@@ -35,7 +35,12 @@ class SchemaUpdateCommand extends Command
 
     public function handle(): int
     {
-        $root = dirname(__DIR__, 2);
+        $root = \Composer\InstalledVersions::isInstalled('merezarezaei/teleproto-schema', true)
+            ? \Composer\InstalledVersions::getInstallPath('merezarezaei/teleproto-schema')
+            : dirname(__DIR__, 3) . '/packages/schema';
+        if ($root === null || $root === '' || !is_dir($root)) {
+            throw new \RuntimeException('teleproto-schema package not installed — schema update requires the schema pipeline package.');
+        }
 
         // 1) Capture the pre-update committed artifacts before anything is written.
         $oldMtproto = SchemaAuditCommand::loadArtifact("{$root}/schema/methods-mtproto.json");

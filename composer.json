@@ -54,7 +54,7 @@
         "analyse:core": "composer analyse --working-dir=packages/core",
         "analyse:laravel": "composer analyse --working-dir=packages/laravel",
         "analyse:schema": "composer analyse --working-dir=packages/schema",
-        "verify": "@bash scripts/verify-monorepo.sh",
+        "verify": "bash scripts/verify-monorepo.sh",
         "test": [
             "@test:core",
             "@test:laravel",

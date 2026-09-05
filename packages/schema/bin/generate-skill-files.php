@@ -194,18 +194,40 @@ foreach (['mtproto', 'bot-http'] as $api) {
     }
 }
 
+$checkOnly = in_array('--check', $argv, true);
+$drift = false;
+
 $pruned = 0;
-foreach (scandir($outDir) as $entry) {
-    if (str_ends_with($entry, '.md') && ! isset($expected[$entry])) {
-        unlink($outDir . '/' . $entry);
-        $pruned++;
+if (! $checkOnly) {
+    foreach (scandir($outDir) as $entry) {
+        if (str_ends_with($entry, '.md') && ! isset($expected[$entry])) {
+            unlink($outDir . '/' . $entry);
+            $pruned++;
+        }
     }
 }
 
 $count = 0;
 foreach ($methods as $method) {
-    file_put_contents($outDir . '/' . $method->name . '.md', $render($method));
-    $count++;
+    $rendered = $render($method);
+    if ($checkOnly) {
+        $committed = @file_get_contents($outDir . '/' . $method->name . '.md');
+        if ($committed !== $rendered) {
+            fwrite(STDERR, "DRIFT: {$outDir}/{$method->name}.md differs from generator output\n");
+            $drift = true;
+        }
+    } else {
+        file_put_contents($outDir . '/' . $method->name . '.md', $rendered);
+        $count++;
+    }
+}
+
+if ($checkOnly) {
+    if ($drift) {
+        exit(1);
+    }
+    echo "skill-files: clean\n";
+    exit(0);
 }
 
 printf("written: %d skill files to %s (pruned %d stale)\n", $count, $outDir, $pruned);

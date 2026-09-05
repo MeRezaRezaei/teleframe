@@ -23,8 +23,11 @@ use MeRezaRezaei\Teleproto\Schema\TelegramMethod;
 const GENERATED_NS = 'MeRezaRezaei\\Teleproto\\Methods\\Generated';
 const HEADER_DATE = '2026-08-28';
 
+$checkOnly = in_array('--check', $argv, true);
+$drift = false;
+
 $configPath = __DIR__ . '/../config/curated-methods.json';
-$outDir = __DIR__ . '/../src/Methods/Generated';
+$outDir = dirname(__DIR__, 2) . '/core/src/Methods/Generated';
 
 $errors = [];
 
@@ -304,29 +307,54 @@ if ($errors !== []) {
     exit(1);
 }
 
-if (! is_dir($outDir)) {
-    mkdir($outDir, 0755, true);
-}
-foreach (scandir($outDir) as $entry) {
-    if (str_ends_with($entry, '.php')) {
-        unlink($outDir . '/' . $entry);
+if (! $checkOnly) {
+    if (! is_dir($outDir)) {
+        mkdir($outDir, 0755, true);
+    }
+    foreach (scandir($outDir) as $entry) {
+        if (str_ends_with($entry, '.php')) {
+            unlink($outDir . '/' . $entry);
+        }
     }
 }
 
 $written = 0;
 $total = 0;
 foreach ($groups as $groupKey => $group) {
+    $targetDir = $group['api'] === 'bot-http'
+        ? (is_dir(dirname(__DIR__, 2) . '/bot/src/Methods/Generated') ? dirname(__DIR__, 2) . '/bot/src/Methods/Generated' : dirname(__DIR__, 2) . '/laravel/src/Methods/Generated')
+        : $outDir;
+
     $label = $group['api'] === 'bot-http'
         ? 'Bot API (bot-http) curated method builders'
         : 'mtproto ' . $groupKey . '.* curated method builders';
     $file = $renderGroup($group['class'], $label, $group['entries']);
-    if (file_put_contents($outDir . '/' . $group['class'] . '.php', $file) === false) {
-        fwrite(STDERR, "cannot write {$outDir}/{$group['class']}.php\n");
-        exit(1);
+
+    if ($checkOnly) {
+        $committed = @file_get_contents($targetDir . '/' . $group['class'] . '.php');
+        if ($committed !== $file) {
+            fwrite(STDERR, "DRIFT: {$targetDir}/{$group['class']}.php differs from generator output\n");
+            $drift = true;
+        }
+    } else {
+        if (file_put_contents($targetDir . '/' . $group['class'] . '.php', $file) === false) {
+            fwrite(STDERR, "cannot write {$targetDir}/{$group['class']}.php\n");
+            exit(1);
+        }
     }
     $written++;
     $total += count($group['entries']);
-    echo $group['class'] . '.php: ' . count($group['entries']) . " builders\n";
+    if (! $checkOnly) {
+        echo $group['class'] . '.php: ' . count($group['entries']) . " builders\n";
+    }
+}
+
+if ($checkOnly) {
+    if ($drift) {
+        exit(1);
+    }
+    echo "method builders: clean\n";
+    exit(0);
 }
 
 echo "wrote {$written} group files, {$total} builders to src/Methods/Generated\n";

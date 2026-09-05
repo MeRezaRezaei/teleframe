@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleproto\Console;
 
+use Composer\InstalledVersions;
 use Illuminate\Console\Command;
 use MeRezaRezaei\Teleproto\Schema\SchemaDiffer;
+use RuntimeException;
 
 /**
  * Regenerates both schema artifacts into a temp dir from the committed
@@ -25,7 +27,12 @@ class SchemaAuditCommand extends Command
 
     public function handle(): int
     {
-        $root = dirname(__DIR__, 2);
+        $root = InstalledVersions::isInstalled('merezarezaei/teleproto-schema', true)
+            ? InstalledVersions::getInstallPath('merezarezaei/teleproto-schema')
+            : dirname(__DIR__, 3) . '/packages/schema';
+        if ($root === null || $root === '' || !is_dir($root)) {
+            throw new RuntimeException('teleproto-schema package not installed — schema audit requires the schema pipeline package.');
+        }
         $tmp = sys_get_temp_dir() . '/teleproto-schema-audit-' . bin2hex(random_bytes(6));
 
         $failure = self::regenerateTo($tmp);
@@ -61,7 +68,12 @@ class SchemaAuditCommand extends Command
      */
     public static function regenerateTo(string $outDir): ?string
     {
-        $root = dirname(__DIR__, 2);
+        $root = InstalledVersions::isInstalled('merezarezaei/teleproto-schema', true)
+            ? InstalledVersions::getInstallPath('merezarezaei/teleproto-schema')
+            : dirname(__DIR__, 3) . '/packages/schema';
+        if ($root === null || $root === '' || !is_dir($root)) {
+            throw new RuntimeException('teleproto-schema package not installed — schema audit requires the schema pipeline package.');
+        }
         if (!is_dir($outDir) && !mkdir($outDir, 0777, true) && !is_dir($outDir)) {
             return "cannot create output dir {$outDir}";
         }

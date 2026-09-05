@@ -14,8 +14,12 @@
         "php": ">=8.2",
         "ext-json": "*"
     },
+    "repositories": {
+        "teleproto-core": { "type": "path", "url": "../core", "options": { "symlink": true } }
+    },
     "require-dev": {
-        "phpunit/phpunit": "^10.0|^11.0"
+        "phpunit/phpunit": "^10.0|^11.0",
+        "merezarezaei/teleproto-core": "*"
     },
     "scripts": {
         "test": "vendor/bin/phpunit"

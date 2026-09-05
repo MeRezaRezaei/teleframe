@@ -168,9 +168,10 @@ $out = str_replace(
     str_replace('__LAYER__', (string) $j['layer'], $class)
 );
 
-file_put_contents(__DIR__ . '/../src/Exceptions/Rpc/RpcErrorCatalog.php', $out);
+$target = dirname(__DIR__, 2) . '/core/src/Exceptions/Rpc/RpcErrorCatalog.php';
+file_put_contents($target, $out);
 printf("written: %d KB, %d descriptions, %d codes, layer %d\n", ...[
-    (int) (filesize(__DIR__ . '/../src/Exceptions/Rpc/RpcErrorCatalog.php') / 1024),
+    (int) (filesize($target) / 1024),
     count($desc),
     count($codeOf),
     $j['layer'],

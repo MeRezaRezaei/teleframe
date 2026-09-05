@@ -9,10 +9,17 @@ declare(strict_types=1);
 //
 // Usage: php bin/generate-userscope-schema.php
 
+$sourcesDir = dirname(__DIR__) . '/schema/sources';
 $tlFiles = [
-    '/home/me/Documents/projects/MadelineProto/src/TL_telegram_v227.tl',
-    '/home/me/Documents/projects/MadelineProto/src/TL_mtproto_v1.tl',
+    $sourcesDir . '/api_full.tl',
+    $sourcesDir . '/mtproto_full.tl',
 ];
+if (!file_exists($tlFiles[0])) {
+    $tlFiles = [
+        '/home/me/Documents/projects/MadelineProto/src/TL_telegram_v227.tl',
+        '/home/me/Documents/projects/MadelineProto/src/TL_mtproto_v1.tl',
+    ];
+}
 
 // Seed: every request method UserAccountScope/BotAccountScope exposes.
 $seedRequests = [
@@ -191,5 +198,18 @@ foreach (array_keys($include) as $name) {
 }
 $out .= "    ];\n}\n";
 
-file_put_contents(__DIR__ . '/../src/MTProto/TL/Schema/UserScopeSchema.php', $out);
-printf("written: %d constructors, %.1f KB\n", $count, filesize(__DIR__ . '/../src/MTProto/TL/Schema/UserScopeSchema.php') / 1024);
+$checkOnly = in_array('--check', $argv, true);
+$targetFile = dirname(__DIR__, 2) . '/core/src/MTProto/TL/Schema/UserScopeSchema.php';
+
+if ($checkOnly) {
+    $committed = @file_get_contents($targetFile);
+    if ($committed !== $out) {
+        fwrite(STDERR, "DRIFT: UserScopeSchema.php differs from generator output\n");
+        exit(1);
+    }
+    echo "userscope-schema: clean\n";
+    exit(0);
+}
+
+file_put_contents($targetFile, $out);
+printf("written: %d constructors, %.1f KB\n", $count, filesize($targetFile) / 1024);

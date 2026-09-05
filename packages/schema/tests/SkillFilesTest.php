@@ -8,11 +8,11 @@ use PHPUnit\Framework\TestCase;
 
 class SkillFilesTest extends TestCase
 {
-    private const SKILL_DIR = __DIR__ . '/../../skills/telegram-methods';
+    private const SKILL_DIR = __DIR__ . '/../skills/telegram-methods';
 
     public function testSkillFileRenderedForCuratedMethod(): void
     {
-        $path = dirname(__DIR__, 2) . '/skills/telegram-methods/messages.sendMessage.md';
+        $path = dirname(__DIR__) . '/skills/telegram-methods/messages.sendMessage.md';
         $this->assertFileExists($path);
         $md = (string) file_get_contents($path);
         $this->assertStringContainsString('messages.sendMessage', $md);
