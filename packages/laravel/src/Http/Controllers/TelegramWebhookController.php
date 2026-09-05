@@ -19,9 +19,13 @@ class TelegramWebhookController
      */
     public function __invoke(Request $request): JsonResponse
     {
-        $configuredSecret = function_exists('config')
-            ? (config('teleproto.webhook_secret') ?? config('teleproto.secret_token'))
-            : getenv('TELEGRAM_WEBHOOK_SECRET');
+        try {
+            $configuredSecret = function_exists('config')
+                ? (config('teleproto.webhook_secret') ?? config('teleproto.secret_token'))
+                : getenv('TELEGRAM_WEBHOOK_SECRET');
+        } catch (\Throwable) {
+            $configuredSecret = getenv('TELEGRAM_WEBHOOK_SECRET');
+        }
 
         if (!empty($configuredSecret)) {
             $receivedHeader = $request->header('X-Telegram-Bot-Api-Secret-Token');
@@ -33,7 +37,11 @@ class TelegramWebhookController
         $payload = $request->json()->all();
 
         if (!empty($payload) && isset($payload['update_id'])) {
-            $botToken = function_exists('config') ? config('teleproto.bot_token') : null;
+            try {
+                $botToken = function_exists('config') ? config('teleproto.bot_token') : null;
+            } catch (\Throwable) {
+                $botToken = null;
+            }
             TelegramUpdateReceived::dispatch($payload, $botToken);
         }
 

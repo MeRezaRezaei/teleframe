@@ -14,7 +14,6 @@ class GeneratedBuildersTest extends TestCase
     {
         MethodRegistry::load();
         require_once dirname(__DIR__, 2) . '/src/Methods/Generated/Messages.php';
-        require_once dirname(__DIR__, 2) . '/src/Methods/Generated/Bots.php';
     }
 
     public function testSendMessageBuilderProducesExactRequestArray(): void
@@ -35,12 +34,5 @@ class GeneratedBuildersTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('message');
         Methods::messages()->sendMessage()->peer(['_' => 'inputPeerSelf'])->toRequest();
-    }
-
-    public function testBotBuilderRequiredList(): void
-    {
-        $req = Methods::bots()->sendMessage()->chatId('@ch')->text('hi')->toRequest();
-        $this->assertSame('@ch', $req['chat_id']);
-        $this->assertSame('hi', $req['text']);
     }
 }

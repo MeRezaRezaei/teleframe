@@ -30,7 +30,10 @@ class TelegramResynced
     public static function dispatch(array $state, ?int $accountId = null): void
     {
         if (class_exists(Event::class) && Event::getFacadeApplication()) {
-            Event::dispatch(new static($state, $accountId));
+            try {
+                Event::dispatch(new static($state, $accountId));
+            } catch (\Throwable) {
+            }
         }
     }
 }

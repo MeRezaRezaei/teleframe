@@ -7,7 +7,6 @@ namespace MeRezaRezaei\Teleproto\Methods;
 use BadMethodCallException;
 use MeRezaRezaei\Teleproto\Methods\Generated\Account;
 use MeRezaRezaei\Teleproto\Methods\Generated\Auth;
-use MeRezaRezaei\Teleproto\Methods\Generated\Bots;
 use MeRezaRezaei\Teleproto\Methods\Generated\Contacts;
 use MeRezaRezaei\Teleproto\Methods\Generated\Help;
 use MeRezaRezaei\Teleproto\Methods\Generated\Messages;
@@ -52,11 +51,6 @@ final class Methods
     public static function help(): Help
     {
         return new Help();
-    }
-
-    public static function bots(): Bots
-    {
-        return new Bots();
     }
 
     /**

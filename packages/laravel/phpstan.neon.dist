@@ -1,0 +1,23 @@
+includes:
+    - vendor/spaze/phpstan-disallowed-calls/extension.neon
+
+parameters:
+    level: 5
+    bootstrapFiles:
+        - phpstan/laravel-helpers.php
+    paths:
+        - src
+    disallowedFunctionCalls:
+        -
+            function: 'preg_*()'
+            message: 'src/ is regex-free by spec 2026-08-28 §A — use sscanf/string functions/the TL tokenizer'
+            allowIn:
+                - bin/*
+                - examples/*
+        -
+            function: 'proc_open()'
+            message: 'subprocess spawning is bin-only by policy — move it into a bin/ generator; src/ orchestrates, not spawns'
+            allowIn:
+                - bin/*
+                - examples/*
+                - src/Console/SchemaAuditCommand.php

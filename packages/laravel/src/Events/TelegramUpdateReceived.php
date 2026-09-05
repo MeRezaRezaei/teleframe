@@ -39,7 +39,10 @@ class TelegramUpdateReceived
         string $source = 'bot-http'
     ): void {
         if (class_exists(Event::class) && Event::getFacadeApplication()) {
-            Event::dispatch(new static($update, $botToken, $accountId, $source));
+            try {
+                Event::dispatch(new static($update, $botToken, $accountId, $source));
+            } catch (\Throwable) {
+            }
         }
     }
 

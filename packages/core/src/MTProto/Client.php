@@ -123,7 +123,14 @@ class Client
      */
     protected function resolveLiveDefault(): bool
     {
-        return function_exists('config') ? (bool) config('teleproto.live_mode') : false;
+        if (!function_exists('config')) {
+            return false;
+        }
+        try {
+            return (bool) config('teleproto.live_mode');
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /**

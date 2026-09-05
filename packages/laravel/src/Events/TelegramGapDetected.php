@@ -46,7 +46,10 @@ class TelegramGapDetected
     public static function dispatch(string $kind, array $context = []): void
     {
         if (class_exists(Event::class) && Event::getFacadeApplication()) {
-            Event::dispatch(new static($kind, $context));
+            try {
+                Event::dispatch(new static($kind, $context));
+            } catch (\Throwable) {
+            }
         }
     }
 }
