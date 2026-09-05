@@ -23,6 +23,11 @@
             "type": "path",
             "url": "packages/bot",
             "options": { "symlink": true }
+        },
+        "teleproto-monorepo-plugin": {
+            "type": "path",
+            "url": "plugins/monorepo",
+            "options": { "symlink": true }
         }
     },
     "require-dev": {
@@ -62,10 +67,5 @@
             "merezarezaei/teleproto-monorepo-plugin": true
         }
     },
-    "extra": {
-        "repositories-monorepo-plugin": {
-            "note": "plugin path repo added in Task 2 next to this block"
-        }
-    },
-    "_comment": "Task 2 removes the repositories-monorepo-plugin placeholder note and adds the plugin path repository + require-dev entry."
+    "extra": {}
 }

@@ -1,0 +1,24 @@
+{
+    "name": "merezarezaei/teleproto-monorepo-plugin",
+    "description": "Root-only composer plugin pinning monorepo package install paths",
+    "type": "composer-plugin",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": { "MeRezaRezaei\\TeleProtoMonorepo\\": "src/" }
+    },
+    "autoload-dev": {
+        "psr-4": { "MeRezaRezaei\\TeleProtoMonorepo\\Tests\\": "tests/" }
+    },
+    "extra": {
+        "class": "MeRezaRezaei\\TeleProtoMonorepo\\InstallPathPlugin"
+    },
+    "require": {
+        "php": ">=8.2",
+        "composer-plugin-api": "^2.0"
+    },
+    "require-dev": {
+        "composer/composer": "^2.6",
+        "phpunit/phpunit": "^10.0|^11.0"
+    },
+    "config": { "allow-plugins": true }
+}
