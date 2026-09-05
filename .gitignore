@@ -8,3 +8,7 @@ composer.lock
 .worktrees/
 schema/audit-report.md
 MadelineProto.log
+
+# monorepo: per-package vendor + caches
+packages/*/vendor/
+packages/*/.phpunit.cache/

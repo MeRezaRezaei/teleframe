@@ -1,93 +1,71 @@
 {
-    "name": "merezarezaei/teleproto",
-    "description": "Almost-zero-friction Telegram for Laravel & PHP — MTProto 2.0, Bot API, Mini App auth, Passport KYC",
-    "type": "library",
+    "name": "merezarezaei/teleproto-monorepo",
+    "description": "Monorepo dev root for the teleproto package family — not published, not installable",
+    "type": "project",
     "license": "MIT",
-    "keywords": [
-        "telegram",
-        "mtproto",
-        "laravel",
-        "bot",
-        "bot-api",
-        "mini-app",
-        "passport",
-        "kyc",
-        "session",
-        "qr-login",
-        "php",
-        "telegram-bot",
-        "telegram-client"
-    ],
-    "homepage": "https://github.com/MeRezaRezaei/teleproto",
-    "support": {
-        "issues": "https://github.com/MeRezaRezaei/teleproto/issues",
-        "source": "https://github.com/MeRezaRezaei/teleproto/tree/main",
-        "docs": "https://github.com/MeRezaRezaei/teleproto/tree/main/docs",
-        "security": "https://github.com/MeRezaRezaei/teleproto/blob/main/SECURITY.md"
-    },
-    "readme": "README.md",
-    "authors": [
-        {
-            "name": "MeRezaRezaei"
+    "repositories": {
+        "teleproto-core": {
+            "type": "path",
+            "url": "packages/core",
+            "options": { "symlink": true }
+        },
+        "teleproto-schema": {
+            "type": "path",
+            "url": "packages/schema",
+            "options": { "symlink": true }
+        },
+        "teleproto-laravel": {
+            "type": "path",
+            "url": "packages/laravel",
+            "options": { "symlink": true }
+        },
+        "teleproto-bot": {
+            "type": "path",
+            "url": "packages/bot",
+            "options": { "symlink": true }
         }
-    ],
-    "require": {
-        "php": ">=8.2",
-        "ext-dom": "*",
-        "ext-hash": "*",
-        "ext-json": "*",
-        "ext-libxml": "*",
-        "ext-mbstring": "*",
-        "ext-openssl": "*",
-        "ext-zlib": "*",
-        "illuminate/support": "^10.0|^11.0|^12.0",
-        "illuminate/http": "^10.0|^11.0|^12.0",
-        "illuminate/filesystem": "^10.0|^11.0|^12.0",
-        "illuminate/routing": "^10.0|^11.0|^12.0",
-        "illuminate/console": "^10.0|^11.0|^12.0",
-        "phpseclib/phpseclib": "^3.0",
-        "laravel/prompts": "^0.3",
-        "vlucas/phpdotenv": "^5.6"
-    },
-    "suggest": {
-        "ext-gmp": "Accelerates BigInteger modular arithmetic for Diffie-Hellman and 2FA SRP calculations.",
-        "ext-bcmath": "Alternative big-integer calculation engine if ext-gmp is not available.",
-        "chillerlan/php-qrcode": "Renders scannable terminal QR codes for the QR login flow (teleproto:login --qr)."
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0|^11.0",
         "phpstan/phpstan": "^2.0",
+        "spaze/phpstan-disallowed-calls": "^4.14",
+        "orchestra/testbench": "^10.11",
         "chillerlan/php-qrcode": "^6.0",
-        "spaze/phpstan-disallowed-calls": "^4.14"
+        "merezarezaei/teleproto-core": "*",
+        "merezarezaei/teleproto-schema": "*",
+        "merezarezaei/teleproto-laravel": "*",
+        "merezarezaei/teleproto-bot": "*",
+        "merezarezaei/teleproto-monorepo-plugin": "*"
     },
-    "autoload": {
-        "psr-4": {
-            "MeRezaRezaei\\Teleproto\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "MeRezaRezaei\\Teleproto\\Tests\\": "tests/"
-        }
-    },
-    "bin": [
-        "bin/teleproto"
-    ],
-    "extra": {
-        "laravel": {
-            "providers": [
-                "MeRezaRezaei\\Teleproto\\TeleprotoServiceProvider"
-            ],
-            "aliases": {
-                "Teleproto": "MeRezaRezaei\\Teleproto\\Facades\\Teleproto",
-                "TP": "MeRezaRezaei\\Teleproto\\Facades\\TP"
-            }
-        }
-    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "autoload": {},
+    "autoload-dev": {},
     "scripts": {
-        "test": "vendor/bin/phpunit",
-        "analyse": "vendor/bin/phpstan analyse",
-        "login": "php examples/live-login.php",
-        "doctor": "php examples/live-doctor.php"
-    }
+        "test:core": "@php -d error_reporting=E_ALL packages/core/vendor/bin/phpunit -c packages/core --color=always",
+        "test:laravel": "composer test --working-dir=packages/laravel",
+        "test:schema": "composer test --working-dir=packages/schema",
+        "test:bot": "composer test --working-dir=packages/bot",
+        "analyse:core": "composer analyse --working-dir=packages/core",
+        "analyse:laravel": "composer analyse --working-dir=packages/laravel",
+        "analyse:schema": "composer analyse --working-dir=packages/schema",
+        "verify": "@bash scripts/verify-monorepo.sh",
+        "test": [
+            "@test:core",
+            "@test:laravel",
+            "@test:schema",
+            "@test:bot"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "merezarezaei/teleproto-monorepo-plugin": true
+        }
+    },
+    "extra": {
+        "repositories-monorepo-plugin": {
+            "note": "plugin path repo added in Task 2 next to this block"
+        }
+    },
+    "_comment": "Task 2 removes the repositories-monorepo-plugin placeholder note and adds the plugin path repository + require-dev entry."
 }
