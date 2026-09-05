@@ -42,7 +42,7 @@
         "merezarezaei/teleproto-bot": "*",
         "merezarezaei/teleproto-monorepo-plugin": "*"
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "autoload": {},
     "autoload-dev": {},
