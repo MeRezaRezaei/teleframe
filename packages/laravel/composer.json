@@ -1,0 +1,10 @@
+{
+    "name": "merezarezaei/teleproto-laravel",
+    "description": "placeholder — populated by Task 5",
+    "type": "library",
+    "license": "MIT",
+    "version": "1.0.0-dev",
+    "autoload": { "psr-4": { "MeRezaRezaei\\Teleproto\\": "src/" } },
+    "require": { "php": ">=8.2", "merezarezaei/teleproto-core": "*", "merezarezaei/teleproto-bot": "*" },
+    "config": { "allow-plugins": false }
+}

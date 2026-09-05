@@ -1,0 +1,10 @@
+{
+    "name": "merezarezaei/teleproto-bot",
+    "description": "placeholder — populated by Task 7",
+    "type": "library",
+    "license": "MIT",
+    "version": "1.0.0-dev",
+    "autoload": { "psr-4": { "MeRezaRezaei\\Teleproto\\": "src/" } },
+    "require": { "php": ">=8.2", "merezarezaei/teleproto-core": "*", "illuminate/http": "^10.0|^11.0|^12.0" },
+    "config": { "allow-plugins": false }
+}

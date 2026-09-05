@@ -429,4 +429,51 @@ class TeleprotoClientTest extends TestCase
         $this->assertEquals('rpc_result', $botAuthRes['raw']['_']);
         $this->assertEquals('auth.importBotAuthorization', $botAuthRes['raw']['method']);
     }
+
+    public function testDispatchRoutesBotHttpRequestThroughBotClientHttp(): void
+    {
+        $http = new \Illuminate\Http\Client\Factory();
+        $http->fake([
+            'https://api.telegram.org/bot12345/getMe' => $http->response([
+                'ok' => true,
+                'result' => ['id' => 12345, 'is_bot' => true, 'username' => 'mock_bot'],
+            ], 200),
+        ]);
+
+        $client = new TeleprotoClient(defaultApiId: 1, defaultApiHash: 'h', defaultBotToken: '12345', http: $http);
+        $res = $client->dispatch(\MeRezaRezaei\Teleproto\Methods\Methods::bots()->getMe()->toRequest());
+
+        $this->assertTrue($res['ok']);
+        $this->assertSame('mock_bot', $res['result']['username']);
+        $http->assertSent(
+            static fn ($request) => str_ends_with($request->url(), '/getMe')
+        );
+    }
+
+    public function testDispatchRoutesMtprotoRequestThroughUserScopeStub(): void
+    {
+        $client = new TeleprotoClient(defaultApiId: 1, defaultApiHash: 'h', defaultUserSession: 'offline-unit-auth-key');
+
+        $res = $client->dispatch(
+            \MeRezaRezaei\Teleproto\Methods\Methods::messages()->sendMessage()
+                ->peer(['_' => 'inputPeerSelf'])
+                ->message('hello')
+                ->randomId(42)
+                ->toRequest()
+        );
+
+        $this->assertSame('rpc_result', $res['_']);
+        $this->assertSame('messages.sendMessage', $res['method']);
+        $this->assertSame('hello', $res['params']['message']);
+        $this->assertArrayNotHasKey('_', $res['params']);
+    }
+
+    public function testDispatchUnknownMethodThrowsRegistryExceptionWithName(): void
+    {
+        $client = new TeleprotoClient(defaultApiId: 1, defaultApiHash: 'h', defaultBotToken: 't');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('totally.bogusMethod');
+        $client->dispatch(['_' => 'totally.bogusMethod']);
+    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleproto\Schema;
 
 use InvalidArgumentException;
+use MeRezaRezaei\TeleprotoSchema\SchemaArtifacts;
 use RuntimeException;
 
 /**
@@ -31,7 +32,7 @@ final class MethodRegistry
         $methods = [];
 
         foreach (['mtproto' => 'methods-mtproto.json', 'bot-http' => 'methods-botapi.json'] as $api => $file) {
-            $path = dirname(__DIR__, 2) . '/schema/' . $file;
+            $path = SchemaArtifacts::path($file);
 
             $json = file_get_contents($path);
             if ($json === false) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleproto\Tests\Schema;
 
+use MeRezaRezaei\TeleprotoSchema\SchemaArtifacts;
 use PHPUnit\Framework\TestCase;
 
 class MtprotoSchemaTest extends TestCase
@@ -11,7 +12,7 @@ class MtprotoSchemaTest extends TestCase
     /** @return array<string, mixed> */
     private static function artifact(): array
     {
-        return (array) json_decode((string) file_get_contents(dirname(__DIR__, 2) . '/schema/methods-mtproto.json'), true);
+        return (array) json_decode((string) file_get_contents(SchemaArtifacts::path('methods-mtproto.json')), true);
     }
 
     public function testArtifactEnvelope(): void
@@ -35,7 +36,7 @@ class MtprotoSchemaTest extends TestCase
     public function testMethodDescriptionsAreHtmlUnescaped(): void
     {
         $raw = (string) (((array) json_decode(
-            (string) file_get_contents(dirname(__DIR__, 2) . '/schema/sources/extracted.json'),
+            (string) file_get_contents(SchemaArtifacts::source('extracted.json')),
             true
         ))['method_account.getPasswordSettings']);
         $expected = str_replace(['&lt;', '&gt;', '&amp;'], ['<', '>', '&'], $raw);

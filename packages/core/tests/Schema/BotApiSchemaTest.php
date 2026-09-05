@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleproto\Tests\Schema;
 
+use MeRezaRezaei\TeleprotoSchema\SchemaArtifacts;
 use PHPUnit\Framework\TestCase;
 
 class BotApiSchemaTest extends TestCase
@@ -11,7 +12,7 @@ class BotApiSchemaTest extends TestCase
     /** @return array<string, mixed> */
     private static function artifact(): array
     {
-        return (array) json_decode((string) file_get_contents(dirname(__DIR__, 2) . '/schema/methods-botapi.json'), true);
+        return (array) json_decode((string) file_get_contents(SchemaArtifacts::path('methods-botapi.json')), true);
     }
 
     public function testEnvelopeAndSpotEntries(): void

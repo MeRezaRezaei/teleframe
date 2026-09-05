@@ -183,7 +183,11 @@ class TLRegistry
         // layer-drift decode misalignment wholesale (found live: stale
         // documentAttributeVideo fields overrunning into string bytes).
         foreach (['api_full.tl', 'mtproto_full.tl'] as $file) {
-            $path = __DIR__ . '/../../../schema/sources/' . $file;
+            try {
+                $path = \MeRezaRezaei\TeleprotoSchema\SchemaArtifacts::source($file);
+            } catch (\Throwable) {
+                $path = __DIR__ . '/../../../schema/sources/' . $file;
+            }
             if (!is_file($path)) {
                 continue;
             }
