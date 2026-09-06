@@ -4,10 +4,10 @@
 declare(strict_types=1);
 
 /*
- * Interactive live MTProto login for Teleproto — powered by Laravel Prompts.
+ * Interactive live MTProto login for Teleframe — powered by Laravel Prompts.
  *
  * Usage (from the repository root, after `composer install`):
- *   php examples/live-login.php        (or: ./bin/teleproto login)
+ *   php examples/live-login.php        (or: ./bin/teleframe login)
  *
  * Flows: Bot token, User phone + code (+2FA SRP), User QR deep link.
  * Saves the exported session string to .env on success.
@@ -23,14 +23,14 @@ use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 use function Laravel\Prompts\warning;
 
-use MeRezaRezaei\Teleproto\Exceptions\DcMigrationException;
-use MeRezaRezaei\Teleproto\Exceptions\Rpc\AuthKeyException;
-use MeRezaRezaei\Teleproto\Exceptions\Rpc\FloodWaitException;
-use MeRezaRezaei\Teleproto\Exceptions\Rpc\PasswordHashInvalidException;
-use MeRezaRezaei\Teleproto\Exceptions\Rpc\PhoneCodeException;
-use MeRezaRezaei\Teleproto\Exceptions\Rpc\SessionPasswordNeededException;
-use MeRezaRezaei\Teleproto\Exceptions\TelegramException;
-use MeRezaRezaei\Teleproto\Services\TeleprotoAuthService;
+use MeRezaRezaei\Teleframe\Core\Exceptions\DcMigrationException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\AuthKeyException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\FloodWaitException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\PasswordHashInvalidException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\PhoneCodeException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\SessionPasswordNeededException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 
 /** @param array<string, mixed> $authorization */
 function celebrate(array $authorization, string $sessionString, string $label): void
@@ -47,12 +47,12 @@ function celebrate(array $authorization, string $sessionString, string $label): 
     $envKey = 'TELEGRAM_' . strtoupper(str_contains($label, 'Bot') ? 'BOT' : 'USER') . '_SESSION';
     echo "\nExported session string:\n{$sessionString}\n\n";
     if (confirm("Save session to .env as {$envKey}?", true)) {
-        \MeRezaRezaei\Teleproto\Support\EnvFile::upsert(__DIR__ . '/../.env', $envKey, $sessionString);
+        \MeRezaRezaei\Teleframe\Core\Support\EnvFile::upsert(__DIR__ . '/../.env', $envKey, $sessionString);
         info("Saved to .env as {$envKey}.");
     }
 }
 
-function whoami(\MeRezaRezaei\Teleproto\Services\UserAccountScope $scope): array
+function whoami(\MeRezaRezaei\Teleframe\Core\Services\UserAccountScope $scope): array
 {
     try {
         $res = $scope->call('users.getUsers', ['id' => [['_' => 'inputUserSelf']]]);
@@ -63,7 +63,7 @@ function whoami(\MeRezaRezaei\Teleproto\Services\UserAccountScope $scope): array
 }
 
 try {
-    $envVars = \MeRezaRezaei\Teleproto\Support\EnvFile::read(__DIR__ . '/../.env');
+    $envVars = \MeRezaRezaei\Teleframe\Core\Support\EnvFile::read(__DIR__ . '/../.env');
 } catch (Throwable $e) {
     warning('.env could not be parsed — continuing with empty defaults: ' . $e->getMessage());
     $envVars = [];
@@ -88,7 +88,7 @@ try {
     exit(1);
 }
 
-$auth = new TeleprotoAuthService();
+$auth = new TeleframeAuthService();
 
 $choice = select(
     'Login method',
@@ -172,7 +172,7 @@ try {
         case 'qr':
             $qr = $auth->exportQrLoginToken($apiId, $apiHash);
             $user = $qr['user'];
-            echo \MeRezaRezaei\Teleproto\Support\TerminalQr::renderOrUrl($qr['url']);
+            echo \MeRezaRezaei\Teleframe\Core\Support\TerminalQr::renderOrUrl($qr['url']);
             try {
                 $authorization = $auth->pollQrLoginToken($user, $apiId, $apiHash, function (string $url): void {
                     static $last = '';

@@ -4,7 +4,7 @@
 declare(strict_types=1);
 
 /*
- * Standalone live MTProto verification for Teleproto — no Laravel/artisan needed.
+ * Standalone live MTProto verification for Teleframe — no Laravel/artisan needed.
  *
  * Usage (from the repository root, after `composer install`):
  *   TG_API_ID=1821270 TG_API_HASH=... php examples/live-doctor.php [dc]
@@ -20,8 +20,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use MeRezaRezaei\Teleproto\MTProto\Client;
-use MeRezaRezaei\Teleproto\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\MTProto\Client;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
 
 $apiId = (int) (getenv('TG_API_ID') ?: 0);
 $apiHash = (string) (getenv('TG_API_HASH') ?: '');
@@ -42,7 +42,7 @@ if (!isset($targets[$which])) {
 }
 [$label, $host] = $targets[$which];
 
-echo "Teleproto live doctor — {$label}:443\n";
+echo "Teleframe live doctor — {$label}:443\n";
 
 $session = new SessionData(dcId: 2, authKey: '');
 $client = (new Client(apiId: $apiId, apiHash: $apiHash, session: $session))->live();

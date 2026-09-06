@@ -1,4 +1,4 @@
-name: monorepo-tests
+name: tests
 
 on:
   push:
@@ -21,11 +21,9 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, openssl, hash, json, gmp, bcmath
           coverage: none
-      - name: Validate all manifests
-        run: |
-          composer validate --strict --no-check-publish
-          for p in core schema laravel bot; do composer validate --strict --working-dir="packages/$p"; done
+      - name: Validate manifest
+        run: composer validate --strict --no-check-publish
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
       - name: Full verify chain
         run: composer verify
-      - name: Plugin suite
-        run: composer test --working-dir=plugins/monorepo

@@ -4,13 +4,13 @@
 declare(strict_types=1);
 
 /*
- * Live msg_container batching benchmark for Teleproto — N requests in ONE round-trip.
+ * Live msg_container batching benchmark for Teleframe — N requests in ONE round-trip.
  *
  * Usage (from the repository root, after `composer install`):
  *   php examples/batch-bench.php
  *
  * Loads TELEGRAM_API_ID / TELEGRAM_API_HASH / TELEGRAM_USER_SESSION from the
- * repo-root .env (an exported user session from `php artisan teleproto:login`
+ * repo-root .env (an exported user session from `php artisan teleframe:login`
  * or examples/live-login.php). Without a session string a fresh DH handshake
  * is performed (like examples/live-doctor.php) — but the two authorized calls
  * need a logged-in session, so provide one for a green run.
@@ -26,9 +26,9 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use MeRezaRezaei\Teleproto\MTProto\Client;
-use MeRezaRezaei\Teleproto\MTProto\SessionData;
-use MeRezaRezaei\Teleproto\Support\EnvFile;
+use MeRezaRezaei\Teleframe\Core\MTProto\Client;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\Support\EnvFile;
 
 const ROUNDS = 2; // round 1 = warmup (connect + init), round 2 = measured
 
@@ -60,7 +60,7 @@ try {
 $dcId = $session->dcId;
 $host = Client::DC_IPS[$dcId] ?? Client::DC_IPS[2];
 echo sprintf(
-    "Teleproto batch bench — live DC%d (%s:443), %s\n",
+    "Teleframe batch bench — live DC%d (%s:443), %s\n",
     $dcId,
     $host,
     $sessionString !== '' ? 'user session from .env' : 'fresh handshake (no user session in .env — authorized calls will fail)'
