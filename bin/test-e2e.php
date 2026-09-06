@@ -4,19 +4,19 @@
 declare(strict_types=1);
 
 /*
- * Comprehensive End-to-End Verification Suite for Teleproto.
+ * Comprehensive End-to-End Verification Suite for Teleframe.
  * Verifies live User MTProto calls, Bot API calls, and official exception guidance.
  *
- * Usage: ./bin/teleproto test-e2e
+ * Usage: ./bin/teleframe test-e2e
  */
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use MeRezaRezaei\Teleproto\Exceptions\Rpc\PhoneNumberException;
-use MeRezaRezaei\Teleproto\Exceptions\Rpc\RpcErrorException;
-use MeRezaRezaei\Teleproto\Exceptions\TelegramException;
-use MeRezaRezaei\Teleproto\Services\TeleprotoClient;
-use MeRezaRezaei\Teleproto\Types\InputUser;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\PhoneNumberException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\RpcErrorException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
+use MeRezaRezaei\Teleframe\Core\Types\InputUser;
 
 $env = file_exists(__DIR__ . '/../.env') ? parse_ini_file(__DIR__ . '/../.env') : [];
 $session = $env['TELEGRAM_USER_SESSION'] ?? getenv('TELEGRAM_USER_SESSION');
@@ -25,7 +25,7 @@ $apiHash = (string)($env['TELEGRAM_API_HASH'] ?? getenv('TG_API_HASH') ?: '');
 $botToken = $env['TELEGRAM_BOT_TOKEN'] ?? getenv('TELEGRAM_BOT_TOKEN');
 
 echo "=======================================================\n";
-echo " Teleproto Low-Level End-to-End Live Verification\n";
+echo " Teleframe Low-Level End-to-End Live Verification\n";
 echo "=======================================================\n\n";
 
 $passed = 0;
@@ -54,7 +54,7 @@ $runner('User MTProto: Connect to DC with saved session', function () use ($sess
     if (!$session) {
         throw new RuntimeException('TELEGRAM_USER_SESSION missing in .env');
     }
-    $client = new TeleprotoClient($apiId, $apiHash);
+    $client = new TeleframeClient($apiId, $apiHash);
     $user = $client->fromSession($session);
     $user->mtproto->live();
 
@@ -66,7 +66,7 @@ $runner('User MTProto: Connect to DC with saved session', function () use ($sess
 });
 
 $runner('User MTProto: Fetch self user profile (users.getUsers)', function () use ($session, $apiId, $apiHash) {
-    $client = new TeleprotoClient($apiId, $apiHash);
+    $client = new TeleframeClient($apiId, $apiHash);
     $user = $client->fromSession($session);
     $user->mtproto->live();
 
@@ -84,7 +84,7 @@ $runner('User MTProto: Fetch self user profile (users.getUsers)', function () us
 // 2. Exception Guidance & Error Catalog Verification
 // --------------------------------------------------------------------
 $runner('Live Exception: PHONE_NUMBER_INVALID guidance on bad phone format', function () use ($apiId, $apiHash) {
-    $client = new TeleprotoClient($apiId, $apiHash);
+    $client = new TeleframeClient($apiId, $apiHash);
     $user = $client->user();
     $user->mtproto->live();
 
@@ -108,7 +108,7 @@ $runner('Live Exception: PHONE_NUMBER_INVALID guidance on bad phone format', fun
 });
 
 $runner('Live Exception: USER_ID_INVALID guidance on invalid inputUser', function () use ($session, $apiId, $apiHash) {
-    $client = new TeleprotoClient($apiId, $apiHash);
+    $client = new TeleframeClient($apiId, $apiHash);
     $user = $client->fromSession($session);
     $user->mtproto->live();
 
@@ -130,7 +130,7 @@ $runner('Live Exception: USER_ID_INVALID guidance on invalid inputUser', functio
 // --------------------------------------------------------------------
 if ($botToken) {
     $runner('Bot Client: HTTP Bot API getMe', function () use ($botToken) {
-        $bot = new \MeRezaRezaei\Teleproto\Services\BotClient($botToken);
+        $bot = new \MeRezaRezaei\Teleframe\Bot\Services\BotClient($botToken);
         $me = $bot->getMe();
         if (empty($me['ok'])) {
             throw new RuntimeException('getMe failed');
@@ -139,7 +139,7 @@ if ($botToken) {
     });
 
     $runner('Bot Client: Native MTProto binary bot login (auth.importBotAuthorization)', function () use ($botToken, $apiId, $apiHash) {
-        $client = new TeleprotoClient($apiId, $apiHash, $botToken);
+        $client = new TeleframeClient($apiId, $apiHash, $botToken);
         $bot = $client->botMtproto();
         $res = $bot->login();
         $u = $res['user'] ?? [];
@@ -147,7 +147,7 @@ if ($botToken) {
     });
 } else {
     $runner('Bot Client: Invalid Token HTTP Error Guidance (Simulated)', function () {
-        $bot = new \MeRezaRezaei\Teleproto\Services\BotClient('123456:INVALID_TOKEN');
+        $bot = new \MeRezaRezaei\Teleframe\Bot\Services\BotClient('123456:INVALID_TOKEN');
         try {
             $bot->getMe();
             throw new RuntimeException('Expected 401 error but call succeeded');

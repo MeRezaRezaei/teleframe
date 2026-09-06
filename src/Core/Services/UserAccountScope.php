@@ -12,13 +12,13 @@ use MeRezaRezaei\Teleframe\Core\Types\InputUser;
 /**
  * Scoped User MTProto operations with typed helper methods and full PHPDoc method mappings.
  *
- * @see \MeRezaRezaei\Teleproto\Types\InputPeer
- * @see \MeRezaRezaei\Teleproto\Types\InputUser
- * @see \MeRezaRezaei\Teleproto\Types\InputChannel
- * @see \MeRezaRezaei\Teleproto\Types\InputContact
- * @see \MeRezaRezaei\Teleproto\Types\InputMedia
- * @see \MeRezaRezaei\Teleproto\Entities\EntityParser
- * @see \MeRezaRezaei\Teleproto\Media\StorageMedia
+ * @see \MeRezaRezaei\Teleframe\Core\Types\InputPeer
+ * @see \MeRezaRezaei\Teleframe\Core\Types\InputUser
+ * @see \MeRezaRezaei\Teleframe\Core\Types\InputChannel
+ * @see \MeRezaRezaei\Teleframe\Core\Types\InputContact
+ * @see \MeRezaRezaei\Teleframe\Core\Types\InputMedia
+ * @see \MeRezaRezaei\Teleframe\Core\Entities\EntityParser
+ * @see \MeRezaRezaei\Teleframe\Laravel\Media\StorageMedia
  */
 class UserAccountScope
 {
@@ -70,8 +70,8 @@ class UserAccountScope
      * @param array<string, mixed> $options Optional settings (entities, reply_to_msg_id, schedule_date)
      * @return array<string, mixed> Updates or Sent Message object
      *
-     * @see \MeRezaRezaei\Teleproto\Types\InputPeer
-     * @see \MeRezaRezaei\Teleproto\Entities\EntityParser
+     * @see \MeRezaRezaei\Teleframe\Core\Types\InputPeer
+     * @see \MeRezaRezaei\Teleframe\Core\Entities\EntityParser
      */
     public function sendMessage(int|string|array $peer, string $text, array $options = []): array
     {
@@ -91,8 +91,8 @@ class UserAccountScope
      * @param array<string, mixed> $options
      * @return array<string, mixed>
      *
-     * @see \MeRezaRezaei\Teleproto\Types\InputPeer
-     * @see \MeRezaRezaei\Teleproto\Types\InputMedia
+     * @see \MeRezaRezaei\Teleframe\Core\Types\InputPeer
+     * @see \MeRezaRezaei\Teleframe\Core\Types\InputMedia
      */
     public function sendMedia(int|string|array $peer, array $media, string $message = '', array $options = []): array
     {
@@ -166,7 +166,7 @@ class UserAccountScope
      * @param int $offsetId Offset message ID for pagination (0 = latest)
      * @return array<string, mixed> messages.messagesSlice or messages.channelMessages
      *
-     * @see \MeRezaRezaei\Teleproto\Types\InputPeer
+     * @see \MeRezaRezaei\Teleframe\Core\Types\InputPeer
      */
     public function getHistory(int|string|array $peer, int $limit = 50, int $offsetId = 0): array
     {
@@ -247,7 +247,7 @@ class UserAccountScope
      * @param int|array<string, mixed> $user User ID or InputUser array
      * @return array<string, mixed> users.userFull
      *
-     * @see \MeRezaRezaei\Teleproto\Types\InputUser
+     * @see \MeRezaRezaei\Teleframe\Core\Types\InputUser
      */
     public function getFullUser(int|array $user): array
     {
@@ -264,7 +264,7 @@ class UserAccountScope
      * @param int|array<string, mixed> $channel Channel ID or InputChannel array
      * @return array<string, mixed> messages.chatFull
      *
-     * @see \MeRezaRezaei\Teleproto\Types\InputChannel
+     * @see \MeRezaRezaei\Teleframe\Core\Types\InputChannel
      */
     public function getFullChannel(int|array $channel): array
     {
@@ -389,7 +389,7 @@ class UserAccountScope
      * @param list<array<string, mixed>> $contacts Array of InputContact objects
      * @return array<string, mixed> contacts.importedContacts
      *
-     * @see \MeRezaRezaei\Teleproto\Types\InputContact
+     * @see \MeRezaRezaei\Teleframe\Core\Types\InputContact
      */
     public function importContacts(array $contacts): array
     {

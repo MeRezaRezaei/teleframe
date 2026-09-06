@@ -6,7 +6,7 @@ namespace MeRezaRezaei\Teleframe\Laravel\Console;
 
 use Composer\InstalledVersions;
 use Illuminate\Console\Command;
-use MeRezaRezaei\Teleproto\Schema\SchemaDiffer;
+use MeRezaRezaei\Teleframe\Core\Schema\SchemaDiffer;
 use RuntimeException;
 
 /**
@@ -31,9 +31,9 @@ class SchemaAuditCommand extends Command
             ? InstalledVersions::getInstallPath('merezarezaei/teleframe')
             : dirname(__DIR__, 3) . '/packages/schema';
         if ($root === null || $root === '' || !is_dir($root)) {
-            throw new RuntimeException('teleproto-schema package not installed — schema audit requires the schema pipeline package.');
+            throw new RuntimeException('teleframe schema layer not installed — schema audit requires the schema pipeline package.');
         }
-        $tmp = sys_get_temp_dir() . '/teleproto-schema-audit-' . bin2hex(random_bytes(6));
+        $tmp = sys_get_temp_dir() . '/teleframe-schema-audit-' . bin2hex(random_bytes(6));
 
         $failure = self::regenerateTo($tmp);
         if ($failure !== null) {
@@ -72,7 +72,7 @@ class SchemaAuditCommand extends Command
             ? InstalledVersions::getInstallPath('merezarezaei/teleframe')
             : dirname(__DIR__, 3) . '/packages/schema';
         if ($root === null || $root === '' || !is_dir($root)) {
-            throw new RuntimeException('teleproto-schema package not installed — schema audit requires the schema pipeline package.');
+            throw new RuntimeException('teleframe schema layer not installed — schema audit requires the schema pipeline package.');
         }
         if (!is_dir($outDir) && !mkdir($outDir, 0777, true) && !is_dir($outDir)) {
             return "cannot create output dir {$outDir}";

@@ -80,10 +80,10 @@ class SkillFilesTest extends TestCase
         // dispatch() is an INSTANCE method: the example must resolve a client
         // and call it instance-style — never the fatal static form.
         $this->assertStringContainsString(
-            '$client = app(\MeRezaRezaei\Teleproto\Services\TeleprotoClient::class);',
+            '$client = app(\MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient::class);',
             $md
         );
         $this->assertStringContainsString('$result = $client->dispatch($request);', $md);
-        $this->assertStringNotContainsString('TeleprotoClient::dispatch', $md);
+        $this->assertStringNotContainsString('TeleframeClient::dispatch', $md);
     }
 }

@@ -93,7 +93,7 @@ class TeleframeClient
         $targetSession = $session ?? $this->defaultUserSession;
 
         if (empty($finalApiId) || empty($finalApiHash)) {
-            throw new RuntimeException("Telegram API ID and API Hash are required. Pass them to user() or configure defaults in config/teleproto.php.");
+            throw new RuntimeException("Telegram API ID and API Hash are required. Pass them to user() or configure defaults in config/teleframe.php.");
         }
 
         if ($targetSession instanceof SessionData) {

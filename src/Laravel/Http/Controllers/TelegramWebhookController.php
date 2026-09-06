@@ -21,7 +21,7 @@ class TelegramWebhookController
     {
         try {
             $configuredSecret = function_exists('config')
-                ? (config('teleproto.webhook_secret') ?? config('teleproto.secret_token'))
+                ? (config('teleframe.webhook_secret') ?? config('teleframe.secret_token'))
                 : getenv('TELEGRAM_WEBHOOK_SECRET');
         } catch (\Throwable) {
             $configuredSecret = getenv('TELEGRAM_WEBHOOK_SECRET');
@@ -38,7 +38,7 @@ class TelegramWebhookController
 
         if (!empty($payload) && isset($payload['update_id'])) {
             try {
-                $botToken = function_exists('config') ? config('teleproto.bot_token') : null;
+                $botToken = function_exists('config') ? config('teleframe.bot_token') : null;
             } catch (\Throwable) {
                 $botToken = null;
             }

@@ -5,11 +5,11 @@ declare(strict_types=1);
 // Live walkthrough of the user surface — never committed output.
 require __DIR__ . '/../vendor/autoload.php';
 
-use MeRezaRezaei\Teleproto\Entities\EntityParser;
-use MeRezaRezaei\Teleproto\Services\TeleprotoClient;
+use MeRezaRezaei\Teleframe\Core\Entities\EntityParser;
+use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 
 $env = parse_ini_file(__DIR__ . '/../.env');
-$c = new TeleprotoClient((int) $env['TELEGRAM_API_ID'], $env['TELEGRAM_API_HASH']);
+$c = new TeleframeClient((int) $env['TELEGRAM_API_ID'], $env['TELEGRAM_API_HASH']);
 $u = $c->fromSession($env['TELEGRAM_USER_SESSION']);
 $u->mtproto->live();
 
@@ -49,7 +49,7 @@ $probe('readHistory(self)', fn ($u) => $u->call('messages.readHistory', ['peer' 
 // The full pipeline: HTML -> EntityParser -> MTProto entities -> send -> verify -> delete
 $sentId = null;
 $probe('sendMessage(self, formatted via EntityParser)', function ($u) use (&$sentId) {
-    $parsed = EntityParser::htmlToEntities('<b>Teleproto</b> live <i>formatted</i> <a href="https://telegram.org">link</a> ✅');
+    $parsed = EntityParser::htmlToEntities('<b>Teleframe</b> live <i>formatted</i> <a href="https://telegram.org">link</a> ✅');
     $updates = $u->call('messages.sendMessage', [
         'peer' => ['_' => 'inputPeerSelf'],
         'message' => $parsed['text'],

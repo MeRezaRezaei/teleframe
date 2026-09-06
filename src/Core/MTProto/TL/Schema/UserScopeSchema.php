@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Core\MTProto\TL\Schema;
 
 /**
- * Constructor closure for Teleproto's documented scope methods (layer 227).
+ * Constructor closure for Teleframe's documented scope methods (layer 227).
  * GENERATED from MadelineProto's layer-227 TL files — lines keep their
  * official #ids verbatim. Regenerate via bin/generate-userscope-schema.php.
  *

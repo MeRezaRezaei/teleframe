@@ -108,6 +108,6 @@ $request = Methods::messages()->forwardMessages()
     ->randomId(['_' => '…'])
     ->toRequest();
 
-$client = app(\MeRezaRezaei\Teleproto\Services\TeleprotoClient::class);   // or: new TeleprotoClient(defaultApiId: …, defaultApiHash: …)
+$client = app(\MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient::class);   // or: new TeleframeClient(defaultApiId: …, defaultApiHash: …)
 $result = $client->dispatch($request);
 ```

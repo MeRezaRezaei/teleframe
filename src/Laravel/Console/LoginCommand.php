@@ -7,7 +7,7 @@ namespace MeRezaRezaei\Teleframe\Laravel\Console;
 use Illuminate\Console\Command;
 use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
 use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
-use MeRezaRezaei\Teleframe\Core\Services\TeleframeAuthService;
+use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use MeRezaRezaei\Teleframe\Core\Support\TerminalQr;
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\select;
@@ -29,14 +29,14 @@ class LoginCommand extends Command
 
     public function handle(TeleframeAuthService $authService): int
     {
-        $this->components->info('Teleproto MTProto 2.0 Authentication Wizard');
+        $this->components->info('Teleframe MTProto 2.0 Authentication Wizard');
 
-        $apiId = (int) (config('teleproto.api_id') ?: text(
+        $apiId = (int) (config('teleframe.api_id') ?: text(
             'Telegram API ID',
             placeholder: 'from https://my.telegram.org',
             validate: fn (string $v) => ($v !== '' && strspn($v, '0123456789') === strlen($v) && (int) $v > 0) ? null : 'API ID must be a positive integer.'
         ));
-        $apiHash = (string) (config('teleproto.api_hash') ?: text(
+        $apiHash = (string) (config('teleframe.api_hash') ?: text(
             'Telegram API Hash',
             placeholder: 'from https://my.telegram.org',
             validate: fn (string $v) => strlen($v) >= 30 ? null : 'API Hash looks too short.'
@@ -141,7 +141,7 @@ class LoginCommand extends Command
 
     protected function handleBotLogin(TeleframeAuthService $authService, int $apiId, string $apiHash, int $dcId): int
     {
-        $botToken = (string)(config('teleproto.bot_token') ?: text('Bot token (from @BotFather)', placeholder: '123456:ABC-DEF...', required: true));
+        $botToken = (string)(config('teleframe.bot_token') ?: text('Bot token (from @BotFather)', placeholder: '123456:ABC-DEF...', required: true));
         if (empty($botToken)) {
             $this->components->error('Bot token is required.');
             return self::FAILURE;
@@ -194,7 +194,7 @@ class LoginCommand extends Command
         $this->newLine();
 
         if ($this->confirm("Would you like to save this session to your .env file as {$envKey}?", true)) {
-            \MeRezaRezaei\Teleproto\Support\EnvFile::upsert(base_path('.env'), $envKey, $sessionString);
+            \MeRezaRezaei\Teleframe\Core\Support\EnvFile::upsert(base_path('.env'), $envKey, $sessionString);
             $this->components->info("Saved to .env as {$envKey}.");
         }
 

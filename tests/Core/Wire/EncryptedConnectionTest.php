@@ -38,7 +38,7 @@ class EncryptedConnectionTest extends TestCase
     {
         $body = EncryptedConnection::buildFirstQueryBody(227, [
             'api_id' => 12345,
-            'device_model' => 'Teleproto',
+            'device_model' => 'Teleframe',
             'system_version' => PHP_VERSION,
             'app_version' => '1.0.0',
             'system_lang_code' => 'en',
@@ -57,7 +57,7 @@ class EncryptedConnectionTest extends TestCase
         $this->assertSame(227, $decoded['layer']);
         $this->assertSame('initConnection', $decoded['query']['_']);
         $this->assertSame(12345, $decoded['query']['api_id']);
-        $this->assertSame('Teleproto', $decoded['query']['device_model']);
+        $this->assertSame('Teleframe', $decoded['query']['device_model']);
         $this->assertSame(0, $decoded['query']['flags']);
         $this->assertSame(['_' => 'help.getNearestDc'], $decoded['query']['query']);
     }

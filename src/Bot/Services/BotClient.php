@@ -13,9 +13,9 @@ use RuntimeException;
  * Modern Laravel Bot Client for Telegram Bot API.
  * High-performance Bot API client powered by Laravel's Http client with retries, proxy routing, and test fakes.
  *
- * @see \MeRezaRezaei\Teleproto\Types\InlineKeyboard
- * @see \MeRezaRezaei\Teleproto\Types\InputMedia
- * @see \MeRezaRezaei\Teleproto\Entities\EntityParser
+ * @see \MeRezaRezaei\Teleframe\Core\Types\InlineKeyboard
+ * @see \MeRezaRezaei\Teleframe\Core\Types\InputMedia
+ * @see \MeRezaRezaei\Teleframe\Core\Entities\EntityParser
  */
 class BotClient
 {
@@ -106,8 +106,8 @@ class BotClient
      * @param array<string, mixed> $options Additional parameters (parse_mode, reply_markup, entities, etc.)
      * @return array<string, mixed> Sent Message object
      *
-     * @see \MeRezaRezaei\Teleproto\Types\InlineKeyboard
-     * @see \MeRezaRezaei\Teleproto\Entities\EntityParser
+     * @see \MeRezaRezaei\Teleframe\Core\Types\InlineKeyboard
+     * @see \MeRezaRezaei\Teleframe\Core\Entities\EntityParser
      */
     public function sendMessage(int|string $chatId, string $text, array $options = []): array
     {
@@ -285,7 +285,7 @@ class BotClient
      * @param array<string, mixed> $options
      * @return array<string, mixed>
      *
-     * @see \MeRezaRezaei\Teleproto\Types\InputMedia
+     * @see \MeRezaRezaei\Teleframe\Core\Types\InputMedia
      */
     public function sendMediaGroup(int|string $chatId, array $media, array $options = []): array
     {
@@ -718,7 +718,7 @@ class BotClient
     protected function normalizeOptions(array $options): array
     {
         if (isset($options['reply_markup'])) {
-            if ($options['reply_markup'] instanceof InlineKeyboard || $options['reply_markup'] instanceof \MeRezaRezaei\Teleproto\Types\ReplyKeyboard) {
+            if ($options['reply_markup'] instanceof InlineKeyboard || $options['reply_markup'] instanceof \MeRezaRezaei\Teleframe\Core\Types\ReplyKeyboard) {
                 $options['reply_markup'] = $options['reply_markup']->toArray();
             }
         }

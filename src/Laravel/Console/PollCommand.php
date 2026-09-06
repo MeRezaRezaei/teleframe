@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Laravel\Console;
 
 use Illuminate\Console\Command;
-use MeRezaRezaei\Teleframe\Core\Facades\TP;
-use MeRezaRezaei\Teleframe\Core\Services\UpdatePollerService;
+use MeRezaRezaei\Teleframe\Laravel\Facades\TF;
+use MeRezaRezaei\Teleframe\Laravel\Services\UpdatePollerService;
 
 /**
  * Long-polling runner for Telegram Bot updates in local development and queue workers.
@@ -29,7 +29,7 @@ class PollCommand extends Command
         $limit = (int)$this->option('limit');
         $botToken = $this->option('bot') ? (string)$this->option('bot') : null;
 
-        $bot = TP::bot($botToken);
+        $bot = TF::bot($botToken);
 
         $poller = new UpdatePollerService();
 

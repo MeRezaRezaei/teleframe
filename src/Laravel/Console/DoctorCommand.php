@@ -7,7 +7,7 @@ namespace MeRezaRezaei\Teleframe\Laravel\Console;
 use Illuminate\Console\Command;
 use MeRezaRezaei\Teleframe\Core\MTProto\Client;
 use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
-use MeRezaRezaei\Teleframe\Core\Services\TeleframeAuthService;
+use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use Throwable;
 
 /**
@@ -20,13 +20,13 @@ class DoctorCommand extends Command
                             {--bot : Also verify bot MTProto authorization}
                             {--dc=2 : Target Telegram Data Center ID (1-5)}';
 
-    protected $description = 'Verify Teleproto live MTProto connectivity (no account needed)';
+    protected $description = 'Verify Teleframe live MTProto connectivity (no account needed)';
 
     public function handle(): int
     {
         $dcId = (int)$this->option('dc');
-        $apiId = (int)(config('teleproto.api_id') ?: $this->ask('Telegram API id'));
-        $apiHash = (string)(config('teleproto.api_hash') ?: $this->ask('Telegram API hash'));
+        $apiId = (int)(config('teleframe.api_id') ?: $this->ask('Telegram API id'));
+        $apiHash = (string)(config('teleframe.api_hash') ?: $this->ask('Telegram API hash'));
 
         $session = new SessionData(dcId: $dcId, authKey: '');
         $client = (new Client(apiId: $apiId, apiHash: $apiHash, session: $session))->live();
@@ -34,7 +34,7 @@ class DoctorCommand extends Command
         $exit = $this->probeConnectivity($client, Client::DC_IPS[$dcId] ?? Client::DC_IPS[2], Client::DEFAULT_PORT);
 
         if ($exit === 0 && $this->option('bot')) {
-            $token = (string)(config('teleproto.bot_token') ?: $this->ask('Bot token'));
+            $token = (string)(config('teleframe.bot_token') ?: $this->ask('Bot token'));
             $exit = $this->probeBotAuth($apiId, $apiHash, $token, $dcId);
         }
 

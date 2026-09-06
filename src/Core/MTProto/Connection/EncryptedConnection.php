@@ -190,7 +190,7 @@ class EncryptedConnection
             ? TLEncoder::encodeObject($constructor, $args)
             : self::buildFirstQueryBody(self::LAYER, [
                 'api_id' => $this->apiId,
-                'device_model' => 'Teleproto',
+                'device_model' => 'Teleframe',
                 'system_version' => PHP_OS . ' PHP ' . PHP_VERSION,
                 'app_version' => '1.0.0',
                 'system_lang_code' => 'en',

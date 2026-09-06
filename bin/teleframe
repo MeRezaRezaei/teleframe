@@ -4,12 +4,12 @@
 declare(strict_types=1);
 
 /*
- * Teleproto CLI - Standalone Developer Tool for Teleproto.
+ * Teleframe CLI - Standalone Developer Tool for Teleframe.
  *
  * Usage:
- *   ./bin/teleproto login   - Interactive MTProto Login Wizard (Phone, QR, Bot)
- *   ./bin/teleproto doctor  - Test live MTProto connection to Telegram DCs
- *   ./bin/teleproto poll    - Listen for incoming bot updates via long-polling
+ *   ./bin/teleframe login   - Interactive MTProto Login Wizard (Phone, QR, Bot)
+ *   ./bin/teleframe doctor  - Test live MTProto connection to Telegram DCs
+ *   ./bin/teleframe poll    - Listen for incoming bot updates via long-polling
  */
 
 $loaded = false;
@@ -21,7 +21,7 @@ foreach ([__DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php
     }
 }
 if (!$loaded) {
-    fwrite(STDERR, "Teleproto CLI: cannot find composer autoload.php. Run 'composer install' in the teleproto repo, or install the package via composer.\n");
+    fwrite(STDERR, "Teleframe CLI: cannot find composer autoload.php. Run 'composer install' in the teleframe repo, or install the package via composer.\n");
     exit(1);
 }
 
@@ -43,9 +43,9 @@ switch ($action) {
             fwrite(STDERR, "TELEGRAM_BOT_TOKEN is required in .env or environment to poll.\n");
             exit(1);
         }
-        $bot = new \MeRezaRezaei\Teleproto\Services\BotClient($token);
-        $poller = new \MeRezaRezaei\Teleproto\Services\UpdatePollerService();
-        echo "Teleproto Poller started. Listening for updates (Ctrl+C to stop)...\n";
+        $bot = new \MeRezaRezaei\Teleframe\Bot\Services\BotClient($token);
+        $poller = new \MeRezaRezaei\Teleframe\Laravel\Services\UpdatePollerService();
+        echo "Teleframe Poller started. Listening for updates (Ctrl+C to stop)...\n";
         $poller->pollBot($bot, onUpdate: function (array $update) {
             $id = $update['update_id'] ?? 0;
             $msg = $update['message']['text'] ?? '[non-text update]';
@@ -67,21 +67,21 @@ switch ($action) {
     case '-h':
     default:
         echo <<<HELP
-Teleproto CLI
+Teleframe CLI
 
 Available commands:
-  ./bin/teleproto login     Interactive MTProto Login (User Phone, QR Link, Bot)
-  ./bin/teleproto doctor    Test MTProto connection to Telegram DC2
-  ./bin/teleproto poll      Run local long-polling for Telegram bot
-  ./bin/teleproto me        Test and inspect your saved user session
-  ./bin/teleproto test-e2e  Run full live end-to-end user/bot & exception test suite
+  ./bin/teleframe login     Interactive MTProto Login (User Phone, QR Link, Bot)
+  ./bin/teleframe doctor    Test MTProto connection to Telegram DC2
+  ./bin/teleframe poll      Run local long-polling for Telegram bot
+  ./bin/teleframe me        Test and inspect your saved user session
+  ./bin/teleframe test-e2e  Run full live end-to-end user/bot & exception test suite
 
 Schema workflow (maintainers):
   1. Regenerate schema artifacts from local sources:
        php bin/generate-method-schema.php && php bin/generate-botapi-schema.php
   2. Audit / update against the live schema:
-       php artisan teleproto:schema-audit {--write}
-       php artisan teleproto:schema-update
+       php artisan teleframe:schema-audit {--write}
+       php artisan teleframe:schema-update
   3. Regenerate builders + skill files:
        php bin/generate-method-builders.php && php bin/generate-skill-files.php
 

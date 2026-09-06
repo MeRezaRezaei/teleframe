@@ -11,7 +11,7 @@ use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
  * Maps Telegram rpc_error messages (and transport-level int32 codes) to
  * typed exceptions whose hints are taken VERBATIM from the official
  * per-method "Possible errors" tables at core.telegram.org, scoped to the
- * authentication methods Teleproto implements:
+ * authentication methods Teleframe implements:
  *
  *   auth.sendCode               https://core.telegram.org/method/auth.sendCode
  *   auth.signIn                 https://core.telegram.org/method/auth.signIn

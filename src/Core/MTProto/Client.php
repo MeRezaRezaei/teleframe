@@ -44,7 +44,7 @@ class Client
     public const KEEPALIVE_IDLE_SECONDS = 45.0;
 
     protected ?array $proxyConfig = null;
-    /** Tri-state: null = defer to config('teleproto.live_mode') at first use; true/false = explicit. */
+    /** Tri-state: null = defer to config('teleframe.live_mode') at first use; true/false = explicit. */
     private ?bool $live = null;
     private ?EncryptedConnection $conn = null;
 
@@ -108,7 +108,7 @@ class Client
 
     /**
      * Resolves the tri-state live flag at first use: an explicit constructor
-     * value (or ->live()) wins; null defers to config('teleproto.live_mode')
+     * value (or ->live()) wins; null defers to config('teleframe.live_mode')
      * when running inside a Laravel app, else stays offline.
      */
     protected function isLive(): bool
@@ -127,7 +127,7 @@ class Client
             return false;
         }
         try {
-            return (bool) config('teleproto.live_mode');
+            return (bool) config('teleframe.live_mode');
         } catch (\Throwable) {
             return false;
         }

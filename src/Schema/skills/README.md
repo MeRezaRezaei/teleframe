@@ -1,9 +1,9 @@
 # skills/ — generated per-method reference for AI agents
 
-Every file in `skills/telegram-methods/` is a **generated** reference page (`<!-- @generated -->` marker) for one Telegram method on Teleproto's curated dial, distilled from the packaged schema artifacts (`schema/methods-mtproto.json`, `schema/methods-botapi.json`) and the official error database. There are two kinds:
+Every file in `skills/telegram-methods/` is a **generated** reference page (`<!-- @generated -->` marker) for one Telegram method on Teleframe's curated dial, distilled from the packaged schema artifacts (`schema/methods-mtproto.json`, `schema/methods-botapi.json`) and the official error database. There are two kinds:
 
-- **MTProto methods** (dot-names like `messages.sendMessage.md`, `auth.sendCode.md`) — callable on a user scope (`Teleproto::user()->call(...)`) or MTProto bot scope, transport `mtproto`
-- **Bot API methods** (camelCase names like `sendMessage.md`, `getMe.md`) — callable on the HTTP bot client (`Teleproto::bot()->call(...)`), transport `bot-http`
+- **MTProto methods** (dot-names like `messages.sendMessage.md`, `auth.sendCode.md`) — callable on a user scope (`Teleframe::user()->call(...)`) or MTProto bot scope, transport `mtproto`
+- **Bot API methods** (camelCase names like `sendMessage.md`, `getMe.md`) — callable on the HTTP bot client (`Teleframe::bot()->call(...)`), transport `bot-http`
 
 ## How an agent consumes a page
 
@@ -11,8 +11,8 @@ Each page has four sections, all machine-extractable:
 
 1. **Parameters** — table of `name | type | required | description`. Required rows are marked `*`. Types are schema types (`InputPeer`, `long`, `Vector<MessageEntity>`, ...); construct them as plain arrays with a `_` key, e.g. `['_' => 'inputPeerChannel', 'channel_id' => 123, 'access_hash' => 0]`.
 2. **Returns** — the expected result constructor(s).
-3. **Errors** — the official, verbatim error strings this method can emit (with `%d` placeholders where Telegram substitutes values). At runtime these arrive as typed `MeRezaRezaei\Teleproto\Exceptions\Rpc\*` exceptions; match on `$e->rpcErrorMessage`, never on the human-readable message.
-4. **Usage** — a ready-to-paste PHP snippet: build the request with the fluent builder (`Methods::...` group per the page), call `toRequest()`, then hand it to `TeleprotoClient::dispatch()`, which routes it over the correct transport automatically.
+3. **Errors** — the official, verbatim error strings this method can emit (with `%d` placeholders where Telegram substitutes values). At runtime these arrive as typed `MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\*` exceptions; match on `$e->rpcErrorMessage`, never on the human-readable message.
+4. **Usage** — a ready-to-paste PHP snippet: build the request with the fluent builder (`Methods::...` group per the page), call `toRequest()`, then hand it to `TeleframeClient::dispatch()`, which routes it over the correct transport automatically.
 
 For methods outside the dial, call them raw — `$scope->call('method.name', [...$params])` — using the same parameter shape documented here for their curated siblings, and the official schema for details.
 

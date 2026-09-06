@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Laravel;
+namespace MeRezaRezaei\Teleframe\Laravel\Providers;
 
 use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
 
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
-use MeRezaRezaei\Teleframe\Core\Http\Middleware\VerifyMiniAppInitData;
+use MeRezaRezaei\Teleframe\Laravel\Http\Middleware\VerifyMiniAppInitData;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 
-class TeleprotoServiceProvider extends ServiceProvider
+class TeleframeServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../../config/teleproto.php', 'teleproto');
+        $this->mergeConfigFrom(__DIR__ . '/../config/teleframe.php', 'teleframe');
 
         $this->app->singleton(TeleframeClient::class, function ($app) {
-            $config = $app['config']['teleproto'] ?? $app['config']['telegram'] ?? [];
+            $config = $app['config']['teleframe'] ?? $app['config']['telegram'] ?? [];
             return new TeleframeClient(
                 defaultApiId: (int)($config['api_id'] ?? 0),
                 defaultApiHash: (string)($config['api_hash'] ?? ''),
@@ -38,15 +38,15 @@ class TeleprotoServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../../config/teleproto.php' => config_path('teleproto.php'),
+                __DIR__ . '/../config/teleframe.php' => config_path('teleframe.php'),
             ], 'teleframe-config');
 
             $this->commands([
-                \MeRezaRezaei\Teleproto\Console\LoginCommand::class,
-                \MeRezaRezaei\Teleproto\Console\PollCommand::class,
-                \MeRezaRezaei\Teleproto\Console\DoctorCommand::class,
-                \MeRezaRezaei\Teleproto\Console\SchemaAuditCommand::class,
-                \MeRezaRezaei\Teleproto\Console\SchemaUpdateCommand::class,
+                \MeRezaRezaei\Teleframe\Laravel\Console\LoginCommand::class,
+                \MeRezaRezaei\Teleframe\Laravel\Console\PollCommand::class,
+                \MeRezaRezaei\Teleframe\Laravel\Console\DoctorCommand::class,
+                \MeRezaRezaei\Teleframe\Laravel\Console\SchemaAuditCommand::class,
+                \MeRezaRezaei\Teleframe\Laravel\Console\SchemaUpdateCommand::class,
             ]);
         }
 
@@ -57,7 +57,7 @@ class TeleprotoServiceProvider extends ServiceProvider
 
             // Register Route Macro for simple Webhook endpoint declaration
             $router->macro('telegramWebhook', function (string $uri = 'telegram/webhook') use ($router) {
-                return $router->post($uri, \MeRezaRezaei\Teleproto\Http\Controllers\TelegramWebhookController::class);
+                return $router->post($uri, \MeRezaRezaei\Teleframe\Laravel\Http\Controllers\TelegramWebhookController::class);
             });
         }
     }

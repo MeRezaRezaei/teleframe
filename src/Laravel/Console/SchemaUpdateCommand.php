@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Laravel\Console;
 
 use Illuminate\Console\Command;
-use MeRezaRezaei\Teleproto\Schema\SchemaDiffer;
+use MeRezaRezaei\Teleframe\Core\Schema\SchemaDiffer;
 
 /**
  * Fetches fresh upstream sources (curl, manual/CI network step), then
@@ -39,7 +39,7 @@ class SchemaUpdateCommand extends Command
             ? \Composer\InstalledVersions::getInstallPath('merezarezaei/teleframe')
             : dirname(__DIR__, 3) . '/packages/schema';
         if ($root === null || $root === '' || !is_dir($root)) {
-            throw new \RuntimeException('teleproto-schema package not installed — schema update requires the schema pipeline package.');
+            throw new \RuntimeException('teleframe schema layer not installed — schema update requires the schema pipeline package.');
         }
 
         // 1) Capture the pre-update committed artifacts before anything is written.

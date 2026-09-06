@@ -1,0 +1,15 @@
+includes:
+    - vendor/spaze/phpstan-disallowed-calls/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - src
+    disallowedFunctionCalls:
+        -
+            function: 'preg_*'
+            message: 'Regex is banned in the core teleframe engine. Use tokenizer or string funcs.'
+            allowIn:
+                - src/Laravel/*
+                - src/Schema/*
+                - src/Bot/*

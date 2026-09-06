@@ -11,9 +11,9 @@ use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
  * High-performance Bot Scope operating natively over Telegram MTProto 2.0 binary protocol.
  * Eliminates HTTP webhook/polling overhead with persistent TCP socket connections and binary TL encoding.
  *
- * @see \MeRezaRezaei\Teleproto\Services\UserAccountScope
- * @see \MeRezaRezaei\Teleproto\Types\InputPeer
- * @see \MeRezaRezaei\Teleproto\Types\InputMedia
+ * @see \MeRezaRezaei\Teleframe\Core\Services\UserAccountScope
+ * @see \MeRezaRezaei\Teleframe\Core\Types\InputPeer
+ * @see \MeRezaRezaei\Teleframe\Core\Types\InputMedia
  */
 use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
 
