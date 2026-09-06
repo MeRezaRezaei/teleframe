@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Console;
+namespace MeRezaRezaei\Teleframe\Core\Console;
 
 use Illuminate\Console\Command;
-use MeRezaRezaei\Teleproto\Facades\TP;
-use MeRezaRezaei\Teleproto\Services\UpdatePollerService;
+use MeRezaRezaei\Teleframe\Core\Facades\TP;
+use MeRezaRezaei\Teleframe\Core\Services\UpdatePollerService;
 
 /**
  * Long-polling runner for Telegram Bot updates in local development and queue workers.
@@ -14,7 +14,7 @@ use MeRezaRezaei\Teleproto\Services\UpdatePollerService;
  */
 class PollCommand extends Command
 {
-    protected $signature = 'teleproto:poll
+    protected $signature = 'teleframe:poll
                             {--bot= : Custom Bot Token to poll}
                             {--timeout=30 : Long-polling timeout in seconds}
                             {--limit=100 : Maximum updates to fetch per batch}';

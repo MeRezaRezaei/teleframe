@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Exceptions\Rpc;
+namespace MeRezaRezaei\Teleframe\Core\Exceptions\Rpc;
 
 /**
  * PASSWORD_HASH_INVALID — description verbatim from

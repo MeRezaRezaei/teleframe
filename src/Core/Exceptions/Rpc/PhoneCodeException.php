@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Exceptions\Rpc;
+namespace MeRezaRezaei\Teleframe\Core\Exceptions\Rpc;
 
 /**
  * PHONE_CODE_* errors from auth.signIn — descriptions verbatim from

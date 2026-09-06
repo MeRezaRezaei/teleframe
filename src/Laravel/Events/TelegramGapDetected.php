@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Events;
+namespace MeRezaRezaei\Teleframe\Core\Events;
 
 use Illuminate\Support\Facades\Event;
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Schema;
+namespace MeRezaRezaei\Teleframe\Core\Schema;
 
 use InvalidArgumentException;
-use MeRezaRezaei\TeleprotoSchema\SchemaArtifacts;
+use MeRezaRezaei\Teleframe\Schema\SchemaArtifacts;
 use RuntimeException;
 
 /**

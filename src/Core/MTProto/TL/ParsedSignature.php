@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\MTProto\TL;
+namespace MeRezaRezaei\Teleframe\Core\MTProto\TL;
 
 /**
  * Immutable parse result of one canonical TL line. Built only by TLSignatureParser.

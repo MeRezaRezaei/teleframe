@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Exceptions\Rpc;
+namespace MeRezaRezaei\Teleframe\Core\Exceptions\Rpc;
 
 /**
  * AUTH_KEY_UNREGISTERED / AUTH_KEY_INVALID / SESSION_REVOKED /

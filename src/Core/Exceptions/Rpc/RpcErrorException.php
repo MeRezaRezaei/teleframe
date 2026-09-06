@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Exceptions\Rpc;
+namespace MeRezaRezaei\Teleframe\Core\Exceptions\Rpc;
 
-use MeRezaRezaei\Teleproto\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
 
 /**
  * Base class for Telegram RPC errors (rpc_error) with the raw TL error

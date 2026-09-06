@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\MTProto\Crypto;
+namespace MeRezaRezaei\Teleframe\Core\MTProto\Crypto;
 
-use MeRezaRezaei\Teleproto\MTProto\Connection\PlainConnection;
-use MeRezaRezaei\Teleproto\MTProto\SessionData;
-use MeRezaRezaei\Teleproto\MTProto\TL\TLDecoder;
-use MeRezaRezaei\Teleproto\MTProto\TL\TLEncoder;
-use MeRezaRezaei\Teleproto\MTProto\TL\TLSerializer;
+use MeRezaRezaei\Teleframe\Core\MTProto\Connection\PlainConnection;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLDecoder;
+use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLEncoder;
+use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLSerializer;
 use phpseclib3\Crypt\PublicKeyLoader;
 use phpseclib3\Crypt\RSA;
 use phpseclib3\File\ASN1;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Support;
+namespace MeRezaRezaei\Teleframe\Core\Support;
 
 /**
  * Tiny .env reader/writer for CLI flows. Laravel has no official .env

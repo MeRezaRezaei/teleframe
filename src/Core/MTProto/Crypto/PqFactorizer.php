@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\MTProto\Crypto;
+namespace MeRezaRezaei\Teleframe\Core\MTProto\Crypto;
 
 use phpseclib3\Math\BigInteger;
 use RuntimeException;

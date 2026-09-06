@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Http\Controllers;
+namespace MeRezaRezaei\Teleframe\Core\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use MeRezaRezaei\Teleproto\Events\TelegramUpdateReceived;
+use MeRezaRezaei\Teleframe\Core\Events\TelegramUpdateReceived;
 
 /**
  * Standard, low-overhead Telegram Webhook intake controller.

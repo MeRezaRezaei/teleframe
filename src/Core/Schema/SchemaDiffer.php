@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Schema;
+namespace MeRezaRezaei\Teleframe\Core\Schema;
 
 /**
  * Compares two canonical schema artifacts (the decoded methods-*.json

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\MTProto\TL\Schema;
+namespace MeRezaRezaei\Teleframe\Core\MTProto\TL\Schema;
 
 /**
  * Constructor closure for Teleproto's documented scope methods (layer 227).

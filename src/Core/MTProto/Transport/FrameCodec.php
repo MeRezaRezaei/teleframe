@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\MTProto\Transport;
+namespace MeRezaRezaei\Teleframe\Core\MTProto\Transport;
 
 use RuntimeException;
 

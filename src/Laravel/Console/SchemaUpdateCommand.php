@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Console;
+namespace MeRezaRezaei\Teleframe\Core\Console;
 
 use Illuminate\Console\Command;
 use MeRezaRezaei\Teleproto\Schema\SchemaDiffer;
@@ -20,7 +20,7 @@ use MeRezaRezaei\Teleproto\Schema\SchemaDiffer;
  */
 class SchemaUpdateCommand extends Command
 {
-    protected $signature = 'teleproto:schema-update';
+    protected $signature = 'teleframe:schema-update';
 
     protected $description = 'Fetch upstream schema sources, regenerate artifacts, and report the diff vs the committed ones';
 

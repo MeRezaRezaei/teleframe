@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Services;
+namespace MeRezaRezaei\Teleframe\Core\Services;
 
-use MeRezaRezaei\Teleproto\Exceptions\DcMigrationException;
-use MeRezaRezaei\Teleproto\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\Exceptions\DcMigrationException;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
 use RuntimeException;
 
 /**
  * Service for Telegram MTProto 2.0 User & Bot Authentication workflows.
  * Fully decoupled from CLI so it can be invoked from Controllers, Livewire, Queue Jobs, or Artisan commands.
  */
-class TeleprotoAuthService
+class TeleframeAuthService
 {
-    protected TeleprotoClient $client;
+    protected TeleframeClient $client;
 
     protected bool $live;
 
-    public function __construct(?TeleprotoClient $client = null, bool $live = true)
+    public function __construct(?TeleframeClient $client = null, bool $live = true)
     {
-        $this->client = $client ?? new TeleprotoClient();
+        $this->client = $client ?? new TeleframeClient();
         $this->live = $live;
     }
 
@@ -239,9 +239,9 @@ class TeleprotoAuthService
             if ($name === 'auth.loginTokenSuccess') {
                 return (array)$res['authorization'];
             }
-            throw new RuntimeException('TeleprotoAuthService: unexpected QR login response ' . $name);
+            throw new RuntimeException('TeleframeAuthService: unexpected QR login response ' . $name);
         }
-        throw new RuntimeException('TeleprotoAuthService: QR login timed out after ' . $timeoutSeconds . 's');
+        throw new RuntimeException('TeleframeAuthService: QR login timed out after ' . $timeoutSeconds . 's');
     }
 
     /**
@@ -260,6 +260,6 @@ class TeleprotoAuthService
         if ($name === 'auth.loginTokenSuccess') {
             return (array)$res['authorization'];
         }
-        throw new RuntimeException('TeleprotoAuthService: unexpected importLoginToken response ' . $name);
+        throw new RuntimeException('TeleframeAuthService: unexpected importLoginToken response ' . $name);
     }
 }

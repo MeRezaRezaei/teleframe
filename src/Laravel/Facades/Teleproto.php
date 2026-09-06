@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Facades;
+namespace MeRezaRezaei\Teleframe\Core\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use MeRezaRezaei\Teleproto\MTProto\SessionData;
-use MeRezaRezaei\Teleproto\Services\BotClient;
-use MeRezaRezaei\Teleproto\Services\TeleprotoClient;
-use MeRezaRezaei\Teleproto\Services\UserAccountScope;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\Services\BotClient;
+use MeRezaRezaei\Teleframe\Core\Services\TeleframeClient;
+use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
 
 /**
  * Main Teleproto Facade for Laravel.
@@ -19,7 +19,7 @@ use MeRezaRezaei\Teleproto\Services\UserAccountScope;
  * @method static BotClient bot(?string $botToken = null, ?array $proxyConfig = null) Connect as a Telegram Bot over HTTP Bot API.
  * @method static \MeRezaRezaei\Teleproto\Services\BotAccountScope botMtproto(?string $botToken = null, string|SessionData|null $session = null, int $dcId = 2, ?int $apiId = null, ?string $apiHash = null, ?array $proxyConfig = null) Connect as a Telegram Bot directly over high-speed binary MTProto 2.0.
  *
- * @see \MeRezaRezaei\Teleproto\Services\TeleprotoClient
+ * @see \MeRezaRezaei\Teleproto\Services\TeleframeClient
  * @see \MeRezaRezaei\Teleproto\Services\UserAccountScope
  * @see \MeRezaRezaei\Teleproto\Services\BotClient
  * @see \MeRezaRezaei\Teleproto\Types\InputPeer
@@ -33,6 +33,6 @@ class Teleproto extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return TeleprotoClient::class;
+        return TeleframeClient::class;
     }
 }

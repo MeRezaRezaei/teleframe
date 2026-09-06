@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Services;
+namespace MeRezaRezaei\Teleframe\Core\Services;
 
 use Closure;
-use MeRezaRezaei\Teleproto\Contracts\UpdateSinkInterface;
-use MeRezaRezaei\Teleproto\Events\TelegramGapDetected;
-use MeRezaRezaei\Teleproto\Events\TelegramResynced;
-use MeRezaRezaei\Teleproto\Exceptions\Rpc\FloodWaitException;
-use MeRezaRezaei\Teleproto\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Core\Contracts\UpdateSinkInterface;
+use MeRezaRezaei\Teleframe\Core\Events\TelegramGapDetected;
+use MeRezaRezaei\Teleframe\Core\Events\TelegramResynced;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\FloodWaitException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
 use Throwable;
 use UnexpectedValueException;
 

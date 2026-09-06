@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\MTProto;
+namespace MeRezaRezaei\Teleframe\Core\MTProto;
 
-use MeRezaRezaei\Teleproto\Exceptions\TelegramException;
-use MeRezaRezaei\Teleproto\MTProto\Connection\EncryptedConnection;
-use MeRezaRezaei\Teleproto\MTProto\Connection\PlainConnection;
-use MeRezaRezaei\Teleproto\MTProto\Crypto\AesIge;
-use MeRezaRezaei\Teleproto\MTProto\Crypto\AuthKeyFactory;
-use MeRezaRezaei\Teleproto\MTProto\Crypto\PasswordCalculator;
-use MeRezaRezaei\Teleproto\MTProto\TL\TLEncoder;
-use MeRezaRezaei\Teleproto\MTProto\TL\TLSerializer;
-use MeRezaRezaei\Teleproto\MTProto\Transport\FrameCodec;
-use MeRezaRezaei\Teleproto\MTProto\Transport\StreamSocket;
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Core\MTProto\Connection\EncryptedConnection;
+use MeRezaRezaei\Teleframe\Core\MTProto\Connection\PlainConnection;
+use MeRezaRezaei\Teleframe\Core\MTProto\Crypto\AesIge;
+use MeRezaRezaei\Teleframe\Core\MTProto\Crypto\AuthKeyFactory;
+use MeRezaRezaei\Teleframe\Core\MTProto\Crypto\PasswordCalculator;
+use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLEncoder;
+use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLSerializer;
+use MeRezaRezaei\Teleframe\Core\MTProto\Transport\FrameCodec;
+use MeRezaRezaei\Teleframe\Core\MTProto\Transport\StreamSocket;
 use RuntimeException;
 use Throwable;
 

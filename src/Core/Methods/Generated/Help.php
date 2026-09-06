@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Methods\Generated;
+namespace MeRezaRezaei\Teleframe\Core\Methods\Generated;
 
 /**
  * mtproto help.* curated method builders.

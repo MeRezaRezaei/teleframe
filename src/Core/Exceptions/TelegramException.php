@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Exceptions;
+namespace MeRezaRezaei\Teleframe\Core\Exceptions;
 
 use RuntimeException;
 

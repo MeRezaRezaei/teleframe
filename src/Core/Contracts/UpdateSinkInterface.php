@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Contracts;
+namespace MeRezaRezaei\Teleframe\Core\Contracts;
 
 /**
  * Contract for consuming and dispatching raw incoming Telegram updates.

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Console;
+namespace MeRezaRezaei\Teleframe\Core\Console;
 
 use Illuminate\Console\Command;
-use MeRezaRezaei\Teleproto\MTProto\Client;
-use MeRezaRezaei\Teleproto\MTProto\SessionData;
-use MeRezaRezaei\Teleproto\Services\TeleprotoAuthService;
+use MeRezaRezaei\Teleframe\Core\MTProto\Client;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\Services\TeleframeAuthService;
 use Throwable;
 
 /**
@@ -16,7 +16,7 @@ use Throwable;
  */
 class DoctorCommand extends Command
 {
-    protected $signature = 'teleproto:doctor
+    protected $signature = 'teleframe:doctor
                             {--bot : Also verify bot MTProto authorization}
                             {--dc=2 : Target Telegram Data Center ID (1-5)}';
 
@@ -65,7 +65,7 @@ class DoctorCommand extends Command
     protected function probeBotAuth(int $apiId, string $apiHash, string $token, int $dcId): int
     {
         try {
-            $auth = app(TeleprotoAuthService::class);
+            $auth = app(TeleframeAuthService::class);
             $auth->loginBot($token, $apiId, $apiHash, $dcId);
             $this->components->info('OK bot MTProto authorization (session generated)');
             return 0;

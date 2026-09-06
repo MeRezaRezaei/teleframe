@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Console;
+namespace MeRezaRezaei\Teleframe\Core\Console;
 
 use Composer\InstalledVersions;
 use Illuminate\Console\Command;
@@ -20,7 +20,7 @@ use RuntimeException;
  */
 class SchemaAuditCommand extends Command
 {
-    protected $signature = 'teleproto:schema-audit
+    protected $signature = 'teleframe:schema-audit
                             {--write : Save the markdown report to schema/audit-report.md}';
 
     protected $description = 'Diff committed method schemas against a fresh regeneration from the committed sources';

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Http\Middleware;
+namespace MeRezaRezaei\Teleframe\Core\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;

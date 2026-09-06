@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Support;
+namespace MeRezaRezaei\Teleframe\Core\Support;
 
 use chillerlan\QRCode\Common\Mode;
 use chillerlan\QRCode\Data\QRMatrix;

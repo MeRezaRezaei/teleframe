@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\MTProto;
+namespace MeRezaRezaei\Teleframe\Core\MTProto;
 
 use InvalidArgumentException;
 

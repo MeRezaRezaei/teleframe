@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\MTProto\TL;
+namespace MeRezaRezaei\Teleframe\Core\MTProto\TL;
 
 use InvalidArgumentException;
 
@@ -184,7 +184,7 @@ class TLRegistry
         // documentAttributeVideo fields overrunning into string bytes).
         foreach (['api_full.tl', 'mtproto_full.tl'] as $file) {
             try {
-                $path = \MeRezaRezaei\TeleprotoSchema\SchemaArtifacts::source($file);
+                $path = \MeRezaRezaei\Teleframe\Schema\SchemaArtifacts::source($file);
             } catch (\Throwable) {
                 $path = __DIR__ . '/../../../schema/sources/' . $file;
             }

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Services;
+namespace MeRezaRezaei\Teleframe\Core\Services;
 
-use MeRezaRezaei\Teleproto\MTProto\Client as MTProtoClient;
-use MeRezaRezaei\Teleproto\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\MTProto\Client as MTProtoClient;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
 
 /**
  * High-performance Bot Scope operating natively over Telegram MTProto 2.0 binary protocol.

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Services;
+namespace MeRezaRezaei\Teleframe\Core\Services;
 
-use MeRezaRezaei\Teleproto\MTProto\Client as MTProtoClient;
-use MeRezaRezaei\Teleproto\MTProto\SessionData;
-use MeRezaRezaei\Teleproto\Types\InputChannel;
-use MeRezaRezaei\Teleproto\Types\InputUser;
+use MeRezaRezaei\Teleframe\Core\MTProto\Client as MTProtoClient;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\Types\InputChannel;
+use MeRezaRezaei\Teleframe\Core\Types\InputUser;
 
 /**
  * Scoped User MTProto operations with typed helper methods and full PHPDoc method mappings.

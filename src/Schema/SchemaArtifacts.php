@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\TeleprotoSchema;
+namespace MeRezaRezaei\Teleframe\Schema;
 
 use Composer\InstalledVersions;
 use InvalidArgumentException;

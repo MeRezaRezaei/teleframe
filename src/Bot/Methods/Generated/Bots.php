@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Methods\Generated;
+namespace MeRezaRezaei\Teleframe\Core\Methods\Generated;
 
 /**
  * Bot API (bot-http) curated method builders.

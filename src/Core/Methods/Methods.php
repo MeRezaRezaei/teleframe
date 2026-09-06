@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Methods;
+namespace MeRezaRezaei\Teleframe\Core\Methods;
 
 use BadMethodCallException;
-use MeRezaRezaei\Teleproto\Methods\Generated\Account;
-use MeRezaRezaei\Teleproto\Methods\Generated\Auth;
-use MeRezaRezaei\Teleproto\Methods\Generated\Contacts;
-use MeRezaRezaei\Teleproto\Methods\Generated\Help;
-use MeRezaRezaei\Teleproto\Methods\Generated\Messages;
-use MeRezaRezaei\Teleproto\Methods\Generated\Users;
+use MeRezaRezaei\Teleframe\Core\Methods\Generated\Account;
+use MeRezaRezaei\Teleframe\Core\Methods\Generated\Auth;
+use MeRezaRezaei\Teleframe\Core\Methods\Generated\Contacts;
+use MeRezaRezaei\Teleframe\Core\Methods\Generated\Help;
+use MeRezaRezaei\Teleframe\Core\Methods\Generated\Messages;
+use MeRezaRezaei\Teleframe\Core\Methods\Generated\Users;
 
 /**
  * Entry point for the curated fluent request builders.

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Exceptions\Rpc;
+namespace MeRezaRezaei\Teleframe\Core\Exceptions\Rpc;
 
-use MeRezaRezaei\Teleproto\Exceptions\DcMigrationException;
-use MeRezaRezaei\Teleproto\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\DcMigrationException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
 
 /**
  * Maps Telegram rpc_error messages (and transport-level int32 codes) to

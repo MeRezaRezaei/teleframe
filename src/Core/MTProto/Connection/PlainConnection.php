@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\MTProto\Connection;
+namespace MeRezaRezaei\Teleframe\Core\MTProto\Connection;
 
-use MeRezaRezaei\Teleproto\MTProto\Crypto\PacketCodec;
-use MeRezaRezaei\Teleproto\MTProto\Transport\FrameCodec;
-use MeRezaRezaei\Teleproto\MTProto\Transport\StreamSocket;
+use MeRezaRezaei\Teleframe\Core\MTProto\Crypto\PacketCodec;
+use MeRezaRezaei\Teleframe\Core\MTProto\Transport\FrameCodec;
+use MeRezaRezaei\Teleframe\Core\MTProto\Transport\StreamSocket;
 use RuntimeException;
 
 /**

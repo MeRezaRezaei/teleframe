@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Console;
+namespace MeRezaRezaei\Teleframe\Core\Console;
 
 use Illuminate\Console\Command;
-use MeRezaRezaei\Teleproto\Exceptions\TelegramException;
-use MeRezaRezaei\Teleproto\MTProto\SessionData;
-use MeRezaRezaei\Teleproto\Services\TeleprotoAuthService;
-use MeRezaRezaei\Teleproto\Support\TerminalQr;
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\Services\TeleframeAuthService;
+use MeRezaRezaei\Teleframe\Core\Support\TerminalQr;
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
 /**
  * Interactive Telegram MTProto Login Command for Laravel CLI.
- * Thin presentation layer delegating authentication logic to `TeleprotoAuthService`.
+ * Thin presentation layer delegating authentication logic to `TeleframeAuthService`.
  */
 class LoginCommand extends Command
 {
-    protected $signature = 'teleproto:login
+    protected $signature = 'teleframe:login
                             {--bot : Authenticate a Bot token over MTProto}
                             {--qr : Authenticate user account by scanning a QR Code}
                             {--phone= : Phone number with country code (e.g. +1234567890)}
@@ -27,7 +27,7 @@ class LoginCommand extends Command
 
     protected $description = 'Interactive Telegram MTProto 2.0 Login (User Phone, QR Code Scan, or Bot Token)';
 
-    public function handle(TeleprotoAuthService $authService): int
+    public function handle(TeleframeAuthService $authService): int
     {
         $this->components->info('Teleproto MTProto 2.0 Authentication Wizard');
 
@@ -75,7 +75,7 @@ class LoginCommand extends Command
         };
     }
 
-    protected function handlePhoneLogin(TeleprotoAuthService $authService, int $apiId, string $apiHash, int $dcId): int
+    protected function handlePhoneLogin(TeleframeAuthService $authService, int $apiId, string $apiHash, int $dcId): int
     {
         $phone = (string) ($this->option('phone') ?: text(
             'Phone number (international)',
@@ -115,7 +115,7 @@ class LoginCommand extends Command
         }
     }
 
-    protected function handleQrLogin(TeleprotoAuthService $authService, int $apiId, string $apiHash, int $dcId): int
+    protected function handleQrLogin(TeleframeAuthService $authService, int $apiId, string $apiHash, int $dcId): int
     {
         $this->components->info('Initializing QR Code Login session...');
 
@@ -139,7 +139,7 @@ class LoginCommand extends Command
         }
     }
 
-    protected function handleBotLogin(TeleprotoAuthService $authService, int $apiId, string $apiHash, int $dcId): int
+    protected function handleBotLogin(TeleframeAuthService $authService, int $apiId, string $apiHash, int $dcId): int
     {
         $botToken = (string)(config('teleproto.bot_token') ?: text('Bot token (from @BotFather)', placeholder: '123456:ABC-DEF...', required: true));
         if (empty($botToken)) {
@@ -161,7 +161,7 @@ class LoginCommand extends Command
         return $this->finalizeLogin($session, 'TELEGRAM_BOT_SESSION', 'Bot Account (MTProto)');
     }
 
-    protected function handle2faStep(TeleprotoAuthService $authService, $userScope, SessionData $session, string $envKey, string $label): int
+    protected function handle2faStep(TeleframeAuthService $authService, $userScope, SessionData $session, string $envKey, string $label): int
     {
         $this->components->warn('🔒 Two-Step Verification (2FA Cloud Password) is enabled on this account.');
         $password = password('2FA Cloud Password');

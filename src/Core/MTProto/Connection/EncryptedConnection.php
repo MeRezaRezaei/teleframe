@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\MTProto\Connection;
+namespace MeRezaRezaei\Teleframe\Core\MTProto\Connection;
 
-use MeRezaRezaei\Teleproto\Exceptions\Rpc\RpcExceptionResolver;
-use MeRezaRezaei\Teleproto\Exceptions\TelegramException;
-use MeRezaRezaei\Teleproto\MTProto\Crypto\PacketCodec;
-use MeRezaRezaei\Teleproto\MTProto\SessionData;
-use MeRezaRezaei\Teleproto\MTProto\TL\TLDecoder;
-use MeRezaRezaei\Teleproto\MTProto\TL\TLEncoder;
-use MeRezaRezaei\Teleproto\MTProto\TL\TLRegistry;
-use MeRezaRezaei\Teleproto\MTProto\TL\TLSerializer;
-use MeRezaRezaei\Teleproto\MTProto\Transport\FrameCodec;
-use MeRezaRezaei\Teleproto\MTProto\Transport\StreamSocket;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\RpcExceptionResolver;
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Core\MTProto\Crypto\PacketCodec;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLDecoder;
+use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLEncoder;
+use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLRegistry;
+use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLSerializer;
+use MeRezaRezaei\Teleframe\Core\MTProto\Transport\FrameCodec;
+use MeRezaRezaei\Teleframe\Core\MTProto\Transport\StreamSocket;
 use RuntimeException;
 
 /**

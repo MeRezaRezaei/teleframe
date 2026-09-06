@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Services;
+namespace MeRezaRezaei\Teleframe\Core\Services;
 
-use MeRezaRezaei\Teleproto\Contracts\UpdateSinkInterface;
-use MeRezaRezaei\Teleproto\Events\TelegramUpdateReceived;
+use MeRezaRezaei\Teleframe\Core\Contracts\UpdateSinkInterface;
+use MeRezaRezaei\Teleframe\Core\Events\TelegramUpdateReceived;
 
 /**
  * Default UpdateSink that dispatches the Laravel `TelegramUpdateReceived` event.

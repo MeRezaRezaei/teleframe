@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Services;
+namespace MeRezaRezaei\Teleframe\Core\Services;
 
 use Illuminate\Http\Client\Factory as HttpFactory;
-use MeRezaRezaei\Teleproto\Exceptions\TelegramException;
-use MeRezaRezaei\Teleproto\Types\InlineKeyboard;
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Core\Types\InlineKeyboard;
 use RuntimeException;
 
 /**

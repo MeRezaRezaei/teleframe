@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Media;
+namespace MeRezaRezaei\Teleframe\Core\Media;
 
 use Generator;
 use Illuminate\Contracts\Filesystem\Filesystem;

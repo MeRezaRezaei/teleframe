@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Facades;
+namespace MeRezaRezaei\Teleframe\Core\Facades;
 
 /**
  * Short Developer Alias for Teleproto Facade (`TP::user(...)`, `TP::bot(...)`).

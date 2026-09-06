@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Passport;
+namespace MeRezaRezaei\Teleframe\Core\Passport;
 
 use RuntimeException;
 

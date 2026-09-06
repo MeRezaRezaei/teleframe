@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Types;
+namespace MeRezaRezaei\Teleframe\Core\Types;
 
 /**
  * Fluent builder for Telegram Custom Reply Keyboard Markup (`reply_markup`).

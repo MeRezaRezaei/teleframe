@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\MTProto\TL;
+namespace MeRezaRezaei\Teleframe\Core\MTProto\TL;
 
 /**
  * Base abstract class for all MTProto Type Language (TL) Objects.

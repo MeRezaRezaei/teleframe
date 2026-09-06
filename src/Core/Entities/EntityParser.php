@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Entities;
+namespace MeRezaRezaei\Teleframe\Core\Entities;
 
 use DOMDocument;
 use DOMElement;

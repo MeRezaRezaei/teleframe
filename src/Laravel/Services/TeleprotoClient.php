@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto\Services;
+namespace MeRezaRezaei\Teleframe\Core\Services;
 
 use Illuminate\Http\Client\Factory as HttpFactory;
-use MeRezaRezaei\Teleproto\MTProto\Client as MTProtoClient;
-use MeRezaRezaei\Teleproto\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\MTProto\Client as MTProtoClient;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
 use MeRezaRezaei\Teleproto\Schema\MethodRegistry;
 use RuntimeException;
 
@@ -14,7 +14,7 @@ use RuntimeException;
  * High-level Laravel Telegram Client Manager.
  * Supports multi-tenant runtime API credentials, user sessions, and bot accounts.
  */
-class TeleprotoClient
+class TeleframeClient
 {
     private ?HttpFactory $http = null;
 

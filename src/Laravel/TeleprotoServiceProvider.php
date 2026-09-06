@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleproto;
+namespace MeRezaRezaei\Teleframe\Core;
 
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
-use MeRezaRezaei\Teleproto\Http\Middleware\VerifyMiniAppInitData;
-use MeRezaRezaei\Teleproto\Services\TeleprotoAuthService;
-use MeRezaRezaei\Teleproto\Services\TeleprotoClient;
+use MeRezaRezaei\Teleframe\Core\Http\Middleware\VerifyMiniAppInitData;
+use MeRezaRezaei\Teleframe\Core\Services\TeleframeAuthService;
+use MeRezaRezaei\Teleframe\Core\Services\TeleframeClient;
 
 class TeleprotoServiceProvider extends ServiceProvider
 {
@@ -16,9 +16,9 @@ class TeleprotoServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/teleproto.php', 'teleproto');
 
-        $this->app->singleton(TeleprotoClient::class, function ($app) {
+        $this->app->singleton(TeleframeClient::class, function ($app) {
             $config = $app['config']['teleproto'] ?? $app['config']['telegram'] ?? [];
-            return new TeleprotoClient(
+            return new TeleframeClient(
                 defaultApiId: (int)($config['api_id'] ?? 0),
                 defaultApiHash: (string)($config['api_hash'] ?? ''),
                 defaultBotToken: $config['bot_token'] ?? $config['default_bot_token'] ?? null,
@@ -29,7 +29,7 @@ class TeleprotoServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->singleton(TeleprotoAuthService::class);
+        $this->app->singleton(TeleframeAuthService::class);
     }
 
     public function boot(): void
@@ -37,7 +37,7 @@ class TeleprotoServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../config/teleproto.php' => config_path('teleproto.php'),
-            ], 'teleproto-config');
+            ], 'teleframe-config');
 
             $this->commands([
                 \MeRezaRezaei\Teleproto\Console\LoginCommand::class,
