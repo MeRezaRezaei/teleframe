@@ -13,6 +13,7 @@
             "MeRezaRezaei\\Teleproto\\MTProto\\": "src/MTProto",
             "MeRezaRezaei\\Teleproto\\Passport\\": "src/Passport",
             "MeRezaRezaei\\Teleproto\\Schema\\": "src/Schema",
+            "MeRezaRezaei\\Teleproto\\Services\\": "src/Services",
             "MeRezaRezaei\\Teleproto\\Support\\": "src/Support",
             "MeRezaRezaei\\Teleproto\\Types\\": "src/Types"
         }

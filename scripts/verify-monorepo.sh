@@ -24,8 +24,8 @@ for pkg in core schema laravel bot; do
     composer test --working-dir="packages/${pkg}"
 done
 
-step "phpstan x3"
-for pkg in core schema laravel; do
+step "phpstan x4"
+for pkg in core schema laravel bot; do
     composer analyse --working-dir="packages/${pkg}"
 done
 
