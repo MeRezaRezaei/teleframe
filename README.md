@@ -15,7 +15,18 @@
 
 You need to send a message, verify a Mini App, decrypt Passport KYC, run a bot, fetch a file — **occasionally**, inside a Laravel app that is about something else. You should not have to adopt a Telegram framework to do it.
 
-- **One composer package, not a framework.** Native MTProto 2.0, Bot API (HTTP), Mini App HMAC auth, Passport KYC decryption, and Storage-backed file streaming — no event loop, no daemon, no IPC.
+- **Scoped composer packages, not a framework.** Native MTProto 2.0, Bot API (HTTP), Mini App HMAC auth, Passport KYC decryption, and Storage-backed file streaming — no event loop, no daemon, no IPC.
+
+| Package | Concern | Illuminate deps |
+|---|---|---|
+| `merezarezaei/teleproto-core` | MTProto 2.0 wire engine: transport, crypto, TL codec, method registry, types, exceptions | none |
+| `merezarezaei/teleproto-schema` | Schema pipeline: TL sources, packaged artifacts, code generators, generated skill docs | none |
+| `merezarezaei/teleproto-laravel` | Laravel glue: clients, auth, polling, events, webhooks, console, facades | illuminate/* |
+| `merezarezaei/teleproto-bot` | Bot API HTTP surface: BotClient, BotAccountScope, Bots builders | illuminate/http |
+
+Attach rule: depend on the highest package whose concern you need — core alone speaks
+raw MTProto; +laravel gives framed Laravel integration; +bot adds the HTTP Bot API;
+schema is pulled in transitively by core and only needed directly when regenerating.
 - **Stateless session strings.** Auth lives in a portable base64 string (`.env` or your DB). No session files, no SQLite, no disk locks. The handshake happened once, ever — it is inside the session string.
 - **Typed errors and AI-shaped docs.** Every RPC error resolves to a typed exception carrying Telegram's official error-database hint, and the `skills/` directory gives AI agents a per-method reference they can drive the package from.
 
@@ -25,7 +36,7 @@ You need to send a message, verify a Mini App, decrypt Passport KYC, run a bot, 
 
 | | **teleproto** | MadelineProto | TDLib |
 | :--- | :--- | :--- | :--- |
-| **Footprint** | One composer package | Full amphp-based framework | Native C++ library + bindings |
+| **Footprint** | Modular composer packages | Full amphp-based framework | Native C++ library + bindings |
 | **Session model** | Stateless string in `.env`/DB | Session files on disk | Own local database |
 | **Daemon / event loop** | None — plain blocking calls | amphp event loop | TDLib client process |
 | **Learning curve** | Facade + `.env` | Event loop, wrappers, IPC | Auth state machine, build steps |
@@ -149,7 +160,7 @@ $user = TP::fromSession(Crypt::decryptString($userModel->telegram_session));
 ## Zero-friction install
 
 ```bash
-composer require merezarezaei/teleproto
+composer require merezarezaei/teleproto-laravel
 php artisan vendor:publish --tag="teleproto-config"
 ```
 

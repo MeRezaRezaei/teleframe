@@ -2,6 +2,17 @@
 
 > Unified Telegram engine for PHP >= 8.2 / Laravel 10-12: user accounts and bots over native MTProto 2.0 binary TCP (Layer 227 wire, Layer 229 schema catalog), bots over HTTP Bot API, fluent request builders, typed RPC exceptions with official hints, update polling with gap/resync handling. Arrays in, arrays out.
 
+## Architecture
+
+| Package | Concern | Illuminate deps |
+|---|---|---|
+| `merezarezaei/teleproto-core` | MTProto 2.0 wire engine: transport, crypto, TL codec, method registry, types, exceptions | none |
+| `merezarezaei/teleproto-schema` | Schema pipeline: TL sources, packaged artifacts, code generators, generated skill docs | none |
+| `merezarezaei/teleproto-laravel` | Laravel glue: clients, auth, polling, events, webhooks, console, facades | illuminate/* |
+| `merezarezaei/teleproto-bot` | Bot API HTTP surface: BotClient, BotAccountScope, Bots builders | illuminate/http |
+
+Attach rule: depend on the highest package whose concern you need — core alone speaks raw MTProto; +laravel gives framed Laravel integration; +bot adds the HTTP Bot API; schema is pulled in transitively by core and only needed directly when regenerating.
+
 ## Docs
 
 - [README](README.md): human-oriented overview, install, login wizard, code samples
@@ -14,7 +25,7 @@
 
 ## Quickstart
 
-Install: `composer require merezarezaei/teleproto` (Laravel: `php artisan vendor:publish --tag="teleproto-config"`). The engine also boots standalone — `new TeleprotoClient(defaultApiId: ..., defaultApiHash: ...)` — facades, artisan commands, and the webhook route macro are Laravel-only.
+Install: `composer require merezarezaei/teleproto-laravel` (Laravel: `php artisan vendor:publish --tag="teleproto-config"`). The engine also boots standalone — `new TeleprotoClient(defaultApiId: ..., defaultApiHash: ...)` — facades, artisan commands, and the webhook route macro are Laravel-only. Bare MTProto via `teleproto-core` is available for framework-free usage.
 
 .env keys (config/teleproto.php):
 
