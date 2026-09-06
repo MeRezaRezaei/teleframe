@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Core\Events;
+namespace MeRezaRezaei\Teleframe\Laravel\Events;
 
 use Illuminate\Support\Facades\Event;
 

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Core\Facades;
+namespace MeRezaRezaei\Teleframe\Laravel\Facades;
 
 use Illuminate\Support\Facades\Facade;
 use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
 use MeRezaRezaei\Teleframe\Core\Services\BotClient;
-use MeRezaRezaei\Teleframe\Core\Services\TeleframeClient;
+use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
 
 /**

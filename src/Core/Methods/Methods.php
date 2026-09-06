@@ -11,6 +11,7 @@ use MeRezaRezaei\Teleframe\Core\Methods\Generated\Contacts;
 use MeRezaRezaei\Teleframe\Core\Methods\Generated\Help;
 use MeRezaRezaei\Teleframe\Core\Methods\Generated\Messages;
 use MeRezaRezaei\Teleframe\Core\Methods\Generated\Users;
+use MeRezaRezaei\Teleframe\Bot\Methods\Generated\Bots;
 
 /**
  * Entry point for the curated fluent request builders.
@@ -59,7 +60,7 @@ final class Methods
      */
     public static function __callStatic(string $name, array $arguments): object
     {
-        $class = 'MeRezaRezaei\\Teleproto\\Methods\\Generated\\' . ucfirst($name);
+        $class = ($name === 'bots' ? 'MeRezaRezaei\\Teleframe\\Bot\\Methods\\Generated\\Bots' : 'MeRezaRezaei\\Teleframe\\Core\\Methods\\Generated\\' . ucfirst($name));
         if (class_exists($class)) {
             return new $class();
         }

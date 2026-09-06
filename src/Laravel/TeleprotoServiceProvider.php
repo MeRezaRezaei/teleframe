@@ -2,19 +2,21 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Core;
+namespace MeRezaRezaei\Teleframe\Laravel;
+
+use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
 
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use MeRezaRezaei\Teleframe\Core\Http\Middleware\VerifyMiniAppInitData;
-use MeRezaRezaei\Teleframe\Core\Services\TeleframeAuthService;
-use MeRezaRezaei\Teleframe\Core\Services\TeleframeClient;
+use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
+use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 
 class TeleprotoServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/teleproto.php', 'teleproto');
+        $this->mergeConfigFrom(__DIR__ . '/../../config/teleproto.php', 'teleproto');
 
         $this->app->singleton(TeleframeClient::class, function ($app) {
             $config = $app['config']['teleproto'] ?? $app['config']['telegram'] ?? [];
@@ -36,7 +38,7 @@ class TeleprotoServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/teleproto.php' => config_path('teleproto.php'),
+                __DIR__ . '/../../config/teleproto.php' => config_path('teleproto.php'),
             ], 'teleframe-config');
 
             $this->commands([

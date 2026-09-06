@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Core\Services;
+namespace MeRezaRezaei\Teleframe\Bot\Services;
 
 use MeRezaRezaei\Teleframe\Core\MTProto\Client as MTProtoClient;
 use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
@@ -15,6 +15,8 @@ use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
  * @see \MeRezaRezaei\Teleproto\Types\InputPeer
  * @see \MeRezaRezaei\Teleproto\Types\InputMedia
  */
+use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
+
 class BotAccountScope extends UserAccountScope
 {
     public function __construct(

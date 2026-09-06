@@ -174,7 +174,7 @@ class TLRegistry
             self::register($line);
         }
         // Full constructor closure for the documented scope methods (layer 227)
-        foreach (\MeRezaRezaei\Teleproto\MTProto\TL\Schema\UserScopeSchema::LINES as $line) {
+        foreach (\MeRezaRezaei\Teleframe\Core\MTProto\TL\Schema\UserScopeSchema::LINES as $line) {
             self::register($line);
         }
 

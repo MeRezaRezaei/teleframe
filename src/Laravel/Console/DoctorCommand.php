@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Core\Console;
+namespace MeRezaRezaei\Teleframe\Laravel\Console;
 
 use Illuminate\Console\Command;
 use MeRezaRezaei\Teleframe\Core\MTProto\Client;

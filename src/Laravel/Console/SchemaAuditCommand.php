@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Core\Console;
+namespace MeRezaRezaei\Teleframe\Laravel\Console;
 
 use Composer\InstalledVersions;
 use Illuminate\Console\Command;
@@ -27,8 +27,8 @@ class SchemaAuditCommand extends Command
 
     public function handle(): int
     {
-        $root = InstalledVersions::isInstalled('merezarezaei/teleproto-schema', true)
-            ? InstalledVersions::getInstallPath('merezarezaei/teleproto-schema')
+        $root = InstalledVersions::isInstalled('merezarezaei/teleframe', true)
+            ? InstalledVersions::getInstallPath('merezarezaei/teleframe')
             : dirname(__DIR__, 3) . '/packages/schema';
         if ($root === null || $root === '' || !is_dir($root)) {
             throw new RuntimeException('teleproto-schema package not installed — schema audit requires the schema pipeline package.');
@@ -68,8 +68,8 @@ class SchemaAuditCommand extends Command
      */
     public static function regenerateTo(string $outDir): ?string
     {
-        $root = InstalledVersions::isInstalled('merezarezaei/teleproto-schema', true)
-            ? InstalledVersions::getInstallPath('merezarezaei/teleproto-schema')
+        $root = InstalledVersions::isInstalled('merezarezaei/teleframe', true)
+            ? InstalledVersions::getInstallPath('merezarezaei/teleframe')
             : dirname(__DIR__, 3) . '/packages/schema';
         if ($root === null || $root === '' || !is_dir($root)) {
             throw new RuntimeException('teleproto-schema package not installed — schema audit requires the schema pipeline package.');

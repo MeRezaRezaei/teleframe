@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Core\Services;
+namespace MeRezaRezaei\Teleframe\Laravel\Services;
 
 use Closure;
 use MeRezaRezaei\Teleframe\Core\Contracts\UpdateSinkInterface;
-use MeRezaRezaei\Teleframe\Core\Events\TelegramGapDetected;
-use MeRezaRezaei\Teleframe\Core\Events\TelegramResynced;
+use MeRezaRezaei\Teleframe\Laravel\Events\TelegramGapDetected;
+use MeRezaRezaei\Teleframe\Laravel\Events\TelegramResynced;
 use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\FloodWaitException;
 use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
+use MeRezaRezaei\Teleframe\Bot\Services\BotClient;
 use Throwable;
 use UnexpectedValueException;
 

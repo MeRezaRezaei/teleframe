@@ -15,7 +15,7 @@ use RuntimeException;
  */
 final class SchemaArtifacts
 {
-    private const PACKAGE = 'merezarezaei/teleproto-schema';
+    private const PACKAGE = 'merezarezaei/teleframe';
 
     /**
      * Absolute path to a file inside this package's schema/ directory.
@@ -41,10 +41,13 @@ final class SchemaArtifacts
         }
 
         if (!is_dir($root)) {
-            throw new RuntimeException('teleproto-schema package root could not be resolved.');
+            throw new RuntimeException('teleframe package root could not be resolved.');
         }
 
-        return rtrim($root, '/') . '/schema/' . ltrim($file, '/');
+        if ($root === dirname(__DIR__)) {
+            return rtrim($root, '/') . '/Schema/schema/' . ltrim($file, '/');
+        }
+        return rtrim($root, '/') . '/src/Schema/schema/' . ltrim($file, '/');
     }
 
     /**

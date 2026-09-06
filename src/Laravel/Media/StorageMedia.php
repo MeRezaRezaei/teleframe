@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Core\Media;
+namespace MeRezaRezaei\Teleframe\Laravel\Media;
 
 use Generator;
 use Illuminate\Contracts\Filesystem\Filesystem;

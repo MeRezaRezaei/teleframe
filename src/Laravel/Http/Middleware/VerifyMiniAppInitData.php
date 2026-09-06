@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Core\Http\Middleware;
+namespace MeRezaRezaei\Teleframe\Laravel\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;

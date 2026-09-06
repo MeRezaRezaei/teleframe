@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Core\Console;
+namespace MeRezaRezaei\Teleframe\Laravel\Console;
 
 use Illuminate\Console\Command;
 use MeRezaRezaei\Teleproto\Schema\SchemaDiffer;
@@ -35,8 +35,8 @@ class SchemaUpdateCommand extends Command
 
     public function handle(): int
     {
-        $root = \Composer\InstalledVersions::isInstalled('merezarezaei/teleproto-schema', true)
-            ? \Composer\InstalledVersions::getInstallPath('merezarezaei/teleproto-schema')
+        $root = \Composer\InstalledVersions::isInstalled('merezarezaei/teleframe', true)
+            ? \Composer\InstalledVersions::getInstallPath('merezarezaei/teleframe')
             : dirname(__DIR__, 3) . '/packages/schema';
         if ($root === null || $root === '' || !is_dir($root)) {
             throw new \RuntimeException('teleproto-schema package not installed — schema update requires the schema pipeline package.');

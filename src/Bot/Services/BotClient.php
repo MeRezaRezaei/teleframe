@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Core\Services;
+namespace MeRezaRezaei\Teleframe\Bot\Services;
 
 use Illuminate\Http\Client\Factory as HttpFactory;
 use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
