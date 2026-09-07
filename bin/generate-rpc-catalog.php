@@ -5,7 +5,7 @@ declare(strict_types=1);
 // Generates src/Exceptions/Rpc/RpcErrorCatalog.php from the official
 // machine-readable RPC error database. Run: php bin/generate-rpc-catalog.php
 
-$j = json_decode((string) file_get_contents('/tmp/opencode/errors.json'), true);
+$j = json_decode((string) file_get_contents(dirname(__DIR__) . '/src/Schema/schema/sources/errors.json'), true);
 if (!is_array($j) || !isset($j['descriptions'])) {
     fwrite(STDERR, "errors.json missing or malformed\n");
     exit(1);
@@ -110,13 +110,43 @@ __CODE_BLOCK__
         }
 
         foreach (self::templates() as $template => $descTemplate) {
-            $pattern = '/^' . str_replace('%d', '(\d+)', preg_quote($template, '/')) . '$/';
-            if (preg_match($pattern, $msg, $m)) {
-                array_shift($m);
-                return [$template, vsprintf($descTemplate, $m)];
+            if (self::templateMatches($template, $msg)) {
+                $value = self::templateValue($template, $msg);
+                // Some official descriptions reference the value more than once
+                // (e.g. ALLOW_PAYMENT_REQUIRED_%d: "charges %d ... smaller than
+                // %d") — fill every slot or sprintf throws ArgumentCountError.
+                $slots = substr_count($descTemplate, '%d');
+                return [$template, $slots > 0 ? sprintf($descTemplate, ...array_fill(0, $slots, $value)) : $descTemplate];
             }
         }
         return null;
+    }
+
+    /**
+     * Pure string-template match: PREFIX %d SUFFIX with the %d part being
+     * a non-empty run of ASCII digits (regex-free equivalent of the old
+     * anchored ^…(\d+)$ pattern).
+     */
+    private static function templateMatches(string $template, string $message): bool
+    {
+        $parts = explode('%d', $template); // e.g. ['SLOWMODE_WAIT_', '']
+        if (!str_starts_with($message, $parts[0])) {
+            return false;
+        }
+        $tail = substr($message, strlen($parts[0]));
+        $requiredSuffix = $parts[1] ?? '';
+        if (!str_ends_with($tail, $requiredSuffix)) {
+            return false;
+        }
+        $digits = substr($tail, 0, strlen($tail) - strlen($requiredSuffix));
+        return $digits !== '' && strspn($digits, '0123456789') === strlen($digits);
+    }
+
+    private static function templateValue(string $template, string $message): int
+    {
+        $parts = explode('%d', $template);
+        $tail = substr($message, strlen($parts[0]));
+        return (int) substr($tail, 0, strlen($tail) - strlen($parts[1] ?? ''));
     }
 
     /**
