@@ -175,6 +175,26 @@ plans adjusted for this app. In fact I made the design that lets us solve any
 misconception or friction, to let us have both web and Telegram app at the
 same time, using framing our work based on the facts they carry.
 
+## Autonomy protocol (added 2026-09-07, owner verbatim)
+
+One of the most annoying frictions I have with AI is it asking approaches for
+doing things where it does not matter which one comes first for the final
+result — all of those steps should have been done anyway. So I am going to ask
+you to solve this friction in your plans: the AI must take all those plans
+and, based on the result we need, it should choose the correct next move —
+since it is the AI that knows, for reaching the goal of the plan, what the
+correct approach is, not me. I am not going to even think about the path or
+what my agent thinks, as long as the final result is there. The owner decides
+RESULTS (what the thing does, its public behavior); the AI decides PATHS
+(every ordering, approach, and mechanism that reaches the same result).
+Plans must never present an option menu to the owner mid-execution — they
+record rulings and assumptions instead, and the owner reviews results.
+
+And one other thing: memory is good to have, but the project should have all
+things committed and pushed — since memory can be made based on project
+facts, not otherwise. Memory can change, but plans inside the repository are
+static truth.
+
 ---
 
 ## Navigation index (added by agent, not part of verbatim)

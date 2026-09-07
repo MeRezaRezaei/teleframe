@@ -65,7 +65,7 @@
 **Decide first:** Q1 (routes truth), Q2 (elimination placement), Q3 (registry key), Q4 (uprate construction), Q5 (execution model), Q6 (response contract) — gap doc §I.
 **Delivers:** Uprate object; declarative route registration (code-declared, compiled/cached, zero-regex matching with sscanf-style params); uprate validation object (FormRequest analog); loop-prevention registry + elimination middleware; uprate identity/dedup key; reply path with account context preserved.
 
-- [ ] Decision session: Q1–Q6 with owner
+- [ ] Spec written with RULINGS Q1–Q6 applied (gap doc §RULINGS); owner gate = spec review only
 - [ ] Spec: `specs/YYYY-MM-DD-uprate-router-design.md`
 - [ ] Plan + execution
 - [ ] Gate: `/start {arg}`-style routing works zero-regex; self-echo eliminated while mirror still stores it; replay dedup proven by test
@@ -75,7 +75,7 @@
 **Decide first:** Q7–Q12 — gap doc §II. Structural recommendation from research: package-owned `tl_user_bindings` with nullable morph (works standalone AND in Laravel).
 **Delivers:** binding table + write hooks (UpdateStored/login); `findTF` (with chosen tenancy strategy + tl_id index migration); `HasTelegram` (+ Telegram notification channel + sender resolution); `HasUserTelegram`; guard trio (auth.php guards over the three scopes); mini-app initData freshness fix + RequestGuard upgrade.
 
-- [ ] Decision session: Q7–Q12
+- [ ] Spec written with RULINGS Q7–Q12 applied; owner gate = spec review only (Q7 veto-able)
 - [ ] Spec + plan + execution
 - [ ] Gate: `User::findTF()` resolves in a Laravel test app; a Notification delivers via Telegram; replayed initData rejected
 
@@ -84,7 +84,7 @@
 **Decide first:** Q15 (callback format), Q16 (id lifecycle) — gap doc §III. Depends: 5a (routing), 5b optional (per-user scoping).
 **Delivers:** keyboard objects with deterministic identity; key→action table = uprate routes; callback_data format within 64B (signed or handle per Q15); rotation/expiry ("menu expired"); injection test suite (forge/replay/relay vectors).
 
-- [ ] Decision session: Q15–Q16 · Spec · Plan · Execution
+- [ ] Spec written with RULINGS Q15–Q16 applied · Plan · Execution
 - [ ] Gate: forged callback_data rejected; old menus expire; keyboard code separated from handler code in example app
 
 ### Phase 5d: Message Templates (Blade-for-Telegram)
@@ -92,7 +92,7 @@
 **Decide first:** Q13 (syntax), Q14 (cache artifact) — gap doc §III. Depends: Phase 1 (schemaLayer salt — hard constraint 4).
 **Delivers:** MessageCompiler (compile→cache in bootstrap/cache pattern, salted by schemaLayer); `message('name')` finder; entity-plan compilation over EntityParser; sendMessage typecheck vs MethodRegistry; view:clear-style ops.
 
-- [ ] Decision session: Q13–Q14 · Spec · Plan · Execution
+- [ ] Spec written with RULINGS Q13–Q14 applied · Plan · Execution (Q13 veto-able)
 - [ ] Gate: template renders to entities; layer bump invalidates cache without mtime change; gates green
 
 ### Phase 5e: Stage Machine (same route, telegram-paced)
@@ -100,7 +100,7 @@
 **Decide first:** Q17 (state home), Q18 (context flag), Q20 (submit transport) + dispatch precedence (echo → stage → keyboard → handler, gap F5). Depends: 5a router, 5c keyboards, 5d templates.
 **Delivers:** declarative stage sets (form-fields shape, plain-array state); per-stage template-shaped validation failures; final submit to THE SAME Laravel route reusing its FormRequest, response flipped to telegram engine (above-controller interceptor, hard constraint 8).
 
-- [ ] Decision session: Q17/Q18/Q20 · Spec · Plan · Execution
+- [ ] Spec written with RULINGS Q17/Q18/Q20 applied (dispatch precedence set: echo → stage → keyboard → handler) · Plan · Execution
 - [ ] Gate: one controller+FormRequest serves a web form AND a telegram staged flow identically; state survives process restart
 
 ### Phase 5f: Bot Map
@@ -108,7 +108,7 @@
 **Decide first:** Q19 (discovery). Depends: none heavy (independent of 5b–5e).
 **Delivers:** named third-party bot registry; capability manifest; `BotMap::for('x')->command()` invocation; token vault; outbound HTTP exposure of bots as API calls (webhook controller precedent).
 
-- [ ] Decision session: Q19 · Spec · Plan · Execution
+- [ ] Spec written with RULING Q19 applied · Plan · Execution
 - [ ] Gate: third-party bot invoked as function call; exposed via authenticated HTTP endpoint
 
 ### Phase 5g: Mini-App Hosting
@@ -116,11 +116,19 @@
 **NOTE from research:** the Vue precedent does NOT exist in the repo — this phase BUILDS it (constraint 7). Depends: 5b (identity/guards).
 **Delivers:** publishable Vite preset + Blade host + telegram-web-app.js bridge + theme CSS vars (per Q12 decision); mini-app session guard wired to bindings.
 
-- [ ] Decision session: Q12 if deferred · Spec · Plan · Execution
+- [ ] Spec written with RULING Q12 applied (stub-based hosting) · Plan · Execution
 - [ ] Gate: example Vue mini app runs inside Telegram, authenticated as the bound Laravel user
 
 ---
 
+## Autonomy protocol (binding — vision doc §Autonomy verbatim)
+
+1. **Owner decides RESULTS** (what a layer does, its public behavior, spec/phase acceptance). **AI decides PATHS** (task order, approach, mechanisms, refactors, test structure — anything where the result is unchanged).
+2. **No option menus mid-execution.** Executors never ask the owner "which approach"; they rule, record the ruling + assumption in the task report, and continue. Wrong rulings surface at the result gate, where they cost a review comment instead of a stalled plan.
+3. **Ordering autonomy:** where phases/tasks are order-independent, the executor chooses the order that minimizes risk and rework (this roadmap's arrows are dependency constraints, not a queue the owner manages).
+4. **Execution mode is a PATH decision** — chosen by the executing agent (default: subagent-driven), never asked of the owner.
+5. **Repo is static truth:** every decision, ruling, spec, plan, and result lands committed + pushed. Memory is derived from repo facts, never the reverse.
+
 ## Roadmap rules
 
-1. Phases 0→4 strictly ordered (each lands green before next). 2. Layer 5a gates 5c/5e; 5b gates 5g; 5d needs Phase 1 only. 3. Any new friction discovered mid-phase gets gap-doc'd, not inline-designed. 4. Every phase ends: gates green → spec/plan committed → pushed → ticked here. 5. Vision doc amendments require owner verbatim additions only.
+1. Phases 0→4 strictly ordered (each lands green before next). 2. Layer 5a gates 5c/5e; 5b gates 5g; 5d needs Phase 1 only — within those arrows, ordering is executor's choice. 3. Any new friction discovered mid-phase gets gap-doc'd with an AI ruling, not inline-designed and not owner-asked. 4. Every phase ends: gates green → spec/plan committed → pushed → ticked here → owner reviews the RESULT. 5. Vision doc amendments require owner verbatim additions only. 6. All Q1–Q20 rulings live in the gap-analysis doc §RULINGS; a ruling may be revisited by a NEW ruling that supersedes it in writing, never by an untracked conversation.
