@@ -61,6 +61,7 @@
         ]
     },
     "extra": {
+        "telegram-layer": 229,
         "laravel": {
             "providers": [
                 "MeRezaRezaei\\Teleframe\\Laravel\\Providers\\TeleframeServiceProvider"

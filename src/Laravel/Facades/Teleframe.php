@@ -18,6 +18,7 @@ use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
  * @method static UserAccountScope forAccount(?int $accountId = null, string|SessionData|null $session = null, int $dcId = 2, ?int $apiId = null, ?string $apiHash = null, ?array $proxyConfig = null) Alias for user().
  * @method static BotClient bot(?string $botToken = null, ?array $proxyConfig = null) Connect as a Telegram Bot over HTTP Bot API.
  * @method static \MeRezaRezaei\Teleframe\Bot\Services\BotAccountScope botMtproto(?string $botToken = null, string|SessionData|null $session = null, int $dcId = 2, ?int $apiId = null, ?string $apiHash = null, ?array $proxyConfig = null) Connect as a Telegram Bot directly over high-speed binary MTProto 2.0.
+ * @method static int schemaLayer() Declared Telegram schema layer of the packaged artifacts.
  *
  * @see \MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient
  * @see \MeRezaRezaei\Teleframe\Core\Services\UserAccountScope

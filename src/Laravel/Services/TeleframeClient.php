@@ -136,7 +136,15 @@ class TeleframeClient
     }
 
     /**
-     * Create client directly from an exported session string.
+     * Declared Telegram schema layer of the packaged artifacts (spec D5).
+     */
+    public function schemaLayer(): int
+    {
+        return \MeRezaRezaei\Teleframe\Core\Schema\SchemaLayer::layer();
+    }
+
+    /**
+     * Create a client directly from an exported session string.
      */
     public function fromSession(
         string $sessionString,
