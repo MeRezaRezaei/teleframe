@@ -10,59 +10,84 @@ MANUAL, developer-run, never automatic at runtime; every manifest declares the
 layer it speaks; migrations are applied by the developer, never as a side
 effect of data writes. Nothing in this skill ever runs `migrate` implicitly.
 
-## Current state (v1 — two repos, pre-unification Phase 0)
+## Current state (v2 — unified pipeline, post-Phase 1)
 
 | Piece | Where | Layer truth |
 |---|---|---|
-| Wire layer | teleframe `EncryptedConnection::LAYER` | may intentionally trail the schema artifact — do NOT "fix" one to match the other |
-| Method schemas | teleframe `src/Schema/schema/methods-mtproto.json` + `methods-botapi.json` | `layer` field in each JSON |
-| Mirror schema | teleclient `schema/sources/*.tl` + `generated/schema-manifest.json` | `layer` field in manifest |
-| RPC catalog | teleframe `src/Core/Exceptions/Rpc/RpcErrorCatalog.php` | `LAYER` const |
+| Wire layer | `EncryptedConnection::LAYER` (227) | intentionally separate from the schema layer — do NOT "fix" one to match the other |
+| Method schemas | `src/Schema/schema/methods-mtproto.json` + `methods-botapi.json` | `layer` field in each JSON (229) |
+| **Packaged stamp** | `src/Schema/schema/schema-manifest.json` | `layer` field — **the `schemaLayer()` truth** (229) |
+| Composer record | `composer.json` `extra.telegram-layer` | release-time snapshot (229) |
+| Runtime API | `Teleframe::schemaLayer(): int` / `SchemaLayer::cacheSalt()` | reads stamp → composer → artifact → wire floor |
+| RPC catalog | `src/Core/Exceptions/Rpc/RpcErrorCatalog.php` | `LAYER` const (reads committed `sources/errors.json`) |
+| Mirror schema | teleclient `schema/sources/*.tl` + `generated/schema-manifest.json` | `layer` field (227; merges into teleframe at Phase 2) |
 
-## Procedure
+## Procedure — one command, three modes
+
+The whole pipeline lives in one Artisan command, also reachable standalone:
+
+```bash
+php bin/teleframe schema-update            # fetch + full chain + stamp
+php bin/teleframe schema-update --no-fetch # fully offline, committed sources only
+php bin/teleframe schema-update --dry-run --no-fetch  # scratch preview, repo untouched
+```
+
+The command runs the full generation chain **in this fixed order**
+(`SchemaAuditCommand::pipelineSteps()`), stamps `schema-manifest.json`, and
+reports the `SchemaDiffer` layer diff — **and never runs migrations**.
+
+1. `method-schema`      → `schema/methods-mtproto.json`
+2. `botapi-schema`      → `schema/methods-botapi.json`
+3. `method-builders`    → `src/Core/Methods/Generated/*` + `src/Bot/Methods/Generated/*`
+4. `skill-files`        → `src/Schema/skills/telegram-methods/*.md`
+5. `rpc-catalog`        → `src/Core/Exceptions/Rpc/RpcErrorCatalog.php`
+6. `userscope-schema`   → `src/Core/MTProto/TL/Schema/UserScopeSchema.php`
+
+## Procedure (full walkthrough)
 
 ### Step 0 — Identify the delta
 1. Check https://core.telegram.org/api/schema for the new layer number and
    https://core.telegram.org/api/updates for changelog notes.
-2. Read current stamps: teleframe method-schema JSONs + teleclient
-   `generated/schema-manifest.json` + `RpcErrorCatalog::LAYER`.
+2. Read the current stamp: `Teleframe::schemaLayer()` (or
+   `src/Schema/schema/schema-manifest.json`).
 3. Decide scope: wire layer bump (MTProto compat) is OPTIONAL and separate —
    schema artifacts may move ahead of the wire layer; they intentionally differ.
+   A wire bump requires the full live gate and must never batch with a
+   schema-only change.
 
 ### Step 1 — Refresh sources
 1. Download the new `.tl` file from the schema page.
-2. teleframe: replace the vendored partial sources under
-   `src/Schema/schema/sources/` that the generators read.
-3. teleclient: replace `schema/sources/*.tl` (full mirror, one file per
-   namespace).
+2. Replace the vendored partial sources under `src/Schema/schema/sources/`
+   (the generators read `api.tl`, `mtproto.tl`, `errors.json`, `extracted.json`,
+   `botapi-spec.json`).
+3. For the teleclient mirror: replace `schema/sources/*.tl` (full mirror, one
+   file per namespace) — merges into teleframe at Phase 2.
 
-### Step 2 — Regenerate (order matters; each generator is idempotent)
-Run from the teleframe repo root:
+### Step 2 — Run the unified command
 ```bash
-php bin/generate-method-schema.php     # methods-mtproto.json
-php bin/generate-botapi-schema.php     # methods-botapi.json
-php bin/generate-method-builders.php   # curated builders (config: curated-methods dial)
-php bin/generate-skill-files.php       # src/Schema/skills/telegram-methods/*.md
-php bin/generate-rpc-catalog.php       # re-fetches core.telegram.org/api/errors.json
-php bin/generate-userscope-schema.php  # userscope artifacts
+php bin/teleframe schema-update --no-fetch
 ```
-Run from the teleclient repo root:
+Review the SchemaDiffer report. Success = bare regeneration is idempotent
+(artifacts unchanged) **and** the manifest advances to the new layer. If the
+report shows method-level differences, that is a real schema change — review
+and commit it deliberately (never blindly).
+
+Safety preview first when uncertain:
 ```bash
-php bin/regenerate            # metamodel → generated/ (±30% sanity gate)
-php bin/regenerate --ship     # ALSO copies the curated dial into migrations/
+php bin/teleframe schema-update --dry-run --no-fetch   # leaves the repo untouched
 ```
-`--force` bypasses the ±30% gate ONLY for huge layers; investigate first if it trips.
 
 ### Step 3 — Curate the dial
-If new constructors/methods matter to the apps: add to teleframe
-`src/Schema/config/curated-methods.json` (builder groups) and/or widen
-teleclient `ship_namespaces` (config or `TELECLIENT_SHIP_NAMESPACES`) before
-re-running the builders / `--ship` copy.
+If new constructors/methods matter to the apps: add to
+`src/Schema/config/curated-methods.json` (builder groups) and/or widen the
+teleclient `ship_namespaces` before re-running the applicable generator
+(`--dry-run` mode previews the members; the real run regenerates them).
 
 ### Step 4 — Version stamps
-1. Confirm `layer` fields advanced in ALL artifacts (Step 0 list).
-2. Record the layer in composer `extra.telegram-layer` (Phase 1 will add;
-   until then note it in CHANGELOG unreleased section).
+1. Confirm the `layer` field advanced in `schema-manifest.json` AND the
+   method-schema JSONs AND `RpcErrorCatalog::LAYER` (Step 0 list).
+2. Record the layer in `composer.json` `extra.telegram-layer` at release time
+   (`SchemaLayer` already prefers the packaged stamp at runtime).
 3. If the wire layer is ALSO bumped: update `EncryptedConnection::LAYER` and
    re-run the full live gate — never batch a wire bump with a schema-only change.
 
@@ -76,29 +101,25 @@ re-running the builders / `--ship` copy.
 
 ### Step 6 — Verify
 ```bash
-# teleframe
-composer verify
-# teleclient
-composer test && composer analyse
+composer verify                              # teleframe: test + stan
+composer test && composer analyse            # teleclient (mirror consumer)
+php bin/teleframe schema-audit               # offline idempotence check (drift → 1)
 # live (opt-in, real credentials; REQUIRED if wire layer changed)
 TELEPROTO_LIVE=true ./bin/teleframe test-e2e
 ```
 
 ### Step 7 — Commit shape
-- teleframe: one commit per artifact family (schemas / builders+skills / rpc
-  catalog) — they regenerate independently.
-- teleclient: one commit for sources + one for regenerated output; NEVER
-  hand-edit anything under `generated/` or `migrations/` (regenerate instead).
+- One commit for the sources, one for regenerated output; the stamped
+  `schema-manifest.json` goes with the regenerated output. NEVER hand-edit any
+  generated artifact (`schema-manifest.json` included — regenerate instead).
 
 ## Failure modes
-- ±30% gate trips → a source file is malformed or a namespace went missing;
-  diff old/new `.tl` file counts before reaching for `--force`.
+- `--dry-run` errors on a generator → regenerate the affected artifact family
+  standalone (e.g. `php bin/generate-method-builders.php`) to isolate; fix the
+  source or the curated dial, not the generator.
 - phpstan fails after regen → hand-written code referenced a generated symbol
   that the new layer renamed; fix the hand-written reference, not the generator.
+- `schema-audit` exits 1 → the committed artifacts drift from the sources;
+  same fix path as above.
 - teleclient tests fail after regen → canned fixtures pin constructor shapes
   (e.g. user#31774388 payload); update fixtures to the new layer's shapes.
-
-## Post-unification (Phase 1, v2 of this skill)
-All of the above collapses into `teleframe:schema-update` (diff + regenerate +
-stamp, still NO implicit migrate) with `Teleframe::schemaLayer(): int` as the
-runtime query surface. This section activates when Phase 1 lands.

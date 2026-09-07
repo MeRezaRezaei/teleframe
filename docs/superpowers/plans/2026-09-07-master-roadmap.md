@@ -31,8 +31,8 @@
 
 **Delivers (spec §6, D4/D5):** unified `teleframe:schema-update` command (diff + regenerate + stamp, NO implicit migrate), `Teleframe::schemaLayer(): int`, composer `extra.telegram-layer`, skill v2 activation. Also: cache-salt primitive that Phase 5d depends on.
 
-- [ ] Write plan `plans/YYYY-MM-DD-phase1-schema-upgrade-pipeline.md` (writing-plans format)
-- [ ] Gate: command runs end-to-end on a synthetic layer bump; layer stamp queryable; gates green
+- [x] Write plan `plans/2026-09-07-phase1-schema-upgrade-pipeline.md` (writing-plans format)
+- [x] Gate: command runs end-to-end on a synthetic layer bump; layer stamp queryable; gates green
 
 ### Phase 2: Module Merge
 

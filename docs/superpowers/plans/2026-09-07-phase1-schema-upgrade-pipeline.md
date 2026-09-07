@@ -523,10 +523,10 @@ git push origin main
 
 ## Completion checklist (whole plan)
 
-- [ ] `composer verify` green after every task
-- [ ] `SchemaLayer::layer()` == 229; `cacheSalt()` == `schema-layer-229` (repo-wide, no manifest override)
-- [ ] `composer.json` `extra.telegram-layer` == 229; `composer.lock` updated
-- [ ] `bin/generate-rpc-catalog.php` reads the committed `errors.json` (no `/tmp`)
-- [ ] `SchemaAuditCommand::pipelineSteps()` = the 6 ordered steps, none migrate
-- [ ] `php bin/teleframe schema-update --dry-run --no-fetch` succeeds and leaves repo untouched; `--no-fetch` real run stamps `src/Schema/schema/schema-manifest.json` layer 229
-- [ ] Spec Status + roadmap Phase 1 ticked; skill v2 committed; pushed
+- [x] `composer verify` green after every task
+- [x] `SchemaLayer::layer()` == 229; `cacheSalt()` == `schema-layer-229` (repo-wide, no manifest override)
+- [x] `composer.json` `extra.telegram-layer` == 229 (composer.lock is gitignored in this repo)
+- [x] `bin/generate-rpc-catalog.php` reads the committed `errors.json` (no `/tmp`; also fixed the generator's stale `preg_*` template → zero-regex, byte-identical regeneration)
+- [x] `SchemaAuditCommand::pipelineSteps()` = the 6 ordered steps, none migrate
+- [x] `php bin/teleframe schema-update --dry-run --no-fetch` succeeds and leaves repo untouched; `--no-fetch` real run stamps `src/Schema/schema/schema-manifest.json` layer 229
+- [x] Spec Status + roadmap Phase 1 ticked; skill v2 committed; pushed
