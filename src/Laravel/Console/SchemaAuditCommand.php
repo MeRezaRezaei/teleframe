@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Laravel\Console;
 
-use Composer\InstalledVersions;
 use Illuminate\Console\Command;
 use MeRezaRezaei\Teleframe\Core\Schema\SchemaDiffer;
 use RuntimeException;
@@ -27,12 +26,8 @@ class SchemaAuditCommand extends Command
 
     public function handle(): int
     {
-        $root = InstalledVersions::isInstalled('merezarezaei/teleframe', true)
-            ? InstalledVersions::getInstallPath('merezarezaei/teleframe')
-            : dirname(__DIR__, 3) . '/packages/schema';
-        if ($root === null || $root === '' || !is_dir($root)) {
-            throw new RuntimeException('teleframe schema layer not installed — schema audit requires the schema pipeline package.');
-        }
+        $root = self::root();
+        $schemaDir = self::schemaDir();
         $tmp = sys_get_temp_dir() . '/teleframe-schema-audit-' . bin2hex(random_bytes(6));
 
         $failure = self::regenerateTo($tmp);
@@ -42,9 +37,9 @@ class SchemaAuditCommand extends Command
             return 1;
         }
 
-        $oldMtproto = self::loadArtifact("{$root}/schema/methods-mtproto.json");
+        $oldMtproto = self::loadArtifact("{$schemaDir}/methods-mtproto.json");
         $newMtproto = self::loadArtifact("{$tmp}/methods-mtproto.json");
-        $oldBotapi = self::loadArtifact("{$root}/schema/methods-botapi.json");
+        $oldBotapi = self::loadArtifact("{$schemaDir}/methods-botapi.json");
         $newBotapi = self::loadArtifact("{$tmp}/methods-botapi.json");
 
         $report = self::buildReport($oldMtproto, $newMtproto, $oldBotapi, $newBotapi);
@@ -52,7 +47,7 @@ class SchemaAuditCommand extends Command
         self::cleanup($tmp);
 
         if ($this->option('write')) {
-            file_put_contents("{$root}/schema/audit-report.md", $report . "\n");
+            file_put_contents("{$schemaDir}/audit-report.md", $report . "\n");
             $this->line('<info>Report written to schema/audit-report.md</info>');
         }
 
@@ -63,17 +58,50 @@ class SchemaAuditCommand extends Command
     }
 
     /**
+     * Absolute package root (repo working copy or vendor install), derived
+     * from this file's location: src/Laravel/Console → package root.
+     */
+    public static function root(): string
+    {
+        return dirname(__DIR__, 3);
+    }
+
+    /**
+     * Absolute path to the packaged schema artifacts + sources directory.
+     */
+    public static function schemaDir(): string
+    {
+        return self::root() . '/src/Schema/schema';
+    }
+
+    /**
+     * The FULL generation chain for teleframe:schema-update, in order.
+     * Each entry: a step name and the bin that performs it. Migrations are
+     * NEVER part of this chain (spec D4) — hosts apply them explicitly.
+     *
+     * @return list<array{name: string, bin: string}>
+     */
+    public static function pipelineSteps(): array
+    {
+        $root = self::root();
+
+        return [
+            ['name' => 'method-schema', 'bin' => $root . '/bin/generate-method-schema.php'],
+            ['name' => 'botapi-schema', 'bin' => $root . '/bin/generate-botapi-schema.php'],
+            ['name' => 'method-builders', 'bin' => $root . '/bin/generate-method-builders.php'],
+            ['name' => 'skill-files', 'bin' => $root . '/bin/generate-skill-files.php'],
+            ['name' => 'rpc-catalog', 'bin' => $root . '/bin/generate-rpc-catalog.php'],
+            ['name' => 'userscope-schema', 'bin' => $root . '/bin/generate-userscope-schema.php'],
+        ];
+    }
+
+    /**
      * Run both generators writing into $outDir (sources stay the committed
      * repo ones). Returns null on success, a failure description otherwise.
      */
     public static function regenerateTo(string $outDir): ?string
     {
-        $root = InstalledVersions::isInstalled('merezarezaei/teleframe', true)
-            ? InstalledVersions::getInstallPath('merezarezaei/teleframe')
-            : dirname(__DIR__, 3) . '/packages/schema';
-        if ($root === null || $root === '' || !is_dir($root)) {
-            throw new RuntimeException('teleframe schema layer not installed — schema audit requires the schema pipeline package.');
-        }
+        $root = self::root();
         if (!is_dir($outDir) && !mkdir($outDir, 0777, true) && !is_dir($outDir)) {
             return "cannot create output dir {$outDir}";
         }

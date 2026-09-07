@@ -9,86 +9,143 @@ use MeRezaRezaei\Teleframe\Core\Schema\SchemaDiffer;
 
 /**
  * Fetches fresh upstream sources (curl, manual/CI network step), then
- * regenerates both artifacts in place, then reports the diff against the
- * pre-update committed artifacts (captured in memory before overwriting).
+ * runs the full regeneration chain, then stamps the schema-manifest.json
+ * layer and reports the diff against the pre-update committed artifacts.
  *
- * A failed fetch never aborts with committed sources damaged: curl writes
- * a temp file that is renamed over the destination only on success. The
- * command exits 0 when it completes (the report communicates what moved;
- * schema-sensitive tests catch regressions) and 1 only on failures that
- * stopped the update. Zero regex by repo spec.
+ * --no-fetch  : skip the network step, regenerate purely from the committed
+ *               sources (fully offline).
+ * --dry-run   : regenerate + stamp into a scratch dir, leave the repo
+ *               untouched (safe preview of a layer bump).
+ *
+ * The chain NEVER runs migrations (spec D4). A failed fetch never aborts
+ * with committed sources damaged: curl writes a temp file that is renamed
+ * over the destination only on success. Zero regex by repo spec.
  */
 class SchemaUpdateCommand extends Command
 {
-    protected $signature = 'teleframe:schema-update';
+    protected $signature = 'teleframe:schema-update
+                            {--no-fetch : Skip the network fetch, regenerate from committed sources}
+                            {--dry-run : Regenerate + stamp into a scratch dir, leave the repo untouched}';
 
-    protected $description = 'Fetch upstream schema sources, regenerate artifacts, and report the diff vs the committed ones';
+    protected $description = 'Fetch upstream schema sources, regenerate the full artifact chain, and stamp the layer manifest';
 
     /** @var list<array{url: string, dest: string}> */
     private const FETCHES = [
-        ['url' => 'https://raw.githubusercontent.com/telegramdesktop/tdesktop/dev/Telegram/SourceFiles/mtproto/scheme/api.tl', 'dest' => 'schema/sources/api.tl'],
-        ['url' => 'https://raw.githubusercontent.com/telegramdesktop/tdesktop/dev/Telegram/SourceFiles/mtproto/scheme/mtproto.tl', 'dest' => 'schema/sources/mtproto.tl'],
-        ['url' => 'https://core.telegram.org/api/errors.json', 'dest' => 'schema/sources/errors.json'],
-        ['url' => 'https://raw.githubusercontent.com/danog/MadelineProto/master/extracted.json', 'dest' => 'schema/sources/extracted.json'],
-        ['url' => 'https://raw.githubusercontent.com/PaulSonOfLars/telegram-bot-api-spec/main/api.json', 'dest' => 'schema/sources/botapi-spec.json'],
+        ['url' => 'https://raw.githubusercontent.com/telegramdesktop/tdesktop/dev/Telegram/SourceFiles/mtproto/scheme/api.tl', 'dest' => '../sources/api.tl'],
+        ['url' => 'https://raw.githubusercontent.com/telegramdesktop/tdesktop/dev/Telegram/SourceFiles/mtproto/scheme/mtproto.tl', 'dest' => '../sources/mtproto.tl'],
+        ['url' => 'https://core.telegram.org/api/errors.json', 'dest' => '../sources/errors.json'],
+        ['url' => 'https://raw.githubusercontent.com/danog/MadelineProto/master/extracted.json', 'dest' => '../sources/extracted.json'],
+        ['url' => 'https://raw.githubusercontent.com/PaulSonOfLars/telegram-bot-api-spec/main/api.json', 'dest' => '../sources/botapi-spec.json'],
     ];
 
     public function handle(): int
     {
-        $root = \Composer\InstalledVersions::isInstalled('merezarezaei/teleframe', true)
-            ? \Composer\InstalledVersions::getInstallPath('merezarezaei/teleframe')
-            : dirname(__DIR__, 3) . '/packages/schema';
-        if ($root === null || $root === '' || !is_dir($root)) {
-            throw new \RuntimeException('teleframe schema layer not installed — schema update requires the schema pipeline package.');
-        }
+        $root = SchemaAuditCommand::root();
+        $schemaDir = SchemaAuditCommand::schemaDir();
+        $sourcesDir = "{$schemaDir}/sources";
 
-        // 1) Capture the pre-update committed artifacts before anything is written.
-        $oldMtproto = SchemaAuditCommand::loadArtifact("{$root}/schema/methods-mtproto.json");
-        $oldBotapi = SchemaAuditCommand::loadArtifact("{$root}/schema/methods-botapi.json");
-
-        // 2) Fetch fresh sources; abort (nothing regenerated) if any fetch fails.
-        $failures = [];
-        foreach (self::FETCHES as $fetch) {
-            $dest = "{$root}/{$fetch['dest']}";
-            $tmpDest = $dest . '.fetching';
-            $result = SchemaAuditCommand::runProcess(['curl', '-fsSL', '--max-time', '120', $fetch['url'], '-o', $tmpDest], $root);
-            if ($result['exit'] !== 0 || !file_exists($tmpDest)) {
-                if (file_exists($tmpDest)) {
-                    unlink($tmpDest);
+        if (!$this->option('no-fetch')) {
+            $failures = [];
+            foreach (self::FETCHES as $fetch) {
+                $dest = $sourcesDir . '/' . basename($fetch['dest']);
+                $tmpDest = $dest . '.fetching';
+                $result = SchemaAuditCommand::runProcess(['curl', '-fsSL', '--max-time', '120', $fetch['url'], '-o', $tmpDest], $root);
+                if ($result['exit'] !== 0 || !file_exists($tmpDest)) {
+                    if (file_exists($tmpDest)) {
+                        unlink($tmpDest);
+                    }
+                    $failures[] = [$fetch, $result];
+                    continue;
                 }
-                $failures[] = [$fetch, $result];
-                continue;
+                rename($tmpDest, $dest);
+                $this->line('<info>fetched ' . $fetch['dest'] . '</info>');
             }
-            rename($tmpDest, $dest);
-            $this->line('<info>fetched ' . $fetch['dest'] . '</info>');
+            if ($failures !== []) {
+                $this->reportFetchFailures($failures);
+                return 1;
+            }
         }
-        if ($failures !== []) {
-            $this->reportFetchFailures($failures);
+
+        if ($this->option('dry-run')) {
+            return $this->dryRun($schemaDir);
+        }
+
+        return $this->realRun($root, $schemaDir);
+    }
+
+    private function dryRun(string $schemaDir): int
+    {
+        $scratch = sys_get_temp_dir() . '/teleframe-schema-update-' . bin2hex(random_bytes(6));
+        if (!is_dir($scratch) && !mkdir($scratch, 0777, true) && !is_dir($scratch)) {
+            $this->line("<error>cannot create scratch dir {$scratch}</error>");
             return 1;
         }
 
-        // 3) Regenerate both artifacts in place.
-        $failure = SchemaAuditCommand::regenerateTo("{$root}/schema");
+        $failure = SchemaAuditCommand::regenerateTo($scratch);
         if ($failure !== null) {
+            self::cleanupScratch($scratch);
             $this->line("<error>Schema regeneration failed: {$failure}</error>");
             return 1;
         }
 
-        // 4) Report pre-update vs freshly regenerated, in memory.
-        $newMtproto = SchemaAuditCommand::loadArtifact("{$root}/schema/methods-mtproto.json");
-        $newBotapi = SchemaAuditCommand::loadArtifact("{$root}/schema/methods-botapi.json");
-        $mtprotoDiff = SchemaDiffer::diff($oldMtproto, $newMtproto);
-        $botapiDiff = SchemaDiffer::diff($oldBotapi, $newBotapi);
+        $oldMtproto = SchemaAuditCommand::loadArtifact("{$schemaDir}/methods-mtproto.json");
+        $newMtproto = SchemaAuditCommand::loadArtifact("{$scratch}/methods-mtproto.json");
+        $layer = $newMtproto['layer'] ?? 0;
+        file_put_contents("{$scratch}/schema-manifest.json", json_encode(['layer' => $layer], JSON_PRETTY_PRINT) . PHP_EOL);
+
+        $this->line(SchemaAuditCommand::buildReport(
+            $oldMtproto,
+            $newMtproto,
+            SchemaAuditCommand::loadArtifact("{$schemaDir}/methods-botapi.json"),
+            SchemaAuditCommand::loadArtifact("{$scratch}/methods-botapi.json"),
+        ));
+        $this->line("<info>stamped schema-manifest.json layer {$layer} (dry-run, repo untouched)</info>");
+        self::cleanupScratch($scratch);
+
+        return 0;
+    }
+
+    private function realRun(string $root, string $schemaDir): int
+    {
+        $oldMtproto = SchemaAuditCommand::loadArtifact("{$schemaDir}/methods-mtproto.json");
+        $oldBotapi = SchemaAuditCommand::loadArtifact("{$schemaDir}/methods-botapi.json");
+
+        foreach (SchemaAuditCommand::pipelineSteps() as $step) {
+            $this->line('<info>running ' . $step['name'] . '</info>');
+            $result = SchemaAuditCommand::runProcess([PHP_BINARY, $step['bin']], $root);
+            if ($result['exit'] !== 0) {
+                $this->line("<error>step [{$step['name']}] failed (exit {$result['exit']}): {$result['output']}</error>");
+                return 1;
+            }
+        }
+
+        $newMtproto = SchemaAuditCommand::loadArtifact("{$schemaDir}/methods-mtproto.json");
+        $newBotapi = SchemaAuditCommand::loadArtifact("{$schemaDir}/methods-botapi.json");
+        $layer = $newMtproto['layer'] ?? 0;
+        file_put_contents("{$schemaDir}/schema-manifest.json", json_encode(['layer' => $layer], JSON_PRETTY_PRINT) . PHP_EOL);
 
         $this->line(SchemaAuditCommand::buildReport($oldMtproto, $newMtproto, $oldBotapi, $newBotapi));
 
-        if (!SchemaAuditCommand::anyDifference($mtprotoDiff, $botapiDiff)) {
-            $this->line('<info>Sources updated; artifacts unchanged.</info>');
+        if (!SchemaAuditCommand::anyDifference(
+            SchemaDiffer::diff($oldMtproto, $newMtproto),
+            SchemaDiffer::diff($oldBotapi, $newBotapi),
+        )) {
+            $this->line('<info>Sources updated; artifacts unchanged; stamped layer ' . $layer . '.</info>');
         } else {
-            $this->line('<comment>Sources updated; artifacts regenerated with differences above — review and commit them.</comment>');
+            $this->line('<comment>Sources updated; artifacts regenerated with differences above — review and commit them. Stamped layer ' . $layer . '.</comment>');
         }
 
         return 0;
+    }
+
+    private static function cleanupScratch(string $dir): void
+    {
+        foreach (glob($dir . '/*') ?: [] as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
+        rmdir($dir);
     }
 
     /**
