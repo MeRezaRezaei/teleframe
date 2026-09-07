@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Laravel\Services;
 
 use Closure;
+use MeRezaRezaei\Teleframe\Core\Contracts\SignalSink;
 use MeRezaRezaei\Teleframe\Core\Contracts\UpdateSinkInterface;
 use MeRezaRezaei\Teleframe\Laravel\Events\TelegramGapDetected;
 use MeRezaRezaei\Teleframe\Laravel\Events\TelegramResynced;
@@ -86,9 +87,17 @@ class UpdatePollerService
      */
     protected bool $gapPending = false;
 
-    public function __construct(?UpdateSinkInterface $sink = null)
+    public function __construct(?UpdateSinkInterface $sink = null, private ?SignalSink $signalSink = null)
     {
         $this->sink = $sink ?? new EventDispatcherSink();
+    }
+
+    /** Observe gap/resync signals without a Laravel event dispatcher (framework-free hosts). */
+    public function withSignalSink(SignalSink $sink): static
+    {
+        $this->signalSink = $sink;
+
+        return $this;
     }
 
     public function setSink(UpdateSinkInterface $sink): self
@@ -339,6 +348,11 @@ class UpdatePollerService
                         'from_pts'   => $requestedPts,
                         'to_pts'     => $this->sequenceState['pts'],
                     ]);
+                    $this->signalSink?->gapDetected(TelegramGapDetected::KIND_SLICE, [
+                        'account_id' => $accountId,
+                        'from_pts'   => $requestedPts,
+                        'to_pts'     => $this->sequenceState['pts'],
+                    ]);
 
                     return self::KIND_SLICE;
                 }
@@ -353,12 +367,23 @@ class UpdatePollerService
                     'requested_pts'    => $requestedPts,
                     'intermediate_pts' => $this->sequenceState['pts'],
                 ]);
+                $this->signalSink?->gapDetected(TelegramGapDetected::KIND_HOLE, [
+                    'account_id'       => $accountId,
+                    'requested_pts'    => $requestedPts,
+                    'intermediate_pts' => $this->sequenceState['pts'],
+                ]);
 
                 return self::KIND_HOLE;
 
             case 'updates.differenceTooLong':
                 $serverPts = (int)($diff['pts'] ?? $this->sequenceState['pts']);
                 TelegramGapDetected::dispatch(TelegramGapDetected::KIND_TOO_LONG, [
+                    'account_id' => $accountId,
+                    'local_pts'  => $this->sequenceState['pts'],
+                    'server_pts' => $serverPts,
+                    'timeout'    => isset($diff['timeout']) ? (int)$diff['timeout'] : null,
+                ]);
+                $this->signalSink?->gapDetected(TelegramGapDetected::KIND_TOO_LONG, [
                     'account_id' => $accountId,
                     'local_pts'  => $this->sequenceState['pts'],
                     'server_pts' => $serverPts,
@@ -486,6 +511,7 @@ class UpdatePollerService
         if ($this->gapPending) {
             $this->gapPending = false;
             TelegramResynced::dispatch($this->getSequenceState() ?? [], $accountId);
+            $this->signalSink?->resynced($this->getSequenceState() ?? [], (int) ($accountId ?? 0));
         }
     }
 
