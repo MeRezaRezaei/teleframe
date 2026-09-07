@@ -779,8 +779,8 @@ git commit -m "feat(core): SignalSink port — poller gaps observable framework-
 
 ## Completion checklist (whole plan)
 
-- [ ] `php bin/standalone-smoke.php` exits 0 in teleclient
-- [ ] `composer test && composer analyse` green in teleclient
-- [ ] `composer verify` green in teleframe
-- [ ] `grep -rn "Illuminate\\\\Foundation\|Illuminate\\\\Queue\|Artisan::" src/` returns zero hits in teleclient
-- [ ] Spec's §5 Phase 0 row fully delivered; note completion in the spec's Status line
+- [x] `php bin/standalone-smoke.php` exits 0 in teleclient
+- [x] `composer test && composer analyse` green in teleclient
+- [x] `composer verify` green in teleframe
+- [x] `grep -rn "Illuminate\\\\Foundation\|Illuminate\\\\Queue\|Artisan::" src/` returns zero hits in teleclient
+- [x] Spec's §5 Phase 0 row fully delivered; note completion in the spec's Status line
