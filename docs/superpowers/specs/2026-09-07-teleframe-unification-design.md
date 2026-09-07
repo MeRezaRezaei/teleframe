@@ -2,6 +2,7 @@
 
 **Status:** Approved 2026-09-07 (user decisions folded in verbatim)
 **Related research:** handler/coupling deep-dive (2026-09-07 session), Nutgram graphify analysis (`/tmp/opencode/nutgram/graphify-out/GRAPH_REPORT.md`)
+**Upstream vision:** `2026-09-07-teleframe-vision-verbatim.md` — the owner's full framework vision (uprate routing, loop prevention, Laravel-layer inheritance, keyboard objects, message templates, stage machine). This unification spec builds the SUBSTRATE; the vision's framework layers become Phase 5+ specs, each with its own gap/friction-mining brainstorm per the owner's planning rule.
 
 ## 1. Goal
 
