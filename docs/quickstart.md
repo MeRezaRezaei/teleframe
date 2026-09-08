@@ -120,3 +120,88 @@ $user->sendMedia('@mychannel', [
 ---
 
 Next: [index](index.md) · [Bot API](bot-client.md) · [User MTProto](user-client.md) · [Passport](telegram-passport.md) · [Scaling](scaling.md)
+
+---
+
+## Consumer layer recipes (merged from teleclient, Phase 2)
+
+The teleclient capabilities (tenant-scoped ingest, Redis bus, daemon,
+backfill, encrypted backup) now live in this package under
+`MeRezaRezaei\Teleframe\*`. Common ground: a Laravel host app, Postgres,
+Redis, and this package installed (migrations auto-load — `php artisan
+migrate` creates the `tl_*` truth tables). Sessions are credentials: keep
+them in env/secrets, never in committed files.
+
+### (f) First update → Postgres row
+
+```bash
+# 1. Login once — teleproto's wizard prints a session string:
+php artisan teleproto:login
+
+# 2. Register the account (config/teleframe.php):
+# 'daemon' => ['accounts' => [
+#     ['account_id' => 501558149, 'session_string' => env('TELEGRAM_SESSION_501558149')],
+# ]],
+
+# 3. Produce: run the daemon bootstrap (pattern in docs/bus.md — host
+#    command wrapping Daemon + RedisStreamSink) with TELEPROTO_LIVE=true.
+
+# 4. Consume one batch:
+php artisan teleframe:ingest --once
+```
+
+Query what landed — the aggregator resolves the CURRENT instance:
+
+```php
+$user = app(\MeRezaRezaei\Teleframe\Teleclient::class)
+    ->user(501558149, 501558149);          // ?TlUser, tenant-scoped
+$user?->currentInstance->first_name;       // fields live on the instance
+```
+
+### (g) Route updates with hot reload
+
+```php
+use MeRezaRezaei\Teleframe\Bus\RouteTable;
+
+$table = app(RouteTable::class);
+$table->set('updateNewMessage*', 'tg:target:messages');
+$table->set('*', 'tg:target:everything');
+```
+
+```bash
+redis-cli publish tg:bus:reload 'reload'   # wake long-lived observers
+php artisan teleframe:ingest               # consumer forwards + acks
+```
+
+### (h) Backfill a channel's history (quota-aware)
+
+```bash
+php artisan teleframe:backfill --account=501558149 --peer=@channel --budget=25
+php artisan teleframe:backfill --account=501558149 --peer=@a --peer=@b
+```
+
+Flag details and v1 report-only semantics: [bus.md](bus.md).
+
+### (i) Encrypted backup of a directory to a Telegram channel
+
+```php
+// config/teleframe.php — real backups need the telegram driver;
+// driver 'memory' (default) is the offline smoke-test driver.
+'backup' => [
+    'driver' => 'telegram',
+    'account' => env('TELEFRAME_BACKUP_ACCOUNT'), // daemon.accounts id
+    'sets' => ['default' => [
+        'paths' => [base_path('docs')],
+        'excludes' => ['.git', 'node_modules'],
+    ]],
+],
+```
+
+```bash
+php artisan teleframe:backup run     --set=default --passphrase='...'
+php artisan teleframe:backup verify  --set=default --sample=5   # keyless sampling
+php artisan teleframe:backup verify  --set=default --passphrase='...'  # full decrypt
+php artisan teleframe:backup restore --set=default --passphrase='...' --target=/tmp/restore
+```
+
+Deeper treatment: [ingest.md](ingest.md), [bus.md](bus.md), [backup.md](backup.md).

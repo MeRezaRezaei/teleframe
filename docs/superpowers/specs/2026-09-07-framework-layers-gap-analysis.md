@@ -102,7 +102,7 @@ F1 aggregator returns anchor+relation not profile view (no accessors on TlUser).
 |---|---|---|
 | Builders | InlineKeyboard/ReplyKeyboard fluent (TF/Core/Types/InlineKeyboard.php:28-123) | Anonymous value objects — no id, no registration, no key→action table; 64-byte callback_data limit unenforced |
 | Update→keyboard attribution | [Nutgram] InlineMenu `data@method` string equality (NG/Conversations/InlineMenu.php:100-151) | Not a first-class object; regex matching banned here (zero-regex); no provenance |
-| Injection prevention | Webhook secret only (TelegramWebhookController.php:30-35); HMAC precedent (VerifyMiniAppInitData:84-87); sodium lives in teleclient only (VaultCrypto; ext-sodium NOT in teleframe composer) | Whole layer missing |
+| Injection prevention | Webhook secret only (TelegramWebhookController.php:30-35); HMAC precedent (VerifyMiniAppInitData:84-87); `ext-sodium` + `VaultCrypto` now live in-repo (Phase 2 merged teleclient; `composer require sodium` satisfied) | Cleared 2026-09-08 |
 
 Vectors: forged callback_data from modified clients; replay (old keyboards clickable forever); cross-chat relay. Format options: (a) plain registry ids scoped user+msg; (b) opaque server-side handle (revocable, stateful); (c) HMAC-signed compact `v1:<kid>:<keyIdx>:<arg>:<sig8-10B>` — stateless, bind msgId+chatId into MAC, truncated MAC acceptable for button integrity. Identity needs: deterministic content-hash id (stable across deploys) + registered key→action = the uprate route + version byte for rotation ("menu expired" via answerCallbackQuery, BotClient:640-652).
 
@@ -171,7 +171,7 @@ flagged veto-able at that layer's spec review without rework.
 
 1. **Zero-regex** in src — Nutgram's matcher unportable; all matching = exact-map + sscanf-style.
 2. **64-byte callback_data budget** — full HMAC hex alone exhausts it.
-3. **ext-sodium split-brain** until Phase 2 merge — keyboards/templates use ext-hash HMAC meanwhile.
+3. ~~**ext-sodium split-brain** until Phase 2 merge~~ — **CLEARED** 2026-09-08: `ext-sodium` + `VaultCrypto` / `InMemoryVault` now live in-repo (`MeRezaRezaei\Teleframe\Backup\*`); `VaultCryptoTest` proves it. keyboards/templates use ext-hash HMAC meanwhile (unchanged).
 4. **mtime-only cache expiry is insufficient** — every compiled artifact salts with schemaLayer().
 5. **Tenancy contract** (no global lookups by tg id) — findTF must choose a deliberate breach or default-account strategy.
 6. **At-least-once delivery + replay-firing events** — uprate identity/dedup key is a prerequisite of every handler layer.
