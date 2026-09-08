@@ -32,4 +32,4 @@ Public faces: `MeRezaRezaei\Teleframe\Teleframe` (compose-not-own facade: `inges
 
 ## Project status
 
-Phases 0–3 of the unification roadmap complete: standalone foundation, schema upgrade pipeline, module merge (teleclient archived), handler substrate + facade. Next: Phase 4 (Laravel thin bridge / packaging landing), then framework layers 5a+.
+The unification roadmap is **fully landed**: Phases 0–4 (standalone foundation, schema upgrade pipeline, module merge [teleclient archived], handler substrate + facade, Laravel thin bridge) and 5a–5g (uprate router + loop prevention, identity & bindings, keyboard objects, message templates, stage machine, bot map, mini-app hosting). See `docs/superpowers/plans/2026-09-07-master-roadmap.md`.
