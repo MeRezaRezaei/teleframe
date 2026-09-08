@@ -34,7 +34,7 @@
 - Consumes: `SchemaArtifacts::path('schema-manifest.json')`, `SchemaArtifacts::path('methods-mtproto.json')`, `EncryptedConnection::LAYER`, `InstalledVersions::getRootPackage()`.
 - Produces: `SchemaLayer::layer(?string $manifestPath = null): int`; `SchemaLayer::cacheSalt(?string $manifestPath = null): string`; `TeleframeClient::schemaLayer(): int` (facade `Teleframe::schemaLayer()`). Phase 5d consumes `cacheSalt()`; Phase 2+ keeps the manifest pathing.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Core/Schema/SchemaLayerTest.php`:
 
@@ -100,12 +100,12 @@ final class SchemaLayerTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `vendor/bin/phpunit tests/Core/Schema/SchemaLayerTest.php`
 Expected: FATAL `Class "MeRezaRezaei\Teleframe\Core\Schema\SchemaLayer" not found`.
 
-- [ ] **Step 3: Create the resolver**
+- [x] **Step 3: Create the resolver**
 
 `src/Core/Schema/SchemaLayer.php`:
 
@@ -174,7 +174,7 @@ final class SchemaLayer
 }
 ```
 
-- [ ] **Step 4: Wire composer extra + facade**
+- [x] **Step 4: Wire composer extra + facade**
 
 In `composer.json`, inside the existing `extra` object add a sibling of `laravel`:
 
@@ -206,12 +206,12 @@ In `src/Laravel/Facades/Teleframe.php` add to the docblock:
  * @method static int schemaLayer() Declared Telegram schema layer of the packaged artifacts.
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `vendor/bin/phpunit tests/Core/Schema/SchemaLayerTest.php`
 Expected: PASS. Then run the whole suite once (`composer test`) to ensure no regression from the composer change.
 
-- [ ] **Step 6: Full gate + commit**
+- [x] **Step 6: Full gate + commit**
 
 Run: `composer verify`
 Expected: green.
@@ -233,7 +233,7 @@ git commit -m "feat(schema): SchemaLayer resolver + cacheSalt + composer extra.t
 - Consumes: packaged `src/Schema/schema/sources/errors.json` (already committed).
 - Produces: unchanged `src/Core/Exceptions/Rpc/RpcErrorCatalog.php` body (byte-identical regeneration proves the fix is safe).
 
-- [ ] **Step 1: Read the current generator head** (already known): reads `/tmp/opencode/errors.json`. Replace the read with the packaged source:
+- [x] **Step 1: Read the current generator head** (already known): reads `/tmp/opencode/errors.json`. Replace the read with the packaged source:
 
 Replace:
 
@@ -247,7 +247,7 @@ with:
 $j = json_decode((string) file_get_contents(dirname(__DIR__) . '/src/Schema/schema/sources/errors.json'), true);
 ```
 
-- [ ] **Step 2: Regenerate and verify byte-identical catalogue**
+- [x] **Step 2: Regenerate and verify byte-identical catalogue**
 
 Run:
 
@@ -259,7 +259,7 @@ diff /tmp/RpcErrorCatalog.php.bak src/Core/Exceptions/Rpc/RpcErrorCatalog.php
 
 Expected: `diff` exits 0 (no output) — the committed catalog was already generated from the same errors.json; the fix only redirected the source. If diff shows changes, STOP and report (the catalog was out of sync; regenerate is the intended update path but must be reviewed).
 
-- [ ] **Step 3: Gate + commit**
+- [x] **Step 3: Gate + commit**
 
 Run: `composer verify`
 Expected: green (phpstan must stay clean — the bin is exempt from preg_* but still analysed).
@@ -282,7 +282,7 @@ git commit -m "fix(schema): rpc catalog generator reads committed errors.json so
 - Consumes: `SchemaAuditCommand::regenerateTo`, `SchemaDiffer`, `SchemaLayer`, `SchemaArtifacts`.
 - Produces: `SchemaAuditCommand::pipelineSteps(): list<array{name: string, bin: string}>` (ordered full chain, never includes migrate); `SchemaUpdateCommand` signature `teleframe:schema-update {--no-fetch : Skip network fetch, regenerate from committed sources} {--dry-run : Regenerate + stamp into a scratch dir, leave the repo untouched}`. Dry-run stamps `scratch/schema-manifest.json` and prints the layer; real run stamps the packaged file. Phase 5d relies on the stamped manifest via `SchemaLayer`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Laravel/SchemaPipelineTest.php` (plain PHPUnit, no Laravel app):
 
@@ -335,12 +335,12 @@ final class SchemaPipelineTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `vendor/bin/phpunit tests/Laravel/SchemaPipelineTest.php`
 Expected: FAIL — `SchemaAuditCommand::pipelineSteps()` not defined, and the first test errors.
 
-- [ ] **Step 3: Add `pipelineSteps()` and fix root resolution in `SchemaAuditCommand`**
+- [x] **Step 3: Add `pipelineSteps()` and fix root resolution in `SchemaAuditCommand`**
 
 In `src/Laravel/Console/SchemaAuditCommand.php`:
 
@@ -383,7 +383,7 @@ Use `self::root()` in place of `$root` in `handle()` and `regenerateTo()` (which
 
 Note: verify the actual root–bin path: `SchemaArtifacts::path('methods-mtproto.json')` → `…/src/Schema/schema/…`; `dirname(…, 2)` → `…/src`? NO — dirname of `…/src/Schema/schema/methods-mtproto.json` with depth 2 = `…/src/Schema`, and the bins are at `…/bin/`, not `…/src/Schema/bin/`. The package root is `…/` (repo root). **Correct `root()` to resolve the package root properly:** use `dirname(dirname(dirname(__DIR__)))` → from `src/Laravel/Console/` that is one level above repo root's `src`. Read the current file's directory chain and derive root as `dirname(__DIR__, 3)` (Console → Laravel → src → repo root = 3 levels). Use that. Keep bins at `{root}/bin/{name}.php` and sources at `{root}/src/Schema/schema/sources/`.
 
-- [ ] **Step 4: Rework `SchemaUpdateCommand`**
+- [x] **Step 4: Rework `SchemaUpdateCommand`**
 
 Rewrite `handle()` in `src/Laravel/Console/SchemaUpdateCommand.php` to:
 
@@ -396,12 +396,12 @@ Keep `{--no-fetch}` and `{--dry-run}` in the signature/description. Never invoke
 
 (The generators write their own outputs in place — method-schema/botapi write the artifacts dir, builders/skills/userscope/rpc write their src targets. That is the intended update behavior.)
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `vendor/bin/phpunit tests/Laravel/SchemaPipelineTest.php`
 Expected: PASS (both tests).
 
-- [ ] **Step 6: Gate + commit**
+- [x] **Step 6: Gate + commit**
 
 Run: `composer verify`
 Expected: green (phpstan clean — new methods typed, no preg_*, unused imports removed).
@@ -422,7 +422,7 @@ git commit -m "feat(schema): unified teleframe:schema-update — full chain, off
 **Interfaces:**
 - Consumes: Task 3 command. Produces: packaged `schema-manifest.json` layer 229 committed; `SchemaLayer::layer()` returns 229 repo-wide.
 
-- [ ] **Step 1: Run the command offline (dry-run first, safe)**
+- [x] **Step 1: Run the command offline (dry-run first, safe)**
 
 Run:
 
@@ -432,7 +432,7 @@ php bin/teleframe schema-update --dry-run --no-fetch 2>&1 | tail -30
 
 Expected: a SchemaDiffer report (likely "Sources updated; artifacts unchanged" or a diff summary) and `<info>stamped … layer 229 (dry-run, repo untouched)</info>`. If the dry-run errors on a generator, STOP and fix (regression in Task 3).
 
-- [ ] **Step 2: Run the real offline update**
+- [x] **Step 2: Run the real offline update**
 
 Run:
 
@@ -443,7 +443,7 @@ git status --short
 
 Expected: generators run in order; a new `src/Schema/schema/schema-manifest.json` appears (or is rewritten); regenerated artifacts are byte-identical (idempotent) so `git status` shows only `schema-manifest.json` (and possibly none of the generated files). If generated files differ, review the diff — this is an effective regeneration, allowed, but must be inspected (drift) before commit.
 
-- [ ] **Step 3: Verify layer queryable + gates green**
+- [x] **Step 3: Verify layer queryable + gates green**
 
 Run:
 
@@ -453,7 +453,7 @@ grep -o '"layer":[0-9]*' src/Schema/schema/schema-manifest.json
 
 Expected: `"layer":229`. Then `composer verify` — green.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/Schema/schema/schema-manifest.json
@@ -472,7 +472,7 @@ git commit -m "chore(schema): packaged schema-manifest.json layer 229 stamped (P
 **Interfaces:**
 - Produces: SKILL v2 that human and AI both follow for the unified procedure.
 
-- [ ] **Step 1: Update the skill to v2**
+- [x] **Step 1: Update the skill to v2**
 
 Rewrite the procedure section of `skills/telegram-schema-update/SKILL.md`:
 
@@ -495,7 +495,7 @@ Rewrite the procedure section of `skills/telegram-schema-update/SKILL.md`:
 
 **Never** hand-edit `schema-manifest.json` or any generated artifact.
 
-- [ ] **Step 2: Tick the roadmap**
+- [x] **Step 2: Tick the roadmap**
 
 In `docs/superpowers/plans/2026-09-07-master-roadmap.md` change the Phase 1 block to:
 
@@ -504,11 +504,11 @@ In `docs/superpowers/plans/2026-09-07-master-roadmap.md` change the Phase 1 bloc
 - [x] Gate: command runs end-to-end on a synthetic layer bump; layer stamp queryable; gates green
 ```
 
-- [ ] **Step 3: Spec status**
+- [x] **Step 3: Spec status**
 
 In `docs/superpowers/specs/2026-09-07-teleframe-unification-design.md` status line, append ` · Phase 1 (unified schema-update + schemaLayer) COMPLETE 2026-09-07`.
 
-- [ ] **Step 4: Gate + commit + push**
+- [x] **Step 4: Gate + commit + push**
 
 Run: `composer verify`
 Expected: green.

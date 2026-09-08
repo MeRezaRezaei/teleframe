@@ -25,7 +25,7 @@
       container in `FakeRunningModeTest`-style dispatch.
 - [x] **Task 4: docs.** `docs/handlers.md`: args receipt, validation wrapper,
       dedup + `seen_replays`, updateId reference.
-- [ ] **Task 5: gate.** `composer verify` exit 0 (phpstan clean), smoke exit 0,
+- [x] **Task 5: gate.** `composer verify` exit 0 (phpstan clean), smoke exit 0,
       `TELEFRAME_PG=1 tests/Pg` green; roadmap Phase 5a items ticked; spec
       status line updated; commit + push `main` (coordinator commits).
 

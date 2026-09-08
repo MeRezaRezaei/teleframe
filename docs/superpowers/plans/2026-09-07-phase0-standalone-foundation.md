@@ -34,7 +34,7 @@
 - Consumes: none new.
 - Produces: `UpdateIngestor::__construct(RouteIdempotency $routes = new RouteIdempotency(), ?\Illuminate\Contracts\Events\Dispatcher $events = null)`; `UpdateStored` plain readonly DTO (`$model`, `$accountId`), no traits. Later phases rely on `?Dispatcher $events` being the event seam.
 
-- [ ] **Step 1: Write the failing standalone load test**
+- [x] **Step 1: Write the failing standalone load test**
 
 Create `tests/Standalone/PlainPhpLoadTest.php`. Plain PHPUnit base — deliberately NOT extending the testbench `TestCase`, so no Laravel app ever boots:
 
@@ -78,12 +78,12 @@ final class PlainPhpLoadTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `vendor/bin/phpunit tests/Standalone/PlainPhpLoadTest.php`
 Expected: FATAL `Class "Illuminate\Foundation\Events\Dispatchable" not found` (or `Illuminate\Queue\SerializesModels`) — proving the audit finding. If it instead passes, STOP: the environment is masking the defect via a dev-time laravel/framework autoload; investigate before continuing.
 
-- [ ] **Step 3: Rebuild `UpdateStored` as a plain DTO**
+- [x] **Step 3: Rebuild `UpdateStored` as a plain DTO**
 
 Replace the entire content of `src/Ingest/Events/UpdateStored.php`:
 
@@ -115,7 +115,7 @@ final class UpdateStored
 }
 ```
 
-- [ ] **Step 4: Add the dispatcher seam to `UpdateIngestor`**
+- [x] **Step 4: Add the dispatcher seam to `UpdateIngestor`**
 
 In `src/Ingest/UpdateIngestor.php`, add the import:
 
@@ -145,7 +145,7 @@ to:
         $this->events?->dispatch(new UpdateStored($root, $accountId));
 ```
 
-- [ ] **Step 5: Write the dispatch-seam test (in Laravel context, proving wiring)**
+- [x] **Step 5: Write the dispatch-seam test (in Laravel context, proving wiring)**
 
 Create `tests/Ingest/UpdateIngestorDispatchTest.php`:
 
@@ -229,7 +229,7 @@ final class UpdateIngestorDispatchTest extends IngestTestCase
 }
 ```
 
-- [ ] **Step 6: Wire the provider so Laravel hosts keep identical behavior**
+- [x] **Step 6: Wire the provider so Laravel hosts keep identical behavior**
 
 In `src/TeleclientServiceProvider.php` change line 45 from:
 
@@ -247,12 +247,12 @@ to:
 
 Add the import `use MeRezaRezaei\Teleclient\Ingest\UpdateIngestor;` if not already present (it is, via the existing singleton call).
 
-- [ ] **Step 7: Run all ingest tests**
+- [x] **Step 7: Run all ingest tests**
 
 Run: `vendor/bin/phpunit tests/Standalone tests/Ingest`
 Expected: ALL PASS, including pre-existing `NestedIngestTest` (its `Event::fake`/`assertDispatched` at :146-151 keeps working because the provider resolves the ingester lazily against the faked dispatcher).
 
-- [ ] **Step 8: Full gate + commit**
+- [x] **Step 8: Full gate + commit**
 
 Run: `composer test && composer analyse`
 Expected: green (334+ tests, phpstan level 5 clean).
@@ -275,7 +275,7 @@ git commit -m "fix(ingest): standalone-safe UpdateStored via injected dispatcher
 - Consumes: Task 1's constructor shape.
 - Produces: `UpdateIngestor::__construct(RouteIdempotency $routes = new RouteIdempotency(), ?Dispatcher $events = null, ?\Closure $now = null)` — the closure returns `DateTimeImmutable`; null means "real clock". `RouteIdempotency::__construct(?\Closure $now = null)`. Phases 2+ reuse `$now` as the clock seam for every module.
 
-- [ ] **Step 1: Write the failing clock test**
+- [x] **Step 1: Write the failing clock test**
 
 Create `tests/Ingest/InjectableClockTest.php`:
 
@@ -335,12 +335,12 @@ final class InjectableClockTest extends IngestTestCase
 
 (If `mark()` turns out to be static in the current file, keep the test body identical and drop the instance expression — call it as `RouteIdempotency::mark(...)` with a `?(Closure $now)` threaded as a parameter instead; the assertion is the contract, not the call shape. The audit read shows instance methods at `RouteIdempotency.php:101,115`.)
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `vendor/bin/phpunit tests/Ingest/InjectableClockTest.php`
 Expected: FAIL — `Unknown named parameter now` (constructor doesn't accept it yet).
 
-- [ ] **Step 3: Add the clock seam**
+- [x] **Step 3: Add the clock seam**
 
 In `src/Ingest/UpdateIngestor.php` the constructor becomes (note `$routes` drops its property-default object — PHP cannot cross-reference constructor params in defaults, and the body threads the clock into the routes helper):
 
@@ -394,12 +394,12 @@ with:
 
 Update the Task 1 dispatch test / provider closure only if phpstan flags the changed default (they pass `events:` named — still valid).
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `vendor/bin/phpunit tests/Ingest/InjectableClockTest.php tests/Ingest`
 Expected: PASS (Eloquent/query-builder accept `DateTimeInterface` for timestamp columns — no format change).
 
-- [ ] **Step 5: Full gate + commit**
+- [x] **Step 5: Full gate + commit**
 
 Run: `composer test && composer analyse`
 Expected: green.
@@ -421,7 +421,7 @@ git commit -m "fix(ingest): injectable clock replaces Laravel now() (Phase 0 Tas
 - Consumes: `migrationPaths(): array` (unchanged, public static).
 - Produces: removal of `UpdateIngestor::boot()`. The explicit migration surface for Phase 2's `Teleframe::migrate()` is `UpdateIngestor::migrationPaths()`.
 
-- [ ] **Step 1: Replace the boot test with a regression test asserting the seam is gone**
+- [x] **Step 1: Replace the boot test with a regression test asserting the seam is gone**
 
 In `tests/Ingest/UpdateIngestorTest.php`, replace `test_boot_migrates_the_generated_truth` (:46-54) with:
 
@@ -440,12 +440,12 @@ In `tests/Ingest/UpdateIngestorTest.php`, replace `test_boot_migrates_the_genera
     }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `vendor/bin/phpunit tests/Ingest/UpdateIngestorTest.php`
 Expected: FAIL — `method_exists` returns true (boot still exists).
 
-- [ ] **Step 3: Delete boot() and the Artisan import**
+- [x] **Step 3: Delete boot() and the Artisan import**
 
 In `src/Ingest/UpdateIngestor.php`: remove the line
 
@@ -477,12 +477,12 @@ Grep for other callers first and fix if found (audit found none outside this cla
 grep -rn -- "->boot()" src/ tests/
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `vendor/bin/phpunit tests/Ingest/UpdateIngestorTest.php tests/Ingest`
 Expected: PASS.
 
-- [ ] **Step 5: Full gate + commit**
+- [x] **Step 5: Full gate + commit**
 
 Run: `composer test && composer analyse`
 Expected: green.
@@ -505,7 +505,7 @@ git commit -m "fix(ingest)!: remove hidden runtime Artisan::call('migrate') (Pha
 - Consumes: Tasks 1–3 (no Foundation/Queue/helpers usage left in src/).
 - Produces: `bin/standalone-smoke.php` exit code 0 = the ingest surface loads with only production deps. CI may invoke it later (Phase 2); it is not wired into CI now.
 
-- [ ] **Step 1: Write the standalone smoke script**
+- [x] **Step 1: Write the standalone smoke script**
 
 Create `bin/standalone-smoke.php`:
 
@@ -545,12 +545,12 @@ foreach ($checks as $label => $check) {
 exit($failed ? 1 : 0);
 ```
 
-- [ ] **Step 2: Run it (it must pass now — and would have fataled before Tasks 1–3)**
+- [x] **Step 2: Run it (it must pass now — and would have fataled before Tasks 1–3)**
 
 Run: `php bin/standalone-smoke.php`
 Expected: all `✓`, exit 0. If any line fatals with `Class ... not found`, a Foundation/Queue reference survived — grep `src/` for `Illuminate\Foundation|Illuminate\Queue` and fix before continuing.
 
-- [ ] **Step 3: Verify the manifest is true**
+- [x] **Step 3: Verify the manifest is true**
 
 Run:
 
@@ -561,7 +561,7 @@ grep -rn "Artisan::" src/
 
 Expected: zero hits. Then confirm production deps already cover everything imported (they do: illuminate/events is required; `Illuminate\Contracts\Events\Dispatcher` lives there). No composer.json change needed — record that in the commit message.
 
-- [ ] **Step 4: Full gate + commit**
+- [x] **Step 4: Full gate + commit**
 
 Run: `composer test && composer analyse`
 Expected: green.
@@ -584,7 +584,7 @@ git commit -m "test(standalone): plain-PHP smoke proof, manifest verified true (
 - Consumes: existing `TelegramGapDetected::dispatch()` guarded statics (stay — Laravel hosts keep them).
 - Produces: `MeRezaRezaei\Teleframe\Core\Contracts\SignalSink` with `gapDetected(string $kind, array $context): void` and `resynced(array $state, int $accountId): void`; `UpdatePollerService::__construct(?UpdateSinkInterface $sink = null, ?SignalSink $signalSink = null)` + `withSignalSink(SignalSink $sink): static`. teleclient's `AccountWorker`/`Daemon` consume this in Phase 2 to observe gaps standalone; `TelegramGapDetected::KIND_*` constants are the `$kind` vocabulary.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/Laravel/UpdatePollerSignalSinkTest.php`:
 
@@ -647,12 +647,12 @@ final class RecordingSink implements SignalSink
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `vendor/bin/phpunit tests/Laravel/UpdatePollerSignalSinkTest.php`
 Expected: FAIL — `Class "MeRezaRezaei\Teleframe\Core\Contracts\SignalSink" not found`.
 
-- [ ] **Step 3: Create the contract**
+- [x] **Step 3: Create the contract**
 
 `src/Core/Contracts/SignalSink.php`:
 
@@ -681,7 +681,7 @@ interface SignalSink
 }
 ```
 
-- [ ] **Step 4: Wire the poller**
+- [x] **Step 4: Wire the poller**
 
 In `src/Laravel/Services/UpdatePollerService.php` add the import `use MeRezaRezaei\Teleframe\Core\Contracts\SignalSink;`. Constructor (currently `:89`):
 
@@ -757,7 +757,7 @@ Site `:488` (inside `finishResync`, after `$this->gapPending = false;`):
             $this->signalSink?->resynced($this->getSequenceState() ?? [], (int) ($accountId ?? 0));
 ```
 
-- [ ] **Step 5: Run the teleframe suite**
+- [x] **Step 5: Run the teleframe suite**
 
 Run: `composer verify` (teleframe repo root)
 Expected: green — 257+ tests, phpstan clean. The state-machine tests already drive gap paths; they assert no regression. Additionally re-run teleclient's full gate since it subclasses the poller:
@@ -768,7 +768,7 @@ cd ../teleclient && composer test && composer analyse
 
 Expected: green (constructor change is additive-optional; `AccountPoller extends UpdatePollerService` unaffected).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Core/Contracts/SignalSink.php src/Laravel/Services/UpdatePollerService.php tests/Laravel/UpdatePollerSignalSinkTest.php

@@ -25,7 +25,7 @@
 
 **Plan:** `plans/2026-09-07-phase0-standalone-foundation.md` (full detail, 5 tasks)
 
-- [ ] Gate: all 5 tasks green; `bin/standalone-smoke.php` exit 0; both repos' gates pass; committed + pushed
+- [x] Gate: all 5 tasks green; `bin/standalone-smoke.php` exit 0; both repos' gates pass; committed + pushed
 
 ### Phase 1: Schema Upgrade Pipeline
 
