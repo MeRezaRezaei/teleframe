@@ -38,7 +38,7 @@
 
 **Delivers:** Ingest/Bus/Daemon/Backfill/Backup move into `teleframe/src/Teleframe/*` behind PSR seams (one module per task, tests move with modules); ext-sodium arrives here (gap constraint 3 clears); teleclient repo archived after.
 
-- [ ] Write plan `plans/YYYY-MM-DD-phase2-module-merge.md`
+- [x] Write plan `plans/2026-09-08-phase2-module-merge.md`
 - [ ] Gate: single package, both suites green inside teleframe, plain-PHP construct of every module proven
 
 ### Phase 3: Handler Substrate
