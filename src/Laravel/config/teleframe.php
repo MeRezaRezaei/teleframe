@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use MeRezaRezaei\Teleframe\Bus\StreamSchema;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 
 /*
@@ -88,9 +89,9 @@ return [
     |--------------------------------------------------------------------------
     */
     'bus' => [
-        'stream' => 'tg:stream:updates',
-        'group' => 'teleclient',
-        'reload_channel' => 'tg:bus:reload',
+        'stream' => StreamSchema::STREAM,
+        'group' => StreamSchema::GROUP,
+        'reload_channel' => StreamSchema::RELOAD_CHANNEL,
         'connection' => 'default',
         'redis_client' => env('TELEFRAME_REDIS', 'predis'),
     ],

@@ -25,5 +25,11 @@
         <testsuite name="Pg">
             <directory>tests/Pg</directory>
         </testsuite>
+        <testsuite name="Bus">
+            <directory>tests/Bus</directory>
+        </testsuite>
+        <testsuite name="Console">
+            <directory>tests/Console</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

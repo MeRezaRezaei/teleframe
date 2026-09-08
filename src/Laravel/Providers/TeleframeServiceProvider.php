@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Laravel\Providers;
 
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Redis\RedisManager;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use MeRezaRezaei\Teleframe\Bus\LaravelRedisAdapter;
+use MeRezaRezaei\Teleframe\Bus\RedisConnectionContract;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Laravel\Console\IngestCommand;
@@ -15,6 +19,7 @@ use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use MeRezaRezaei\Teleframe\Teleclient;
+use RuntimeException;
 
 class TeleframeServiceProvider extends ServiceProvider
 {
@@ -28,6 +33,27 @@ class TeleframeServiceProvider extends ServiceProvider
         ));
         $this->app->singleton(EntityAggregator::class);
         $this->app->singleton(Teleclient::class);
+
+        $this->app->bind(RedisConnectionContract::class, static function ($app): RedisConnectionContract {
+            $manager = $app->bound('redis') ? $app->make('redis') : null;
+
+            if ($manager instanceof RedisManager) {
+                /** @var ConfigRepository $config */
+                $config = $app->make('config');
+                $connection = (string) $config->get('teleframe.bus.connection', 'default');
+
+                return new LaravelRedisAdapter($manager->connection($connection));
+            }
+
+            // No illuminate redis service: fail loudly. Tests bind the
+            // in-memory ArrayRedis double to this contract themselves; a
+            // silent fallback here would hide a misconfigured host app.
+            throw new RuntimeException(
+                'teleframe bus requires the illuminate redis service (app("redis")); '
+                . 'install illuminate/redis (predis or phpredis driver) or bind '
+                . RedisConnectionContract::class . ' yourself.',
+            );
+        });
 
         $this->app->singleton(TeleframeClient::class, function ($app) {
             $config = $app['config']['teleframe'] ?? $app['config']['telegram'] ?? [];
