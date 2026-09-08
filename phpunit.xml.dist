@@ -16,5 +16,14 @@
         <testsuite name="Schema">
             <directory>tests/Schema</directory>
         </testsuite>
+        <testsuite name="Ingest">
+            <directory>tests/Ingest</directory>
+        </testsuite>
+        <testsuite name="Standalone">
+            <directory>tests/Standalone</directory>
+        </testsuite>
+        <testsuite name="Pg">
+            <directory>tests/Pg</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

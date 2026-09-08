@@ -6,11 +6,15 @@ namespace MeRezaRezaei\Teleframe\Laravel\Providers;
 
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
+use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
+use MeRezaRezaei\Teleframe\Laravel\Console\IngestCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Http\Middleware\VerifyMiniAppInitData;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
+use MeRezaRezaei\Teleframe\Teleclient;
 
 class TeleframeServiceProvider extends ServiceProvider
 {
@@ -19,6 +23,11 @@ class TeleframeServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/teleframe.php', 'teleframe');
 
         $this->app->singleton(SchemaRegenerator::class);
+        $this->app->singleton(UpdateIngestor::class, static fn ($app): UpdateIngestor => new UpdateIngestor(
+            events: $app->make(\Illuminate\Contracts\Events\Dispatcher::class),
+        ));
+        $this->app->singleton(EntityAggregator::class);
+        $this->app->singleton(Teleclient::class);
 
         $this->app->singleton(TeleframeClient::class, function ($app) {
             $config = $app['config']['teleframe'] ?? $app['config']['telegram'] ?? [];
@@ -50,6 +59,7 @@ class TeleframeServiceProvider extends ServiceProvider
                 \MeRezaRezaei\Teleframe\Laravel\Console\SchemaAuditCommand::class,
                 \MeRezaRezaei\Teleframe\Laravel\Console\SchemaUpdateCommand::class,
                 RegenerateCommand::class,
+                IngestCommand::class,
             ]);
 
             $this->loadMigrationsFrom(dirname(__DIR__, 3) . '/migrations');

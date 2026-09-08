@@ -18,11 +18,11 @@ use PDO;
  * Connection truth is env-driven so the same code serves the local
  * peer-auth unix socket (user `me`, db teleframe_night_test, no password)
  * and the CI postgres:17 service (TCP + password):
- *   TELECLIENT_PG_HOST      default /var/run/postgresql
- *   TELECLIENT_PG_PORT      default 5432
- *   TELECLIENT_PG_DATABASE  default teleproto_night_test
- *   TELECLIENT_PG_USER      default me
- *   TELECLIENT_PG_PASSWORD  default empty (peer auth)
+ *   TELEFRAME_PG_HOST      default /var/run/postgresql
+ *   TELEFRAME_PG_PORT      default 5432
+ *   TELEFRAME_PG_DATABASE  default teleproto_night_test
+ *   TELEFRAME_PG_USER      default me
+ *   TELEFRAME_PG_PASSWORD  default empty (peer auth)
  */
 trait RunsPostgresMigrations
 {
@@ -36,11 +36,11 @@ trait RunsPostgresMigrations
     protected static function pgConnectionConfig(): array
     {
         return [
-            'host' => (string) (getenv('TELECLIENT_PG_HOST') ?: '/var/run/postgresql'),
-            'port' => (string) (getenv('TELECLIENT_PG_PORT') ?: '5432'),
-            'database' => (string) (getenv('TELECLIENT_PG_DATABASE') ?: 'teleproto_night_test'),
-            'user' => (string) (getenv('TELECLIENT_PG_USER') ?: 'me'),
-            'password' => (string) (getenv('TELECLIENT_PG_PASSWORD') ?: ''),
+            'host' => (string) (getenv('TELEFRAME_PG_HOST') ?: '/var/run/postgresql'),
+            'port' => (string) (getenv('TELEFRAME_PG_PORT') ?: '5432'),
+            'database' => (string) (getenv('TELEFRAME_PG_DATABASE') ?: 'teleproto_night_test'),
+            'user' => (string) (getenv('TELEFRAME_PG_USER') ?: 'me'),
+            'password' => (string) (getenv('TELEFRAME_PG_PASSWORD') ?: ''),
         ];
     }
 

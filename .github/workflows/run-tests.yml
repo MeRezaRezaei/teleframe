@@ -27,3 +27,49 @@ jobs:
         run: composer install --no-interaction --prefer-dist
       - name: Full verify chain
         run: composer verify
+
+  # Night W3: PostgreSQL track — the sqlite matrix cannot see native uuid
+  # columns, DEFERRABLE INITIALLY DEFERRED cross-type FKs, or the FULL
+  # 637-migration generated set (sqlite tests only run the 112-file dial +
+  # entity anchors). Env TELEFRAME_PG=1 forces the track on; the sqlite
+  # matrix jobs keep default-skipping it (no PG service there).
+  pg-tests:
+    runs-on: ubuntu-latest
+    name: PG 17 - full mirror
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: teleproto_night_test
+          POSTGRES_USER: me
+          POSTGRES_PASSWORD: telegram
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U me -d teleproto_night_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TELEFRAME_PG: 1
+      TELEFRAME_PG_HOST: 127.0.0.1
+      TELEFRAME_PG_PORT: 5432
+      TELEFRAME_PG_DATABASE: teleproto_night_test
+      TELEFRAME_PG_USER: me
+      TELEFRAME_PG_PASSWORD: telegram
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: dom, curl, libxml, mbstring, zip, openssl, hash, json, gmp, bcmath, sodium, pdo, pdo_sqlite, sqlite3, pdo_pgsql
+          coverage: none
+      - name: Validate manifest
+        run: composer validate --strict --no-check-publish
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+      - name: Execute Postgres track
+        run: vendor/bin/phpunit tests/Pg
