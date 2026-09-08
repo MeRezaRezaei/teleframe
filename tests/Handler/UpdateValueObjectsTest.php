@@ -40,4 +40,43 @@ final class UpdateValueObjectsTest extends TestCase
         self::assertTrue($owned->selfOriginated);
         self::assertNotSame($u, $owned);
     }
+
+    public function test_update_id_is_a_deterministic_content_hash(): void
+    {
+        $a = Update::fromBus(['_' => 'updateNewMessage', 'message' => 'hi'], 7, 100);
+        $b = Update::fromBus(['_' => 'updateNewMessage', 'message' => 'hi'], 7, 100);
+
+        self::assertSame($a->updateId(), $b->updateId());
+        self::assertSame(40, strlen($a->updateId())); // sha1 hex
+    }
+
+    public function test_update_id_changes_with_payload_account_or_ts(): void
+    {
+        $base = Update::fromBus(['_' => 'updateNewMessage', 'message' => 'hi'], 7, 100);
+
+        self::assertNotSame(
+            $base->updateId(),
+            Update::fromBus(['_' => 'updateNewMessage', 'message' => 'yo'], 7, 100)->updateId(),
+        );
+        self::assertNotSame(
+            $base->updateId(),
+            Update::fromBus(['_' => 'updateNewMessage', 'message' => 'hi'], 8, 100)->updateId(),
+        );
+        self::assertNotSame(
+            $base->updateId(),
+            Update::fromBus(['_' => 'updateNewMessage', 'message' => 'hi'], 7, 101)->updateId(),
+        );
+    }
+
+    public function test_from_mirror_seeds_update_id_from_model_created_at(): void
+    {
+        $created = \Carbon\Carbon::createFromTimestamp(500);
+        $model = $this->createStub(\MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel::class);
+        $model->method('getAttribute')->willReturn($created);
+
+        $u = Update::fromMirror($model, 9);
+
+        self::assertSame(500, $u->ts);
+        self::assertSame($u->updateId(), Update::fromMirror($model, 9)->updateId());
+    }
 }

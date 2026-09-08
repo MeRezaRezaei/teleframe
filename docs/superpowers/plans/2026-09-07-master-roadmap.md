@@ -67,33 +67,33 @@
 
 - [x] Spec written with RULINGS Q1–Q6 applied (gap doc §RULINGS); owner gate = spec review only
 - [x] Spec: `specs/2026-09-08-uprate-router-design.md`
-- [ ] Plan + execution
-- [ ] Gate: `/start {arg}`-style routing works zero-regex; self-echo eliminated while mirror still stores it; replay dedup proven by test
+- [x] Plan + execution
+- [x] Gate: `/start {arg}`-style routing works zero-regex; self-echo eliminated while mirror still stores it; replay dedup proven by test
 
 ### Phase 5b: Identity & Laravel Bindings
 
 **Decide first:** Q7–Q12 — gap doc §II. Structural recommendation from research: package-owned `tl_user_bindings` with nullable morph (works standalone AND in Laravel).
 **Delivers:** binding table + write hooks (UpdateStored/login); `findTF` (with chosen tenancy strategy + tl_id index migration); `HasTelegram` (+ Telegram notification channel + sender resolution); `HasUserTelegram`; guard trio (auth.php guards over the three scopes); mini-app initData freshness fix + RequestGuard upgrade.
 
-- [ ] Spec written with RULINGS Q7–Q12 applied; owner gate = spec review only (Q7 veto-able)
-- [ ] Spec + plan + execution
-- [ ] Gate: `User::findTF()` resolves in a Laravel test app; a Notification delivers via Telegram; replayed initData rejected
+- [x] Spec written with RULINGS Q7–Q12 applied; owner gate = spec review only (Q7 veto-able)
+- [x] Spec + plan + execution
+- [x] Gate: `User::findTF()` resolves in a Laravel test app; a Notification delivers via Telegram; replayed initData rejected
 
 ### Phase 5c: Keyboard Objects
 
 **Decide first:** Q15 (callback format), Q16 (id lifecycle) — gap doc §III. Depends: 5a (routing), 5b optional (per-user scoping).
 **Delivers:** keyboard objects with deterministic identity; key→action table = uprate routes; callback_data format within 64B (signed or handle per Q15); rotation/expiry ("menu expired"); injection test suite (forge/replay/relay vectors).
 
-- [ ] Spec written with RULINGS Q15–Q16 applied · Plan · Execution
-- [ ] Gate: forged callback_data rejected; old menus expire; keyboard code separated from handler code in example app
+- [x] Spec written with RULINGS Q15–Q16 applied · Plan · Execution
+- [x] Gate: forged callback_data rejected; old menus expire; keyboard code separated from handler code in example app
 
 ### Phase 5d: Message Templates (Blade-for-Telegram)
 
 **Decide first:** Q13 (syntax), Q14 (cache artifact) — gap doc §III. Depends: Phase 1 (schemaLayer salt — hard constraint 4).
 **Delivers:** MessageCompiler (compile→cache in bootstrap/cache pattern, salted by schemaLayer); `message('name')` finder; entity-plan compilation over EntityParser; sendMessage typecheck vs MethodRegistry; view:clear-style ops.
 
-- [ ] Spec written with RULINGS Q13–Q14 applied · Plan · Execution (Q13 veto-able)
-- [ ] Gate: template renders to entities; layer bump invalidates cache without mtime change; gates green
+- [x] Spec written with RULINGS Q13–Q14 applied · Plan · Execution (Q13 veto-able)
+- [x] Gate: template renders to entities; layer bump invalidates cache without mtime change; gates green
 
 ### Phase 5e: Stage Machine (same route, telegram-paced)
 

@@ -20,8 +20,8 @@ Phase 5a closes the *deliverable* deltas and proves the roadmap gate:
 | Declarative routes, zero-regex, sscanf params | ✅ `HandlerRegistry`/`HandlerMatcher` — **gate needs `/start {arg}` proof + documented arg-receipt** |
 | Loop-prevention registry + elimination middleware | ✅ `EchoEliminator` (KEY `teleframe.handler.sends`) |
 | Reply path with account context preserved | ✅ facade `TelegramContext`/`send` |
-| Uprate identity / dedup key | ⬜ NEW — deterministic content-hash id + replay dedup test |
-| Uprate validation object (FormRequest analog) | ⬜ NEW — `ValidatedUpdate` wrapper, DI-injected per handler |
+| Uprate identity / dedup key | ✅ SHIPPED — deterministic content-hash id + `ReplayDedup` middleware + `seen_replays` |
+| Uprate validation object (FormRequest analog) | ✅ SHIPPED — `ValidatedUpdate` wrapper, DI-injected per handler |
 
 ## 1. RULINGS applied (gap doc §RULINGS)
 

@@ -8,7 +8,8 @@ namespace MeRezaRezaei\Teleframe\Handler;
  * Pure matcher over the registry — the router half of the two-stage split
  * (Q4): match the raw constructor name now, hydrate models later via DI in
  * the handler. Same zero-regex grammar as the bus ``RouteTable``: exact,
- * trailing ``*`` prefix, bare ``*`` catch-all, first-match-wins.
+ * trailing ``*`` prefix, bare ``*`` catch-all, plus a single ``%s`` sscanf
+ * token (spec 5a §2). First-match-wins.
  */
 final class HandlerMatcher
 {
@@ -17,27 +18,40 @@ final class HandlerMatcher
     ) {
     }
 
-    public function match(string $constructor): ?Handler
+    public function match(string $constructor): ?HandlerMatch
     {
         foreach ($this->registry->all() as $handler) {
-            if (self::patternMatches($handler->match, $constructor)) {
-                return $handler;
+            $args = self::extractArgs($handler->match, $constructor);
+            if ($args !== null) {
+                return new HandlerMatch($handler, $args);
             }
         }
 
         return null;
     }
 
-    private static function patternMatches(string $pattern, string $constructor): bool
+    /**
+     * Extract sscanf args when the pattern matches, else null.
+     *
+     * @return list<string>|null
+     */
+    private static function extractArgs(string $pattern, string $constructor): ?array
     {
         if ($pattern === '*') {
-            return true;
+            return [];
         }
 
         if (str_ends_with($pattern, '*')) {
-            return str_starts_with($constructor, substr($pattern, 0, -1));
+            return str_starts_with($constructor, substr($pattern, 0, -1)) ? [] : null;
         }
 
-        return $pattern === $constructor;
+        if (! str_contains($pattern, '%s')) {
+            return $pattern === $constructor ? [] : null;
+        }
+
+        $captured = null;
+        $matched = sscanf($constructor, $pattern, $captured);
+
+        return $matched > 0 ? [(string) $captured] : null;
     }
 }

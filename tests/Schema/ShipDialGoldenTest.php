@@ -25,6 +25,17 @@ final class ShipDialGoldenTest extends TestCase
     private const SHIP_DIR = self::PACKAGE_ROOT . '/migrations';
     private const GENERATED_DIR = self::PACKAGE_ROOT . '/generated/migrations';
 
+    /**
+     * App-owned migrations under migrations/ that are hand-authored (Phase 5b
+     * identity bindings) and therefore have NO generated/ source and are NOT
+     * reproduced by `bin/regenerate --ship` (the dial only copies TL per-type
+     * migrations). Exempted from the two regenerate-reproduction golden
+     * checks; the byte-identical check still verifies they exist.
+     */
+    private const APP_OWNED_MIGRATIONS = [
+        '2026_09_08_000100_create_tl_user_bindings_table.php',
+    ];
+
     public function test_shipped_subset_count_under_two_hundred(): void
     {
         $files = self::migrationFiles(self::SHIP_DIR);
@@ -76,13 +87,21 @@ final class ShipDialGoldenTest extends TestCase
     public function test_shipped_files_are_byte_identical_copies_of_generated(): void
     {
         foreach (glob(self::SHIP_DIR . '/*.php') ?: [] as $shipped) {
-            $generated = self::GENERATED_DIR . '/' . basename($shipped);
-            self::assertFileExists($generated, basename($shipped) . ' has no generated/ counterpart');
+            $name = basename($shipped);
+            if (in_array($name, self::APP_OWNED_MIGRATIONS, true)) {
+                continue; // app-owned (Phase 5b): hand-authored, no generated source
+            }
+            $generated = self::GENERATED_DIR . '/' . $name;
+            self::assertFileExists($generated, $name . ' has no generated/ counterpart');
             self::assertSame(
                 hash_file('sha256', $generated),
                 hash_file('sha256', $shipped),
-                basename($shipped) . ' drifted from its generated/ source',
+                $name . ' drifted from its generated/ source',
             );
+        }
+
+        foreach (self::APP_OWNED_MIGRATIONS as $name) {
+            self::assertFileExists(self::SHIP_DIR . '/' . $name, $name . ' missing');
         }
     }
 
@@ -98,7 +117,7 @@ final class ShipDialGoldenTest extends TestCase
 
         try {
             $fresh = self::migrationNames($out . '/migrations');
-            $committed = self::migrationNames(self::SHIP_DIR);
+            $committed = array_values(array_diff(self::migrationNames(self::SHIP_DIR), self::APP_OWNED_MIGRATIONS));
             sort($fresh);
             sort($committed);
             self::assertSame($committed, $fresh, 'fresh --ship run does not reproduce the committed subset');

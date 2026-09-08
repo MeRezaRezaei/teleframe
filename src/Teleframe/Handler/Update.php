@@ -33,6 +33,23 @@ final class Update
         return (string) ($this->array['_'] ?? '');
     }
 
+    /**
+     * Deterministic content-hash identity (spec 5a §3) — stable across
+     * deploys and processes: ``sha1(accountId . "\0" . ts . "\0" . raw_json)``.
+     * Derived from the ENTRY (array + account + ts), not the handler result,
+     * so a re-ingested payload dedups regardless of handler mutability.
+     */
+    public function updateId(): string
+    {
+        $raw = json_encode(
+            $this->array,
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR,
+        );
+        $ts = $this->ts !== null ? (string) $this->ts : '';
+
+        return sha1($this->accountId . "\0" . $ts . "\0" . $raw);
+    }
+
     /** A fresh frame with the self-originated verdict set. */
     public function withSelfOriginated(bool $selfOriginated): self
     {
@@ -78,6 +95,13 @@ final class Update
      */
     public static function fromMirror(TlInstanceModel $model, int $accountId, ?int $ts = null): self
     {
+        if ($ts === null) {
+            $created = $model->getAttribute('created_at');
+            if ($created instanceof \DateTimeInterface) {
+                $ts = $created->getTimestamp();
+            }
+        }
+
         return new self([], $accountId, 'event', $ts, false, $model);
     }
 }

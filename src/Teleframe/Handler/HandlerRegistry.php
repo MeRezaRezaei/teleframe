@@ -23,11 +23,18 @@ final class HandlerRegistry
      *  - `*`              catch-all (also the `onMessage()` surface)
      *  - `Foo`            exact constructor name
      *  - `FooBar*`        constructor-name prefix
+     *  - `/start %s`      single sscanf token (route arg), zero-regex
      *
      * @param string|array|\Closure $handler PSR-11-addressable invokable
      */
     public function on(string $match, string|array|\Closure $handler, int $priority = 0, bool $onOwn = false): static
     {
+        if (substr_count($match, '%s') > 1) {
+            throw new MultipleSscanfTokensException(
+                "Match pattern [$match] carries more than one %s token; exactly zero or one is allowed.",
+            );
+        }
+
         $this->handlers[] = new Handler($match, $handler, $priority, $onOwn);
 
         return $this;

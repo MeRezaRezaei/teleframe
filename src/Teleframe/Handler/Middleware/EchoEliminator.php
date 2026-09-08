@@ -49,7 +49,7 @@ final class EchoEliminator
         $selfOriginated = $update->withSelfOriginated(true);
         $handler = $this->matcher->match($update->constructor());
 
-        if ($handler !== null && $handler->onOwn) {
+        if ($handler !== null && $handler->handler->onOwn) {
             return $next($selfOriginated);
         }
 

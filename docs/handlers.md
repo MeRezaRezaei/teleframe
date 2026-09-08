@@ -38,6 +38,25 @@ $teleframe
 Match grammar is zero-regex: exact constructor (`updateNewMessage`), trailing
 `*` prefix (`updateNew*`), or bare `*` catch-all.
 
+### Route args (`/start %s`)
+
+A single sscanf `%s` token captures the rest of the matched constructor
+(zero-regex, sscanf only). The captured segment lands in a `string $arg`
+handler parameter:
+
+```php
+$teleframe->on('/start %s', function (Update $u, string $arg) {
+    // $arg === '42' for constructor '/start 42'
+});
+```
+
+- **Zero or one `%s` token per pattern** — registering `/start %s %s` throws
+  `MultipleSscanfTokensException` at registration.
+- First-match-wins (priority, then registration order) is unchanged; exact
+  and `*`-prefix patterns still carry no args.
+- The matcher result itself exposes `HandlerMatch::$args` / `HandlerMatch::arg()`
+  if you route manually.
+
 ## 2. Hammer-weight matching, feather-weight hydration
 
 Routing uses the raw constructor name (cheap); the mirrored Eloquent model is
@@ -58,6 +77,30 @@ $teleframe->on('user', UserSaved::class);
 // UserSaved::__invoke(Update $u, TlUserUser $user)
 ```
 
+### Validation wrapper (`ValidatedUpdate`)
+
+Opt in to shape guardrails by type-hinting `ValidatedUpdate` — the FormRequest
+analog. The dispatcher constructs it from the same active `Update`, so no
+binding setup is needed on your side:
+
+```php
+use MeRezaRezaei\Teleframe\Handler\ValidatedUpdate;
+
+$teleframe->onMessage(function (Update $u, ValidatedUpdate $v) {
+    if (! $v->valid()) {
+        $errors = $v->errors(); // ['from' => [...]], ['chat' => [...]], ...
+        return;
+    }
+    $messageText = $v->update()->array['message']['text'] ?? null;
+});
+```
+
+- `valid(): bool` — every guardrail on `{from_, chat, message}` passed.
+- `errors(): array` — field-path → message list (empty when valid).
+- `rules(): array` — the guardrail rules, documented like a FormRequest.
+- **No failure magic (Q6a):** never throws on invalid input, never
+  auto-replies — reads only.
+
 ## 3. Reply explicitly — the Q2d echo loop
 
 Handlers return `void`; replies go through the facade's `send()`, which
@@ -76,6 +119,29 @@ $teleframe->on('updateNewMessage', function (Update $u) use ($teleframe) {
 
 A handler that opts into its own echoes passes `onOwn: true`. To disable the
 eliminator, bind a fresh `UpdateDispatcher` without it.
+
+### Replay dedup + `seen_replays`
+
+A second middleware (`ReplayDedup`) sits after the echo eliminator on the same
+onion. Every uprate carries a deterministic content-hash identity
+`Update::updateId()` = `sha1(accountId . "\0" . ts . "\0" . raw_json(array))`
+— stable across deploys and processes, derived from the entry, so a
+re-ingested payload dedups regardless of handler mutability.
+
+The first dispatch marks the id in the PSR-16 `teleframe.handler.seen`
+namespace (TTL 60s default); a duplicate within the window is dropped before
+any user handler runs:
+
+```php
+$dispatcher->dispatch($first);   // runs; mark teleframe.handler.seen
+$dispatcher->dispatch($second);  // same updateId → skipped
+$dispatcher->seenReplays();      // 1
+```
+
+The TTL is constructor-injected (`UpdateDispatcher(..., dedupTtl: 60)`); a
+Laravel coordinator supplies `teleframe.handler.dedup_ttl`. On the fake
+running-mode surface the drop counter is `FakeDispatcher::$seenReplays` after
+`run()`.
 
 ## 4. Both intake rows are one pipeline
 

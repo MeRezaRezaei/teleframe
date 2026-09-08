@@ -20,8 +20,10 @@ use Psr\SimpleCache\CacheInterface;
  *
  * ``run()`` returns ``{dispatched: list<Update>, sent: list<...>}``:
  * every fixture frame that reached the terminal (matched, not
- * echo-eliminated) lands in ``dispatched``; explicit replies a handler
- * makes via the facade's ``send()`` land in ``sent`` (Q6 explicit path).
+ * echo-eliminated, not replay-deduped) lands in ``dispatched``; explicit
+ * replies a handler makes via the facade's ``send()`` land in ``sent``
+ * (Q6 explicit path); ``seenReplays`` counts the frames the replay dedup
+ * dropped.
  */
 final class FakeDispatcher
 {
@@ -30,6 +32,9 @@ final class FakeDispatcher
 
     /** @var list<array{account:int, send:array<string, mixed>}> */
     public array $sent = [];
+
+    /** Replays dropped by ReplayDedup during the last run() (spec 5a §3). */
+    public int $seenReplays = 0;
 
     /**
      * @param list<array<mixed>> $fixtures each {update: array, account_id: int, ...}
@@ -63,6 +68,8 @@ final class FakeDispatcher
         foreach ($this->fixtures as $fixture) {
             $dispatcher->dispatch($this->frameFrom((array) $fixture));
         }
+
+        $this->seenReplays = $dispatcher->seenReplays();
 
         return ['dispatched' => $this->dispatched, 'sent' => $this->sent];
     }

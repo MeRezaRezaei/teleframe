@@ -43,5 +43,11 @@
         <testsuite name="Handler">
             <directory>tests/Handler</directory>
         </testsuite>
+        <testsuite name="Message">
+            <directory>tests/Message</directory>
+        </testsuite>
+        <testsuite name="Identity">
+            <directory>tests/Identity</directory>
+        </testsuite>
     </testsuites>
 </phpunit>
