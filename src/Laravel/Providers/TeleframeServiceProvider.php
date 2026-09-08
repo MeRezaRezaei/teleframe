@@ -10,8 +10,11 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use MeRezaRezaei\Teleframe\Bus\LaravelRedisAdapter;
 use MeRezaRezaei\Teleframe\Bus\RedisConnectionContract;
+use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
+use MeRezaRezaei\Teleframe\Daemon\AccountWorker;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
+use MeRezaRezaei\Teleframe\Laravel\Console\BackfillCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\IngestCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Http\Middleware\VerifyMiniAppInitData;
@@ -20,6 +23,7 @@ use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use MeRezaRezaei\Teleframe\Teleclient;
 use RuntimeException;
+use Throwable;
 
 class TeleframeServiceProvider extends ServiceProvider
 {
@@ -68,6 +72,48 @@ class TeleframeServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->bind(BackfillCommand::SCOPE_RESOLVER_KEY, static function ($app): callable {
+            return static function (int $accountId) use ($app): UserAccountScope {
+                /** @var ConfigRepository $config */
+                $config = $app->make('config');
+
+                foreach ((array) $config->get('teleframe.daemon.accounts', []) as $account) {
+                    if ((int) ($account['account_id'] ?? 0) === $accountId) {
+                        return AccountWorker::buildLiveScope($account);
+                    }
+                }
+
+                throw new RuntimeException(
+                    "no teleframe.daemon.accounts entry with account_id={$accountId} "
+                    . '(the backfill command resolves its session through that registry)',
+                );
+            };
+        });
+
+        // Default batch writer: each fetched page lands as a plain
+        // messages.messages ingest under the account's tenancy (route
+        // dedup is deliberately NOT used — see BackfillCommand).
+        $this->app->bind(BackfillCommand::INGESTER_KEY, static function ($app): callable {
+            return static function (int $accountId) use ($app): callable {
+                $ingestor = $app->make(UpdateIngestor::class);
+
+                return static function (array $messages) use ($ingestor, $accountId): array {
+                    try {
+                        $root = $ingestor->ingest([
+                            '_' => 'messages.messages',
+                            'messages' => $messages,
+                            'chats' => [],
+                            'users' => [],
+                        ], $accountId);
+
+                        return ['stored' => count($messages), 'root' => $root->getKey()];
+                    } catch (Throwable) {
+                        return ['stored' => 0]; // v1 report-only: a failing batch never kills the fetch loop
+                    }
+                };
+            };
+        });
+
         $this->app->singleton(TeleframeAuthService::class);
     }
 
@@ -86,6 +132,7 @@ class TeleframeServiceProvider extends ServiceProvider
                 \MeRezaRezaei\Teleframe\Laravel\Console\SchemaUpdateCommand::class,
                 RegenerateCommand::class,
                 IngestCommand::class,
+                BackfillCommand::class,
             ]);
 
             $this->loadMigrationsFrom(dirname(__DIR__, 3) . '/migrations');

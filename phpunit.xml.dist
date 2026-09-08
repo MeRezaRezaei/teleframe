@@ -34,5 +34,8 @@
         <testsuite name="Daemon">
             <directory>tests/Daemon</directory>
         </testsuite>
+        <testsuite name="Backfill">
+            <directory>tests/Backfill</directory>
+        </testsuite>
     </testsuites>
 </phpunit>
