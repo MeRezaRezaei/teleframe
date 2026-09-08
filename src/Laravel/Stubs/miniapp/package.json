@@ -1,0 +1,19 @@
+{
+    "name": "teleframe-miniapp",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Teleframe Mini App hosting stub (Phase 5g): Vite preset, Blade host, telegram-web-app bridge and Telegram theme CSS vars. Presence-only — never installed by this package's CI.",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "peerDependencies": {
+        "vite": "^5.0.0 || ^6.0.0",
+        "vue": "^3.3.0"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^5.0.0"
+    }
+}

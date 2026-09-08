@@ -49,5 +49,14 @@
         <testsuite name="Identity">
             <directory>tests/Identity</directory>
         </testsuite>
+        <testsuite name="Stage">
+            <directory>tests/Stage</directory>
+        </testsuite>
+        <testsuite name="BotMap">
+            <directory>tests/BotMap</directory>
+        </testsuite>
+        <testsuite name="MiniApp">
+            <directory>tests/MiniApp</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

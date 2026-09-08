@@ -1,0 +1,83 @@
+/*
+ * teleframe Mini App theme vars (Phase 5g, Q12 ruling (a)).
+ *
+ * Maps Telegram's `themeParams` palette (bg_color, text_color, hint_color,
+ * button_color, button_text_color, secondary_bg_color, header_bg_color,
+ * link_color, bottom_bar_bg_color, destructive_text_color) onto the CSS
+ * custom properties the mini-app UI consumes.
+ *
+ * Two layers:
+ *   1. CSS defaults below — Telegram's standard light / dark palettes, driven
+ *      by the <html data-theme="light|dark"> attribute (the host blade + the
+ *      bridge's onThemeChange() set it).
+ *   2. Runtime override — the live SDK `themeParams` (user's custom theme)
+ *      applied as inline custom properties on <html> by the host bootstrap /
+ *      bridge, which WIN over these defaults by virtue of being on the root.
+ *
+ * Usage in your components: `background: var(--tg-theme-bg-color)`, etc.
+ */
+
+:root,
+:root[data-theme='light'],
+:root:not([data-theme]) {
+    --tg-theme-bg-color: #ffffff;
+    --tg-theme-text-color: #000000;
+    --tg-theme-hint-color: #999999;
+    --tg-theme-link-color: #2481cc;
+    --tg-theme-button-color: #5288c1;
+    --tg-theme-button-text-color: #ffffff;
+    --tg-theme-secondary-bg-color: #f0f0f0;
+    --tg-theme-header-bg-color: #ffffff;
+    --tg-theme-bottom-bar-bg-color: #ffffff;
+    --tg-theme-destructive-text-color: #d14d4d;
+}
+
+:root[data-theme='dark'] {
+    --tg-theme-bg-color: #212121;
+    --tg-theme-text-color: #ffffff;
+    --tg-theme-hint-color: #aaaaaa;
+    --tg-theme-link-color: #5eb1ef;
+    --tg-theme-button-color: #8774e1;
+    --tg-theme-button-text-color: #ffffff;
+    --tg-theme-secondary-bg-color: #181818;
+    --tg-theme-header-bg-color: #212121;
+    --tg-theme-bottom-bar-bg-color: #181818;
+    --tg-theme-destructive-text-color: #e53935;
+}
+
+/* Body plumbing so a bare host page already looks like a Telegram webview. */
+body {
+    margin: 0;
+    background-color: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Tiny reusable helpers over the theme vars (used by the example Vue app). */
+.tg-header {
+    background-color: var(--tg-theme-header-bg-color);
+    color: var(--tg-theme-text-color);
+}
+
+.tg-text {
+    color: var(--tg-theme-text-color);
+}
+
+.tg-hint {
+    color: var(--tg-theme-hint-color);
+}
+
+.tg-link {
+    color: var(--tg-theme-link-color);
+}
+
+.tg-button {
+    background-color: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+}
+
+.tg-metadata-bar {
+    background-color: var(--tg-theme-bottom-bar-bg-color);
+    color: var(--tg-theme-hint-color);
+}

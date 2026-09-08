@@ -198,6 +198,10 @@ class TeleframeServiceProvider extends ServiceProvider
                 __DIR__ . '/../config/teleframe.php' => config_path('teleframe.php'),
             ], 'teleframe-config');
 
+            $this->publishes([
+                __DIR__ . '/../Stubs/miniapp' => base_path(),
+            ], 'teleframe-miniapp');
+
             $this->commands([
                 \MeRezaRezaei\Teleframe\Laravel\Console\LoginCommand::class,
                 \MeRezaRezaei\Teleframe\Laravel\Console\PollCommand::class,

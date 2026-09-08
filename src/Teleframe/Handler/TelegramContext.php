@@ -14,11 +14,21 @@ final class TelegramContext
 {
     public function __construct(
         public readonly Update $update,
+        public readonly bool $inStageFlow = false,
     ) {
     }
 
     public function accountId(): int
     {
         return $this->update->accountId;
+    }
+
+    /**
+     * True when this exchange is a telegram-paced stage flow (Phase 5e):
+     * raised by StageMiddleware for the whole dispatch it consumes.
+     */
+    public function inStageFlow(): bool
+    {
+        return $this->inStageFlow;
     }
 }

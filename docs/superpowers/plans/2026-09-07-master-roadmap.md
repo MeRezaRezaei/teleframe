@@ -100,24 +100,24 @@
 **Decide first:** Q17 (state home), Q18 (context flag), Q20 (submit transport) + dispatch precedence (echo → stage → keyboard → handler, gap F5). Depends: 5a router, 5c keyboards, 5d templates.
 **Delivers:** declarative stage sets (form-fields shape, plain-array state); per-stage template-shaped validation failures; final submit to THE SAME Laravel route reusing its FormRequest, response flipped to telegram engine (above-controller interceptor, hard constraint 8).
 
-- [ ] Spec written with RULINGS Q17/Q18/Q20 applied (dispatch precedence set: echo → stage → keyboard → handler) · Plan · Execution
-- [ ] Gate: one controller+FormRequest serves a web form AND a telegram staged flow identically; state survives process restart
+- [x] Spec written with RULINGS Q17/Q18/Q20 applied (dispatch precedence set: echo → stage → keyboard → handler) · Plan · Execution
+- [x] Gate: one controller+FormRequest serves a web form AND a telegram staged flow identically; state survives process restart
 
 ### Phase 5f: Bot Map
 
 **Decide first:** Q19 (discovery). Depends: none heavy (independent of 5b–5e).
 **Delivers:** named third-party bot registry; capability manifest; `BotMap::for('x')->command()` invocation; token vault; outbound HTTP exposure of bots as API calls (webhook controller precedent).
 
-- [ ] Spec written with RULING Q19 applied · Plan · Execution
-- [ ] Gate: third-party bot invoked as function call; exposed via authenticated HTTP endpoint
+- [x] Spec written with RULING Q19 applied · Plan · Execution
+- [x] Gate: third-party bot invoked as function call; exposed via authenticated HTTP endpoint
 
 ### Phase 5g: Mini-App Hosting
 
 **NOTE from research:** the Vue precedent does NOT exist in the repo — this phase BUILDS it (constraint 7). Depends: 5b (identity/guards).
 **Delivers:** publishable Vite preset + Blade host + telegram-web-app.js bridge + theme CSS vars (per Q12 decision); mini-app session guard wired to bindings.
 
-- [ ] Spec written with RULING Q12 applied (stub-based hosting) · Plan · Execution
-- [ ] Gate: example Vue mini app runs inside Telegram, authenticated as the bound Laravel user
+- [x] Spec written with RULING Q12 applied (stub-based hosting) · Plan · Execution
+- [x] Gate: example Vue mini app runs inside Telegram, authenticated as the bound Laravel user
 
 ---
 
