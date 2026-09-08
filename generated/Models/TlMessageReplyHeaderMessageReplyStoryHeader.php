@@ -1,0 +1,28 @@
+<?php
+
+// GENERATED — do not edit; run artisan teleframe:regenerate
+
+declare(strict_types=1);
+
+namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+/** Constructor model for messageReplyStoryHeader of MessageReplyHeader (crc32 0e5af939). */
+final class TlMessageReplyHeaderMessageReplyStoryHeader extends TlInstanceModel
+{
+    use HasFactory, HasTlChildren;
+
+    protected $table = 'tl_message_reply_header_message_reply_story_header';
+
+    protected $guarded = [];
+
+    /** @var array<string, string> */
+    protected $casts = [
+        'peer' => 'string',
+        'story_id' => 'int',
+    ];
+}

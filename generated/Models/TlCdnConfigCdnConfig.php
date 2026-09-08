@@ -1,0 +1,32 @@
+<?php
+
+// GENERATED — do not edit; run artisan teleframe:regenerate
+
+declare(strict_types=1);
+
+namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlCdnConfigCdnConfigPublic_keys;
+
+/** Constructor model for cdnConfig of CdnConfig (crc32 5725e40a). */
+final class TlCdnConfigCdnConfig extends TlInstanceModel
+{
+    use HasFactory, HasTlChildren;
+
+    protected $table = 'tl_cdn_config_cdn_config';
+
+    protected $guarded = [];
+
+    /** @var array<string, string> */
+    protected $casts = [
+    ];
+
+    public function publicKeys(): HasMany
+    {
+        return $this->tlChild(TlCdnConfigCdnConfigPublic_keys::class);
+    }
+}

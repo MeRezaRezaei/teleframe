@@ -1,0 +1,17 @@
+<?php
+
+// GENERATED — do not edit; run artisan teleframe:regenerate
+
+declare(strict_types=1);
+
+namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
+
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
+
+/** Anchor model for TL type help.InviteText (spec §4.1). */
+final class TlHelpInviteText extends TlAnchorModel
+{
+    protected $table = 'tl_help_invite_text';
+
+    protected $guarded = [];
+}

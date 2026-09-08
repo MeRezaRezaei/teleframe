@@ -1,0 +1,57 @@
+<?php
+
+// GENERATED — do not edit; run artisan teleframe:regenerate
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('tl_notify_peer', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->bigInteger('constructor_id'); // crc32, may exceed signed i32
+            $table->string('constructor_name', 96);
+            $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
+            $table->timestamps();
+            $table->index('constructor_id');
+            $table->index('account_id');
+        });
+        Schema::create('tl_notify_peer_notify_broadcasts', function (Blueprint $table) {
+            $table->foreignUuid('id')->primary()->constrained('tl_notify_peer')->cascadeOnDelete();
+            $table->timestamps();
+        });
+        Schema::create('tl_notify_peer_notify_chats', function (Blueprint $table) {
+            $table->foreignUuid('id')->primary()->constrained('tl_notify_peer')->cascadeOnDelete();
+            $table->timestamps();
+        });
+        Schema::create('tl_notify_peer_notify_forum_topic', function (Blueprint $table) {
+            $table->foreignUuid('id')->primary()->constrained('tl_notify_peer')->cascadeOnDelete();
+            $table->uuid('peer');
+            $table->integer('top_msg_id');
+            $table->timestamps();
+        });
+        Schema::create('tl_notify_peer_notify_peer', function (Blueprint $table) {
+            $table->foreignUuid('id')->primary()->constrained('tl_notify_peer')->cascadeOnDelete();
+            $table->uuid('peer');
+            $table->timestamps();
+        });
+        Schema::create('tl_notify_peer_notify_users', function (Blueprint $table) {
+            $table->foreignUuid('id')->primary()->constrained('tl_notify_peer')->cascadeOnDelete();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('tl_notify_peer_notify_users');
+        Schema::dropIfExists('tl_notify_peer_notify_peer');
+        Schema::dropIfExists('tl_notify_peer_notify_forum_topic');
+        Schema::dropIfExists('tl_notify_peer_notify_chats');
+        Schema::dropIfExists('tl_notify_peer_notify_broadcasts');
+        Schema::dropIfExists('tl_notify_peer');
+    }
+};

@@ -1,0 +1,33 @@
+<?php
+
+// GENERATED — do not edit; run artisan teleframe:regenerate
+
+declare(strict_types=1);
+
+namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesInvitedUsersInvitedUsersMissing_invitees;
+
+/** Constructor model for messages.invitedUsers of messages.InvitedUsers (crc32 7f5defa6). */
+final class TlMessagesInvitedUsersInvitedUsers extends TlInstanceModel
+{
+    use HasFactory, HasTlChildren;
+
+    protected $table = 'tl_messages_invited_users_invited_users';
+
+    protected $guarded = [];
+
+    /** @var array<string, string> */
+    protected $casts = [
+        'updates' => 'string',
+    ];
+
+    public function missingInvitees(): HasMany
+    {
+        return $this->tlChild(TlMessagesInvitedUsersInvitedUsersMissing_invitees::class);
+    }
+}

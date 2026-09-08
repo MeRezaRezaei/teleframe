@@ -1,0 +1,51 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Thin artisan-less regeneration runner (plan Task 3, spec §5).
+//
+// The regeneration engine lives in a Laravel-bound artisan command
+// (RegenerateCommand). This bin boots the composer autoloader, hands that
+// command a minimal Illuminate container — a plain Container plus the one
+// Foundation-contract method the console run path touches
+// (runningUnitTests(), via ConfiguresPrompts) — and drives it through a
+// Symfony console Application. Zero refactor of the command itself.
+//
+// Usage: php bin/regenerate [--force] [--schemas=DIR] [--out=DIR] [--ship]
+//   --force    bypass the ±30% constructor-count sanity gate
+//   --schemas  .tl sources dir (default: package schema/sources/ mirror)
+//   --out      output dir; artifacts land in <out>/generated/ (default: package root)
+//   --ship     also copy the curated dial's namespace migrations to <out>/migrations/
+//              (dial: config teleframe.ship_namespaces; full set stays in generated/)
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use Illuminate\Container\Container;
+use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\ConsoleOutput;
+
+$container = new class extends Container
+{
+    public function runningUnitTests(): bool
+    {
+        return false;
+    }
+};
+
+$command = new RegenerateCommand();
+$command->setLaravel($container);
+
+$application = new Application('teleframe', '1.0.0');
+$application->setAutoExit(false);
+$application->setCatchExceptions(false);
+$application->add($command);
+
+$args = array_slice($argv, 1);
+$line = implode(' ', array_merge(['teleframe:regenerate'], array_map('escapeshellarg', $args)));
+
+$exit = $application->run(new StringInput($line), new ConsoleOutput());
+
+exit($exit);

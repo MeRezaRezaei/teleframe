@@ -19,18 +19,25 @@
         "ext-libxml": "*",
         "ext-mbstring": "*",
         "ext-openssl": "*",
+        "ext-pdo": "*",
+        "ext-sodium": "*",
         "ext-zlib": "*",
         "phpseclib/phpseclib": "^3.0",
         "vlucas/phpdotenv": "^5.6",
         "illuminate/contracts": "^10.0 || ^11.0 || ^12.0",
         "illuminate/support": "^10.0 || ^11.0 || ^12.0",
         "illuminate/console": "^10.0 || ^11.0 || ^12.0",
+        "illuminate/database": "^10.0 || ^11.0 || ^12.0",
         "illuminate/http": "^10.0 || ^11.0 || ^12.0",
         "illuminate/events": "^10.0 || ^11.0 || ^12.0",
         "illuminate/filesystem": "^10.0 || ^11.0 || ^12.0",
+        "illuminate/redis": "^10.0 || ^11.0 || ^12.0",
         "illuminate/routing": "^10.0 || ^11.0 || ^12.0",
         "laravel/prompts": "^0.3",
-        "symfony/console": "^6.0 || ^7.0"
+        "predis/predis": "^3.6",
+        "spatie/laravel-data": "^4.0",
+        "symfony/console": "^6.0 || ^7.0",
+        "symfony/uid": "^6.0 || ^7.0"
     },
     "require-dev": {
         "orchestra/testbench": "^9.0 || ^10.0",
@@ -44,7 +51,9 @@
             "MeRezaRezaei\\Teleframe\\Core\\": "src/Core/",
             "MeRezaRezaei\\Teleframe\\Bot\\": "src/Bot/",
             "MeRezaRezaei\\Teleframe\\Laravel\\": "src/Laravel/",
-            "MeRezaRezaei\\Teleframe\\Schema\\": "src/Schema/"
+            "MeRezaRezaei\\Teleframe\\Schema\\": "src/Schema/",
+            "MeRezaRezaei\\Teleframe\\": "src/Teleframe/",
+            "MeRezaRezaei\\Teleframe\\Schema\\Generated\\": "generated/"
         }
     },
     "autoload-dev": {

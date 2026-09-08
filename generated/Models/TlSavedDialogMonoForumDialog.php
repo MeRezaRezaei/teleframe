@@ -1,0 +1,36 @@
+<?php
+
+// GENERATED — do not edit; run artisan teleframe:regenerate
+
+declare(strict_types=1);
+
+namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+/** Constructor model for monoForumDialog of SavedDialog (crc32 64407ea7). */
+final class TlSavedDialogMonoForumDialog extends TlInstanceModel
+{
+    use HasFactory, HasTlChildren;
+
+    protected $table = 'tl_saved_dialog_mono_forum_dialog';
+
+    protected $guarded = [];
+
+    /** @var array<string, string> */
+    protected $casts = [
+        'flags' => 'int',
+        'unread_mark' => 'bool',
+        'nopaid_messages_exception' => 'bool',
+        'peer' => 'string',
+        'top_message' => 'int',
+        'read_inbox_max_id' => 'int',
+        'read_outbox_max_id' => 'int',
+        'unread_count' => 'int',
+        'unread_reactions_count' => 'int',
+        'draft' => 'string',
+    ];
+}

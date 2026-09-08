@@ -1,0 +1,24 @@
+<?php
+
+// GENERATED — do not edit; run artisan teleframe:regenerate
+
+declare(strict_types=1);
+
+namespace MeRezaRezaei\Teleframe\Schema\Generated\Factories;
+
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/** Factory for TlMessageActionMessageActionManagedBotCreated (messageActionManagedBotCreated). */
+final class TlMessageActionMessageActionManagedBotCreatedFactory extends Factory
+{
+    /** @var class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageActionMessageActionManagedBotCreated> */
+    protected $model = \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageActionMessageActionManagedBotCreated::class;
+
+    /** @return array<string, mixed> */
+    public function definition(): array
+    {
+        return [
+            'bot_id' => 1001,
+        ];
+    }
+}
