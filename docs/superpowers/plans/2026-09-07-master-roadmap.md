@@ -46,7 +46,7 @@
 **Delivers:** handler-as-data registry + middleware onion (26-line chain) + `onMessage()` subscription + single composed `Teleframe` facade + Fake RunningMode testing surface (dissolves frictions I.1/.2/.3 partially).
 
 - [x] Write plan `plans/2026-09-09-phase3-handler-substrate.md`
-- [ ] Gate: fake uprate flows the real pipeline in tests; facade one-class DX documented; gates green
+- [x] Gate: fake uprate flows the real pipeline in tests; facade one-class DX documented; gates green
 
 ### Phase 4: Laravel Thin Bridge
 

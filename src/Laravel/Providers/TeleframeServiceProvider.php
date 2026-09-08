@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Laravel\Providers;
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Contracts\Events\Dispatcher as EventDispatcher;
 use Illuminate\Redis\RedisManager;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
@@ -15,7 +16,13 @@ use MeRezaRezaei\Teleframe\Bus\LaravelRedisAdapter;
 use MeRezaRezaei\Teleframe\Bus\RedisConnectionContract;
 use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
 use MeRezaRezaei\Teleframe\Daemon\AccountWorker;
+use MeRezaRezaei\Teleframe\Handler\HandlerRegistry;
+use MeRezaRezaei\Teleframe\Handler\InMemoryCache;
+use MeRezaRezaei\Teleframe\Handler\Pipeline;
+use MeRezaRezaei\Teleframe\Handler\Subscriptions\UpdateStoredHandler;
+use MeRezaRezaei\Teleframe\Handler\UpdateDispatcher;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
+use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackfillCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackupCommand;
@@ -26,6 +33,8 @@ use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use MeRezaRezaei\Teleframe\Teleclient;
+use MeRezaRezaei\Teleframe\Teleframe;
+use Psr\SimpleCache\CacheInterface;
 use RuntimeException;
 use Throwable;
 
@@ -41,6 +50,22 @@ class TeleframeServiceProvider extends ServiceProvider
         ));
         $this->app->singleton(EntityAggregator::class);
         $this->app->singleton(Teleclient::class);
+
+        $this->app->singleton(HandlerRegistry::class);
+        $this->app->singleton(UpdateDispatcher::class, static function ($app): UpdateDispatcher {
+            $sends = $app->bound(CacheInterface::class)
+                ? $app->make(CacheInterface::class)
+                : new InMemoryCache();
+
+            return new UpdateDispatcher(
+                $app->make(HandlerRegistry::class),
+                new Pipeline(),
+                $app,
+                $sends,
+            );
+        });
+
+        $this->app->singleton(Teleframe::class, static fn ($app): Teleframe => new Teleframe($app));
 
         $this->app->bind(RedisConnectionContract::class, static function ($app): RedisConnectionContract {
             $manager = $app->bound('redis') ? $app->make('redis') : null;
@@ -197,6 +222,15 @@ class TeleframeServiceProvider extends ServiceProvider
             $router->macro('telegramWebhook', function (string $uri = 'telegram/webhook') use ($router) {
                 return $router->post($uri, \MeRezaRezaei\Teleframe\Laravel\Http\Controllers\TelegramWebhookController::class);
             });
+        }
+
+        // The event intake row funnels into the handler pipeline (friction
+        // I.1): stored updates reach the registered onMessage surface with
+        // the same registry + onion the bus path uses.
+        if (isset($this->app['events']) && class_exists(UpdateStored::class)) {
+            /** @var EventDispatcher $events */
+            $events = $this->app['events'];
+            $events->listen(UpdateStored::class, UpdateStoredHandler::class);
         }
     }
 }

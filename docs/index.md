@@ -9,11 +9,16 @@ Telegram power for Laravel apps — Bot HTTP API, native MTProto 2.0 for users *
 > Telegram-channel Backup vault. See [ingest](ingest.md), [bus](bus.md),
 > [backup](backup.md) below.
 
+> **Handler substrate + facade merged in Phase 3.** Every stored update flows
+> through ONE handler pipeline; `MeRezaRezaei\Teleframe\Teleframe` is the
+> one-class primary face composing every module. See [handlers](handlers.md).
+
 ## Start here
 
 | Doc | What's inside |
 | :--- | :--- |
 | [Quickstart](quickstart.md) | 5 copy-paste recipes: bot message, user login wizard + MTProto, Mini App route guard, Passport decryption, Storage → MTProto streaming upload |
+| [Handlers](handlers.md) | One-class DX: `onMessage` / route by constructor / DI lazy hydration / echo elimination / FakeDispatcher |
 | [Bot API Client](bot-client.md) | Bot over HTTP: tokens, keyboards, webhooks & polling, generic `call()`, native MTProto bot mode |
 | [User MTProto Client](user-client.md) | User accounts over MTProto 2.0: API credentials, login/2FA, session strings, calls from stored sessions |
 | [Telegram Passport](telegram-passport.md) | End-to-end encrypted KYC: RSA keypair setup, decrypting Passport credentials in a webhook |

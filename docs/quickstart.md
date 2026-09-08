@@ -2,6 +2,11 @@
 
 Copy-paste recipes against real Teleproto APIs. Every snippet assumes `use MeRezaRezaei\Teleproto\Facades\TP;` unless shown.
 
+> **Phase 2 + 3 consumers.** For the merged consumer layer the public face is
+> `MeRezaRezaei\Teleframe\Teleframe` (composes `ingest` / `onMessage` /
+> `route` / `run` / `backup`) with ingest-only `Teleclient` retained. See
+> [handlers](handlers.md), [ingest](ingest.md), [bus](bus.md).
+
 ---
 
 ## (a) Send a message as a Bot (HTTP Bot API)

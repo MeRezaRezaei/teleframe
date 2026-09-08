@@ -30,6 +30,11 @@ use MeRezaRezaei\Teleframe\Bus\RedisStreamSink;
 use MeRezaRezaei\Teleframe\Bus\RouteTable;
 use MeRezaRezaei\Teleframe\Bus\StreamSchema;
 use MeRezaRezaei\Teleframe\Daemon\AccountWorker;
+use MeRezaRezaei\Teleframe\Handler\HandlerRegistry;
+use MeRezaRezaei\Teleframe\Handler\InMemoryCache;
+use MeRezaRezaei\Teleframe\Handler\Pipeline;
+use MeRezaRezaei\Teleframe\Handler\Update;
+use MeRezaRezaei\Teleframe\Handler\UpdateDispatcher;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\IdentityLock;
@@ -39,6 +44,8 @@ use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use MeRezaRezaei\Teleframe\Schema\Generator\TeleframeSchemeLoader;
 use MeRezaRezaei\Teleframe\Teleclient;
+use MeRezaRezaei\Teleframe\Teleframe;
+use Psr\SimpleCache\CacheInterface;
 
 /** Minimal in-memory RedisConnectionContract double (no laravel redis). */
 final class SmokeRedis implements RedisConnectionContract
@@ -118,6 +125,44 @@ final class SmokeRedis implements RedisConnectionContract
     }
 
     public function llen(string $key): int { return count($this->streams[$key] ?? []); }
+}
+
+/**
+ * Framework-free PSR-11 + PSR-16 double for the Phase 3 handler stack:
+ * resolves the singleton registry/dispatcher and shares ONE sends cache
+ * between the facade's send path and the echo eliminator.
+ */
+final class StackContainer implements \Psr\Container\ContainerInterface
+{
+    private ?UpdateDispatcher $dispatcher = null;
+
+    public function __construct(
+        private readonly HandlerRegistry $registry,
+        private readonly InMemoryCache $sends,
+    ) {
+    }
+
+    public function get(string $id): mixed
+    {
+        if ($id === HandlerRegistry::class) {
+            return $this->registry;
+        }
+        if ($id === CacheInterface::class) {
+            return $this->sends;
+        }
+        if ($id === UpdateDispatcher::class) {
+            return $this->dispatcher ??= new UpdateDispatcher($this->registry, new Pipeline(), $this, $this->sends);
+        }
+
+        throw new \RuntimeException('smoke stack: ' . $id . ' not bound');
+    }
+
+    public function has(string $id): bool
+    {
+        return $id === HandlerRegistry::class
+            || $id === CacheInterface::class
+            || $id === UpdateDispatcher::class;
+    }
 }
 
 /** Framework-free stand-in for Illuminate\Contracts\Events\Dispatcher. */
@@ -232,6 +277,79 @@ $checks = [
         null,
         static fn (int $s): bool => true,
     ) instanceof AccountWorker,
+
+    // Handler (Phase 3)
+    'Handler substrate constructs (registry/pipeline/update/dispatcher/cache)' => static function (): bool {
+        $registry = new HandlerRegistry();
+        $dispatcher = new UpdateDispatcher($registry, new Pipeline(), new StackContainer($registry, new InMemoryCache()), new InMemoryCache(), []);
+
+        return Update::fromBus(['_' => 'x'], 1) instanceof Update
+            && $dispatcher instanceof UpdateDispatcher;
+    },
+    'FakeRunningMode drives the REAL pipeline plain-PHP' => static function (): bool {
+        $registry = new HandlerRegistry();
+        $fired = 0;
+        $registry->onMessage(static function (Update $u) use (&$fired): void {
+            $fired++;
+        });
+        $sends = new InMemoryCache();
+        $fake = new \MeRezaRezaei\Teleframe\Testing\FakeDispatcher(
+            [['update' => ['_' => 'updateNewMessage'], 'account_id' => 7]],
+            $registry,
+            new StackContainer($registry, $sends),
+            $sends,
+        );
+        $result = $fake->run();
+
+        return $fired === 1 && count($result['dispatched']) === 1;
+    },
+    'Q2 echo elimination in the REAL pipeline (plain-PHP)' => static function (): bool {
+        $registry = new HandlerRegistry();
+        $fired = 0;
+        $registry->onMessage(static function (?Update $u) use (&$fired): void {
+            $fired++;
+        });
+        $sends = new InMemoryCache();
+        $eliminator = new \MeRezaRezaei\Teleframe\Handler\Middleware\EchoEliminator(
+            $sends,
+            new \MeRezaRezaei\Teleframe\Handler\HandlerMatcher($registry),
+        );
+        $eliminator->remember(7, ['random_id' => 'r-1']);
+        $fake = new \MeRezaRezaei\Teleframe\Testing\FakeDispatcher(
+            [['update' => ['_' => 'updateNewMessage', 'random_id' => 'r-1'], 'account_id' => 7]],
+            $registry,
+            new StackContainer($registry, $sends),
+            $sends,
+        );
+        $fake->run();
+
+        return $fired === 0; // echo eliminated before the handler ran
+    },
+    'Teleframe facade composes + onMessage + run (plain-PHP)' => static function (): bool {
+        $registry = new HandlerRegistry();
+        $sends = new InMemoryCache();
+        $teleframe = new \MeRezaRezaei\Teleframe\Teleframe(new StackContainer($registry, $sends));
+        $fired = 0;
+        $teleframe->onMessage(static function (?Update $u) use (&$fired): void {
+            $fired++;
+        });
+        $teleframe->run([['update' => ['_' => 'updateNewMessage'], 'account_id' => 1]]);
+
+        return $fired === 1;
+    },
+    'Facade send writes the elimination registry; echo consumed by dispatcher' => static function (): bool {
+        $registry = new HandlerRegistry();
+        $sends = new InMemoryCache();
+        $teleframe = new \MeRezaRezaei\Teleframe\Teleframe(new StackContainer($registry, $sends));
+        $fired = 0;
+        $teleframe->onMessage(static function (?Update $u) use (&$fired): void {
+            $fired++;
+        });
+        $teleframe->send(7, ['random_id' => 'r-2']);
+        $teleframe->run([['update' => ['_' => 'updateNewMessage', 'random_id' => 'r-2'], 'account_id' => 7]]);
+
+        return $fired === 0; // the recorded send's echo never re-entered the handler
+    },
 ];
 
 $failed = false;

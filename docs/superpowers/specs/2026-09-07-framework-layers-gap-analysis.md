@@ -145,11 +145,11 @@ flagged veto-able at that layer's spec review without rework.
 | Q | Ruling | Rationale (goal-fit) |
 |---|---|---|
 | Q1 | **(a) In-code declarations, compiled into the Redis hash (code wins, hash = cache)** | Dissolves friction I.4 (routing-is-ops); Laravel pattern; hash keeps hot-reload ops story |
-| Q2 | **(d)+(b): send-time registry + default-on built-in first middleware (elimination), per-route escape hatch** | Only pair surviving the phone-typing subtlety; faithful to "registered-to-respond → eliminated"; mirror stays truth-complete |
+| Q2 | **(d)+(b): send-time registry + default-on built-in first middleware (elimination), per-route escape hatch** | Only pair surviving the phone-typing subtlety; faithful to "registered-to-respond → eliminated"; mirror stays truth-complete — **ENACTED Phase 3** (`EchoEliminator`, `onOwn` escape hatch) |
 | Q3 | **(c) Two-phase: random_id early, msg_id reconciled late** | Mirrors Telegram's own mechanism; mirror already persists the mapping |
-| Q4 | **(c) Two-stage: raw match at router, model hydration via DI in handler** | Laravel's own split (match-then-bind); keeps consumer lean; replay-safe |
+| Q4 | **(c) Two-stage: raw match at router, model hydration via DI in handler** | Laravel's own split (match-then-bind); keeps consumer lean; replay-safe — **ENACTED Phase 3** (`Update::constructor()` eager; lazy DI hydration) |
 | Q5 | **(a) In-consumer synchronous, reusing retry/DL semantics** | `->deferred()` is YAGNI until a workload demands it |
-| Q6 | **(a) v1: handlers return void, explicit replies via facade — (c) full Laravel Response reuse becomes the Phase 5e contract** | Zero magic first; the same-controller endgame arrives with the stage machine that needs it |
+| Q6 | **(a) v1: handlers return void, explicit replies via facade — (c) full Laravel Response reuse becomes the Phase 5e contract** | Zero magic first; the same-controller endgame arrives with the stage machine that needs it — **ENACTED Phase 3** (facade `send()`/`run()`) |
 | Q7 | **(a) findTF: primary-account default + explicit accountId override** ⚠ dev-facing | Preserves the tenancy contract (no silent cross-tenant registry) |
 | Q8 | **(a) Package-owned `tl_user_bindings`, nullable morph** | Works standalone AND in Laravel (Sanctum analogy) |
 | Q9 | **(d) `routeNotificationForTelegram()` override + (a) configured default sender fallback** | Laravel-native override point; sane zero-config default |
@@ -161,7 +161,7 @@ flagged veto-able at that layer's spec review without rework.
 | Q15 | **(c) HMAC-signed compact callback: `v1:<kid>:<keyIdx>:<arg>:<sig≤10B>`, msg+chat bound into MAC** | Stateless, replay-scoped, fits 64B; ext-hash available now |
 | Q16 | **(a) Content-hash keyboard ids, stable across deploys** | Menus survive deploys; rotation via version byte |
 | Q17 | **(a) PSR-16 seam (array default) + redis adapter; plain-array state, never serialized objects** | Matches unification D2 seam; avoids Nutgram's refactor-breaking state |
-| Q18 | **(a) Container-bound `TelegramContext`** | Fits PSR-11 delegate (D2); detectable above controllers (constraint 8) |
+| Q18 | **(a) Container-bound `TelegramContext`** | Fits PSR-11 delegate (D2); detectable above controllers (constraint 8) — **ENACTED Phase 3** (`TelegramContext`, bound per dispatch) |
 | Q19 | **(a) getMyCommands probe at registration + manual capability manifest** | Automates the discoverable; documents the rest |
 | Q20 | **(a) In-process `Request::create` sub-dispatch for final stage submit** | No HTTP round-trip; flag carried in container; loop-safe per Q2 registry |
 

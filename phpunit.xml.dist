@@ -40,5 +40,8 @@
         <testsuite name="Backup">
             <directory>tests/Backup</directory>
         </testsuite>
+        <testsuite name="Handler">
+            <directory>tests/Handler</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

@@ -253,6 +253,30 @@ final class IngestConsumerTest extends IngestTestCase
         self::assertCount(1, $this->redis->streamEntries('tg:target:two'), 'second entry went to the new target');
     }
 
+    public function test_routed_entries_fan_into_the_on_routed_seam(): void
+    {
+        $table = new RouteTable($this->redis);
+        $table->set('updateNewMessage*', 'tg:target:messages');
+        $sink = new RedisStreamSink($this->redis, self::ACCOUNT);
+        $sink->handle(['_' => 'updateNewMessage', 'message' => ['_' => 'message', 'id' => 9]], (string) self::ACCOUNT);
+
+        $routed = [];
+        $consumer = new IngestConsumer(
+            $this->redis,
+            $this->app->make(Teleclient::class),
+            null,
+            static function (array $update, int $accountId) use (&$routed): void {
+                $routed[] = [$update['_'], $accountId];
+            },
+        );
+
+        $stats = $consumer->consumeOnce();
+
+        self::assertSame(['processed' => 1, 'forwarded' => 1], $stats);
+        self::assertSame([['updateNewMessage', self::ACCOUNT]], $routed);
+        self::assertCount(1, $this->redis->streamEntries('tg:target:messages'));
+    }
+
     /**
      * @return array<string, mixed>
      */

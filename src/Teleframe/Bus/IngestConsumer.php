@@ -51,6 +51,9 @@ final class IngestConsumer
     /** @var ?Closure(TlInstanceModel, int): void */
     private readonly ?Closure $onStored;
 
+    /** @var ?Closure(array<string, mixed>, int): void */
+    private readonly ?Closure $onRouted;
+
     /** @var array<string, int> stream entry id => consecutive ingest-path throws */
     private array $ingestFailures = [];
 
@@ -58,8 +61,10 @@ final class IngestConsumer
         private readonly RedisConnectionContract $redis,
         private readonly Teleclient $client,
         ?callable $onStored = null,
+        ?callable $onRouted = null,
     ) {
         $this->onStored = $onStored === null ? null : $onStored(...);
+        $this->onRouted = $onRouted === null ? null : $onRouted(...);
     }
 
     /**
@@ -130,6 +135,11 @@ final class IngestConsumer
 
         if ($target !== null) {
             $this->redis->xadd($target, '*', $fields);
+            if ($this->onRouted !== null) {
+                // The matched entry fans into the handler pipeline too —
+                // one payload shape, one pipeline (friction I.1).
+                ($this->onRouted)($entry['update'], (int) $entry['account_id']);
+            }
             $forwarded++;
             $this->ack($entryId);
 
