@@ -8,6 +8,9 @@ use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Redis\RedisManager;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use MeRezaRezaei\Teleframe\Backup\InMemoryVault;
+use MeRezaRezaei\Teleframe\Backup\TelegramVault;
+use MeRezaRezaei\Teleframe\Backup\VaultInterface;
 use MeRezaRezaei\Teleframe\Bus\LaravelRedisAdapter;
 use MeRezaRezaei\Teleframe\Bus\RedisConnectionContract;
 use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
@@ -15,6 +18,7 @@ use MeRezaRezaei\Teleframe\Daemon\AccountWorker;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackfillCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\BackupCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\IngestCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Http\Middleware\VerifyMiniAppInitData;
@@ -114,6 +118,51 @@ class TeleframeServiceProvider extends ServiceProvider
             };
         });
 
+        // Backup vault factory (Phase 2, Task 6): callable(string $setId):
+        // VaultInterface for teleframe:backup. Driver-aware — 'memory'
+        // shares one InMemoryVault per set for the process (so run→restore
+        // round-trips offline; nothing is persisted), while 'telegram'
+        // reuses the backfill SCOPE_RESOLVER_KEY seam (shared
+        // daemon.accounts registry, AccountWorker::buildLiveScope) to build
+        // the real channel-backed TelegramVault.
+        $this->app->bind(BackupCommand::VAULT_FACTORY_KEY, static function ($app): callable {
+            return static function (string $setId) use ($app): VaultInterface {
+                /** @var ConfigRepository $config */
+                $config = $app->make('config');
+                $driver = (string) $config->get('teleframe.backup.driver', 'memory');
+
+                if ($driver === 'memory') {
+                    $key = 'teleframe.backup.vault.' . $setId;
+                    if (! $app->bound($key)) {
+                        $app->bind($key, static fn (): VaultInterface => new InMemoryVault(), true);
+                    }
+
+                    /** @var VaultInterface */
+                    return $app->make($key);
+                }
+
+                if ($driver !== 'telegram') {
+                    throw new RuntimeException("unknown backup driver \"{$driver}\" — expected memory|telegram.");
+                }
+
+                $accountId = (int) ($config->get('teleframe.backup.account') ?? 0);
+                if ($accountId <= 0) {
+                    throw new RuntimeException(
+                        'backup driver "telegram" needs teleframe.backup.account (a daemon.accounts account_id).',
+                    );
+                }
+
+                $resolver = $app->make(BackfillCommand::SCOPE_RESOLVER_KEY);
+                if (! is_callable($resolver) || is_string($resolver)) {
+                    throw new RuntimeException(
+                        BackfillCommand::SCOPE_RESOLVER_KEY . ' must bind a callable(int): UserAccountScope',
+                    );
+                }
+
+                return TelegramVault::forScope($resolver($accountId), $setId);
+            };
+        });
+
         $this->app->singleton(TeleframeAuthService::class);
     }
 
@@ -133,6 +182,7 @@ class TeleframeServiceProvider extends ServiceProvider
                 RegenerateCommand::class,
                 IngestCommand::class,
                 BackfillCommand::class,
+                BackupCommand::class,
             ]);
 
             $this->loadMigrationsFrom(dirname(__DIR__, 3) . '/migrations');
