@@ -65,8 +65,8 @@
 **Decide first:** Q1 (routes truth), Q2 (elimination placement), Q3 (registry key), Q4 (uprate construction), Q5 (execution model), Q6 (response contract) — gap doc §I.
 **Delivers:** Uprate object; declarative route registration (code-declared, compiled/cached, zero-regex matching with sscanf-style params); uprate validation object (FormRequest analog); loop-prevention registry + elimination middleware; uprate identity/dedup key; reply path with account context preserved.
 
-- [ ] Spec written with RULINGS Q1–Q6 applied (gap doc §RULINGS); owner gate = spec review only
-- [ ] Spec: `specs/YYYY-MM-DD-uprate-router-design.md`
+- [x] Spec written with RULINGS Q1–Q6 applied (gap doc §RULINGS); owner gate = spec review only
+- [x] Spec: `specs/2026-09-08-uprate-router-design.md`
 - [ ] Plan + execution
 - [ ] Gate: `/start {arg}`-style routing works zero-regex; self-echo eliminated while mirror still stores it; replay dedup proven by test
 
