@@ -8,7 +8,7 @@
 
 The Phase 3 live pipeline: teleproto pollers → one Redis stream per
 installation (multi-account fan-in) → `teleframe:ingest` consumer
-→ P2 Postgres truth, with hot-reloadable routing, a standalone
+→ P2 Postgres truth, with hot zero-regex routing, a standalone
 multi-account daemon and a quota-aware history backfill. illuminate/redis
 on predis (pure PHP) or ext-phpredis — whatever the host app configures.
 
@@ -39,7 +39,7 @@ byte-identical to what was appended. Producers use `RedisStreamSink`
 (implements teleproto's `UpdateSinkInterface`); every account derives its
 `account_id` from the poller source string automatically.
 
-## Routes + reload protocol
+## Routes protocol
 
 `tg:bus:routes` is a Redis hash: pattern → target stream. Matching is
 **prefix-only** (string functions, zero regex): a single trailing `*` is
@@ -49,7 +49,6 @@ path.
 
 ```bash
 redis-cli hset tg:bus:routes 'updateNewMessage*' 'tg:target:messages'
-redis-cli publish tg:bus:reload 'reload'
 ```
 
 - Matched entries are forwarded **verbatim** to the target stream and
@@ -71,10 +70,10 @@ redis-cli publish tg:bus:reload 'reload'
     daemon reaches the cap in-process, while a fresh process restarts
     the count — which only delays the dead-letter, never the group's
     progress (pending retries drain before new entries each cycle).
-- Reload: publish to `tg:bus:reload`; a `HotReloadRouter` (push style,
-  for daemons) re-reads the table on each ping; the consumer reads the
-  table fresh per entry, so routing is hot without any signal at all —
-  the channel is the wake-up nudge for long-lived observers.
+- Routing is hot by construction: the consumer re-reads `tg:bus:routes`
+  fresh for every entry, so hash edits apply immediately — no reload
+  signal needed. `tg:bus:reload` remains the operational wake-up nudge
+  (`redis-cli publish tg:bus:reload reload`) for long-lived observers.
 
 ## Ingest command
 

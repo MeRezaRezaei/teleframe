@@ -24,7 +24,7 @@ Telegram power for Laravel apps — Bot HTTP API, native MTProto 2.0 for users *
 | [Telegram Passport](telegram-passport.md) | End-to-end encrypted KYC: RSA keypair setup, decrypting Passport credentials in a webhook |
 | [Scaling](scaling.md) | One process per account (Horizon), cold-start numbers (49 ms cold / 5 ms warm), backpressure contract, honest load limits & roadmap |
 | [Ingest](ingest.md) | Tenant-scoped raw TL → Postgres truth: updates / method responses, route dedup, idempotency, events (`MeRezaRezaei\Teleframe\Ingest`, public face `Teleclient`) |
-| [Bus](bus.md) | Redis Streams fan-in, hot-reload routing, `teleframe:ingest` consumer, multi-account `Daemon`, quota-aware `teleframe:backfill`, systemd unit |
+| [Bus](bus.md) | Redis Streams fan-in, zero-regex route table (hot by per-entry re-read), `teleframe:ingest` consumer, multi-account `Daemon`, quota-aware `teleframe:backfill`, systemd unit |
 | [Backup](backup.md) | Encrypted Telegram-channel backup vault: chunking, Argon2id + XChaCha20-Poly1305, manifest-first restore, verify, `teleframe:backup` |
 
 ## For AI agents

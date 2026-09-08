@@ -18,7 +18,7 @@ Path legend: TF = teleframe/src, TC = teleclient/src, FW = vendor/laravel/framew
 | Laravel concept | Exists today | Gap |
 |---|---|---|
 | Route declaration (Router::get/post, FW/Routing/Router.php:158-230) | Ops-level only: `RouteTable::set()` Redis hash (TC/Bus/RouteTable.php:38); poller `filter()` + `$onUpdate` closures (TF/Laravel/Services/UpdatePollerService.php:110,540) | No dev-facing declarative vocabulary — no `Update::on(...)`, no route file, code never declares routes |
-| Route compilation/caching (CompiledRouteCollection; route:cache) | `HotReloadRouter` snapshot (TC/Bus/HotReloadRouter.php:39-66); consumer re-reads hash per entry (TC/Bus/IngestConsumer.php:129) | No compile step, no cache artifact; priority = accidental Redis hash insertion order |
+| Route compilation/caching (CompiledRouteCollection; route:cache) | `HotReloadRouter` snapshot (TC/Bus/HotReloadRouter.php:39-66; deleted in Phase 4 — unwired); consumer re-reads hash per entry (TC/Bus/IngestConsumer.php:129) | No compile step, no cache artifact; priority = accidental Redis hash insertion order |
 | Route matching + param binding | Prefix-only `updateNewMessage*` match, zero-regex (RouteTable.php:53-66) | No param capture ("/start {arg}"), no constraints, no chat-type/account scoping, no 404 semantics |
 | Middleware pipeline (FW/Routing/Pipeline.php onion) | One alias `tg.miniapp` (TF provider:56); sink = single slot not chain | No onion/groups/aliases — Phase 3's 26-line chain fills this |
 | FormRequest validation (DI-triggered, FW/Foundation/Http/FormRequest.php:141-243) | Raw arrays only (`UpdateSinkInterface::handle`); spatie DTOs generated but unbound | No uprate validation object, no failure semantics |

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Tests\Bus;
 
-use MeRezaRezaei\Teleframe\Bus\HotReloadRouter;
 use MeRezaRezaei\Teleframe\Bus\IngestConsumer;
 use MeRezaRezaei\Teleframe\Bus\RedisStreamSink;
 use MeRezaRezaei\Teleframe\Bus\RouteTable;
@@ -218,40 +217,6 @@ final class IngestConsumerTest extends IngestTestCase
         self::assertSame([[TlUserUser::class, self::ACCOUNT]], $seen);
     }
 
-    public function test_reload_signal_swaps_routes_before_the_next_consume(): void
-    {
-        $table = new RouteTable($this->redis);
-        $table->set('updateNewMessage*', 'tg:target:one');
-
-        $reloads = [];
-        $router = new HotReloadRouter($this->redis, static function (array $routes) use (&$reloads): void {
-            $reloads[] = $routes;
-        });
-        $router->listen();
-
-        $sink = new RedisStreamSink($this->redis, self::ACCOUNT);
-        $sink->handle(['_' => 'updateNewMessage', 'message' => ['_' => 'message', 'id' => 1]], (string) self::ACCOUNT);
-
-        $first = $this->consumer->consumeOnce();
-        self::assertSame(['processed' => 1, 'forwarded' => 1], $first);
-        self::assertCount(1, $this->redis->streamEntries('tg:target:one'));
-
-        // Live swap: retarget the same pattern, announce it, refresh
-        $table->set('updateNewMessage*', 'tg:target:two');
-        $this->redis->publish(StreamSchema::RELOAD_CHANNEL, 'reload');
-        $fresh = $router->refresh();
-
-        self::assertSame([['updateNewMessage*' => 'tg:target:two']], $reloads);
-        self::assertSame(['updateNewMessage*' => 'tg:target:two'], $fresh);
-
-        // An update arriving AFTER the swap takes the new route
-        $sink->handle(['_' => 'updateNewMessage', 'message' => ['_' => 'message', 'id' => 2]], (string) self::ACCOUNT);
-
-        $second = $this->consumer->consumeOnce();
-        self::assertSame(['processed' => 1, 'forwarded' => 1], $second);
-        self::assertCount(1, $this->redis->streamEntries('tg:target:one'), 'first target untouched');
-        self::assertCount(1, $this->redis->streamEntries('tg:target:two'), 'second entry went to the new target');
-    }
 
     public function test_routed_entries_fan_into_the_on_routed_seam(): void
     {

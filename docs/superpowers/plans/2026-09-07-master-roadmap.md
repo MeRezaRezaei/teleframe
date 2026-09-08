@@ -52,8 +52,8 @@
 
 **Delivers:** provider shrinks to delegate-container wiring; `extra.laravel` final shape; Packagist publish readiness; dead code deleted (HotReloadRouter, unwired hooks, src-compat).
 
-- [ ] Write plan `plans/YYYY-MM-DD-phase4-laravel-bridge.md`
-- [ ] Gate: Laravel app + plain-PHP script both drive the identical facade; docs refreshed (AGENTS/README/llms)
+- [x] Write plan `plans/2026-09-08-phase4-laravel-bridge.md`
+- [x] Gate: Laravel app + plain-PHP script both drive the identical facade; docs refreshed (AGENTS/README/llms)
 
 ---
 

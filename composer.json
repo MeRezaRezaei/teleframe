@@ -1,11 +1,25 @@
 {
     "name": "merezarezaei/teleframe",
-    "description": "Unified Telegram engine and framework (MTProto 2.0 & Bot API)",
+    "description": "Unified Telegram engine and framework: MTProto 2.0 (user + bot), Bot HTTP API, Mini App auth, Passport KYC, consumer layer (ingest, bus, daemon, backfill, backup) and a one-class handler facade (Teleframe)",
     "type": "library",
     "license": "MIT",
+    "keywords": [
+        "telegram",
+        "mtproto",
+        "bot-api",
+        "teleframe",
+        "teleclient",
+        "laravel"
+    ],
+    "homepage": "https://github.com/MeRezaRezaei/teleframe",
+    "support": {
+        "issues": "https://github.com/MeRezaRezaei/teleframe/issues",
+        "source": "https://github.com/MeRezaRezaei/teleframe"
+    },
     "authors": [
         {
-            "name": "Teleframe Team"
+            "name": "Teleframe Team",
+            "homepage": "https://github.com/MeRezaRezaei"
         }
     ],
     "require": {

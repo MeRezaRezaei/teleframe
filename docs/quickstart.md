@@ -163,7 +163,7 @@ $user = app(\MeRezaRezaei\Teleframe\Teleclient::class)
 $user?->currentInstance->first_name;       // fields live on the instance
 ```
 
-### (g) Route updates with hot reload
+### (g) Route updates are hot by construction
 
 ```php
 use MeRezaRezaei\Teleframe\Bus\RouteTable;
@@ -174,8 +174,7 @@ $table->set('*', 'tg:target:everything');
 ```
 
 ```bash
-redis-cli publish tg:bus:reload 'reload'   # wake long-lived observers
-php artisan teleframe:ingest               # consumer forwards + acks
+php artisan teleframe:ingest   # re-reads routes per entry; forward + ack
 ```
 
 ### (h) Backfill a channel's history (quota-aware)

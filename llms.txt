@@ -1,93 +1,35 @@
-# Teleproto
+# Teleframe
 
-> Unified Telegram engine for PHP >= 8.2 / Laravel 10-12: user accounts and bots over native MTProto 2.0 binary TCP (Layer 227 wire, Layer 229 schema catalog), bots over HTTP Bot API, fluent request builders, typed RPC exceptions with official hints, update polling with gap/resync handling. Arrays in, arrays out.
+Unified Telegram package for PHP >= 8.2 / Laravel 10-12. One `merezarezaei/teleframe` library containing the full engine — native MTProto 2.0 for users and bots (Layer 227 wire, Layer 229 schema catalog), Bot HTTP API, Mini App HMAC auth, Passport KYC decryption, Storage-backed file streaming — plus the merged consumer layer (tenant-scoped Ingest into Postgres, Redis stream Bus + Daemon + quota-aware backfill, encrypted Telegram-channel Backup vault) and a one-class handler facade (`MeRezaRezaei\Teleframe\Teleframe`) over a shared handler pipeline.
 
 ## Architecture
 
-| Package | Concern | Illuminate deps |
-|---|---|---|
-| `merezarezaei/teleproto-core` | MTProto 2.0 wire engine: transport, crypto, TL codec, method registry, types, exceptions | none |
-| `merezarezaei/teleproto-schema` | Schema pipeline: TL sources, packaged artifacts, code generators, generated skill docs | none |
-| `merezarezaei/teleproto-laravel` | Laravel glue: clients, auth, polling, events, webhooks, console, facades | illuminate/* |
-| `merezarezaei/teleproto-bot` | Bot API HTTP surface: BotClient, BotAccountScope, Bots builders | illuminate/http |
+Single package, PSR-4 roots: `Core/` (wire engine), `Bot/` (Bot HTTP API), `Laravel/` (provider, commands, glue), `Schema/` (pipeline + generators; generated artifacts in `generated/`), and consumer + handler modules under `MeRezaRezaei\Teleframe\` → `src/Teleframe/`:
 
-Attach rule: depend on the highest package whose concern you need — core alone speaks raw MTProto; +laravel gives framed Laravel integration; +bot adds the HTTP Bot API; schema is pulled in transitively by core and only needed directly when regenerating.
+| Layer | Location | Concern |
+|---|---|---|
+| Engine | `src/Core/` | MTProto 2.0 wire: transport, encrypted connection, crypto (DH, 2FA SRP), zero-regex TL codec, method registry, typed RPC exceptions |
+| Bot | `src/Bot/` | Bot HTTP API: `BotClient`, `BotAccountScope`, fluent builders, webhooks/polling |
+| Schema | `src/Schema/` + `generated/` | `.tl` sources (`schema/sources/`), `teleframe:schema-update` (diff + regenerate + stamp, never migrates), layer 229 catalog, skill files |
+| Laravel glue | `src/Laravel/` | `TeleframeServiceProvider`, `teleframe:*` commands (`login`, `poll`, `doctor`, `schema-audit`, `schema-update`, `regenerate`, `ingest`, `backfill`, `backup`), `Route::telegramWebhook`, `tg.miniapp` middleware |
+| Consumer | `src/Teleframe/{Ingest,Bus,Daemon,Backfill,Backup}/` | Tenant-scoped ingest truth mirror (Postgres, events out), Redis Streams fan-in consumer + zero-regex route table (re-read per entry, hot by construction), multi-account daemon, quota-aware backfill, encrypted backup vault (`teleframe.backup.*`) |
+| Handlers | `src/Teleframe/Handler/` + `Testing/` | Handler-as-data registry (`on`/`onMessage`, priority-ordered, zero-regex `exact`/`prefix*`/`*`), 26-line middleware pipeline, `UpdateDispatch` (DI-flavored, lazy model hydration), `EchoEliminator` (Q2d PSR-16 send registry), `FakeDispatcher` running-mode test surface |
+
+Public faces: `MeRezaRezaei\Teleframe\Teleframe` (compose-not-own facade: `ingest`, `ingestResponse`, `onMessage`/`on`, `run`, `user`/`chat`/`channel`, `route`, `backup`, `schemaLayer`, `send`) and the retained ingest-only `Teleclient`. Config key `teleframe` (env `TELEFRAME_*`).
+
+## Composer
+
+- Requires PHP ^8.2, `illuminate/{contracts,support,console,database,http,events,filesystem,redis,routing}` ^10–^12, `spatie/laravel-data`, `predis/predis`, `symfony/*`, `phpseclib/phpseclib`, `vlucas/phpdotenv`; ext-bcmath/dom/fileinfo/gmp/hash/json/libxml/mbstring/openssl/pdo/sodium/zlib.
+- `extra.laravel` auto-registers `TeleframeServiceProvider` and `TF`/`Teleframe` facades; `extra.telegram-layer` = 229.
+- Dev: `orchestra/testbench`, `phpunit`, `phpstan` (+ `spaze/phpstan-disallowed-calls` — `preg_*` banned in `src/`), `chillerlan/php-qrcode`.
 
 ## Docs
 
-- [README](README.md): human-oriented overview, install, login wizard, code samples
-- [Quickstart](docs/quickstart.md): from install to first MTProto call
-- [User MTProto client](docs/user-client.md): credentials, phone/2FA login flow, session strings, raw calls
-- [Bot API client](docs/bot-client.md): bot(), keyboards, webhooks, polling, botMtproto()
-- [Scaling](docs/scaling.md): one-process-per-account model, backpressure, load limits
-- [Telegram Passport](docs/telegram-passport.md): Passport KYC only — RSA keypair setup, credential decryption in a webhook. Mini App HMAC auth lives in the [Quickstart](docs/quickstart.md) (see also the README)
-- [skills/](skills/): generated per-method reference (parameters, returns, errors, usage) for every curated method
+- `docs/quickstart.md` — recipes (bot message, user login, Mini App guard, Passport, streaming, consumer).
+- `docs/handlers.md` — one-class DX: onMessage, constructor routing, DI lazy hydration, echo elimination, FakeDispatcher.
+- `docs/ingest.md`, `docs/bus.md`, `docs/backup.md` — consumer modules (merged from the archived teleclient).
+- `docs/superpowers/` — roadmap, unification spec, gap analysis, plans, skills.
 
-## Quickstart
+## Project status
 
-Install: `composer require merezarezaei/teleproto-laravel` (Laravel: `php artisan vendor:publish --tag="teleproto-config"`). The engine also boots standalone — `new TeleprotoClient(defaultApiId: ..., defaultApiHash: ...)` — facades, artisan commands, and the webhook route macro are Laravel-only. Bare MTProto via `teleproto-core` is available for framework-free usage.
-
-.env keys (config/teleproto.php):
-
-```env
-TELEGRAM_API_ID=12345678          # from https://my.telegram.org — required for MTProto
-TELEGRAM_API_HASH="..."           # from https://my.telegram.org — required for MTProto
-TELEGRAM_BOT_TOKEN="123456:..."   # optional — HTTP Bot API
-TELEGRAM_USER_SESSION="2:AQAB..." # exported by the login wizard
-TELEGRAM_BOT_SESSION="2:AQAB..."  # exported by the login wizard
-TELEGRAM_DC_ID=2                  # optional
-TELEGRAM_WEBHOOK_SECRET="..."     # optional
-```
-
-Login wizard (interactive; phone + code + 2FA SRP, QR deep link, or bot token): `php artisan teleproto:login` (Laravel), `vendor/bin/teleproto login` (installed package), or `./bin/teleproto login` / `php examples/live-login.php` (repo clone). Writes `TELEGRAM_USER_SESSION` / `TELEGRAM_BOT_SESSION` to `.env` on success. With a session in `.env`, `TP::user()` and `TP::botMtproto()` need zero arguments.
-
-First calls:
-
-```php
-use MeRezaRezaei\Teleproto\Facades\TP;
-
-$me   = TP::bot()->call('getMe');                          // HTTP Bot API
-$msgs = TP::user()->call('messages.getHistory', [          // raw MTProto
-    'peer' => ['_' => 'inputPeerChannel', 'channel_id' => 123, 'access_hash' => 0],
-    'limit' => 10,
-]);
-TP::user()->sendMessage('@channel', 'hello');              // typed helper on the scope
-```
-
-## API
-
-Facades `Teleproto` / `TP` both resolve `TeleprotoClient::class` (`MeRezaRezaei\Teleproto\Services\TeleprotoClient`). Entry points:
-
-- `user(?int $accountId = null, string|SessionData|null $session = null, ?int $dcId = null, ?int $apiId = null, ?string $apiHash = null, ?array $proxyConfig = null): UserAccountScope` — user MTProto scope (session may be an exported base64 string, `SessionData`, or raw AuthKey)
-- `fromSession(string $sessionString, ?int $apiId = null, ?string $apiHash = null, ?array $proxyConfig = null): UserAccountScope` — shorthand for a stored session string
-- `bot(?string $botToken = null, ?array $proxyConfig = null): BotClient` — HTTP Bot API client
-- `botMtproto(?string $botToken = null, string|SessionData|null $session = null, ?int $dcId = null, ?int $apiId = null, ?string $apiHash = null, ?array $proxyConfig = null): BotAccountScope` — bot over binary MTProto via `auth.importBotAuthorization` (call `->login()` once)
-- `dispatch(array $request): array` — takes a builder request `['_' => method, ...params]` and routes it over the transport the packaged schema catalog assigns (`mtproto` -> user scope, `bot-http` -> bot client)
-- `forAccount(...)` — backward-compatible alias of `user()`
-
-Raw call contract: `$scope->call(string $method, array $params = []): array` on `UserAccountScope` (MTProto) and `BotClient` (Bot API). Batching: `TeleprotoClient::callMany(array $requests): array` (passthrough to MTProto `Client::callMany`) sends N independent requests in one encrypted round-trip — a single `msg_container`, `rpc_result`s demultiplexed by inner msg_id. Input is `key => ['method' => ..., 'params' => [...]]`; results come back keyed the same, each the decoded array `call()` returns. Bounds: 1020 messages / 32 KB per container; a failing request throws the same typed exception `call()` would, carrying that request's method context. Keep sequential `call()` for dependent chains. Any method in the packaged catalog (`schema/methods-mtproto.json`, `schema/methods-botapi.json`) is callable by name. Parameters and results are plain arrays; TL constructors are arrays with a `_` key, e.g. `['_' => 'inputPeerUser', 'user_id' => 1, 'access_hash' => 0]`. `UserAccountScope` also exposes typed helpers (`sendMessage`, `sendMedia`, `getHistory`, `getDialogs`, `getFullUser`, `joinChannel`, ...).
-
-Request builders: `Methods::messages()->sendMessage()->peer([...])->message('hi')->randomId(1)->toRequest()` produces the `dispatch()` payload; groups: `messages`, `users`, `contacts`, `account`, `auth`, `help`, `bots` (Bot API). Coverage is the curated dial in `config/curated-methods.json` — extend it and regenerate to grow the surface.
-
-Errors: every Telegram RPC failure throws a typed `MeRezaRezaei\Teleproto\Exceptions\Rpc\*` exception. Base `RpcErrorException` carries `$rpcErrorMessage`, `$rpcErrorCode`, `$docHint` (official wording from `RpcErrorCatalog`, generated from core.telegram.org/api/errors.json), and `$rpcMethod` (failing call). Notable: `FloodWaitException->$seconds`, `AuthKeyException`, `PhoneCodeException`, `SessionPasswordNeededException`, `PasswordHashInvalidException`, `ApiIdException`, `PhoneNumberException`; `DcMigrationException` for DC redirects during login. Catch these instead of parsing message strings.
-
-Update ingestion: `UpdatePollerService` runs the loops — `pollUser($user, pts:, date:, qts:)` implements the `updates.getDifference` state machine (slices, `differenceTooLong`, gap detection, resync); `pollBot($bot)` long-polls `getUpdates`. Updates stream into any `UpdateSinkInterface` (`handle(array $update, ?string $source): bool`; return `false` to refuse/backpressure). Default sink `EventDispatcherSink` fires the Laravel event `TelegramUpdateReceived` (plus `TelegramGapDetected`, `TelegramResynced`). Bots can instead receive webhooks via `Route::telegramWebhook('telegram/webhook')`.
-
-## Capabilities
-
-- User accounts over native MTProto 2.0 TCP (Layer 227 wire): full method catalog, 4 GB uploads, no HTTP latency
-- Bots over both HTTP Bot API and binary MTProto (`botMtproto`)
-- Stateless sessions: the whole auth state is one exported base64 string; store it encrypted, restore with `fromSession()`
-- Interactive login wizard (phone + SMS/app code, 2FA cloud password via SRP-6a, QR deep link, bot token)
-- Generated per-method reference under [skills/](skills/) for every curated method: parameter table, return type, official error list, ready-to-paste usage
-- FloodWait-aware polling with clamped interruptible backoff; gap/resync signalling events
-- Mini App HMAC middleware (`VerifyMiniAppInitData`) and Telegram Passport credential decryption (`PassportDecryptor::decryptCredentials`)
-
-## Constraints
-
-- Blocking request/response per MTProto connection: sequential `call()` blocks (encrypt -> send -> read); `callMany()` batches N requests into one round-trip (one in-flight batch at a time, no concurrent batches). Scale horizontally, one process per account/bot (queue workers/Horizon); see [docs/scaling.md](docs/scaling.md). Never share one connection across processes; the same session string in multiple processes is fine (distinct `session_id`s).
-- Arrays-only contract: no DTO hydration, no result objects — params and results are associative arrays with `_` constructor keys.
-- No handler framework: there is no router/bot-command abstraction. The event (`TelegramUpdateReceived`) and `UpdateSinkInterface` are the only ingestion seams — build your pipeline above them.
-- Synchronous sinks: updates are delivered inline in the polling loop; a slow `handle()` stalls that account. Keep it fast (hand off to a queue); return `false` for backpressure — do not throw to refuse.
-- Builder/method coverage is the curated dial (`config/curated-methods.json`); anything outside it is still reachable via raw `call()`.
-- `TELEGRAM_*_SESSION` strings grant full account access: never commit `.env`.
+Phases 0–3 of the unification roadmap complete: standalone foundation, schema upgrade pipeline, module merge (teleclient archived), handler substrate + facade. Next: Phase 4 (Laravel thin bridge / packaging landing), then framework layers 5a+.
