@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Laravel\Providers;
 
-use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
-
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Http\Middleware\VerifyMiniAppInitData;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
+use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 
 class TeleframeServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/teleframe.php', 'teleframe');
+
+        $this->app->singleton(SchemaRegenerator::class);
 
         $this->app->singleton(TeleframeClient::class, function ($app) {
             $config = $app['config']['teleframe'] ?? $app['config']['telegram'] ?? [];
@@ -47,7 +49,10 @@ class TeleframeServiceProvider extends ServiceProvider
                 \MeRezaRezaei\Teleframe\Laravel\Console\DoctorCommand::class,
                 \MeRezaRezaei\Teleframe\Laravel\Console\SchemaAuditCommand::class,
                 \MeRezaRezaei\Teleframe\Laravel\Console\SchemaUpdateCommand::class,
+                RegenerateCommand::class,
             ]);
+
+            $this->loadMigrationsFrom(dirname(__DIR__, 3) . '/migrations');
         }
 
         if (isset($this->app['router'])) {

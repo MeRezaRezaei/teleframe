@@ -19,7 +19,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, openssl, hash, json, gmp, bcmath
+          extensions: dom, curl, libxml, mbstring, zip, openssl, hash, json, gmp, bcmath, sodium, pdo, pdo_sqlite, sqlite3, pdo_pgsql
           coverage: none
       - name: Validate manifest
         run: composer validate --strict --no-check-publish

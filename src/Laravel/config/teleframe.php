@@ -1,5 +1,49 @@
 <?php
 
+declare(strict_types=1);
+
+use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
+
+/*
+ * teleframe configuration.
+ *
+ * Merged from teleclient (archived after Phase 2 module merge):
+ *
+ * - schema_sources (string|null): directory holding the .tl layer sources
+ *   the mirror regenerates from. Defaults to this package's committed
+ *   copies of the owner's full v227 mirror (schema/sources/
+ *   TL_telegram_v227.tl + TL_mtproto_v1.tl + TL_secret.tl, MIT). Set this
+ *   only to pin a different checkout.
+ * - ship_namespaces (list<string>): curated migration dial — TL namespaces
+ *   whose per-type migrations are copied into migrations/ at the package
+ *   root by `php bin/regenerate --ship` (the provider publishes them via
+ *   loadMigrationsFrom). The full layer mirror always stays in generated/.
+ *   Comma-separated env override, e.g.
+ *   TELEFRAME_SHIP_NAMESPACES="auth,messages,users".
+ * - bus (merged in Task 1; StreamSchema drives the consts in Task 3):
+ *   bus.stream / bus.group / bus.reload_channel are canonical Redis bus
+ *   names (literal StreamSchema values at this stage), bus.connection is
+ *   the illuminate/redis connection name the bus reads/writes through, and
+ *   bus.redis_client the preferred driver ('predis' pure PHP default or
+ *   'phpredis' extension). Host apps override by configuring their own
+ *   redis service.
+ * - daemon: the accounts the multi-account supervisor drives. Each entry is
+ *   an AccountWorker config — {account_id (positive int, REQUIRED),
+ *   session_string (a credential: keep it in env/secrets, never committed),
+ *   dc?, api_id?, api_hash?}.
+ * - backfill: defaults for teleframe:backfill when the CLI option is
+ *   omitted/empty.
+ * - backup: encrypted channel vaults. 'driver' picks the vault transport
+ *   for teleframe:backup — 'memory' (default; offline) or 'telegram'
+ *   (real private-channel vault via daemon.accounts). 'account' is the
+ *   daemon.accounts account_id the telegram driver resolves its session
+ *   through. 'chunk_size' is the content-addressed chunk split (4 MiB).
+ *   Each set in 'sets' lists 'paths' (files/directories, walked
+ *   recursively) and substring 'excludes'.
+ */
+
+$shipEnv = env('TELEFRAME_SHIP_NAMESPACES');
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -26,5 +70,74 @@ return [
     */
     'user_session' => env('TELEGRAM_USER_SESSION'),
     'bot_session' => env('TELEGRAM_BOT_SESSION'),
-];
 
+    /*
+    |--------------------------------------------------------------------------
+    | Schema Mirror (regeneration sources + curated migration dial)
+    |--------------------------------------------------------------------------
+    */
+    'schema_sources' => env('TELEFRAME_SCHEMA_SOURCES'),
+
+    'ship_namespaces' => $shipEnv === null
+        ? SchemaRegenerator::DEFAULT_SHIP_NAMESPACES
+        : array_values(array_filter(array_map('trim', explode(',', $shipEnv)))),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Redis Bus (update stream / hot-reload channel / route table)
+    |--------------------------------------------------------------------------
+    */
+    'bus' => [
+        'stream' => 'tg:stream:updates',
+        'group' => 'teleclient',
+        'reload_channel' => 'tg:bus:reload',
+        'connection' => 'default',
+        'redis_client' => env('TELEFRAME_REDIS', 'predis'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Daemon (multi-account supervisor registry)
+    |--------------------------------------------------------------------------
+    */
+    'daemon' => [
+        'accounts' => [
+            // [
+            //     'account_id' => 501558149,
+            //     'session_string' => env('TELEGRAM_SESSION_501558149'),
+            //     'dc' => 2, 'api_id' => null, 'api_hash' => null,
+            // ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Backfill (history fetch defaults)
+    |--------------------------------------------------------------------------
+    */
+    'backfill' => [
+        'request_budget' => env('TELEFRAME_BACKFILL_BUDGET', 25),
+        'flood_cap_seconds' => 3600,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Backup (encrypted channel vaults)
+    |--------------------------------------------------------------------------
+    */
+    'backup' => [
+        'driver' => env('TELEFRAME_BACKUP_DRIVER', 'memory'),
+        'account' => env('TELEFRAME_BACKUP_ACCOUNT'),
+        'chunk_size' => env('TELEFRAME_BACKUP_CHUNK_SIZE', 4194304),
+        'sets' => [
+            'default' => [
+                'paths' => [
+                    // env('TELEFRAME_BACKUP_PATHS') is a sensible host
+                    // pattern: base_path('...') entries go here — the runner
+                    // requires at least one path before it uploads anything.
+                ],
+                'excludes' => [],
+            ],
+        ],
+    ],
+];
