@@ -31,5 +31,8 @@
         <testsuite name="Console">
             <directory>tests/Console</directory>
         </testsuite>
+        <testsuite name="Daemon">
+            <directory>tests/Daemon</directory>
+        </testsuite>
     </testsuites>
 </phpunit>
