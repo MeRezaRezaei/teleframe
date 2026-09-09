@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Live-test ready (2026-09-09):** `.env.example` + quickstart live ladder (`doctor → login → me → walkthrough → test-e2e`); Pg collation ops note; credential-gated dry-run matrix in `docs/superpowers/plans/2026-09-09-live-readiness.md`. Offline gates green (999 tests); live gates remain opt-in, never CI.
 - **PSR-3 logging seam (`psr/log` ^3, silent by default):** `LoggerInterface` is
   now resolved by the provider (host binding → `teleframe.logging.logger` FQCN →
   `NullLogger`). `UpdateDispatcher` logs handler failures and `TeleframeClient`

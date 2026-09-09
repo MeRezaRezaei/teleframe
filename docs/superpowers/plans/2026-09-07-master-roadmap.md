@@ -119,6 +119,8 @@
 - [x] Spec written with RULING Q12 applied (stub-based hosting) · Plan · Execution
 - [x] Gate: example Vue mini app runs inside Telegram, authenticated as the bound Laravel user
 
+- [x] Live-test ready 2026-09-09: ladder documented, dry-run matrix recorded, main green.
+
 ---
 
 ## Autonomy protocol (binding — vision doc §Autonomy verbatim)
