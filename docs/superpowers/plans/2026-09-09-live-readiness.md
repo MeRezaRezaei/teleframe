@@ -276,3 +276,16 @@ Expected: green + pushed.
 - [ ] **Step 5: Declare READY**
 
 READY = L0 green on main + ladder documented + dry-run matrix recorded (OKs or credential-gated SKIPs with evidence) + no secrets in `git log --all -- .env` + working tree clean.
+
+## Live dry-run 2026-09-09
+
+| Gate | Result | Evidence |
+|---|---|---|
+| L0 offline | OK | `vendor/bin/phpunit`: 999 tests, 14305 assertions, 5 skipped; phpstan No errors; `TELEFRAME_PG=1 tests/Pg`: 8 tests OK (collation warning benign) |
+| L1 doctor | SKIPPED (no credentials) | `php examples/live-doctor.php prod50` → "Set TG_API_ID and TG_API_HASH env vars"; no `.env` in repo |
+| L3 me | SKIPPED (no .env session) | `ls .env` → No such file; `./bin/teleframe me` not attempted without session |
+| L4 walkthrough | SKIPPED (needs L3 session) | same as L3 — no session to send/verify/delete with |
+| L5 e2e | SKIPPED (needs session + bot token) | same — no `TELEGRAM_USER_SESSION` / `TELEGRAM_BOT_TOKEN` |
+| Secrets | CLEAN | `git log --all -- .env` empty; `.env` gitignored (line 4, `git check-ignore` OK) |
+
+Note: the single `Failures: 1` seen once in Task 3's `composer verify` tail did not reproduce — full rerun green (999/14305/5-skipped). Treated as flaky; watch on merge.
