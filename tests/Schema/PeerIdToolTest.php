@@ -23,7 +23,7 @@ final class PeerIdToolTest extends TestCase
         self::assertSame(['kind' => 'chat', 'id' => 42], PeerIdTool::decode($long));
     }
 
-    public function test_channel_long_is_below_negative_2to32(): void
+    public function test_channel_long_is_below_negative_2to31(): void
     {
         $long = PeerIdTool::channelLong(100);
         self::assertLessThan(-(1 << 31), $long);

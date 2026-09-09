@@ -49,7 +49,10 @@ final class SchemaRegenerator
         if (!is_dir($dir)) {
             throw new TlRegenerateException("teleframe schema sources dir not found: {$dir}");
         }
-        $files = glob(rtrim($dir, '/') . '/*.tl') ?: [];
+        $files = glob(rtrim($dir, '/') . '/*.tl');
+        if ($files === false) {
+            throw new TlRegenerateException("failed to read scheme dir: {$dir}");
+        }
         sort($files);
         if ($files === []) {
             throw new TlRegenerateException("no .tl scheme files in {$dir}");
@@ -66,8 +69,14 @@ final class SchemaRegenerator
             throw new TlRegenerateException("schemas dir not found: {$schemasDir}");
         }
 
-        $files = glob(rtrim($schemasDir, '/') . '/*.tl') ?: [];
-        $tdl = glob(rtrim($schemasDir, '/') . '/*.tdl') ?: [];
+        $files = glob(rtrim($schemasDir, '/') . '/*.tl');
+        if ($files === false) {
+            throw new TlRegenerateException("failed to read schemas dir: {$schemasDir}");
+        }
+        $tdl = glob(rtrim($schemasDir, '/') . '/*.tdl');
+        if ($tdl === false) {
+            throw new TlRegenerateException("failed to read schemas dir: {$schemasDir}");
+        }
         $files = array_merge($files, $tdl);
         sort($files);
         if ($files === []) {
@@ -132,6 +141,11 @@ final class SchemaRegenerator
     /** Ship-exempt migrations the owning app checks in (ShipDialGoldenTest
      *  mirrors this contract): the ship purge must never delete them. */
     private const APP_OWNED_MIGRATIONS = ['2026_09_08_000100_create_tl_user_bindings_table.php'];
+
+    /** Safety gate: refuse to wipe the generated tree when the ctor count
+     *  drifts by more than this ratio vs. the committed manifest (pass
+     *  --force to override). */
+    private const MAX_CTOR_DRIFT_RATIO = 0.30;
 
     private function shipMigrations(TlScheme $combined, array $tableMap, array $migFiles, string $outputDir): array
     {
@@ -213,9 +227,10 @@ final class SchemaRegenerator
             return;
         }
         $now = $combined->counts()['constructors'];
-        if (abs($now - $prevCtors) / $prevCtors > 0.30) {
+        if (abs($now - $prevCtors) / $prevCtors > self::MAX_CTOR_DRIFT_RATIO) {
             throw new TlRegenerateException(sprintf(
-                'constructor count changed by more than 30%% (%d -> %d); pass --force if intentional',
+                'constructor count changed by more than %.0f%% (%d -> %d); pass --force if intentional',
+                self::MAX_CTOR_DRIFT_RATIO * 100,
                 $prevCtors,
                 $now,
             ));

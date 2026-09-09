@@ -64,6 +64,14 @@ final class FilesystemCache implements CacheInterface
     {
         $this->assertKey($key);
 
+        if (is_object($value) || is_resource($value)) {
+            throw new InvalidArgumentException(sprintf(
+                '%s refuses to store objects/resources (unserialize runs with allowed_classes=false); got %s',
+                self::class,
+                is_object($value) ? get_debug_type($value) : gettype($value),
+            ));
+        }
+
         $seconds = self::ttlSeconds($ttl);
         $expires = $seconds === 0 ? 0 : time() + $seconds;
 
