@@ -31,7 +31,8 @@ Carry `@generated` markers; overwritten by the schema pipeline:
   teleframe:regenerate [--ship]` / `php bin/regenerate`.
 - `src/{Core,Bot}/Methods/Generated/*.php` — regenerate after editing
   `schema/config/curated-methods.json`.
-- `skills/telegram-schema-update/*.md` — generated from the catalog.
+- `src/Schema/skills/telegram-methods/*.md` — generated from the catalog
+  (`bin/generate-skill-files.php`, 30 files, `<!-- @generated -->` stamped).
 - `src/Core/Exceptions/Rpc/RpcErrorCatalog.php` — regenerated from the
   committed `errors.json`.
 
@@ -64,6 +65,21 @@ Live gates (real credentials) are opt-in and never part of CI.
 Notes: LSP "Undefined type" diagnostics are stale-autoload noise — final
 authority is `composer verify`. `composer.lock` is gitignored. `tests/`
 mirrors `src/`, one test class per file.
+
+## Known gaps / limitations (2026-09-09 audit)
+
+- **No logging seam.** `src/` contains zero `LoggerInterface`/`Log::` usage and
+  `psr/log` is not required. The engine intentionally delegates observability
+  to the host app (Laravel writes its own logs); an injectable PSR-3 logger is
+  an open application-layer item, not an engine bug.
+- **StreamSocket proxy tunneling not implemented.** `StreamSocket` accepts a
+  `proxy` config (SOCKS5/HTTP shape) but connects directly — `@todo` in the
+  class. Wire-path spec's proxy option remains inert by design.
+- **PSR-7/17 not used** (by design): `illuminate/http` is the HTTP seam inside
+  Laravel; MTProto is raw TCP. PSR-17 becomes relevant only if raw HTTP
+  handling is added outside Laravel.
+- **Schema artifacts catalogue Layer 229 while the wire speaks Layer 227** —
+  intentional, never "fix" it (see the Schema + Methods row above).
 
 ## Specs and plans
 

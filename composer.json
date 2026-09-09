@@ -79,6 +79,9 @@
             "MeRezaRezaei\\Teleframe\\Schema\\Tests\\": "tests/Schema/"
         }
     },
+    "bin": [
+        "bin/teleframe"
+    ],
     "scripts": {
         "test": "phpunit",
         "stan": "phpstan analyse -c phpstan.neon.dist",
