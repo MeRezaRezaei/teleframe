@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageExtendedMedia;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebDocument;
 
 /** Constructor model for messageMediaInvoice of MessageMedia (crc32 f6a548d3). */
 final class TlMessageMediaMessageMediaInvoice extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_media_message_media_invoice';
 
@@ -27,11 +31,18 @@ final class TlMessageMediaMessageMediaInvoice extends TlInstanceModel
         'test' => 'bool',
         'title' => 'string',
         'description' => 'string',
-        'photo' => 'string',
         'receipt_msg_id' => 'int',
         'currency' => 'string',
         'total_amount' => 'int',
         'start_param' => 'string',
-        'extended_media' => 'string',
     ];
+
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(TlWebDocument::class, 'photo');
+    }
+    public function extendedMedia(): BelongsTo
+    {
+        return $this->belongsTo(TlMessageExtendedMedia::class, 'extended_media');
+    }
 }

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_1b5877e1d6afd6da600a3bf2');
+            $table->index('account_id', 'ix_38fbc57f14f85930f055ec72');
         });
         Schema::create('tl_stars_topup_option_stars_topup_option', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_stars_topup_option')->cascadeOnDelete();
@@ -28,7 +28,9 @@ return new class extends Migration
             $table->text('store_product')->nullable();
             $table->text('currency');
             $table->bigInteger('amount');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_9634d7d6fb6de61981bfcda4');
         });
     }
 

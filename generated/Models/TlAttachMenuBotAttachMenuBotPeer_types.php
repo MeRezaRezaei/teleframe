@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param peer_types (table tl_attach_menu_bot_attach_menu_bot__peer_types). */
 final class TlAttachMenuBotAttachMenuBotPeer_types extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_attach_menu_bot_attach_menu_bot__peer_types';
 
     public $timestamps = false; // child tables carry no timestamps columns

@@ -7,6 +7,7 @@ namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 use Illuminate\Support\Facades\Event;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChannel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatPhotoChatPhotoEmpty;
@@ -85,13 +86,14 @@ final class NestedIngestTest extends IngestTestCase
         self::assertTrue($message->out);
         self::assertSame($root->message, (string) $message->id, 'root.message uuid → the message instance');
 
-        // Ref columns carry the child instances' shared PKs (uuids).
+        // Ref columns carry the canonical peer longs (T1.2); the walker's
+        // peer child rows persist alongside with the same identity.
         $fromPeer = TlPeerPeerUser::query()->sole();
         self::assertSame(self::USER_ID, $fromPeer->user_id);
-        self::assertSame($message->from_id, $fromPeer->id);
+        self::assertSame(PeerIdTool::userLong(self::USER_ID), (int) $message->from_id, 'message.from_id = canonical user long');
         $chanPeer = TlPeerPeerChannel::query()->sole();
         self::assertSame(self::CHANNEL_ID, $chanPeer->channel_id);
-        self::assertSame($message->peer_id, $chanPeer->id);
+        self::assertSame(PeerIdTool::channelLong(self::CHANNEL_ID), (int) $message->peer_id, 'message.peer_id = canonical channel long');
         self::assertSame(2, TlPeer::query()->count(), 'peer anchors for both refs');
         self::assertSame('peerChannel', TlPeer::query()->where('id', $chanPeer->id)->value('constructor_name'));
 
@@ -172,9 +174,13 @@ final class NestedIngestTest extends IngestTestCase
         $chatB = TlChat::query()->where('account_id', 8)->sole();
         self::assertSame('Teleframe Café', TlChatChannel::query()->findOrFail((string) $chatB->id)->title);
 
-        // Account 7's view is untouched by the account 8 ingest.
+        // Account 7's view is untouched by the account 8 ingest: the canonical
+        // peer long STILL denotes account 7's peer, and account 7's own
+        // peer child row is what its message column points at semantically.
         $messageA = TlMessageMessage::query()->where('id', $rootA->message)->sole();
-        self::assertSame(1, TlPeerPeerChannel::query()->where('id', $messageA->peer_id)->count());
+        self::assertSame(PeerIdTool::channelLong(self::CHANNEL_ID), (int) $messageA->peer_id, 'account 7 peer_id = canonical channel long');
+        self::assertSame(2, TlPeerPeerChannel::query()->count(), 'peer child rows stay per-tenant');
+        self::assertSame(self::CHANNEL_ID, TlPeerPeerChannel::query()->where('account_id', self::ACCOUNT)->sole()->channel_id);
 
         // Child rows hang off each tenant's own message instance with
         // disjoint value sets (content aggregation never crosses tenants).

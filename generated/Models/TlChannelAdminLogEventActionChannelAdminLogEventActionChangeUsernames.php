@@ -7,16 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelAdminLogEventActionChannelAdm38f150219e2ePrev_value;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelAdminLogEventActionChannelAdm38f150219e2eNew_value;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelAdminLogEventActionChannelAdm38f150219e2ePrev_value;
 
 /** Constructor model for channelAdminLogEventActionChangeUsernames of ChannelAdminLogEventAction (crc32 f04fb3a9). */
 final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeUsernames extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_channel_admin_log_event_action_channel_adm_38f150219e2e';
 

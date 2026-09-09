@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_49a6ccbe8d1f1982dd7afc2f');
+            $table->index('account_id', 'ix_2096639ec69584d8d1412069');
         });
         Schema::create('tl_poll_answer_voters_poll_answer_voters', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_poll_answer_voters')->cascadeOnDelete();
@@ -27,14 +27,18 @@ return new class extends Migration
             $table->boolean('correct')->default(false);
             $table->binary('option');
             $table->integer('voters')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_8ed039f662d9e1cdbf4b4dc3');
         });
         Schema::create('tl_poll_answer_voters_poll_answer_voters__recent_voters', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_poll_answer_voters_poll_answer_voters')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_525be0a4c7d7a93f54e8');
+            $table->index('account_id', 'ix_8767f8ae4c8f10de1f8dcef3');
         });
     }
 

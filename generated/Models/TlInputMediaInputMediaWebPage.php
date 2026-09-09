@@ -7,14 +7,15 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** Constructor model for inputMediaWebPage of InputMedia (crc32 c21b8849). */
 final class TlInputMediaInputMediaWebPage extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_media_input_media_web_page';
 

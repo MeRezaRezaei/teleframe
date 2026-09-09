@@ -7,18 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessagesChannelMessagesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessagesChannelMessagesMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessagesChannelMessagesTopics;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessagesChannelMessagesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessagesChannelMessagesUsers;
 
 /** Constructor model for messages.channelMessages of messages.Messages (crc32 c776ba4e). */
 final class TlMessagesMessagesChannelMessages extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_messages_channel_messages';
 

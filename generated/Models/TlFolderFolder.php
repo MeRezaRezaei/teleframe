@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatPhoto;
 
 /** Constructor model for folder of Folder (crc32 ff544e65). */
 final class TlFolderFolder extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_folder_folder';
 
@@ -28,6 +31,10 @@ final class TlFolderFolder extends TlInstanceModel
         'autofill_new_correspondents' => 'bool',
         'tl_id' => 'int',
         'title' => 'string',
-        'photo' => 'string',
     ];
+
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(TlChatPhoto::class, 'photo');
+    }
 }

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_6744d2665b1e6d500d7531eb');
+            $table->index('account_id', 'ix_c8c4396ebfae292f10c65f03');
         });
         Schema::create('tl_disallowed_gifts_settings_disallowed_gifts_settings', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_disallowed_gifts_settings')->cascadeOnDelete();
@@ -28,7 +28,9 @@ return new class extends Migration
             $table->boolean('disallow_unique_stargifts')->default(false);
             $table->boolean('disallow_premium_gifts')->default(false);
             $table->boolean('disallow_stargifts_from_channels')->default(false);
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_38a1bb807cbba45493ba3138');
         });
     }
 

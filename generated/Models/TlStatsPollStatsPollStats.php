@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsGraph;
 
 /** Constructor model for stats.pollStats of stats.PollStats (crc32 2999beed). */
 final class TlStatsPollStatsPollStats extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_stats_poll_stats_poll_stats';
 
@@ -22,6 +25,10 @@ final class TlStatsPollStatsPollStats extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'votes_graph' => 'string',
     ];
+
+    public function votesGraph(): BelongsTo
+    {
+        return $this->belongsTo(TlStatsGraph::class, 'votes_graph');
+    }
 }

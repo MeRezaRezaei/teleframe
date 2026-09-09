@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** Constructor model for groupCall of GroupCall (crc32 efb2b617). */
 final class TlGroupCallGroupCall extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_group_call_group_call';
 
@@ -48,6 +51,5 @@ final class TlGroupCallGroupCall extends TlInstanceModel
         'version' => 'int',
         'invite_link' => 'string',
         'send_paid_messages_stars' => 'int',
-        'default_send_as' => 'string',
     ];
 }

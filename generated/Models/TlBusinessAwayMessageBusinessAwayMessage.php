@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBusinessAwayMessageSchedule;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBusinessRecipients;
 
 /** Constructor model for businessAwayMessage of BusinessAwayMessage (crc32 ef156a5c). */
 final class TlBusinessAwayMessageBusinessAwayMessage extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_business_away_message_business_away_message';
 
@@ -25,7 +29,14 @@ final class TlBusinessAwayMessageBusinessAwayMessage extends TlInstanceModel
         'flags' => 'int',
         'offline_only' => 'bool',
         'shortcut_id' => 'int',
-        'schedule' => 'string',
-        'recipients' => 'string',
     ];
+
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(TlBusinessAwayMessageSchedule::class, 'schedule');
+    }
+    public function recipients(): BelongsTo
+    {
+        return $this->belongsTo(TlBusinessRecipients::class, 'recipients');
+    }
 }

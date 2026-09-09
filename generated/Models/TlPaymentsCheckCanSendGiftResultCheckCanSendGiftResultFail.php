@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for payments.checkCanSendGiftResultFail of payments.CheckCanSendGiftResult (crc32 d5e58274). */
 final class TlPaymentsCheckCanSendGiftResultCheckCanSendGiftResultFail extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_payments_check_can_send_gift_result_check__b2fde8ccbce4';
 
@@ -22,6 +25,10 @@ final class TlPaymentsCheckCanSendGiftResultCheckCanSendGiftResultFail extends T
 
     /** @var array<string, string> */
     protected $casts = [
-        'reason' => 'string',
     ];
+
+    public function reason(): BelongsTo
+    {
+        return $this->belongsTo(TlTextWithEntities::class, 'reason');
+    }
 }

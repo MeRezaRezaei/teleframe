@@ -7,14 +7,15 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** Constructor model for starGiftAuctionRoundExtendable of StarGiftAuctionRound (crc32 0aa021e5). */
 final class TlStarGiftAuctionRoundStarGiftAuctionRoundExtendable extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_star_gift_auction_round_star_gift_auction__a0b7925a30f9';
 

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessage;
 
 /** Constructor model for msg_copy of MessageCopy (crc32 e06046b2). */
 final class TlMessageCopyMsgCopy extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_copy_msg_copy';
 
@@ -22,6 +25,10 @@ final class TlMessageCopyMsgCopy extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'orig_message' => 'string',
     ];
+
+    public function origMessage(): BelongsTo
+    {
+        return $this->belongsTo(TlMessage::class, 'orig_message');
+    }
 }

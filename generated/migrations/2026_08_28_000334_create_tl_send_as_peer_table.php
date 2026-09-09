@@ -17,15 +17,18 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_53ea97c164ef582b3b88e5be');
+            $table->index('account_id', 'ix_1ec26db7d1e0cca2ff16606b');
         });
         Schema::create('tl_send_as_peer_send_as_peer', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_send_as_peer')->cascadeOnDelete();
             $table->bigInteger('flags')->nullable();
             $table->boolean('premium_required')->default(false);
-            $table->uuid('peer');
+            $table->bigInteger('peer');
+            $table->index('peer', 'ix_4e7258369786775a555534a6');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_1defb0d5be8b25a9262362b2');
         });
     }
 

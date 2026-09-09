@@ -7,14 +7,15 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** Constructor model for searchResultsCalendarPeriod of SearchResultsCalendarPeriod (crc32 c9b0539f). */
 final class TlSearchResultsCalendarPeriodSearchResultsCalendarPeriod extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_search_results_calendar_period_search_resu_9116af4a75f6';
 

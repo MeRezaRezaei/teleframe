@@ -17,15 +17,17 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_4eaa61150ed266673bfa9aef');
+            $table->index('account_id', 'ix_17edb5ed07dd5ce428d5338d');
         });
         Schema::create('tl_nearest_dc_nearest_dc', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_nearest_dc')->cascadeOnDelete();
             $table->text('country');
             $table->integer('this_dc');
             $table->integer('nearest_dc');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_0007c62a6c390c7671d10e40');
         });
     }
 

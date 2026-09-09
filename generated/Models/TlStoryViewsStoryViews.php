@@ -7,9 +7,10 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryViewsStoryViewsReactions;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryViewsStoryViewsRecent_viewers;
 
@@ -17,6 +18,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryViewsStoryViewsRecent_
 final class TlStoryViewsStoryViews extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_story_views_story_views';
 

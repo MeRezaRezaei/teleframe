@@ -7,14 +7,15 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** Constructor model for messages.emojiGameOutcome of messages.EmojiGameOutcome (crc32 da2ad647). */
 final class TlMessagesEmojiGameOutcomeEmojiGameOutcome extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_emoji_game_outcome_emoji_game_outcome';
 

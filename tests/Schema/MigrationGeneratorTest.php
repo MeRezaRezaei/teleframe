@@ -41,7 +41,7 @@ final class MigrationGeneratorTest extends TestCase
         self::assertStringContainsString("\$table->bigInteger('constructor_id');", $user);
         self::assertStringContainsString("\$table->string('constructor_name', 96);", $user);
         self::assertStringContainsString("\$table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)", $user);
-        self::assertStringContainsString("\$table->index('account_id');", $user);
+        self::assertStringContainsString("\$table->index('account_id', 'ix_", $user);
     }
 
     public function test_instance_table_shape(): void
@@ -135,10 +135,10 @@ final class MigrationGeneratorTest extends TestCase
         $message = $files['2026_08_28_000001_create_tl_message_table.php'];
         self::assertStringContainsString("\$table->bigInteger('from_id')->nullable();", $message);
         self::assertStringContainsString("\$table->bigInteger('peer_id');", $message);
-        self::assertStringContainsString("\$table->index('peer_id');", $message);
-        self::assertStringContainsString("\$table->index('from_id');", $message);
+        self::assertStringContainsString("\$table->index('peer_id', 'ix_", $message);
+        self::assertStringContainsString("\$table->index('from_id', 'ix_", $message);
         self::assertStringContainsString("\$table->uuid('media')", $message);
-        self::assertStringContainsString("\$table->index('media');", $message);
+        self::assertStringContainsString("\$table->index('media', 'ix_", $message);
         self::assertStringNotContainsString("uuid('peer_id')", $message);
         $stats = $gen->stats();
         self::assertSame(1, $stats['fk_count']); // media ref emits FK; Peer refs no longer do
@@ -157,7 +157,7 @@ final class MigrationGeneratorTest extends TestCase
                 continue;
             }
             self::assertStringContainsString("\$table->bigInteger('account_id');", $content, "{$name} missing account_id column");
-            self::assertStringContainsString("\$table->index('account_id');", $content, "{$name} missing account_id index");
+            self::assertStringContainsString("\$table->index('account_id', 'ix_", $content, "{$name} missing account_id index");
         }
     }
 

@@ -7,15 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMsgsAllInfoMsgsAllInfoMsg_ids;
 
 /** Constructor model for msgs_all_info of MsgsAllInfo (crc32 8cc0d131). */
 final class TlMsgsAllInfoMsgsAllInfo extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_msgs_all_info_msgs_all_info';
 

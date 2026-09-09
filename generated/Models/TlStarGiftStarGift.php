@@ -7,14 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGiftBackground;
 
 /** Constructor model for starGift of StarGift (crc32 313a9547). */
 final class TlStarGiftStarGift extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_star_gift_star_gift';
 
@@ -31,7 +37,6 @@ final class TlStarGiftStarGift extends TlInstanceModel
         'peer_color_available' => 'bool',
         'auction' => 'bool',
         'tl_id' => 'int',
-        'sticker' => 'string',
         'stars' => 'int',
         'availability_remains' => 'int',
         'availability_total' => 'int',
@@ -42,7 +47,6 @@ final class TlStarGiftStarGift extends TlInstanceModel
         'upgrade_stars' => 'int',
         'resell_min_stars' => 'int',
         'title' => 'string',
-        'released_by' => 'string',
         'per_user_total' => 'int',
         'per_user_remains' => 'int',
         'locked_until_date' => 'int',
@@ -50,6 +54,14 @@ final class TlStarGiftStarGift extends TlInstanceModel
         'gifts_per_round' => 'int',
         'auction_start_date' => 'int',
         'upgrade_variants' => 'int',
-        'background' => 'string',
     ];
+
+    public function sticker(): BelongsTo
+    {
+        return $this->belongsTo(TlDocument::class, 'sticker');
+    }
+    public function background(): BelongsTo
+    {
+        return $this->belongsTo(TlStarGiftBackground::class, 'background');
+    }
 }

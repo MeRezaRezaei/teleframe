@@ -7,15 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBool;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlConfigConfigDc_options;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReaction;
 
 /** Constructor model for config of Config (crc32 cc1a241e). */
 final class TlConfigConfig extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_config_config';
 
@@ -31,7 +36,6 @@ final class TlConfigConfig extends TlInstanceModel
         'force_try_ipv6' => 'bool',
         'date' => 'int',
         'expires' => 'int',
-        'test_mode' => 'string',
         'this_dc' => 'int',
         'dc_txt_domain_name' => 'string',
         'chat_size_max' => 'int',
@@ -68,12 +72,20 @@ final class TlConfigConfig extends TlInstanceModel
         'suggested_lang_code' => 'string',
         'lang_pack_version' => 'int',
         'base_lang_pack_version' => 'int',
-        'reactions_default' => 'string',
         'autologin_token' => 'string',
     ];
 
     public function dcOptions(): HasMany
     {
         return $this->tlChild(TlConfigConfigDc_options::class);
+    }
+
+    public function testMode(): BelongsTo
+    {
+        return $this->belongsTo(TlBool::class, 'test_mode');
+    }
+    public function reactionsDefault(): BelongsTo
+    {
+        return $this->belongsTo(TlReaction::class, 'reactions_default');
     }
 }

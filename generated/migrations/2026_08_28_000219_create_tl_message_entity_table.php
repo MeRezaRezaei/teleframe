@@ -17,21 +17,26 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_3b4e8d021a274ac8f5aa6d1d');
+            $table->index('account_id', 'ix_892838f2ed3b1480bb78bfed');
         });
         Schema::create('tl_message_entity_input_message_entity_mention_name', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
             $table->uuid('user_id');
+            $table->index('user_id', 'ix_7d82b71b03fd1a2b7ebf1b14');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_1fbf481c9e98db0ffa884705');
         });
         Schema::create('tl_message_entity_message_entity_bank_card', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_c23ce30e632f728925a0a1cd');
         });
         Schema::create('tl_message_entity_message_entity_blockquote', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
@@ -39,63 +44,84 @@ return new class extends Migration
             $table->boolean('collapsed')->default(false);
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_eccde0fbc2bb0b83e0a8f88a');
         });
         Schema::create('tl_message_entity_message_entity_bold', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_6a3f733fc5d9eec10f5e1192');
         });
         Schema::create('tl_message_entity_message_entity_bot_command', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_b34584f0cfed13967fd602a2');
         });
         Schema::create('tl_message_entity_message_entity_cashtag', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_787103b61466d5bbca07013c');
         });
         Schema::create('tl_message_entity_message_entity_code', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_b808e867a77f00c2aff56449');
         });
         Schema::create('tl_message_entity_message_entity_custom_emoji', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
             $table->bigInteger('document_id');
+            $table->index('document_id', 'ix_3ca1a0bb19fca41b9975fb84');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_7664cec27c337bbc591dea00');
         });
         Schema::create('tl_message_entity_message_entity_diff_delete', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_45c43079cf4c8fcf1bdfb6be');
         });
         Schema::create('tl_message_entity_message_entity_diff_insert', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_2093899c68bcb65c3bc72c13');
         });
         Schema::create('tl_message_entity_message_entity_diff_replace', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
             $table->text('old_text');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_cdad57aec7240268b26f7476');
         });
         Schema::create('tl_message_entity_message_entity_email', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_48d1481047a41e3bf88ef5dc');
         });
         Schema::create('tl_message_entity_message_entity_formatted_date', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
@@ -109,82 +135,109 @@ return new class extends Migration
             $table->integer('tl_offset');
             $table->integer('length');
             $table->integer('date');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_c20115a8cc56dea6408d6596');
         });
         Schema::create('tl_message_entity_message_entity_hashtag', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_b57564d926d460cfe6bff9ae');
         });
         Schema::create('tl_message_entity_message_entity_italic', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_6e0a6a06cf1541d633f56183');
         });
         Schema::create('tl_message_entity_message_entity_mention', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_a97b969b3d62d44dcf495fe8');
         });
         Schema::create('tl_message_entity_message_entity_mention_name', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
             $table->bigInteger('user_id');
+            $table->index('user_id', 'ix_98d5998e1b7e2d84211eb267');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_7f9c2752c48e4506a50951d9');
         });
         Schema::create('tl_message_entity_message_entity_phone', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_d8057d9064577f04d6ca6976');
         });
         Schema::create('tl_message_entity_message_entity_pre', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
             $table->text('language');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_ec5d3b8e05f64aea706dca2b');
         });
         Schema::create('tl_message_entity_message_entity_spoiler', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_63f88c6104b2e9655a8acc20');
         });
         Schema::create('tl_message_entity_message_entity_strike', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_3134802796cb42b97b43d44b');
         });
         Schema::create('tl_message_entity_message_entity_text_url', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
             $table->text('url');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_8507585fcb822c3fd042fd45');
         });
         Schema::create('tl_message_entity_message_entity_underline', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_2c0a15dfccef41716b55480a');
         });
         Schema::create('tl_message_entity_message_entity_unknown', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_e837bc69b77ec307592f5a9a');
         });
         Schema::create('tl_message_entity_message_entity_url', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_message_entity')->cascadeOnDelete();
             $table->integer('tl_offset');
             $table->integer('length');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_dcde048c9890c84dbf0dbd35');
         });
     }
 

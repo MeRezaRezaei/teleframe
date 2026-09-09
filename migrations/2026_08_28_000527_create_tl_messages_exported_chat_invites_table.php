@@ -17,27 +17,33 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_8dba65c9d9d507764452b11b');
+            $table->index('account_id', 'ix_b7ca6706a1456658ef57eb0b');
         });
         Schema::create('tl_messages_exported_chat_invites_exported_chat_invites', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_messages_exported_chat_invites')->cascadeOnDelete();
             $table->integer('count');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_25e4e071f5b095049217cac9');
         });
         Schema::create('tl_messages_exported_chat_invites_exported_ch_6aaa781e3e6f', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_messages_exported_chat_invites_exported_chat_invites')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_58155d356c05ff9273fd');
+            $table->index('account_id', 'ix_6e32d85113954d8050dd5905');
         });
         Schema::create('tl_messages_exported_chat_invites_exported_ch_a8d7d20365d9', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_messages_exported_chat_invites_exported_chat_invites')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_9fdd09b6472d0b80f8a8');
+            $table->index('account_id', 'ix_980ab839ef7b3b08f9decd60');
         });
     }
 

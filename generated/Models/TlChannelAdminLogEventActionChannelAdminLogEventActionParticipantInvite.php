@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelParticipant;
 
 /** Constructor model for channelAdminLogEventActionParticipantInvite of ChannelAdminLogEventAction (crc32 e31c34d8). */
 final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantInvite extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_channel_admin_log_event_action_channel_adm_6750f366ea9f';
 
@@ -22,6 +25,10 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantInv
 
     /** @var array<string, string> */
     protected $casts = [
-        'participant' => 'string',
     ];
+
+    public function participant(): BelongsTo
+    {
+        return $this->belongsTo(TlChannelParticipant::class, 'participant');
+    }
 }

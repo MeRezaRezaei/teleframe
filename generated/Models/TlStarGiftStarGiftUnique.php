@@ -7,9 +7,13 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerColor;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGiftStarGiftUniqueAttributes;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGiftStarGiftUniqueResell_amount;
 
@@ -17,6 +21,8 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGiftStarGiftUniqueResel
 final class TlStarGiftStarGiftUnique extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_star_gift_star_gift_unique';
 
@@ -35,19 +41,14 @@ final class TlStarGiftStarGiftUnique extends TlInstanceModel
         'title' => 'string',
         'slug' => 'string',
         'num' => 'int',
-        'owner_id' => 'string',
         'owner_name' => 'string',
         'owner_address' => 'string',
         'availability_issued' => 'int',
         'availability_total' => 'int',
         'gift_address' => 'string',
-        'released_by' => 'string',
         'value_amount' => 'int',
         'value_currency' => 'string',
         'value_usd_amount' => 'int',
-        'theme_peer' => 'string',
-        'peer_color' => 'string',
-        'host_id' => 'string',
         'offer_min_stars' => 'int',
         'craft_chance_permille' => 'int',
     ];
@@ -59,5 +60,10 @@ final class TlStarGiftStarGiftUnique extends TlInstanceModel
     public function resellAmount(): HasMany
     {
         return $this->tlChild(TlStarGiftStarGiftUniqueResell_amount::class);
+    }
+
+    public function peerColor(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerColor::class, 'peer_color');
     }
 }

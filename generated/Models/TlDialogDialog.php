@@ -7,14 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDraftMessage;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerNotifySettings;
 
 /** Constructor model for dialog of Dialog (crc32 fc89f7f3). */
 final class TlDialogDialog extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_dialog_dialog';
 
@@ -26,7 +32,6 @@ final class TlDialogDialog extends TlInstanceModel
         'pinned' => 'bool',
         'unread_mark' => 'bool',
         'view_forum_as_messages' => 'bool',
-        'peer' => 'string',
         'top_message' => 'int',
         'read_inbox_max_id' => 'int',
         'read_outbox_max_id' => 'int',
@@ -34,10 +39,17 @@ final class TlDialogDialog extends TlInstanceModel
         'unread_mentions_count' => 'int',
         'unread_reactions_count' => 'int',
         'unread_poll_votes_count' => 'int',
-        'notify_settings' => 'string',
         'pts' => 'int',
-        'draft' => 'string',
         'folder_id' => 'int',
         'ttl_period' => 'int',
     ];
+
+    public function notifySettings(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerNotifySettings::class, 'notify_settings');
+    }
+    public function draft(): BelongsTo
+    {
+        return $this->belongsTo(TlDraftMessage::class, 'draft');
+    }
 }

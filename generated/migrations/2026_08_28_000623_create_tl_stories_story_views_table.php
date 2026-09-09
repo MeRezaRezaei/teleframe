@@ -17,26 +17,32 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_db59498cb6980d9995f76c25');
+            $table->index('account_id', 'ix_1538a8e853ee142064536d5d');
         });
         Schema::create('tl_stories_story_views_story_views', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_stories_story_views')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_ef86893be8ad2be78c39b662');
         });
         Schema::create('tl_stories_story_views_story_views__views', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_stories_story_views_story_views')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_cc141a0e0b803597495a');
+            $table->index('account_id', 'ix_f69ec0ec7c9af91c5425b81a');
         });
         Schema::create('tl_stories_story_views_story_views__users', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_stories_story_views_story_views')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_db6008724f30978a59aa');
+            $table->index('account_id', 'ix_d83c487f575ca306790c5877');
         });
     }
 

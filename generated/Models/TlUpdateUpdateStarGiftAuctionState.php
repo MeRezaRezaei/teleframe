@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGiftAuctionState;
 
 /** Constructor model for updateStarGiftAuctionState of Update (crc32 48e246c2). */
 final class TlUpdateUpdateStarGiftAuctionState extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_update_update_star_gift_auction_state';
 
@@ -23,6 +26,10 @@ final class TlUpdateUpdateStarGiftAuctionState extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'gift_id' => 'int',
-        'state' => 'string',
     ];
+
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(TlStarGiftAuctionState::class, 'state');
+    }
 }

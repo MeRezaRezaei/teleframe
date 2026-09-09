@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_3f08100e2b2c6c62e08eafd0');
+            $table->index('account_id', 'ix_feb3ea9d1be01282cccd2d0d');
         });
         Schema::create('tl_mask_coords_mask_coords', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_mask_coords')->cascadeOnDelete();
@@ -26,7 +26,9 @@ return new class extends Migration
             $table->double('x');
             $table->double('y');
             $table->double('zoom');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_9e0c209b391c24024b85d24b');
         });
     }
 

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsAmount;
 
 /** Constructor model for starRefProgram of StarRefProgram (crc32 dd0c66f2). */
 final class TlStarRefProgramStarRefProgram extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_star_ref_program_star_ref_program';
 
@@ -27,6 +30,10 @@ final class TlStarRefProgramStarRefProgram extends TlInstanceModel
         'commission_permille' => 'int',
         'duration_months' => 'int',
         'end_date' => 'int',
-        'daily_revenue_per_user' => 'string',
     ];
+
+    public function dailyRevenuePerUser(): BelongsTo
+    {
+        return $this->belongsTo(TlStarsAmount::class, 'daily_revenue_per_user');
+    }
 }

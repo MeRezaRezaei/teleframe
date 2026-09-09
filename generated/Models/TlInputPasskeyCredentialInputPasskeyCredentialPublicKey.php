@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputPasskeyResponse;
 
 /** Constructor model for inputPasskeyCredentialPublicKey of InputPasskeyCredential (crc32 3c27b78f). */
 final class TlInputPasskeyCredentialInputPasskeyCredentialPublicKey extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_passkey_credential_input_passkey_cre_2ab4607fcbc0';
 
@@ -24,6 +27,10 @@ final class TlInputPasskeyCredentialInputPasskeyCredentialPublicKey extends TlIn
     protected $casts = [
         'tl_id' => 'string',
         'raw_id' => 'string',
-        'response' => 'string',
     ];
+
+    public function response(): BelongsTo
+    {
+        return $this->belongsTo(TlInputPasskeyResponse::class, 'response');
+    }
 }

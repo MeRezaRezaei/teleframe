@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param users (table tl_phone_group_call_stars_group_call_stars__users). */
 final class TlPhoneGroupCallStarsGroupCallStarsUsers extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_phone_group_call_stars_group_call_stars__users';
 
     public $timestamps = false; // child tables carry no timestamps columns

@@ -7,18 +7,28 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMedia;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReaction;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryFwdHeader;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryItemStoryItemAlbums;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryItemStoryItemEntities;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryItemStoryItemMedia_areas;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryItemStoryItemPrivacy;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryItemStoryItemAlbums;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryViews;
 
 /** Constructor model for storyItem of StoryItem (crc32 16a4b93c). */
 final class TlStoryItemStoryItem extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_story_item_story_item';
 
@@ -38,14 +48,8 @@ final class TlStoryItemStoryItem extends TlInstanceModel
         'out' => 'bool',
         'tl_id' => 'int',
         'date' => 'int',
-        'from_id' => 'string',
-        'fwd_from' => 'string',
         'expire_date' => 'int',
         'caption' => 'string',
-        'media' => 'string',
-        'views' => 'string',
-        'sent_reaction' => 'string',
-        'music' => 'string',
     ];
 
     public function entities(): HasMany
@@ -63,5 +67,26 @@ final class TlStoryItemStoryItem extends TlInstanceModel
     public function albums(): HasMany
     {
         return $this->tlChild(TlStoryItemStoryItemAlbums::class);
+    }
+
+    public function fwdFrom(): BelongsTo
+    {
+        return $this->belongsTo(TlStoryFwdHeader::class, 'fwd_from');
+    }
+    public function media(): BelongsTo
+    {
+        return $this->belongsTo(TlMessageMedia::class, 'media');
+    }
+    public function views(): BelongsTo
+    {
+        return $this->belongsTo(TlStoryViews::class, 'views');
+    }
+    public function sentReaction(): BelongsTo
+    {
+        return $this->belongsTo(TlReaction::class, 'sent_reaction');
+    }
+    public function music(): BelongsTo
+    {
+        return $this->belongsTo(TlDocument::class, 'music');
     }
 }

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStickerSet;
 
 /** Constructor model for channelAdminLogEventActionChangeEmojiStickerSet of ChannelAdminLogEventAction (crc32 46d840ab). */
 final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeEmojiStickerSet extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_channel_admin_log_event_action_channel_adm_2ab9a74c160a';
 
@@ -22,7 +25,14 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeEmojiSti
 
     /** @var array<string, string> */
     protected $casts = [
-        'prev_stickerset' => 'string',
-        'new_stickerset' => 'string',
     ];
+
+    public function prevStickerset(): BelongsTo
+    {
+        return $this->belongsTo(TlInputStickerSet::class, 'prev_stickerset');
+    }
+    public function newStickerset(): BelongsTo
+    {
+        return $this->belongsTo(TlInputStickerSet::class, 'new_stickerset');
+    }
 }

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReaction;
 
 /** Constructor model for savedReactionTag of SavedReactionTag (crc32 cb6ff828). */
 final class TlSavedReactionTagSavedReactionTag extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_saved_reaction_tag_saved_reaction_tag';
 
@@ -23,8 +26,12 @@ final class TlSavedReactionTagSavedReactionTag extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'flags' => 'int',
-        'reaction' => 'string',
         'title' => 'string',
         'count' => 'int',
     ];
+
+    public function reaction(): BelongsTo
+    {
+        return $this->belongsTo(TlReaction::class, 'reaction');
+    }
 }

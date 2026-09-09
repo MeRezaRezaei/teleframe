@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param dark_colors (table tl_peer_color_peer_color_collectible__dark_colors). */
 final class TlPeerColorPeerColorCollectibleDark_colors extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_peer_color_peer_color_collectible__dark_colors';
 
     public $timestamps = false; // child tables carry no timestamps columns

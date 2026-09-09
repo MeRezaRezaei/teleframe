@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputUser;
 
 /** Constructor model for inputStorePaymentStarsGift of InputStorePaymentPurpose (crc32 1d741ef7). */
 final class TlInputStorePaymentPurposeInputStorePaymentStarsGift extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_store_payment_purpose_input_store_pa_0bfdc631e6d2';
 
@@ -22,9 +25,13 @@ final class TlInputStorePaymentPurposeInputStorePaymentStarsGift extends TlInsta
 
     /** @var array<string, string> */
     protected $casts = [
-        'user_id' => 'string',
         'stars' => 'int',
         'currency' => 'string',
         'amount' => 'int',
     ];
+
+    public function userId(): BelongsTo
+    {
+        return $this->belongsTo(TlInputUser::class, 'user_id');
+    }
 }

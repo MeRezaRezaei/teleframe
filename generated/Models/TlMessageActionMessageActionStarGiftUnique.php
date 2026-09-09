@@ -7,14 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGift;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsAmount;
 
 /** Constructor model for messageActionStarGiftUnique of MessageAction (crc32 e6c31522). */
 final class TlMessageActionMessageActionStarGiftUnique extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_message_action_message_action_star_gift_unique';
 
@@ -31,16 +37,21 @@ final class TlMessageActionMessageActionStarGiftUnique extends TlInstanceModel
         'assigned' => 'bool',
         'from_offer' => 'bool',
         'craft' => 'bool',
-        'gift' => 'string',
         'can_export_at' => 'int',
         'transfer_stars' => 'int',
-        'from_id' => 'string',
-        'peer' => 'string',
         'saved_id' => 'int',
-        'resale_amount' => 'string',
         'can_transfer_at' => 'int',
         'can_resell_at' => 'int',
         'drop_original_details_stars' => 'int',
         'can_craft_at' => 'int',
     ];
+
+    public function gift(): BelongsTo
+    {
+        return $this->belongsTo(TlStarGift::class, 'gift');
+    }
+    public function resaleAmount(): BelongsTo
+    {
+        return $this->belongsTo(TlStarsAmount::class, 'resale_amount');
+    }
 }

@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAutoSaveSettings;
 
 /** Constructor model for autoSaveException of AutoSaveException (crc32 81602d47). */
 final class TlAutoSaveExceptionAutoSaveException extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_auto_save_exception_auto_save_exception';
 
@@ -22,7 +27,10 @@ final class TlAutoSaveExceptionAutoSaveException extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'peer' => 'string',
-        'settings' => 'string',
     ];
+
+    public function settings(): BelongsTo
+    {
+        return $this->belongsTo(TlAutoSaveSettings::class, 'settings');
+    }
 }

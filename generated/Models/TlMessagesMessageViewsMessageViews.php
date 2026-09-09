@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessageViewsMessageViewsViews;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessageViewsMessageViewsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessageViewsMessageViewsUsers;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessageViewsMessageViewsViews;
 
 /** Constructor model for messages.messageViews of messages.MessageViews (crc32 b6c4f543). */
 final class TlMessagesMessageViewsMessageViews extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_message_views_message_views';
 

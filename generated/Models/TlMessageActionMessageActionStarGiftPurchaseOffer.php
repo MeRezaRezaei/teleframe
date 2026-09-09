@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGift;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsAmount;
 
 /** Constructor model for messageActionStarGiftPurchaseOffer of MessageAction (crc32 774278d4). */
 final class TlMessageActionMessageActionStarGiftPurchaseOffer extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_action_message_action_star_gift_purchase_offer';
 
@@ -25,8 +29,15 @@ final class TlMessageActionMessageActionStarGiftPurchaseOffer extends TlInstance
         'flags' => 'int',
         'accepted' => 'bool',
         'declined' => 'bool',
-        'gift' => 'string',
-        'price' => 'string',
         'expires_at' => 'int',
     ];
+
+    public function gift(): BelongsTo
+    {
+        return $this->belongsTo(TlStarGift::class, 'gift');
+    }
+    public function price(): BelongsTo
+    {
+        return $this->belongsTo(TlStarsAmount::class, 'price');
+    }
 }

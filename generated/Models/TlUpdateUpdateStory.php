@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryItem;
 
 /** Constructor model for updateStory of Update (crc32 75b3b798). */
 final class TlUpdateUpdateStory extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_update_update_story';
 
@@ -22,7 +27,10 @@ final class TlUpdateUpdateStory extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'peer' => 'string',
-        'story' => 'string',
     ];
+
+    public function story(): BelongsTo
+    {
+        return $this->belongsTo(TlStoryItem::class, 'story');
+    }
 }

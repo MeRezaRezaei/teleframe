@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlEncryptedFile;
 
 /** Constructor model for messages.sentEncryptedFile of messages.SentEncryptedMessage (crc32 9493ff32). */
 final class TlMessagesSentEncryptedMessageSentEncryptedFile extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_sent_encrypted_message_sent_encrypted_file';
 
@@ -23,6 +26,10 @@ final class TlMessagesSentEncryptedMessageSentEncryptedFile extends TlInstanceMo
     /** @var array<string, string> */
     protected $casts = [
         'date' => 'int',
-        'file' => 'string',
     ];
+
+    public function file(): BelongsTo
+    {
+        return $this->belongsTo(TlEncryptedFile::class, 'file');
+    }
 }

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** Constructor model for messageFwdHeader of MessageFwdHeader (crc32 4e4df4bb). */
 final class TlMessageFwdHeaderMessageFwdHeader extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_message_fwd_header_message_fwd_header';
 
@@ -25,14 +28,11 @@ final class TlMessageFwdHeaderMessageFwdHeader extends TlInstanceModel
         'flags' => 'int',
         'imported' => 'bool',
         'saved_out' => 'bool',
-        'from_id' => 'string',
         'from_name' => 'string',
         'date' => 'int',
         'channel_post' => 'int',
         'post_author' => 'string',
-        'saved_from_peer' => 'string',
         'saved_from_msg_id' => 'int',
-        'saved_from_id' => 'string',
         'saved_from_name' => 'string',
         'saved_date' => 'int',
         'psa_type' => 'string',

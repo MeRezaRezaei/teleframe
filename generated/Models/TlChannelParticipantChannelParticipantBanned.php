@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatBannedRights;
 
 /** Constructor model for channelParticipantBanned of ChannelParticipant (crc32 d5f0ad91). */
 final class TlChannelParticipantChannelParticipantBanned extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_channel_participant_channel_participant_banned';
 
@@ -24,10 +29,13 @@ final class TlChannelParticipantChannelParticipantBanned extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'left' => 'bool',
-        'peer' => 'string',
         'kicked_by' => 'int',
         'date' => 'int',
-        'banned_rights' => 'string',
         'rank' => 'string',
     ];
+
+    public function bannedRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatBannedRights::class, 'banned_rights');
+    }
 }

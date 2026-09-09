@@ -7,9 +7,10 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerColorPeerColorCollectibleColors;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerColorPeerColorCollectibleDark_colors;
 
@@ -17,6 +18,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerColorPeerColorCollectib
 final class TlPeerColorPeerColorCollectible extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_peer_color_peer_color_collectible';
 

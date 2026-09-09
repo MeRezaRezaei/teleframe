@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentCharge;
 
 /** Constructor model for messageActionPaymentRefunded of MessageAction (crc32 41b3e202). */
 final class TlMessageActionMessageActionPaymentRefunded extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_message_action_message_action_payment_refunded';
 
@@ -23,10 +28,13 @@ final class TlMessageActionMessageActionPaymentRefunded extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'flags' => 'int',
-        'peer' => 'string',
         'currency' => 'string',
         'total_amount' => 'int',
         'payload' => 'string',
-        'charge' => 'string',
     ];
+
+    public function charge(): BelongsTo
+    {
+        return $this->belongsTo(TlPaymentCharge::class, 'charge');
+    }
 }

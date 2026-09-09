@@ -7,15 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagePeerVoteMessagePeerVoteMultipleOptions;
 
 /** Constructor model for messagePeerVoteMultiple of MessagePeerVote (crc32 4628f6e6). */
 final class TlMessagePeerVoteMessagePeerVoteMultiple extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_message_peer_vote_message_peer_vote_multiple';
 
@@ -23,7 +27,6 @@ final class TlMessagePeerVoteMessagePeerVoteMultiple extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'peer' => 'string',
         'date' => 'int',
     ];
 

@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupParticipantsGroupParticipantsParticipants;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupParticipantsGroupParticipantsChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupParticipantsGroupParticipantsParticipants;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupParticipantsGroupParticipantsUsers;
 
 /** Constructor model for phone.groupParticipants of phone.GroupParticipants (crc32 f47751b6). */
 final class TlPhoneGroupParticipantsGroupParticipants extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_phone_group_participants_group_participants';
 

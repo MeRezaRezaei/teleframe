@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGroupCall;
 
 /** Constructor model for messageMediaVideoStream of MessageMedia (crc32 ca5cab89). */
 final class TlMessageMediaMessageMediaVideoStream extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_media_message_media_video_stream';
 
@@ -24,6 +27,10 @@ final class TlMessageMediaMessageMediaVideoStream extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'rtmp_stream' => 'bool',
-        'call' => 'string',
     ];
+
+    public function call(): BelongsTo
+    {
+        return $this->belongsTo(TlInputGroupCall::class, 'call');
+    }
 }

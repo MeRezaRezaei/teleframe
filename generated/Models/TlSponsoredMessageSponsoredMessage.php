@@ -7,15 +7,21 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMedia;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerColor;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSponsoredMessageSponsoredMessageEntities;
 
 /** Constructor model for sponsoredMessage of SponsoredMessage (crc32 7dbf8673). */
 final class TlSponsoredMessageSponsoredMessage extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_sponsored_message_sponsored_message';
 
@@ -30,9 +36,6 @@ final class TlSponsoredMessageSponsoredMessage extends TlInstanceModel
         'url' => 'string',
         'title' => 'string',
         'message' => 'string',
-        'photo' => 'string',
-        'media' => 'string',
-        'color' => 'string',
         'button_text' => 'string',
         'sponsor_info' => 'string',
         'additional_info' => 'string',
@@ -43,5 +46,18 @@ final class TlSponsoredMessageSponsoredMessage extends TlInstanceModel
     public function entities(): HasMany
     {
         return $this->tlChild(TlSponsoredMessageSponsoredMessageEntities::class);
+    }
+
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(TlPhoto::class, 'photo');
+    }
+    public function media(): BelongsTo
+    {
+        return $this->belongsTo(TlMessageMedia::class, 'media');
+    }
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerColor::class, 'color');
     }
 }

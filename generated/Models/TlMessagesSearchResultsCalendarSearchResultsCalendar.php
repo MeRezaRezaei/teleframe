@@ -7,18 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSearchResultsCalendarSearchReB1534ec0e56fPeriods;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSearchResultsCalendarSearchReB1534ec0e56fMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSearchResultsCalendarSearchReB1534ec0e56fChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSearchResultsCalendarSearchReB1534ec0e56fMessages;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSearchResultsCalendarSearchReB1534ec0e56fPeriods;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSearchResultsCalendarSearchReB1534ec0e56fUsers;
 
 /** Constructor model for messages.searchResultsCalendar of messages.SearchResultsCalendar (crc32 147ee23c). */
 final class TlMessagesSearchResultsCalendarSearchResultsCalendar extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_search_results_calendar_search_re_b1534ec0e56f';
 

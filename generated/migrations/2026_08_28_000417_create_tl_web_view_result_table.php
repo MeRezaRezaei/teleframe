@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_b042475b3c0e754576b8e4ec');
+            $table->index('account_id', 'ix_c9965667d58cc00702107915');
         });
         Schema::create('tl_web_view_result_web_view_result_url', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_web_view_result')->cascadeOnDelete();
@@ -27,8 +27,11 @@ return new class extends Migration
             $table->boolean('fullscreen')->default(false);
             $table->boolean('same_origin')->default(false);
             $table->bigInteger('query_id')->nullable();
+            $table->index('query_id', 'ix_07e9e236a300d1e94b2c4b54');
             $table->text('url');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_a03e4ada2ca514f55c5676ae');
         });
     }
 

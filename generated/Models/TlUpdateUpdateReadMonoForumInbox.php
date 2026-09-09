@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** Constructor model for updateReadMonoForumInbox of Update (crc32 77b0e372). */
 final class TlUpdateUpdateReadMonoForumInbox extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_update_update_read_mono_forum_inbox';
 
@@ -23,7 +26,6 @@ final class TlUpdateUpdateReadMonoForumInbox extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'channel_id' => 'int',
-        'saved_peer_id' => 'string',
         'read_max_id' => 'int',
     ];
 }

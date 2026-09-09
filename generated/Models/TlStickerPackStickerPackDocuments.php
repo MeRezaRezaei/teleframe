@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param documents (table tl_sticker_pack_sticker_pack__documents). */
 final class TlStickerPackStickerPackDocuments extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_sticker_pack_sticker_pack__documents';
 
     public $timestamps = false; // child tables carry no timestamps columns

@@ -7,14 +7,37 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBirthday;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotInfo;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotVerification;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBusinessAwayMessage;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBusinessGreetingMessage;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBusinessIntro;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBusinessLocation;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBusinessWorkHours;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatAdminRights;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatTheme;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDisallowedGiftsSettings;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerNotifySettings;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerSettings;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerStories;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlProfileTab;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarRefProgram;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsRating;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWallPaper;
 
 /** Constructor model for userFull of UserFull (crc32 06cbe645). */
 final class TlUserFullUserFull extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_user_full_user_full';
 
@@ -46,41 +69,117 @@ final class TlUserFullUserFull extends TlInstanceModel
         'unofficial_security_risk' => 'bool',
         'tl_id' => 'int',
         'about' => 'string',
-        'settings' => 'string',
-        'personal_photo' => 'string',
-        'profile_photo' => 'string',
-        'fallback_photo' => 'string',
-        'notify_settings' => 'string',
-        'bot_info' => 'string',
         'pinned_msg_id' => 'int',
         'common_chats_count' => 'int',
         'folder_id' => 'int',
         'ttl_period' => 'int',
-        'theme' => 'string',
         'private_forward_name' => 'string',
-        'bot_group_admin_rights' => 'string',
-        'bot_broadcast_admin_rights' => 'string',
-        'wallpaper' => 'string',
-        'stories' => 'string',
-        'business_work_hours' => 'string',
-        'business_location' => 'string',
-        'business_greeting_message' => 'string',
-        'business_away_message' => 'string',
-        'business_intro' => 'string',
-        'birthday' => 'string',
         'personal_channel_id' => 'int',
         'personal_channel_message' => 'int',
         'stargifts_count' => 'int',
-        'starref_program' => 'string',
-        'bot_verification' => 'string',
         'send_paid_messages_stars' => 'int',
-        'disallowed_gifts' => 'string',
-        'stars_rating' => 'string',
-        'stars_my_pending_rating' => 'string',
         'stars_my_pending_rating_date' => 'int',
-        'main_tab' => 'string',
-        'saved_music' => 'string',
-        'note' => 'string',
         'bot_manager_id' => 'int',
     ];
+
+    public function settings(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerSettings::class, 'settings');
+    }
+    public function personalPhoto(): BelongsTo
+    {
+        return $this->belongsTo(TlPhoto::class, 'personal_photo');
+    }
+    public function profilePhoto(): BelongsTo
+    {
+        return $this->belongsTo(TlPhoto::class, 'profile_photo');
+    }
+    public function fallbackPhoto(): BelongsTo
+    {
+        return $this->belongsTo(TlPhoto::class, 'fallback_photo');
+    }
+    public function notifySettings(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerNotifySettings::class, 'notify_settings');
+    }
+    public function botInfo(): BelongsTo
+    {
+        return $this->belongsTo(TlBotInfo::class, 'bot_info');
+    }
+    public function theme(): BelongsTo
+    {
+        return $this->belongsTo(TlChatTheme::class, 'theme');
+    }
+    public function botGroupAdminRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatAdminRights::class, 'bot_group_admin_rights');
+    }
+    public function botBroadcastAdminRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatAdminRights::class, 'bot_broadcast_admin_rights');
+    }
+    public function wallpaper(): BelongsTo
+    {
+        return $this->belongsTo(TlWallPaper::class, 'wallpaper');
+    }
+    public function stories(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerStories::class, 'stories');
+    }
+    public function businessWorkHours(): BelongsTo
+    {
+        return $this->belongsTo(TlBusinessWorkHours::class, 'business_work_hours');
+    }
+    public function businessLocation(): BelongsTo
+    {
+        return $this->belongsTo(TlBusinessLocation::class, 'business_location');
+    }
+    public function businessGreetingMessage(): BelongsTo
+    {
+        return $this->belongsTo(TlBusinessGreetingMessage::class, 'business_greeting_message');
+    }
+    public function businessAwayMessage(): BelongsTo
+    {
+        return $this->belongsTo(TlBusinessAwayMessage::class, 'business_away_message');
+    }
+    public function businessIntro(): BelongsTo
+    {
+        return $this->belongsTo(TlBusinessIntro::class, 'business_intro');
+    }
+    public function birthday(): BelongsTo
+    {
+        return $this->belongsTo(TlBirthday::class, 'birthday');
+    }
+    public function starrefProgram(): BelongsTo
+    {
+        return $this->belongsTo(TlStarRefProgram::class, 'starref_program');
+    }
+    public function botVerification(): BelongsTo
+    {
+        return $this->belongsTo(TlBotVerification::class, 'bot_verification');
+    }
+    public function disallowedGifts(): BelongsTo
+    {
+        return $this->belongsTo(TlDisallowedGiftsSettings::class, 'disallowed_gifts');
+    }
+    public function starsRating(): BelongsTo
+    {
+        return $this->belongsTo(TlStarsRating::class, 'stars_rating');
+    }
+    public function starsMyPendingRating(): BelongsTo
+    {
+        return $this->belongsTo(TlStarsRating::class, 'stars_my_pending_rating');
+    }
+    public function mainTab(): BelongsTo
+    {
+        return $this->belongsTo(TlProfileTab::class, 'main_tab');
+    }
+    public function savedMusic(): BelongsTo
+    {
+        return $this->belongsTo(TlDocument::class, 'saved_music');
+    }
+    public function note(): BelongsTo
+    {
+        return $this->belongsTo(TlTextWithEntities::class, 'note');
+    }
 }

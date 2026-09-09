@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatAdminRights;
 
 /** Constructor model for channelParticipantAdmin of ChannelParticipant (crc32 34c3bb53). */
 final class TlChannelParticipantChannelParticipantAdmin extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_channel_participant_channel_participant_admin';
 
@@ -29,7 +32,11 @@ final class TlChannelParticipantChannelParticipantAdmin extends TlInstanceModel
         'inviter_id' => 'int',
         'promoted_by' => 'int',
         'date' => 'int',
-        'admin_rights' => 'string',
         'rank' => 'string',
     ];
+
+    public function adminRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatAdminRights::class, 'admin_rights');
+    }
 }

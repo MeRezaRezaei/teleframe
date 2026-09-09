@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatBannedRights;
 
 /** Constructor model for updateChatDefaultBannedRights of Update (crc32 54c01850). */
 final class TlUpdateUpdateChatDefaultBannedRights extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_update_update_chat_default_banned_rights';
 
@@ -22,8 +27,11 @@ final class TlUpdateUpdateChatDefaultBannedRights extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'peer' => 'string',
-        'default_banned_rights' => 'string',
         'version' => 'int',
     ];
+
+    public function defaultBannedRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatBannedRights::class, 'default_banned_rights');
+    }
 }

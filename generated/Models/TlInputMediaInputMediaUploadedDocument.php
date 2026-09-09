@@ -7,16 +7,21 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputFile;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputMediaInputMediaUploadedDocumentAttributes;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputMediaInputMediaUploadedDocumentStickers;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputPhoto;
 
 /** Constructor model for inputMediaUploadedDocument of InputMedia (crc32 037c9330). */
 final class TlInputMediaInputMediaUploadedDocument extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_media_input_media_uploaded_document';
 
@@ -28,10 +33,7 @@ final class TlInputMediaInputMediaUploadedDocument extends TlInstanceModel
         'nosound_video' => 'bool',
         'force_file' => 'bool',
         'spoiler' => 'bool',
-        'file' => 'string',
-        'thumb' => 'string',
         'mime_type' => 'string',
-        'video_cover' => 'string',
         'video_timestamp' => 'int',
         'ttl_seconds' => 'int',
     ];
@@ -43,5 +45,18 @@ final class TlInputMediaInputMediaUploadedDocument extends TlInstanceModel
     public function stickers(): HasMany
     {
         return $this->tlChild(TlInputMediaInputMediaUploadedDocumentStickers::class);
+    }
+
+    public function file(): BelongsTo
+    {
+        return $this->belongsTo(TlInputFile::class, 'file');
+    }
+    public function thumb(): BelongsTo
+    {
+        return $this->belongsTo(TlInputFile::class, 'thumb');
+    }
+    public function videoCover(): BelongsTo
+    {
+        return $this->belongsTo(TlInputPhoto::class, 'video_cover');
     }
 }

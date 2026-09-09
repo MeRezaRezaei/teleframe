@@ -25,7 +25,7 @@ final class RegenerationGoldenTest extends TestCase
     private const MANIFEST = self::PACKAGE_ROOT . '/generated/schema-manifest.json';
 
     /** sha256 of the committed generated/schema-manifest.json (full-run pin). */
-    private const COMMITTED_MANIFEST_SHA256 = 'f2462a3ea613056316b354950ffe67d76525326e56e1ff69a408401491f85964';
+    private const COMMITTED_MANIFEST_SHA256 = 'b833e98935caed278ccf373a36ecdac508d1d855546550ba422c1778751f83e2';
 
     public function test_committed_manifest_exists_and_pins_layer_227(): void
     {

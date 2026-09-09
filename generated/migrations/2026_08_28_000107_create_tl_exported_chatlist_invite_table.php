@@ -17,22 +17,26 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_dd45286770a2d33971b69a9d');
+            $table->index('account_id', 'ix_926079519cac2d6cb5a82904');
         });
         Schema::create('tl_exported_chatlist_invite_exported_chatlist_invite', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_exported_chatlist_invite')->cascadeOnDelete();
             $table->bigInteger('flags')->nullable();
             $table->text('title');
             $table->text('url');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_068c0562a8ea5e5367517f6b');
         });
         Schema::create('tl_exported_chatlist_invite_exported_chatlist_fe83e2c1c582', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_exported_chatlist_invite_exported_chatlist_invite')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_17f1fa26b9f658eab0c3');
+            $table->index('account_id', 'ix_00513d3fee6cd6c68add23af');
         });
     }
 

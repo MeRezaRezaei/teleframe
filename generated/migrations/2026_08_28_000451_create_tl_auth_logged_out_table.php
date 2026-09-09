@@ -17,14 +17,16 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_02c4bc14d66731a3c886fcd2');
+            $table->index('account_id', 'ix_c45ff01f40b51af02a437f45');
         });
         Schema::create('tl_auth_logged_out_logged_out', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_auth_logged_out')->cascadeOnDelete();
             $table->bigInteger('flags')->nullable();
             $table->binary('future_auth_token')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_3fe518815fc9b66d508aa557');
         });
     }
 

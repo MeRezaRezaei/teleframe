@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_5bafdc36ef47694ad1aaddfc');
+            $table->index('account_id', 'ix_a46fe06fa92e6d85346f6a68');
         });
         Schema::create('tl_dc_option_dc_option', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_dc_option')->cascadeOnDelete();
@@ -33,7 +33,10 @@ return new class extends Migration
             $table->text('ip_address');
             $table->integer('port');
             $table->binary('secret')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_670d322e18f42554fd2c6ee8');
+            $table->unique(['account_id', 'tl_id'], 'ux_fadc168f42eb6e2b1b81');
         });
     }
 

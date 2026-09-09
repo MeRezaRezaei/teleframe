@@ -17,20 +17,25 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_feea29c4574edfea1b2c50e8');
+            $table->index('account_id', 'ix_90c7b10c326b2748d3a55613');
         });
         Schema::create('tl_peer_located_peer_located', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_peer_located')->cascadeOnDelete();
-            $table->uuid('peer');
+            $table->bigInteger('peer');
+            $table->index('peer', 'ix_55ec9250e978076ee4fd32b7');
             $table->integer('expires');
             $table->integer('distance');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_9089a7537fc04933bfdd7b34');
         });
         Schema::create('tl_peer_located_peer_self_located', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_peer_located')->cascadeOnDelete();
             $table->integer('expires');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_25d7c9f39ff6a55698c1a7a6');
         });
     }
 

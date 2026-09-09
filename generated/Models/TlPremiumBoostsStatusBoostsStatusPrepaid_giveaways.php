@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param prepaid_giveaways (table tl_premium_boosts_status_boosts_status__prepaid_giveaways). */
 final class TlPremiumBoostsStatusBoostsStatusPrepaid_giveaways extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_premium_boosts_status_boosts_status__prepaid_giveaways';
 
     public $timestamps = false; // child tables carry no timestamps columns

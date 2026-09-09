@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryItem;
 
 /** Constructor model for storyViewPublicRepost of StoryView (crc32 bd74cf49). */
 final class TlStoryViewStoryViewPublicRepost extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_story_view_story_view_public_repost';
 
@@ -25,7 +30,10 @@ final class TlStoryViewStoryViewPublicRepost extends TlInstanceModel
         'flags' => 'int',
         'blocked' => 'bool',
         'blocked_my_stories_from' => 'bool',
-        'peer_id' => 'string',
-        'story' => 'string',
     ];
+
+    public function story(): BelongsTo
+    {
+        return $this->belongsTo(TlStoryItem::class, 'story');
+    }
 }

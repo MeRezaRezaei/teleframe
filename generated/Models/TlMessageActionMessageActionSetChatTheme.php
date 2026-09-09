@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatTheme;
 
 /** Constructor model for messageActionSetChatTheme of MessageAction (crc32 b91bbd3a). */
 final class TlMessageActionMessageActionSetChatTheme extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_action_message_action_set_chat_theme';
 
@@ -22,6 +25,10 @@ final class TlMessageActionMessageActionSetChatTheme extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'theme' => 'string',
     ];
+
+    public function theme(): BelongsTo
+    {
+        return $this->belongsTo(TlChatTheme::class, 'theme');
+    }
 }

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_f6355276d28227826ac275ed');
+            $table->index('account_id', 'ix_9593c8389a2d2171168cbdfa');
         });
         Schema::create('tl_input_business_intro_input_business_intro', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_input_business_intro')->cascadeOnDelete();
@@ -26,7 +26,10 @@ return new class extends Migration
             $table->text('title');
             $table->text('description');
             $table->uuid('sticker')->nullable();
+            $table->index('sticker', 'ix_db109a1b631c73a26abb59f7');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_bf6f815ec9c286c35dfbb936');
         });
     }
 

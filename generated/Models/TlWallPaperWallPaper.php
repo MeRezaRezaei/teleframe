@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWallPaperSettings;
 
 /** Constructor model for wallPaper of WallPaper (crc32 a437c3ed). */
 final class TlWallPaperWallPaper extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_wall_paper_wall_paper';
 
@@ -30,7 +34,14 @@ final class TlWallPaperWallPaper extends TlInstanceModel
         'dark' => 'bool',
         'access_hash' => 'int',
         'slug' => 'string',
-        'document' => 'string',
-        'settings' => 'string',
     ];
+
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(TlDocument::class, 'document');
+    }
+    public function settings(): BelongsTo
+    {
+        return $this->belongsTo(TlWallPaperSettings::class, 'settings');
+    }
 }

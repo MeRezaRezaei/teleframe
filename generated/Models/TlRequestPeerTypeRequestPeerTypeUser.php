@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBool;
 
 /** Constructor model for requestPeerTypeUser of RequestPeerType (crc32 5f3b8a00). */
 final class TlRequestPeerTypeRequestPeerTypeUser extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_request_peer_type_request_peer_type_user';
 
@@ -23,7 +26,14 @@ final class TlRequestPeerTypeRequestPeerTypeUser extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'flags' => 'int',
-        'bot' => 'string',
-        'premium' => 'string',
     ];
+
+    public function bot(): BelongsTo
+    {
+        return $this->belongsTo(TlBool::class, 'bot');
+    }
+    public function premium(): BelongsTo
+    {
+        return $this->belongsTo(TlBool::class, 'premium');
+    }
 }

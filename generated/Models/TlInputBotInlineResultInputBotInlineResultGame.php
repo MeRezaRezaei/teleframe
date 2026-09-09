@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputBotInlineMessage;
 
 /** Constructor model for inputBotInlineResultGame of InputBotInlineResult (crc32 4fa417f2). */
 final class TlInputBotInlineResultInputBotInlineResultGame extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_bot_inline_result_input_bot_inline_result_game';
 
@@ -24,6 +27,10 @@ final class TlInputBotInlineResultInputBotInlineResultGame extends TlInstanceMod
     protected $casts = [
         'tl_id' => 'string',
         'short_name' => 'string',
-        'send_message' => 'string',
     ];
+
+    public function sendMessage(): BelongsTo
+    {
+        return $this->belongsTo(TlInputBotInlineMessage::class, 'send_message');
+    }
 }

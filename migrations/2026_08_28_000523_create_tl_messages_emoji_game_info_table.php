@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_d5f8e8a5b14ca72e6f678209');
+            $table->index('account_id', 'ix_38df9a15419280fbc11835ad');
         });
         Schema::create('tl_messages_emoji_game_info_emoji_game_dice_info', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_messages_emoji_game_info')->cascadeOnDelete();
@@ -27,18 +27,24 @@ return new class extends Migration
             $table->bigInteger('prev_stake');
             $table->integer('current_streak');
             $table->integer('plays_left')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_6bd0fe4795219e11df47efc2');
         });
         Schema::create('tl_messages_emoji_game_info_emoji_game_dice_info__params', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_messages_emoji_game_info_emoji_game_dice_info')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_d8ed97c6cf52f620a941');
+            $table->index('account_id', 'ix_5096b2d95acb2bccf2b00cfa');
         });
         Schema::create('tl_messages_emoji_game_info_emoji_game_unavailable', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_messages_emoji_game_info')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_35cd82bb37e51dae32cb2d13');
         });
     }
 

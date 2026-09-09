@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_b36b0a5aa2675090d2501984');
+            $table->index('account_id', 'ix_54f77d2273b4487f7ab65b53');
         });
         Schema::create('tl_smsjobs_status_status', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_smsjobs_status')->cascadeOnDelete();
@@ -31,7 +31,9 @@ return new class extends Migration
             $table->integer('total_since');
             $table->text('last_gift_slug')->nullable();
             $table->text('terms_url');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_5af4404517387567494cffc3');
         });
     }
 

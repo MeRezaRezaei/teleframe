@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsAmount;
 
 /** Constructor model for starsRevenueStatus of StarsRevenueStatus (crc32 febe5491). */
 final class TlStarsRevenueStatusStarsRevenueStatus extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_stars_revenue_status_stars_revenue_status';
 
@@ -24,9 +27,19 @@ final class TlStarsRevenueStatusStarsRevenueStatus extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'withdrawal_enabled' => 'bool',
-        'current_balance' => 'string',
-        'available_balance' => 'string',
-        'overall_revenue' => 'string',
         'next_withdrawal_at' => 'int',
     ];
+
+    public function currentBalance(): BelongsTo
+    {
+        return $this->belongsTo(TlStarsAmount::class, 'current_balance');
+    }
+    public function availableBalance(): BelongsTo
+    {
+        return $this->belongsTo(TlStarsAmount::class, 'available_balance');
+    }
+    public function overallRevenue(): BelongsTo
+    {
+        return $this->belongsTo(TlStarsAmount::class, 'overall_revenue');
+    }
 }

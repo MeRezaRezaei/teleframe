@@ -7,15 +7,21 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPage;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebPageWebPageAttributes;
 
 /** Constructor model for webPage of WebPage (crc32 e89c45b2). */
 final class TlWebPageWebPage extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_web_page_web_page';
 
@@ -34,19 +40,29 @@ final class TlWebPageWebPage extends TlInstanceModel
         'site_name' => 'string',
         'title' => 'string',
         'description' => 'string',
-        'photo' => 'string',
         'embed_url' => 'string',
         'embed_type' => 'string',
         'embed_width' => 'int',
         'embed_height' => 'int',
         'duration' => 'int',
         'author' => 'string',
-        'document' => 'string',
-        'cached_page' => 'string',
     ];
 
     public function attributes(): HasMany
     {
         return $this->tlChild(TlWebPageWebPageAttributes::class);
+    }
+
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(TlPhoto::class, 'photo');
+    }
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(TlDocument::class, 'document');
+    }
+    public function cachedPage(): BelongsTo
+    {
+        return $this->belongsTo(TlPage::class, 'cached_page');
     }
 }

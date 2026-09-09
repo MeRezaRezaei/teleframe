@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_c93d81fb627a01f1a39ba931');
+            $table->index('account_id', 'ix_8c96863a9273ed62fd4b8a67');
         });
         Schema::create('tl_web_domain_exception_web_domain_exception', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_web_domain_exception')->cascadeOnDelete();
@@ -27,7 +27,9 @@ return new class extends Migration
             $table->text('url');
             $table->text('title');
             $table->bigInteger('favicon')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_cde59f344cc1d08339858f4f');
         });
     }
 

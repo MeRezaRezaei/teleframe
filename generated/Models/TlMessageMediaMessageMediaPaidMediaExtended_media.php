@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param extended_media (table tl_message_media_message_media_paid_media__extended_media). */
 final class TlMessageMediaMessageMediaPaidMediaExtended_media extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_message_media_message_media_paid_media__extended_media';
 
     public $timestamps = false; // child tables carry no timestamps columns

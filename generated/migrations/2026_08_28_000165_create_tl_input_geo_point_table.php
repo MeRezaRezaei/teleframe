@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_523c539db857b80bd63b8f41');
+            $table->index('account_id', 'ix_cdf24f06cbaa33be42ca120f');
         });
         Schema::create('tl_input_geo_point_input_geo_point', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_input_geo_point')->cascadeOnDelete();
@@ -26,11 +26,15 @@ return new class extends Migration
             $table->double('lat');
             $table->double('tl_long');
             $table->integer('accuracy_radius')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_c4e0bf686ba42c8122f20a4d');
         });
         Schema::create('tl_input_geo_point_input_geo_point_empty', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_input_geo_point')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_6eb505f46c2afef3c521c618');
         });
     }
 

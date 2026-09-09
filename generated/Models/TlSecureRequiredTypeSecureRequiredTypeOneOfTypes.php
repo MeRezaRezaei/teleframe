@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param types (table tl_secure_required_type_secure_required_type_one_of__types). */
 final class TlSecureRequiredTypeSecureRequiredTypeOneOfTypes extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_secure_required_type_secure_required_type_one_of__types';
 
     public $timestamps = false; // child tables carry no timestamps columns

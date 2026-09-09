@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStoryViewsListStoryViewsListViews;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStoryViewsListStoryViewsListChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStoryViewsListStoryViewsListUsers;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStoryViewsListStoryViewsListViews;
 
 /** Constructor model for stories.storyViewsList of stories.StoryViewsList (crc32 59d78fc5). */
 final class TlStoriesStoryViewsListStoryViewsList extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_stories_story_views_list_story_views_list';
 

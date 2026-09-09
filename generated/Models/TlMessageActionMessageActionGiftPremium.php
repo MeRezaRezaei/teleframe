@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for messageActionGiftPremium of MessageAction (crc32 48e91302). */
 final class TlMessageActionMessageActionGiftPremium extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_action_message_action_gift_premium';
 
@@ -28,6 +31,10 @@ final class TlMessageActionMessageActionGiftPremium extends TlInstanceModel
         'days' => 'int',
         'crypto_currency' => 'string',
         'crypto_amount' => 'int',
-        'message' => 'string',
     ];
+
+    public function message(): BelongsTo
+    {
+        return $this->belongsTo(TlTextWithEntities::class, 'message');
+    }
 }

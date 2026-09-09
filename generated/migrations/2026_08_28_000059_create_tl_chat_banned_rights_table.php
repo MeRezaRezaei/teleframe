@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_9642029dcb294b346cae3de5');
+            $table->index('account_id', 'ix_d4277d958a93b38d817062c5');
         });
         Schema::create('tl_chat_banned_rights_chat_banned_rights', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_chat_banned_rights')->cascadeOnDelete();
@@ -46,7 +46,9 @@ return new class extends Migration
             $table->boolean('edit_rank')->default(false);
             $table->boolean('send_reactions')->default(false);
             $table->integer('until_date');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_8665ff2319ec236e99984271');
         });
     }
 

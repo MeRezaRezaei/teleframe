@@ -7,15 +7,22 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSavedStarGiftSavedStarGiftCollection_id;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGift;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for savedStarGift of SavedStarGift (crc32 41df43fc). */
 final class TlSavedStarGiftSavedStarGift extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_saved_star_gift_saved_star_gift';
 
@@ -30,10 +37,7 @@ final class TlSavedStarGiftSavedStarGift extends TlInstanceModel
         'can_upgrade' => 'bool',
         'pinned_to_top' => 'bool',
         'upgrade_separate' => 'bool',
-        'from_id' => 'string',
         'date' => 'int',
-        'gift' => 'string',
-        'message' => 'string',
         'msg_id' => 'int',
         'saved_id' => 'int',
         'convert_stars' => 'int',
@@ -51,5 +55,14 @@ final class TlSavedStarGiftSavedStarGift extends TlInstanceModel
     public function collectionId(): HasMany
     {
         return $this->tlChild(TlSavedStarGiftSavedStarGiftCollection_id::class);
+    }
+
+    public function gift(): BelongsTo
+    {
+        return $this->belongsTo(TlStarGift::class, 'gift');
+    }
+    public function message(): BelongsTo
+    {
+        return $this->belongsTo(TlTextWithEntities::class, 'message');
     }
 }

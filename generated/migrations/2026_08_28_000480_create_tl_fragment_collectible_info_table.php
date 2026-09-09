@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_4ee3fd1dbd272fb8165d3757');
+            $table->index('account_id', 'ix_54ea937a17625f444974390d');
         });
         Schema::create('tl_fragment_collectible_info_collectible_info', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_fragment_collectible_info')->cascadeOnDelete();
@@ -28,7 +28,9 @@ return new class extends Migration
             $table->text('crypto_currency');
             $table->bigInteger('crypto_amount');
             $table->text('url');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_fc7c85348bfda2c94f10688b');
         });
     }
 

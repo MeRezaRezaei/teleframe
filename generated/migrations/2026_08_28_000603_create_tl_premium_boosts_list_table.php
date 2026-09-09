@@ -17,29 +17,35 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_474151f8e111b023918bf2c8');
+            $table->index('account_id', 'ix_4989e4644f0ef5f708be0a57');
         });
         Schema::create('tl_premium_boosts_list_boosts_list', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_premium_boosts_list')->cascadeOnDelete();
             $table->bigInteger('flags')->nullable();
             $table->integer('count');
             $table->text('next_offset')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_853a2b3d2c92d7ab2a0225af');
         });
         Schema::create('tl_premium_boosts_list_boosts_list__boosts', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_premium_boosts_list_boosts_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_8b3c171ce41af469fba5');
+            $table->index('account_id', 'ix_5ea6ec6cd1cb1e9a5b1220f8');
         });
         Schema::create('tl_premium_boosts_list_boosts_list__users', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_premium_boosts_list_boosts_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_bc7f8eab808f1896e4ac');
+            $table->index('account_id', 'ix_c38031fe82483e4ef192ec33');
         });
     }
 

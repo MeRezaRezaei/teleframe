@@ -17,28 +17,37 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_4d7119b9738db49639163f95');
+            $table->index('account_id', 'ix_de26670d34ec0ff57a94d6bd');
         });
         Schema::create('tl_chat_participants_chat_participants', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_chat_participants')->cascadeOnDelete();
             $table->bigInteger('chat_id');
+            $table->index('chat_id', 'ix_18e2db10adaf1b47acc98ff4');
             $table->integer('version');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_f25ed9d9390c5307bf9b54aa');
         });
         Schema::create('tl_chat_participants_chat_participants__participants', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_chat_participants_chat_participants')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_38a75218a587f72142dc');
+            $table->index('account_id', 'ix_86f88478683cbdc4c422800b');
         });
         Schema::create('tl_chat_participants_chat_participants_forbidden', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_chat_participants')->cascadeOnDelete();
             $table->bigInteger('flags')->nullable();
             $table->bigInteger('chat_id');
+            $table->index('chat_id', 'ix_ce132a5db14f6e17c65d89ea');
             $table->uuid('self_participant')->nullable();
+            $table->index('self_participant', 'ix_9b094ab90e5639b2ec7df2d0');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_2ad0778e6234170a73d90116');
         });
     }
 

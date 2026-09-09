@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlExportedChatInvite;
 
 /** Constructor model for channelAdminLogEventActionExportedInviteEdit of ChannelAdminLogEventAction (crc32 e90ebb59). */
 final class TlChannelAdminLogEventActionChannelAdminLogEventActionExportedInviteEdit extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_channel_admin_log_event_action_channel_adm_88f46dc9c3bc';
 
@@ -22,7 +25,14 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionExportedInvite
 
     /** @var array<string, string> */
     protected $casts = [
-        'prev_invite' => 'string',
-        'new_invite' => 'string',
     ];
+
+    public function prevInvite(): BelongsTo
+    {
+        return $this->belongsTo(TlExportedChatInvite::class, 'prev_invite');
+    }
+    public function newInvite(): BelongsTo
+    {
+        return $this->belongsTo(TlExportedChatInvite::class, 'new_invite');
+    }
 }

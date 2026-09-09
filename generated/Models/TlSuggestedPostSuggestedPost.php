@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsAmount;
 
 /** Constructor model for suggestedPost of SuggestedPost (crc32 0e8e37e5). */
 final class TlSuggestedPostSuggestedPost extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_suggested_post_suggested_post';
 
@@ -25,7 +28,11 @@ final class TlSuggestedPostSuggestedPost extends TlInstanceModel
         'flags' => 'int',
         'accepted' => 'bool',
         'rejected' => 'bool',
-        'price' => 'string',
         'schedule_date' => 'int',
     ];
+
+    public function price(): BelongsTo
+    {
+        return $this->belongsTo(TlStarsAmount::class, 'price');
+    }
 }

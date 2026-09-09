@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesVotesListVotesListVotes;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesVotesListVotesListChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesVotesListVotesListUsers;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesVotesListVotesListVotes;
 
 /** Constructor model for messages.votesList of messages.VotesList (crc32 4899484e). */
 final class TlMessagesVotesListVotesList extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_votes_list_votes_list';
 

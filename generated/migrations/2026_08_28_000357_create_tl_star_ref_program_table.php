@@ -17,18 +17,22 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_28d7bead4c6b78114cadfa88');
+            $table->index('account_id', 'ix_d78b569a958dcedc6e7cf1bb');
         });
         Schema::create('tl_star_ref_program_star_ref_program', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_star_ref_program')->cascadeOnDelete();
             $table->bigInteger('flags')->nullable();
             $table->bigInteger('bot_id');
+            $table->index('bot_id', 'ix_0c22c6edce6d17d8104fd835');
             $table->integer('commission_permille');
             $table->integer('duration_months')->nullable();
             $table->integer('end_date')->nullable();
             $table->uuid('daily_revenue_per_user')->nullable();
+            $table->index('daily_revenue_per_user', 'ix_f13a3c6ae7c6f2de62e61e2a');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_7198e2213a948fcc0c0c9e1e');
         });
     }
 

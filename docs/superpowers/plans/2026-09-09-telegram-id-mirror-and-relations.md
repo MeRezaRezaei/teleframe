@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Status: ✅ COMPLETE** — Tasks 1.1–1.5, 2.1–2.4, 3.1–3.3 all shipped and gate-green (`composer verify`, smoke, `TELEFRAME_PG=1`): Peer/InputPeer refs are canonical int64 longs (`PeerIdTool`), instance+child tables carry denormalized `account_id` with per-account `(account_id, peer, tl_id)` uniques, every generated model boots `AccountScope` (+`PeerResolution` on peer models), generated `belongsTo`/reverse-`hasMany`/vector `hasMany` relations are in place, index names are content-addressed (PG-truncation-collision-proof), `UpdateIngestor` writes tenant + canonical peer columns, and cross-account queries return shared peers across accounts. Implemented with parallel subagents (A: migrations, B: model generator, C: isolation machinery) plus the coordinator's direct reverse-`hasMany` fix.
+
 **Goal:** Mirror Telegram's real ID engineering (int64 ids, canonical peer longs) through the generated schema→migration→model pipeline, emit real Eloquent relations for every schema type reference, index every id/ref column, and give every generated model per-account isolation with opt-in cross-account queries — all regenerable from the TL mirror in seconds on a schema bump.
 
 **Architecture:** Extend the existing deterministic regeneration pipeline (TlParser → MigrationGenerator/ModelGenerator/DtoGenerator). Three decisions carry the whole design: (1) ID fidelity — scalar `long`/`int` id fields already map to bigInteger/integer; the two wrong cases are `Peer`/`InputPeer`-typed refs (from_id, peer_id, saved_peer_id, guestchat_via_from…) which must become **int64 canonical peer longs**, and object refs which stay uuid-anchor FKs; (2) relations — every object-ref param gets a generated `belongsTo`, every vector a typed `hasMany` (already exists), Peer refs get generated **peer scopes + a `peerModel()` resolver** via `PeerIdTool`; (3) tenancy — `account_id` is denormalized onto every generated table (anchor, instance, child), a global `AccountScope` isolates by context by default, and uniqueness keys are `(account_id, canonical telegram id)` so the same update collapses to one row per account (never duplicates) and cross-account queries reveal which accounts share a peer.
@@ -47,7 +49,7 @@
 **Interfaces:**
 - Produces: `PeerIdTool::userLong(int $userId): int`, `voice chat` chat `PeerIdTool::chatLong(int $chatId): int`, `PeerIdTool::channelLong(int $channelId): int`, `PeerIdTool::decode(int $long): array{kind:'user'|'chat'|'channel', id:int}`, `PeerIdTool::isUser(int $long): bool`. Canonical forms (documented Telegram scheme): user → `+id`; chat → `-id`; channel → `-((1<<32) + id)` (i.e. `< -(1<<32)`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```php
 <?php
@@ -102,12 +104,12 @@ final class PeerIdToolTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `vendor/bin/phpunit tests/Schema/PeerIdToolTest.php`
 Expected: FAIL with `Class "MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool" not found`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```php
 <?php
@@ -167,12 +169,12 @@ final class PeerIdTool
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `vendor/bin/phpunit tests/Schema/PeerIdToolTest.php`
 Expected: PASS (4 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Schema/Eloquent/PeerIdTool.php tests/Schema/PeerIdToolTest.php
@@ -189,7 +191,7 @@ git commit -m "feat(schema): PeerIdTool — canonical Telegram peer long encode/
 - Consumes: `TlParam::kind()`, `TlParam::baseType()`, `TlParam::conditional()`.
 - Produces: For a constructor with `from_id:flags.8?Peer`, the instance table emits `$table->bigInteger('from_id')->nullable()->index();` and a `$table->index('from_id');`. For `media:flags.9?MessageMedia`, unchanged uuid + index line `$table->index('media');`. For `user_id:long`, unchanged bigInteger + `$table->index('user_id');`.
 
-- [ ] **Step 1: Write the failing test** (extend MigrationGeneratorTest)
+- [x] **Step 1: Write the failing test** (extend MigrationGeneratorTest)
 
 ```php
 public function test_peer_ref_columns_are_bigInteger_canonical_long(): void
@@ -214,12 +216,12 @@ public function test_peer_ref_columns_are_bigInteger_canonical_long(): void
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `vendor/bin/phpunit --filter peer_ref_columns_are_bigInteger_canonical_long tests/Schema`
 Expected: FAIL (peer_id still `uuid`, no `index` for refs).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `columnLines()` (currently matches on `kind()` only): after computing `$col` and `$nullable`, add a branch — if `$param->kind() === 'ref'` delegate to `refColumn` (unchanged shape), else if `$param->kind() === 'scalar'` and `Naming::dbType($param, precision: true) === 'bigint'` and name ends in `_id` → append `->index()`. In `refColumn`:
 
@@ -261,9 +263,9 @@ if (str_ends_with($param->name, '_id') && str_contains($line, 'bigInteger')) {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes** — `vendor/bin/phpunit --filter peer_ref_columns tests/Schema` → PASS.
+- [x] **Step 4: Run test to verify it passes** — `vendor/bin/phpunit --filter peer_ref_columns tests/Schema` → PASS.
 
-- [ ] **Step 5: Commit** — `git commit -m "feat(schema): Peer refs become bigInteger canonical longs; index every id/ref column"`.
+- [x] **Step 5: Commit** — `git commit -m "feat(schema): Peer refs become bigInteger canonical longs; index every id/ref column"`.
 
 ### Task 1.3: account_id denormalized onto instance + child tables
 
@@ -275,7 +277,7 @@ if (str_ends_with($param->name, '_id') && str_contains($line, 'bigInteger')) {
 **Interfaces:**
 - Produces: every generated table declares `$table->bigInteger('account_id');` + `$table->index('account_id');` (anchors already do; add to instance + child). UpdateIngestor copies the parent anchor's account_id into instance + child rows on write.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```php
 // MigrationGeneratorTest
@@ -293,13 +295,13 @@ public function test_every_generated_table_has_account_id_column_and_index(): vo
 }
 ```
 
-- [ ] **Step 2: Run to verify FAIL** — `vendor/bin/phpunit --filter every_generated_table_has_account_id`.
+- [x] **Step 2: Run to verify FAIL** — `vendor/bin/phpunit --filter every_generated_table_has_account_id`.
 
-- [ ] **Step 3: Implement** — in `instanceTables()` and `childTable()` add `account_id` + index lines next to `timestamps()`; in `UpdateIngestor`, when writing anchor + instance + child rows pass `account_id` into the child/instance column arrays (the anchor already carries it — copy the same value instead of relying on FK `parent` lookups).
+- [x] **Step 3: Implement** — in `instanceTables()` and `childTable()` add `account_id` + index lines next to `timestamps()`; in `UpdateIngestor`, when writing anchor + instance + child rows pass `account_id` into the child/instance column arrays (the anchor already carries it — copy the same value instead of relying on FK `parent` lookups).
 
-- [ ] **Step 4: Verify PASS** — extend `tests/Ingest/NestedIngestTest.php` with `assertSame(self::ACCOUNT, (int) $instance->account_id)` on a nested instance + a child row; run `vendor/bin/phpunit tests/Ingest`.
+- [x] **Step 4: Verify PASS** — extend `tests/Ingest/NestedIngestTest.php` with `assertSame(self::ACCOUNT, (int) $instance->account_id)` on a nested instance + a child row; run `vendor/bin/phpunit tests/Ingest`.
 
-- [ ] **Step 5: Commit** — `git commit -m "feat(schema): account_id denormalized onto instance + child tables; ingestor writes it"`.
+- [x] **Step 5: Commit** — `git commit -m "feat(schema): account_id denormalized onto instance + child tables; ingestor writes it"`.
 
 ### Task 1.4: Per-account uniqueness — (account_id, canonical id) upsert keys
 
@@ -310,7 +312,7 @@ public function test_every_generated_table_has_account_id_column_and_index(): vo
 **Interfaces:**
 - Produces: anchor/instance tables that carry a scalar `id` become idempotent per account: `$table->unique(['account_id', 'tl_id'], 'ux_<sha1(table) short>')`. For `tl_message_message` specifically `$table->unique(['account_id', 'peer_id', 'tl_id'], 'ux_<sha1...>')`. Child vector tables keep their existing `unique(['parent_id','idx'])`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```php
 public function test_message_table_upholds_account_scoped_uniqueness(): void
@@ -326,13 +328,13 @@ public function test_message_table_upholds_account_scoped_uniqueness(): void
 }
 ```
 
-- [ ] **Step 2: Run to verify FAIL.**
+- [x] **Step 2: Run to verify FAIL.**
 
-- [ ] **Step 3: Implement** — after the column loop and timestamps in `instanceTables`, detect the scalar `id` param `(kind()==='scalar' && name==='id')`; build `$uniqueCols = ['account_id']`; if any ref param has baseType `Peer`, append its column name; append `tl_id` (Naming::column('id')); emit `$table->unique([...], 'ux_'.substr(sha1($instance), 0, 20));`.
+- [x] **Step 3: Implement** — after the column loop and timestamps in `instanceTables`, detect the scalar `id` param `(kind()==='scalar' && name==='id')`; build `$uniqueCols = ['account_id']`; if any ref param has baseType `Peer`, append its column name; append `tl_id` (Naming::column('id')); emit `$table->unique([...], 'ux_'.substr(sha1($instance), 0, 20));`.
 
-- [ ] **Step 4: Verify PASS** (unit test).
+- [x] **Step 4: Verify PASS** (unit test).
 
-- [ ] **Step 5: Commit** — `git commit -m "feat(schema): per-account unique (account_id, canonical id) keys on instance tables"`.
+- [x] **Step 5: Commit** — `git commit -m "feat(schema): per-account unique (account_id, canonical id) keys on instance tables"`.
 
 ### Task 1.5: Regenerate the tree; update goldens and affected column asserts
 
@@ -340,10 +342,10 @@ public function test_message_table_upholds_account_scoped_uniqueness(): void
 - Modify: `generated/**` (regenerated), `migrations/**` (re-shipped), `tests/Schema/RegenerationGoldenTest.php`, `tests/Schema/ShipDialGoldenTest.php`, any unit tests asserting `uuid('peer_id')`-style columns (grep first).
 - Run: `php bin/regenerate` (verify determinism: run twice to temp dirs — RegenerationGoldenTest does this), `php bin/regenerate --ship`.
 
-- [ ] **Step 1: Regenerate** — `php bin/regenerate && php bin/regenerate --ship`; expect anchor/instance tables for user/chat/channel/message peers to now be bigInteger canonical-long columns, instance+child tables to carry account_id, uniqueness keys added, and deferred-FK count to drop (Peer refs no longer FK) — update any stat asserts (RegenerationGoldenTest `$counts['fks']`, ShipDialGoldenTest counts) to the new numbers.
-- [ ] **Step 2: Run full gate** — `composer verify` (must be green), `TELEFRAME_PG=1 vendor/bin/phpunit tests/Pg` (PG applies new migrations + ALTERs; watch the reduced FK count), `php bin/standalone-smoke.php`.
-- [ ] **Step 3: Fix any stragglers** — grep tests for `uuid('peer_id')` / `uuid('from_id')` asserts and update to bigInteger expectations.
-- [ ] **Step 4: Commit** — `git commit -m "chore(schema): regenerate — peer longs, account_id on all tables, per-account uniques; goldens updated"`.
+- [x] **Step 1: Regenerate** — `php bin/regenerate && php bin/regenerate --ship`; expect anchor/instance tables for user/chat/channel/message peers to now be bigInteger canonical-long columns, instance+child tables to carry account_id, uniqueness keys added, and deferred-FK count to drop (Peer refs no longer FK) — update any stat asserts (RegenerationGoldenTest `$counts['fks']`, ShipDialGoldenTest counts) to the new numbers.
+- [x] **Step 2: Run full gate** — `composer verify` (must be green), `TELEFRAME_PG=1 vendor/bin/phpunit tests/Pg` (PG applies new migrations + ALTERs; watch the reduced FK count), `php bin/standalone-smoke.php`.
+- [x] **Step 3: Fix any stragglers** — grep tests for `uuid('peer_id')` / `uuid('from_id')` asserts and update to bigInteger expectations.
+- [x] **Step 4: Commit** — `git commit -m "chore(schema): regenerate — peer longs, account_id on all tables, per-account uniques; goldens updated"`.
 
 ## Task 2: Generated relations — belongsTo for object refs, peer resolution for Peer refs
 
@@ -357,7 +359,7 @@ public function test_message_table_upholds_account_scoped_uniqueness(): void
 **Interfaces:**
 - Produces: in `tl_message_message` model: `public function media(): BelongsTo { return $this->belongsTo(TlMessageMedia::class, 'media'); }`, `public function fwdFrom(): BelongsTo { return $this->belongsTo(TlMessageFwdHeader::class, 'fwd_from'); }`. Method name = camelCase of param name.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```php
 public function test_object_ref_params_generate_belongsTo_methods(): void
@@ -375,13 +377,13 @@ public function test_object_ref_params_generate_belongsTo_methods(): void
 }
 ```
 
-- [ ] **Step 2: Run to verify FAIL.**
+- [x] **Step 2: Run to verify FAIL.**
 
-- [ ] **Step 3: Implement** — in `ctorModel`, beside the existing `childMethods`/`childUses` loop, add `$belongsToUses = []` and `$belongsToMethods = []`; for each param where `kind()==='ref'` and baseType not in `['Peer','InputPeer']` and `isFkTargetable`-equivalent (base not any/`Object`/`Type`/`X`/`True`, no `<`), push `use ...Models\Tl{Base};` + `public function {camel(name)}(): BelongsTo\n{ return $this->belongsTo(Tl{Base}::class, '{col}'); }`. Assemble via the existing body array; add `use Illuminate\Database\Eloquent\Relations\BelongsTo;` when methods exist.
+- [x] **Step 3: Implement** — in `ctorModel`, beside the existing `childMethods`/`childUses` loop, add `$belongsToUses = []` and `$belongsToMethods = []`; for each param where `kind()==='ref'` and baseType not in `['Peer','InputPeer']` and `isFkTargetable`-equivalent (base not any/`Object`/`Type`/`X`/`True`, no `<`), push `use ...Models\Tl{Base};` + `public function {camel(name)}(): BelongsTo\n{ return $this->belongsTo(Tl{Base}::class, '{col}'); }`. Assemble via the existing body array; add `use Illuminate\Database\Eloquent\Relations\BelongsTo;` when methods exist.
 
-- [ ] **Step 4: Verify PASS.**
+- [x] **Step 4: Verify PASS.**
 
-- [ ] **Step 5: Commit** — `git commit -m "feat(schema): generated belongsTo relations for object-ref params"`.
+- [x] **Step 5: Commit** — `git commit -m "feat(schema): generated belongsTo relations for object-ref params"`.
 
 ### Task 2.2: Peer columns — generated scopes + cross-type peer resolver
 
@@ -396,7 +398,7 @@ public function test_object_ref_params_generate_belongsTo_methods(): void
   - `scopeWherePeerIsChat`, `scopeWherePeerIsChannel` analogously.
   - `resolvePeerModel(string $col): ?TlUser|TlChat|TlChannel` → decode the stored long; query `TlUser::where('tl_id', $id)->first()` (within AccountScope) / `TlChat` / `TlChannel`; returns null when the peer was never seen by the scoped account.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```php
 // PeerResolutionTest — uses a temp table `peer_holder` (migrated in-tenant) so the trait
@@ -427,13 +429,13 @@ final class PeerResolutionTest extends TestCase {
 }
 ```
 
-- [ ] **Step 2: Run to verify FAIL** (trait + methods missing).
+- [x] **Step 2: Run to verify FAIL** (trait + methods missing).
 
-- [ ] **Step 3: Implement** — `PeerResolution` trait with the three scopes (delegating to `PeerIdTool`) and `resolvePeerModel`. In `ModelGenerator.ctorModel`, for Peer refs inject `use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;` (once) instead of a belongsTo method.
+- [x] **Step 3: Implement** — `PeerResolution` trait with the three scopes (delegating to `PeerIdTool`) and `resolvePeerModel`. In `ModelGenerator.ctorModel`, for Peer refs inject `use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;` (once) instead of a belongsTo method.
 
-- [ ] **Step 4: Verify PASS** — run `tests/Schema/ModelGeneratorTest.php` filter and `tests/Schema/PeerResolutionTest.php`.
+- [x] **Step 4: Verify PASS** — run `tests/Schema/ModelGeneratorTest.php` filter and `tests/Schema/PeerResolutionTest.php`.
 
-- [ ] **Step 5: Commit** — `git commit -m "feat(schema): peer-long columns get generated scopes + account-scoped peer resolver"`.
+- [x] **Step 5: Commit** — `git commit -m "feat(schema): peer-long columns get generated scopes + account-scoped peer resolver"`.
 
 ### Task 2.3: Reverse hasMany on anchors for object refs
 
@@ -444,7 +446,7 @@ final class PeerResolutionTest extends TestCase {
 **Interfaces:**
 - Produces: `TlMessageMedia::messages(): HasMany { return $this->hasMany(TlMessageMessage::class, 'media'); }` (only when a ref exists). Method name = plural snake of originating param, camelized.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```php
 public function test_anchor_models_get_reverse_has_many_for_incoming_refs(): void
@@ -458,9 +460,9 @@ public function test_anchor_models_get_reverse_has_many_for_incoming_refs(): voi
 }
 ```
 
-- [ ] **Step 2: FAIL → Step 3: Implement** — during `anchorModel`, scan all types' constructors for refs whose baseType === this type name; collect `[table, col]` pairs; emit one `hasMany` per pair.
+- [x] **Step 2: FAIL → Step 3: Implement** — during `anchorModel`, scan all types' constructors for refs whose baseType === this type name; collect `[table, col]` pairs; emit one `hasMany` per pair.
 
-- [ ] **Step 4: PASS → Step 5: Commit** — `git commit -m "feat(schema): generated reverse hasMany on anchors"`.
+- [x] **Step 4: PASS → Step 5: Commit** — `git commit -m "feat(schema): generated reverse hasMany on anchors"`.
 
 ### Task 2.4: AccountScoped trait on every generated model
 
@@ -475,7 +477,7 @@ public function test_anchor_models_get_reverse_has_many_for_incoming_refs(): voi
 - `AccountScoped` trait: `bootAccountScoped()` adds global `AccountScope` (filter `account_id = AccountContext::current()` when non-null); provides `scopeForAccount($q, int $accountId)`, `scopeAcrossAccounts($q)` (drops the global scope), and `forAccount()`/`acrossAccounts()` query entry points.
 - Every generated model (`Tl*`, anchor/instance/child) applies the trait automatically so NEW relations and queried data respect isolation by default.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```php
 final class AccountIsolationTest extends TestCase {
@@ -498,9 +500,9 @@ final class AccountIsolationTest extends TestCase {
 }
 ```
 
-- [ ] **Step 2: FAIL → Step 3: Implement** — the three Schema\Eloquent classes; provider singleton binding `AccountContext` with default `config('teleframe.primary_account_id')`; `ModelGenerator` emits the trait import + use on every generated model body.
+- [x] **Step 2: FAIL → Step 3: Implement** — the three Schema\Eloquent classes; provider singleton binding `AccountContext` with default `config('teleframe.primary_account_id')`; `ModelGenerator` emits the trait import + use on every generated model body.
 
-- [ ] **Step 4: PASS → Step 5: Commit** — `git commit -m "feat(schema): AccountContext + AccountScoped global scope on all generated models"`.
+- [x] **Step 4: PASS → Step 5: Commit** — `git commit -m "feat(schema): AccountContext + AccountScoped global scope on all generated models"`.
 
 ## Task 3: Cross-account queries + ingest dedup collapse
 
@@ -513,7 +515,7 @@ final class AccountIsolationTest extends TestCase {
 - Consumes: `AccountContext`, `AccountScoped`, `PeerIdTool`, unique upsert keys from Task 1.4.
 - Produces: proven query pattern to return `account_id` list for a telegram user id: `TlMessage::acrossAccounts()->where('peer_id', PeerIdTool::userLong($userId))->distinct()->orderBy('account_id')->pluck('account_id')->all()`.
 
-- [ ] **Step 1: Write the failing-context test (seeds two accounts, asserts the pattern)**
+- [x] **Step 1: Write the failing-context test (seeds two accounts, asserts the pattern)**
 
 ```php
 public function test_which_accounts_have_messages_from_user(): void
@@ -527,8 +529,8 @@ public function test_which_accounts_have_messages_from_user(): void
 }
 ```
 
-- [ ] **Step 2: Run — must PASS once Task 2.4 is landed** (if it fails, the gap is `acrossAccounts()`; fix trait). This task exists so the pattern is *documented and locked* before the ingestor changes.
-- [ ] **Step 3: Commit** — `git commit -m "test(schema): cross-account message query patterns locked"`.
+- [x] **Step 2: Run — must PASS once Task 2.4 is landed** (if it fails, the gap is `acrossAccounts()`; fix trait). This task exists so the pattern is *documented and locked* before the ingestor changes.
+- [x] **Step 3: Commit** — `git commit -m "test(schema): cross-account message query patterns locked"`.
 
 ### Task 3.2: Ingest upsert collapse — one row per (account, canonical key), deduped
 
@@ -539,7 +541,7 @@ public function test_which_accounts_have_messages_from_user(): void
 **Interfaces:**
 - Produces: anchor rows upsert on `account_id` + the type's canonical id(s): first `SELECT` by unique key within account, else `INSERT`, else `UPDATE` (single statement per entity per key). Message instance rows upsert on `(account_id, peer_id, tl_id)` — the SAME telegram message arriving from two account streams yields exactly one row per account (never 2 per account), and re-delivery (replay) never duplicates. Shared group/channel entity arriving from multiple accounts keeps N account-scoped rows (tenancy preserved) but each is a single keyed upsert — no cross-account INSERT amplification.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```php
 public function test_same_message_via_two_account_streams_yields_one_row_per_account(): void
@@ -554,18 +556,18 @@ public function test_same_message_via_two_account_streams_yields_one_row_per_acc
 }
 ```
 
-- [ ] **Step 2: Run to verify FAIL** (today: re-delivery probably duplicates anchor rows).
-- [ ] **Step 3: Implement** — in the message/anchor write path, before INSERT run an EXISTS lookup on the unique key (account-scoped); if present, `UPDATE` the content columns instead. Guard child-table inserts with the existing `unique(parent_id, idx)` (already upsert-safe via unique constraint + catch).
-- [ ] **Step 4: Run to verify PASS** — `vendor/bin/phpunit tests/Ingest` green.
-- [ ] **Step 5: Commit** — `git commit -m "feat(ingest): upsert collapse keyed on (account, canonical id) — replay-safe, per-account dedup"`.
+- [x] **Step 2: Run to verify FAIL** (today: re-delivery probably duplicates anchor rows).
+- [x] **Step 3: Implement** — in the message/anchor write path, before INSERT run an EXISTS lookup on the unique key (account-scoped); if present, `UPDATE` the content columns instead. Guard child-table inserts with the existing `unique(parent_id, idx)` (already upsert-safe via unique constraint + catch).
+- [x] **Step 4: Run to verify PASS** — `vendor/bin/phpunit tests/Ingest` green.
+- [x] **Step 5: Commit** — `git commit -m "feat(ingest): upsert collapse keyed on (account, canonical id) — replay-safe, per-account dedup"`.
 
 ### Task 3.3: Regenerate + goldens + full gate + docs
 
 **Files:**
 - Modify: `generated/**`, `migrations/**`, `tests/Schema/RegenerationGoldenTest.php`, `tests/Schema/ShipDialGoldenTest.php`, `docs/superpowers/specs/2026-09-07-teleframe-unification-design.md` (status line → enhancement COMPLETE), `docs/` relation/isolation sections if present.
 
-- [ ] **Step 1: `php bin/regenerate && php bin/regenerate --ship`**; update goldens/stat asserts (FK count drops again with relation changes; anchor files now carry trait imports).
-- [ ] **Step 2: Full gate** — `composer verify` (phpstan level 5 clean, all 940+ tests), `TELEFRAME_PG=1 vendor/bin/phpunit tests/Pg`, `php bin/standalone-smoke.php` exit 0.
-- [ ] **Step 3: Docs** — spec status line + a short "IDs & relations & tenancy" section: canonical peer longs, generated belongsTo/hasMany, AccountContext isolation, cross-account query pattern.
-- [ ] **Step 4: Commit** — `git commit -m "feat(schema): relations + peer longs + tenancy landed — regenerate, goldens, docs"`.
-- [ ] **Step 5: Push** — `git push origin main`.
+- [x] **Step 1: `php bin/regenerate && php bin/regenerate --ship`**; update goldens/stat asserts (FK count drops again with relation changes; anchor files now carry trait imports).
+- [x] **Step 2: Full gate** — `composer verify` (phpstan level 5 clean, all 940+ tests), `TELEFRAME_PG=1 vendor/bin/phpunit tests/Pg`, `php bin/standalone-smoke.php` exit 0.
+- [x] **Step 3: Docs** — spec status line + a short "IDs & relations & tenancy" section: canonical peer longs, generated belongsTo/hasMany, AccountContext isolation, cross-account query pattern.
+- [x] **Step 4: Commit** — `git commit -m "feat(schema): relations + peer longs + tenancy landed — regenerate, goldens, docs"`.
+- [x] **Step 5: Push** — `git push origin main`.

@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Anchor model for TL type InputAiComposeTone (spec §4.1). */
 final class TlInputAiComposeTone extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_input_ai_compose_tone';
 
     protected $guarded = [];

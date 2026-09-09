@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPageBlock;
 
 /** Constructor model for pageBlockCover of PageBlock (crc32 39f23300). */
 final class TlPageBlockPageBlockCover extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_page_block_page_block_cover';
 
@@ -22,6 +25,10 @@ final class TlPageBlockPageBlockCover extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'cover' => 'string',
     ];
+
+    public function cover(): BelongsTo
+    {
+        return $this->belongsTo(TlPageBlock::class, 'cover');
+    }
 }

@@ -129,9 +129,22 @@ final class SchemaRegenerator
      * @param array<string,string> $migFiles migration filename => content
      * @return array{namespaces:list<string>,count:int,dir:string}
      */
+    /** Ship-exempt migrations the owning app checks in (ShipDialGoldenTest
+     *  mirrors this contract): the ship purge must never delete them. */
+    private const APP_OWNED_MIGRATIONS = ['2026_09_08_000100_create_tl_user_bindings_table.php'];
+
     private function shipMigrations(TlScheme $combined, array $tableMap, array $migFiles, string $outputDir): array
     {
         $dir = $outputDir . '/migrations';
+        $preserved = [];
+        if (is_dir($dir)) {
+            foreach (glob($dir . '/*.php') as $file) {
+                $name = basename($file);
+                if (in_array($name, self::APP_OWNED_MIGRATIONS, true)) {
+                    $preserved[$name] = file_get_contents($file);
+                }
+            }
+        }
         self::removeTree($dir);
         mkdir($dir, 0775, true);
 
@@ -150,6 +163,9 @@ final class SchemaRegenerator
         }
         ksort($shipped);
         foreach ($shipped as $name => $content) {
+            file_put_contents($dir . '/' . $name, $content);
+        }
+        foreach ($preserved as $name => $content) {
             file_put_contents($dir . '/' . $name, $content);
         }
         return ['namespaces' => $this->shipNamespaces ?? [], 'count' => count($shipped), 'dir' => $dir];

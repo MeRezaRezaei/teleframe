@@ -7,9 +7,10 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAicomposeTonesTonesTones;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAicomposeTonesTonesUsers;
 
@@ -17,6 +18,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAicomposeTonesTonesUsers;
 final class TlAicomposeTonesTones extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_aicompose_tones_tones';
 

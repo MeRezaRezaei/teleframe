@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param keywords (table tl_emoji_keywords_difference_emoji_keywords_d_8bb0c8308884). */
 final class TlEmojiKeywordsDifferenceEmojiKeywordsDifferenceKeywords extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_emoji_keywords_difference_emoji_keywords_d_8bb0c8308884';
 
     public $timestamps = false; // child tables carry no timestamps columns

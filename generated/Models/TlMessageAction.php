@@ -6,12 +6,22 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMessageService;
 
 /** Anchor model for TL type MessageAction (spec §4.1). */
 final class TlMessageAction extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_message_action';
 
     protected $guarded = [];
+
+    public function action(): HasMany
+    {
+        return $this->hasMany(TlMessageMessageService::class, 'action');
+    }
 }

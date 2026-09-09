@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesEmojiGameInfo;
 
 /** Constructor model for updateEmojiGameInfo of Update (crc32 fb9c547a). */
 final class TlUpdateUpdateEmojiGameInfo extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_update_update_emoji_game_info';
 
@@ -22,6 +25,10 @@ final class TlUpdateUpdateEmojiGameInfo extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'info' => 'string',
     ];
+
+    public function info(): BelongsTo
+    {
+        return $this->belongsTo(TlMessagesEmojiGameInfo::class, 'info');
+    }
 }

@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStorePaymentPurpose;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPremiumGiftCodeOption;
 
 /** Constructor model for inputInvoicePremiumGiftCode of InputInvoice (crc32 98986c0d). */
 final class TlInputInvoiceInputInvoicePremiumGiftCode extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_invoice_input_invoice_premium_gift_code';
 
@@ -22,7 +26,14 @@ final class TlInputInvoiceInputInvoicePremiumGiftCode extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'purpose' => 'string',
-        'option' => 'string',
     ];
+
+    public function purpose(): BelongsTo
+    {
+        return $this->belongsTo(TlInputStorePaymentPurpose::class, 'purpose');
+    }
+    public function option(): BelongsTo
+    {
+        return $this->belongsTo(TlPremiumGiftCodeOption::class, 'option');
+    }
 }

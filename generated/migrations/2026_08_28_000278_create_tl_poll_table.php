@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_ea007a40fd4b4decc0438e4b');
+            $table->index('account_id', 'ix_ed48b57407b927ebc064d97b');
         });
         Schema::create('tl_poll_poll', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_poll')->cascadeOnDelete();
@@ -35,24 +35,32 @@ return new class extends Migration
             $table->boolean('creator')->default(false);
             $table->boolean('subscribers_only')->default(false);
             $table->uuid('question');
+            $table->index('question', 'ix_37474c8b9a76fa817a8afb73');
             $table->integer('close_period')->nullable();
             $table->integer('close_date')->nullable();
             $table->bigInteger('hash');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_1af152a40132e3cd31ab4f9f');
+            $table->unique(['account_id', 'tl_id'], 'ux_054de76cfa8c86876ecb');
         });
         Schema::create('tl_poll_poll__answers', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_poll_poll')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_07eccdaff6d04c9d4309');
+            $table->index('account_id', 'ix_e11426d2860a34756c0a7b9a');
         });
         Schema::create('tl_poll_poll__countries_iso2', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_poll_poll')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_1fe8b3de7c2aea019aec');
+            $table->index('account_id', 'ix_3a02de926e8ab01865d1e8c3');
         });
     }
 

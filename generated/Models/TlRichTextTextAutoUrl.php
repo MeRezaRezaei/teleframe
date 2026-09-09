@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichText;
 
 /** Constructor model for textAutoUrl of RichText (crc32 ac6a83aa). */
 final class TlRichTextTextAutoUrl extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_rich_text_text_auto_url';
 
@@ -22,6 +25,10 @@ final class TlRichTextTextAutoUrl extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'text' => 'string',
     ];
+
+    public function text(): BelongsTo
+    {
+        return $this->belongsTo(TlRichText::class, 'text');
+    }
 }

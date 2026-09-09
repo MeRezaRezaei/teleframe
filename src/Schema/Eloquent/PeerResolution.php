@@ -86,14 +86,16 @@ trait PeerResolution
     }
 
     /**
-     * Default FQCN map — generated models for the concrete classes.
-     * Tests supply their own via the $classMap seam.
+     * Default FQCN map — the canonical id lives on the ctor INSTANCE
+     * models (tl_id is an instance-table column; anchors have no tl_id),
+     * so resolution targets the persona constructor's instance. Tests
+     * supply their own via the $classMap seam.
      *
      * @var array{user: class-string<Model>, chat: class-string<Model>, channel: class-string<Model>}
      */
     private const PEER_FQCN_MAP = [
-        'user'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser',
-        'chat'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat',
-        'channel' => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannel',
+        'user'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUser',
+        'chat'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChat',
+        'channel' => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChannel',
     ];
 }

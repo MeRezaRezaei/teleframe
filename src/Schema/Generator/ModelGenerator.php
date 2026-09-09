@@ -52,50 +52,62 @@ final class ModelGenerator
     /**
      * Task 2.3: reverse hasMany on anchors for incoming object-ref params.
      *
-     * @param list<array{0:string,1:string}> $referringTypes  [originType, paramName] pairs
+     * One relation per (origin type, ctor) — the FK column lives on that
+     * ctor's instance table, so the relation targets the ctor model.
+     * Method names are made unique with a deterministic collision ladder:
+     * plain param name, then +ctor, then +origin, then +index. The caller
+     * keys origin types (ksorted) and constructors (ksorted), which keeps
+     * the ladder reproducible across regenerations.
+     *
+     * @param list<array{0:string,1:string,2:string}> $referringTypes [originType, ctorName, paramName] pairs
      * @return array{methods: list<string>, uses: list<string>}
      */
     private static function reverseHasMany(TlType $type, array $referringTypes): array
     {
-        $methods = [];
-        $uses = [];
         if ($referringTypes === []) {
-            return ['methods' => $methods, 'uses' => $uses];
+            return ['methods' => [], 'uses' => []];
         }
 
-        // Build method name for each referring type. Deduplicate collisions
-        // by appending the origin type (PascalCase) to the method name.
+        $used = [];
+        $taken = self::reservedMethodNames();
         $entries = [];
-        $methodCount = [];
-        foreach ($referringTypes as [$originType, $paramName]) {
+        foreach ($referringTypes as [$originType, $ctorName, $paramName]) {
             $base = lcfirst(self::pascalParam($paramName));
-            if (!isset($methodCount[$base])) {
-                $methodCount[$base] = 0;
+            $method = $base;
+            $collides = static fn (string $name): bool => isset($used[$name]) || isset($taken[strtolower($name)]);
+            if ($collides($method)) {
+                $method = $base . self::pascalParam($ctorName);
             }
-            $methodCount[$base]++;
-            if ($methodCount[$base] > 1) {
+            if ($collides($method)) {
                 $method = $base . self::pascalParam($originType);
-            } else {
-                $method = $base;
             }
-            $entries[] = [$originType, $paramName, $method];
+            if ($collides($method)) {
+                $method = $base . self::pascalParam($ctorName) . self::pascalParam($originType);
+            }
+            if ($collides($method)) {
+                $method = $method . '_' . count($used);
+            }
+            $used[$method] = true;
+            $entries[] = [$originType, $ctorName, $paramName, $method];
         }
 
         // Sort entries by method name for deterministic output.
-        usort($entries, static fn (array $a, array $b): int => strcmp($a[2], $b[2]));
+        usort($entries, static fn (array $a, array $b): int => strcmp($a[3], $b[3]));
 
-        $seenOrigins = [];
-        foreach ($entries as [$originType, $paramName, $method]) {
-            $shortOrigin = Naming::ctorModel($originType, $originType);
-            $originFqcn = self::NS . '\\' . $shortOrigin;
-            if (!isset($seenOrigins[$originFqcn])) {
-                $uses[] = $originFqcn;
-                $seenOrigins[$originFqcn] = true;
+        $methods = [];
+        $uses = [];
+        $seenTargets = [];
+        foreach ($entries as [$originType, $ctorName, $paramName, $method]) {
+            $target = Naming::ctorModel($originType, $ctorName);
+            $targetFqcn = self::NS . '\\' . $target;
+            if (!isset($seenTargets[$targetFqcn])) {
+                $uses[] = $targetFqcn;
+                $seenTargets[$targetFqcn] = true;
             }
             $col = Naming::column($paramName);
             $methods[] = "    public function {$method}(): HasMany";
             $methods[] = '    {';
-            $methods[] = "        return \$this->hasMany({$shortOrigin}::class, '{$col}');";
+            $methods[] = "        return \$this->hasMany({$target}::class, '{$col}');";
             $methods[] = '    }';
         }
 
@@ -122,7 +134,7 @@ final class ModelGenerator
                     if ($param->baseType() === 'Peer' || $param->baseType() === 'InputPeer') {
                         continue;
                     }
-                    $referringTypes[] = [$otherType->name, $param->name];
+                    $referringTypes[] = [$otherType->name, $ctor->name, $param->name];
                 }
             }
         }
@@ -140,20 +152,18 @@ final class ModelGenerator
             ...($hasMany['methods'] !== [] ? ['', ...$hasMany['methods']] : []),
             '}',
         ];
-        $uses = [
-            'use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;',
-            'use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;',
-            '',
+        $imports = [
+            'MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel',
+            'MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped',
         ];
         if ($hasMany['methods'] !== []) {
-            $uses[] = 'use Illuminate\Database\Eloquent\Relations\HasMany;';
+            $imports[] = 'Illuminate\Database\Eloquent\Relations\HasMany';
         }
         foreach ($hasMany['uses'] as $use) {
-            $uses[] = 'use ' . $use . ';';
+            $imports[] = $use;
         }
-        $uses[] = '';
 
-        $files[$class . '.php'] = CodeWriter::phpFile(self::NS, [...$uses, ...$body]);
+        $files[$class . '.php'] = CodeWriter::phpFile(self::NS, [...self::useLines($imports), ...$body]);
     }
 
     /** @param array<string,string> $files @param-out modified
@@ -170,6 +180,21 @@ final class ModelGenerator
         $belongsToMethods = [];
         $belongsToUses = [];
         $hasPeerRef = false;
+        $taken = self::reservedMethodNames();
+        $usedMethods = [];
+
+        $methodName = static function (string $paramName, array &$used) use ($taken): string {
+            $base = lcfirst(self::pascalParam($paramName));
+            $method = $base;
+            if (isset($taken[strtolower($method)])) {
+                $method = $base . 'Attr';
+            }
+            if (isset($used[$method])) {
+                $method = $base . '_' . count($used);
+            }
+            $used[$method] = true;
+            return $method;
+        };
 
         foreach ($ctor->params() as $param) {
             if ($param->isFiller || $param->kind() === 'generic') {
@@ -179,7 +204,7 @@ final class ModelGenerator
                 $childClass = self::childModelClass($table, $param->name);
                 $classes[] = $childClass;
                 $this->childModel($childClass, Naming::childTable($table, $param->name), $param, $files);
-                $method = lcfirst(self::pascalParam($param->name));
+                $method = $methodName($param->name, $usedMethods);
                 $childMethods[] = "    public function {$method}(): HasMany";
                 $childMethods[] = '    {';
                 $childMethods[] = "        return \$this->tlChild({$childClass}::class);";
@@ -197,7 +222,7 @@ final class ModelGenerator
             // Task 2.1: object-ref params → belongsTo.
             if ($param->kind() === 'ref' && $this->isFkTargetable($param->baseType(), $param)) {
                 $col = Naming::column($param->name);
-                $method = lcfirst(self::pascalParam($param->name));
+                $method = $methodName($param->name, $usedMethods);
                 $base = $param->baseType();
                 $shortName = Naming::model($base);
                 $targetClass = self::NS . '\\' . $shortName;
@@ -217,9 +242,8 @@ final class ModelGenerator
             'final class ' . $class . ' extends TlInstanceModel',
             '{',
             '    use HasFactory, HasTlChildren;',
-            '',
             '    use AccountScoped;',
-            '',
+            ...($hasPeerRef ? ['    use PeerResolution;', ''] : ['']),
             "    protected \$table = '{$table}';",
             '',
             '    protected $guarded = [];',
@@ -232,30 +256,29 @@ final class ModelGenerator
             ...($belongsToMethods !== [] ? ['', ...$belongsToMethods] : []),
             '}',
         ];
-        $uses = [
-            'use Illuminate\Database\Eloquent\Factories\HasFactory;',
-            'use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;',
-            'use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;',
-            'use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;',
+        $imports = [
+            'Illuminate\Database\Eloquent\Factories\HasFactory',
+            'MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren',
+            'MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel',
+            'MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped',
         ];
         if ($hasPeerRef) {
-            $uses[] = 'use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;';
+            $imports[] = 'MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution';
         }
         if ($childMethods !== []) {
-            $uses[] = 'use Illuminate\Database\Eloquent\Relations\HasMany;';
+            $imports[] = 'Illuminate\Database\Eloquent\Relations\HasMany';
         }
         if ($belongsToMethods !== []) {
-            $uses[] = 'use Illuminate\Database\Eloquent\Relations\BelongsTo;';
+            $imports[] = 'Illuminate\Database\Eloquent\Relations\BelongsTo';
         }
         foreach ($childUses as $use) {
-            $uses[] = 'use ' . self::NS . '\\' . $use . ';';
+            $imports[] = self::NS . '\\' . $use;
         }
         foreach ($belongsToUses as $use) {
-            $uses[] = 'use ' . $use . ';';
+            $imports[] = $use;
         }
-        $uses[] = '';
 
-        $files[$class . '.php'] = CodeWriter::phpFile(self::NS, [...$uses, ...$body]);
+        $files[$class . '.php'] = CodeWriter::phpFile(self::NS, [...self::useLines($imports), ...$body]);
     }
 
     /** @param array<string,string> $files @param-out modified */
@@ -285,12 +308,36 @@ final class ModelGenerator
             '    ];',
             '}',
         ];
-        $files[$class . '.php'] = CodeWriter::phpFile(self::NS, [
-            'use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;',
-            'use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;',
-            '',
-            ...$body,
-        ]);
+        $files[$class . '.php'] = CodeWriter::phpFile(self::NS, [...self::useLines([
+            'MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel',
+            'MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped',
+        ]), ...$body]);
+    }
+
+    /**
+     * Per-file use-import assembly: deduped, ksort-deterministic 'use X;'
+     * lines terminated by a single blank line. Every import source for a
+     * generated model goes through here (relation targets, trait imports,
+     * base model classes) so no FQCN can be imported twice in one file.
+     *
+     * @param list<string> $imports fully-qualified class names
+     * @return list<string> deduped 'use X;' lines in ksort order plus a blank separator
+     */
+    private static function useLines(array $imports): array
+    {
+        $set = [];
+        foreach ($imports as $import) {
+            if ($import !== '') {
+                $set[$import] = true;
+            }
+        }
+        ksort($set);
+        $lines = [];
+        foreach (array_keys($set) as $fqcn) {
+            $lines[] = 'use ' . $fqcn . ';';
+        }
+        $lines[] = '';
+        return $lines;
     }
 
     private static function isFkTargetable(string $baseType, \MeRezaRezaei\Teleframe\Schema\Generator\Model\TlParam $param): bool
@@ -314,6 +361,22 @@ final class ModelGenerator
 
     private static function pascalParam(string $name): string
     {
-        return implode('', array_map('ucfirst', explode('_', $name)));
+        return Naming::pascal($name);
+    }
+
+    /** @return array<string,true> lowercase method names a generated method must never shadow */
+    private static function reservedMethodNames(): array
+    {
+        static $taken = null;
+        if ($taken === null) {
+            $taken = [];
+            foreach (array_merge(
+                get_class_methods(\Illuminate\Database\Eloquent\Model::class),
+                get_class_methods(\MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel::class),
+            ) as $methodSig) {
+                $taken[strtolower($methodSig)] = true;
+            }
+        }
+        return $taken;
     }
 }

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGeoPoint;
 
 /** Constructor model for messageMediaGeoLive of MessageMedia (crc32 b940c666). */
 final class TlMessageMediaMessageMediaGeoLive extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_media_message_media_geo_live';
 
@@ -23,9 +26,13 @@ final class TlMessageMediaMessageMediaGeoLive extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'flags' => 'int',
-        'geo' => 'string',
         'heading' => 'int',
         'period' => 'int',
         'proximity_notification_radius' => 'int',
     ];
+
+    public function geo(): BelongsTo
+    {
+        return $this->belongsTo(TlGeoPoint::class, 'geo');
+    }
 }

@@ -7,9 +7,12 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerStories;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesPeerStoriesPeerStoriesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesPeerStoriesPeerStoriesUsers;
 
@@ -17,6 +20,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesPeerStoriesPeerStori
 final class TlStoriesPeerStoriesPeerStories extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_stories_peer_stories_peer_stories';
 
@@ -24,7 +28,6 @@ final class TlStoriesPeerStoriesPeerStories extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'stories' => 'string',
     ];
 
     public function chats(): HasMany
@@ -34,5 +37,10 @@ final class TlStoriesPeerStoriesPeerStories extends TlInstanceModel
     public function users(): HasMany
     {
         return $this->tlChild(TlStoriesPeerStoriesPeerStoriesUsers::class);
+    }
+
+    public function stories(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerStories::class, 'stories');
     }
 }

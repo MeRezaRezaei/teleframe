@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Anchor model for TL type DialogFilterSuggested (spec §4.1). */
 final class TlDialogFilterSuggested extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_dialog_filter_suggested';
 
     protected $guarded = [];

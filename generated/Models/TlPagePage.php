@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPagePageBlocks;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPagePagePhotos;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPagePageDocuments;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPagePagePhotos;
 
 /** Constructor model for page of Page (crc32 98657f0d). */
 final class TlPagePage extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_page_page';
 

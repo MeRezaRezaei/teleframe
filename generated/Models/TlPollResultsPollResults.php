@@ -7,17 +7,21 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollResultsPollResultsResults;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMedia;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollResultsPollResultsRecent_voters;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollResultsPollResultsResults;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollResultsPollResultsSolution_entities;
 
 /** Constructor model for pollResults of PollResults (crc32 ba7bb15e). */
 final class TlPollResultsPollResults extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_poll_results_poll_results';
 
@@ -31,7 +35,6 @@ final class TlPollResultsPollResults extends TlInstanceModel
         'can_view_stats' => 'bool',
         'total_voters' => 'int',
         'solution' => 'string',
-        'solution_media' => 'string',
     ];
 
     public function results(): HasMany
@@ -45,5 +48,10 @@ final class TlPollResultsPollResults extends TlInstanceModel
     public function solutionEntities(): HasMany
     {
         return $this->tlChild(TlPollResultsPollResultsSolution_entities::class);
+    }
+
+    public function solutionMedia(): BelongsTo
+    {
+        return $this->belongsTo(TlMessageMedia::class, 'solution_media');
     }
 }

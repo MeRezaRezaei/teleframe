@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_1a763997d331fe5cbac31e48');
+            $table->index('account_id', 'ix_35cc5c08566e1a937e449938');
         });
         Schema::create('tl_messages_forum_topics_forum_topics', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_messages_forum_topics')->cascadeOnDelete();
@@ -26,35 +26,45 @@ return new class extends Migration
             $table->boolean('order_by_create_date')->default(false);
             $table->integer('count');
             $table->integer('pts');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_040b6b035a748b43f8166019');
         });
         Schema::create('tl_messages_forum_topics_forum_topics__topics', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_messages_forum_topics_forum_topics')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_6b2d645185200386d191');
+            $table->index('account_id', 'ix_5d2a0725a8ceaabb69e54b9b');
         });
         Schema::create('tl_messages_forum_topics_forum_topics__messages', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_messages_forum_topics_forum_topics')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_061dc5ad011c1efcec9d');
+            $table->index('account_id', 'ix_737d3f502a40de38952bbf7a');
         });
         Schema::create('tl_messages_forum_topics_forum_topics__chats', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_messages_forum_topics_forum_topics')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_b373bdfc0ca2e9246d90');
+            $table->index('account_id', 'ix_100caf06a99aa80380e2e748');
         });
         Schema::create('tl_messages_forum_topics_forum_topics__users', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_messages_forum_topics_forum_topics')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_66d1bff450ffac14b475');
+            $table->index('account_id', 'ix_204cf69e76ead3175db09cd9');
         });
     }
 

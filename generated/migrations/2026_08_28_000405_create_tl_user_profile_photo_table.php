@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_171b2fa3aec55e844d3f80d0');
+            $table->index('account_id', 'ix_957073a6b079da9921096f1d');
         });
         Schema::create('tl_user_profile_photo_user_profile_photo', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_user_profile_photo')->cascadeOnDelete();
@@ -26,13 +26,18 @@ return new class extends Migration
             $table->boolean('has_video')->default(false);
             $table->boolean('personal')->default(false);
             $table->bigInteger('photo_id');
+            $table->index('photo_id', 'ix_92a2bc1776c0770a606bdacd');
             $table->binary('stripped_thumb')->nullable();
             $table->integer('dc_id');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_f96d96a714479aa1df6e0456');
         });
         Schema::create('tl_user_profile_photo_user_profile_photo_empty', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_user_profile_photo')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_d5c3938470f40230580dcafe');
         });
     }
 

@@ -7,19 +7,21 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumPromoPeriod_options;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumPromoStatus_entities;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumPromoUsers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumPromoVideo_sections;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumPromoVideos;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumPromoPeriod_options;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumPromoUsers;
 
 /** Constructor model for help.premiumPromo of help.PremiumPromo (crc32 5334759c). */
 final class TlHelpPremiumPromoPremiumPromo extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_help_premium_promo_premium_promo';
 

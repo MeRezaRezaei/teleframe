@@ -17,13 +17,14 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_49e96ae6fd5ef68e50a87a7b');
+            $table->index('account_id', 'ix_fa092f1f5aef1562f47ed812');
         });
         Schema::create('tl_web_authorization_web_authorization', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_web_authorization')->cascadeOnDelete();
             $table->bigInteger('hash');
             $table->bigInteger('bot_id');
+            $table->index('bot_id', 'ix_11377894211190674bc05091');
             $table->text('domain');
             $table->text('browser');
             $table->text('platform');
@@ -31,7 +32,9 @@ return new class extends Migration
             $table->integer('date_active');
             $table->text('ip');
             $table->text('region');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_6ed3aeba74fabbec7800f38a');
         });
     }
 

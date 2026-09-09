@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesDiscussionMessageDiscussionMessageMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesDiscussionMessageDiscussionMessageChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesDiscussionMessageDiscussionMessageMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesDiscussionMessageDiscussionMessageUsers;
 
 /** Constructor model for messages.discussionMessage of messages.DiscussionMessage (crc32 a6341782). */
 final class TlMessagesDiscussionMessageDiscussionMessage extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_discussion_message_discussion_message';
 

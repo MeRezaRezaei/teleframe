@@ -7,15 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageFwdHeader;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageReplyHeader;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesUpdateShortMessageEntities;
 
 /** Constructor model for updateShortMessage of Updates (crc32 313bc7f8). */
 final class TlUpdatesUpdateShortMessage extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_updates_update_short_message';
 
@@ -34,14 +39,21 @@ final class TlUpdatesUpdateShortMessage extends TlInstanceModel
         'pts' => 'int',
         'pts_count' => 'int',
         'date' => 'int',
-        'fwd_from' => 'string',
         'via_bot_id' => 'int',
-        'reply_to' => 'string',
         'ttl_period' => 'int',
     ];
 
     public function entities(): HasMany
     {
         return $this->tlChild(TlUpdatesUpdateShortMessageEntities::class);
+    }
+
+    public function fwdFrom(): BelongsTo
+    {
+        return $this->belongsTo(TlMessageFwdHeader::class, 'fwd_from');
+    }
+    public function replyTo(): BelongsTo
+    {
+        return $this->belongsTo(TlMessageReplyHeader::class, 'reply_to');
     }
 }

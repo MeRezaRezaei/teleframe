@@ -7,15 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsValidatedRequestedInfoValidate9668a5a19280Shipping_options;
 
 /** Constructor model for payments.validatedRequestedInfo of payments.ValidatedRequestedInfo (crc32 d1451883). */
 final class TlPaymentsValidatedRequestedInfoValidatedRequestedInfo extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_payments_validated_requested_info_validate_9668a5a19280';
 

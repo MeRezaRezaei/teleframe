@@ -8,6 +8,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlConstructor;
@@ -211,6 +212,7 @@ final class UpdateIngestor
                     $row,
                     (string) $instances[$row['parent_path']]->getKey(),
                     $valuePath !== null ? (string) $instances[$valuePath]->getKey() : null,
+                    $accountId,
                 );
             }
 
@@ -306,6 +308,10 @@ final class UpdateIngestor
         self::assertTableReady((new $anchorClass())->getTable(), $name);
 
         $columns = [];
+        $paramByField = [];
+        foreach ($ctor->params() as $p) {
+            $paramByField[$p->name] = $p;
+        }
         foreach ($payload as $key => $value) {
             if ($key === '_') {
                 continue;
@@ -329,6 +335,20 @@ final class UpdateIngestor
                         $childRows[] = $row;
                     }
                 } elseif (isset($value['_'])) {
+                    $param = $paramByField[$key] ?? null;
+                    if ($param !== null
+                        && $param->kind() === 'ref'
+                        && in_array($param->baseType(), ['Peer', 'InputPeer'], true)) {
+                        // T1.2: Peer/InputPeer refs are canonical longs, not
+                        // child-instance PKs. The parent column carries
+                        // Telegram's own int64 peer id; the walker's peer
+                        // child rows (tl_peer …) still persist alongside.
+                        $long = self::peerLong((array) $value);
+                        if ($long !== null) {
+                            $columns[Naming::column((string) $key)] = $long;
+                        }
+                        continue;
+                    }
                     $child = $instances[self::joinPath($path, $key, null)] ?? null;
                     if ($child !== null) {
                         $columns[Naming::column($key)] = (string) $child->getKey(); // ref column = child instance PK
@@ -383,8 +403,9 @@ final class UpdateIngestor
                 ]);
             }
 
-            $instance = $instanceClass::query()->find($anchorId) ?? new $instanceClass();
+            $instance = $instanceClass::query()->withoutGlobalScopes()->find($anchorId) ?? new $instanceClass();
             $instance->setAttribute('id', $anchorId); // shared PK with the anchor (spec §4.2)
+            $instance->setAttribute('account_id', $accountId);
             $instance->fill($columns);
             $instance->save();
         } finally {
@@ -394,6 +415,23 @@ final class UpdateIngestor
         }
 
         return $instance;
+    }
+
+    /**
+     * Telegram's canonical Peer long for an ingested peer object
+     * (T1.2: peerUser→+id, peerChat→-id, peerChannel→-(2^32)-id).
+     *
+     * @param array<string, mixed> $value
+     */
+    private static function peerLong(array $value): ?int
+    {
+        $ctor = (string) ($value['_'] ?? '');
+        return match ($ctor) {
+            'peerUser' => PeerIdTool::userLong((int) ($value['user_id'] ?? 0)),
+            'peerChat' => PeerIdTool::chatLong((int) ($value['chat_id'] ?? 0)),
+            'peerChannel' => PeerIdTool::channelLong((int) ($value['channel_id'] ?? 0)),
+            default => null,
+        };
     }
 
     /**
@@ -528,21 +566,25 @@ final class UpdateIngestor
      *
      * @param array{class: class-string<TlAnchorModel>, parent_path: string, idx: int, value_path?: string, value?: mixed} $row
      */
-    private function upsertChildRow(array $row, string $parentId, ?string $valueId): void
+    private function upsertChildRow(array $row, string $parentId, ?string $valueId, int $accountId): void
     {
         /** @var class-string<TlAnchorModel> $class */
         $class = $row['class'];
         $isScalar = array_key_exists('value', $row);
         self::assertTableReady((new $class())->getTable(), 'vector child rows');
 
-        $fill = ['parent_id' => $parentId, 'idx' => $row['idx']];
+        $fill = ['parent_id' => $parentId, 'idx' => $row['idx'], 'account_id' => $accountId];
         if ($isScalar) {
             $fill['value'] = $row['value'];
         } else {
             $fill['value_id'] = $valueId;
         }
 
-        $existing = $class::query()->where('parent_id', $parentId)->where('idx', $row['idx'])->first();
+        $existing = $class::query()
+            ->where('parent_id', $parentId)
+            ->where('idx', $row['idx'])
+            ->where('account_id', $accountId)
+            ->first();
         if ($existing !== null) {
             $changed = $isScalar
                 ? $existing->getAttribute('value') !== $row['value']

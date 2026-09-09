@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountPrivacyRulesPrivacyRulesRules;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountPrivacyRulesPrivacyRulesChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountPrivacyRulesPrivacyRulesRules;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountPrivacyRulesPrivacyRulesUsers;
 
 /** Constructor model for account.privacyRules of account.PrivacyRules (crc32 50a04e45). */
 final class TlAccountPrivacyRulesPrivacyRules extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_account_privacy_rules_privacy_rules';
 

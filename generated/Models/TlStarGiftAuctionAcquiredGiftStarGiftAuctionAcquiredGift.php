@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for starGiftAuctionAcquiredGift of StarGiftAuctionAcquiredGift (crc32 42b00348). */
 final class TlStarGiftAuctionAcquiredGiftStarGiftAuctionAcquiredGift extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_star_gift_auction_acquired_gift_star_gift__f6508cc9bcc2';
 
@@ -24,12 +29,15 @@ final class TlStarGiftAuctionAcquiredGiftStarGiftAuctionAcquiredGift extends TlI
     protected $casts = [
         'flags' => 'int',
         'name_hidden' => 'bool',
-        'peer' => 'string',
         'date' => 'int',
         'bid_amount' => 'int',
         'round' => 'int',
         'pos' => 'int',
-        'message' => 'string',
         'gift_num' => 'int',
     ];
+
+    public function message(): BelongsTo
+    {
+        return $this->belongsTo(TlTextWithEntities::class, 'message');
+    }
 }

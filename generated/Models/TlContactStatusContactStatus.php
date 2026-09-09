@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserStatus;
 
 /** Constructor model for contactStatus of ContactStatus (crc32 16d9703b). */
 final class TlContactStatusContactStatus extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_contact_status_contact_status';
 
@@ -23,6 +26,10 @@ final class TlContactStatusContactStatus extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'user_id' => 'int',
-        'status' => 'string',
     ];
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(TlUserStatus::class, 'status');
+    }
 }

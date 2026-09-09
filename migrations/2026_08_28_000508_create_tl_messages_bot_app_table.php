@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_8b6899378828d6e92ec762c2');
+            $table->index('account_id', 'ix_0ed6e4138ce31c4258e70b81');
         });
         Schema::create('tl_messages_bot_app_bot_app', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_messages_bot_app')->cascadeOnDelete();
@@ -27,7 +27,10 @@ return new class extends Migration
             $table->boolean('request_write_access')->default(false);
             $table->boolean('has_settings')->default(false);
             $table->uuid('app');
+            $table->index('app', 'ix_289205534c4658317b9430ab');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_2bda2a6fd31cba65cc3b56c5');
         });
     }
 

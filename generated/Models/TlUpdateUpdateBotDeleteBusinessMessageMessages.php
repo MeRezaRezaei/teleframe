@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param messages (table tl_update_update_bot_delete_business_message__messages). */
 final class TlUpdateUpdateBotDeleteBusinessMessageMessages extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_update_update_bot_delete_business_message__messages';
 
     public $timestamps = false; // child tables carry no timestamps columns

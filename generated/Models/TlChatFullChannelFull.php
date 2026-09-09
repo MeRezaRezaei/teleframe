@@ -7,17 +7,33 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotVerification;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelLocation;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatFullChannelFullBot_info;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatFullChannelFullPending_suggestions;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatFullChannelFullRecent_requesters;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatReactions;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlExportedChatInvite;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGroupCall;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerNotifySettings;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerStories;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlProfileTab;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStickerSet;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWallPaper;
 
 /** Constructor model for channelFull of ChatFull (crc32 a04e8d3a). */
 final class TlChatFullChannelFull extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_chat_full_channel_full';
 
@@ -58,38 +74,24 @@ final class TlChatFullChannelFull extends TlInstanceModel
         'read_inbox_max_id' => 'int',
         'read_outbox_max_id' => 'int',
         'unread_count' => 'int',
-        'chat_photo' => 'string',
-        'notify_settings' => 'string',
-        'exported_invite' => 'string',
         'migrated_from_chat_id' => 'int',
         'migrated_from_max_id' => 'int',
         'pinned_msg_id' => 'int',
-        'stickerset' => 'string',
         'available_min_id' => 'int',
         'folder_id' => 'int',
         'linked_chat_id' => 'int',
-        'location' => 'string',
         'slowmode_seconds' => 'int',
         'slowmode_next_send_date' => 'int',
         'stats_dc' => 'int',
         'pts' => 'int',
-        'call' => 'string',
         'ttl_period' => 'int',
-        'groupcall_default_join_as' => 'string',
         'theme_emoticon' => 'string',
         'requests_pending' => 'int',
-        'default_send_as' => 'string',
-        'available_reactions' => 'string',
         'reactions_limit' => 'int',
-        'stories' => 'string',
-        'wallpaper' => 'string',
         'boosts_applied' => 'int',
         'boosts_unrestrict' => 'int',
-        'emojiset' => 'string',
-        'bot_verification' => 'string',
         'stargifts_count' => 'int',
         'send_paid_messages_stars' => 'int',
-        'main_tab' => 'string',
         'guard_bot_id' => 'int',
     ];
 
@@ -104,5 +106,54 @@ final class TlChatFullChannelFull extends TlInstanceModel
     public function recentRequesters(): HasMany
     {
         return $this->tlChild(TlChatFullChannelFullRecent_requesters::class);
+    }
+
+    public function chatPhoto(): BelongsTo
+    {
+        return $this->belongsTo(TlPhoto::class, 'chat_photo');
+    }
+    public function notifySettings(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerNotifySettings::class, 'notify_settings');
+    }
+    public function exportedInvite(): BelongsTo
+    {
+        return $this->belongsTo(TlExportedChatInvite::class, 'exported_invite');
+    }
+    public function stickerset(): BelongsTo
+    {
+        return $this->belongsTo(TlStickerSet::class, 'stickerset');
+    }
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(TlChannelLocation::class, 'location');
+    }
+    public function call(): BelongsTo
+    {
+        return $this->belongsTo(TlInputGroupCall::class, 'call');
+    }
+    public function availableReactions(): BelongsTo
+    {
+        return $this->belongsTo(TlChatReactions::class, 'available_reactions');
+    }
+    public function stories(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerStories::class, 'stories');
+    }
+    public function wallpaper(): BelongsTo
+    {
+        return $this->belongsTo(TlWallPaper::class, 'wallpaper');
+    }
+    public function emojiset(): BelongsTo
+    {
+        return $this->belongsTo(TlStickerSet::class, 'emojiset');
+    }
+    public function botVerification(): BelongsTo
+    {
+        return $this->belongsTo(TlBotVerification::class, 'bot_verification');
+    }
+    public function mainTab(): BelongsTo
+    {
+        return $this->belongsTo(TlProfileTab::class, 'main_tab');
     }
 }

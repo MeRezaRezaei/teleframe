@@ -17,18 +17,24 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_bd65772a8245c5fb7fdac498');
+            $table->index('account_id', 'ix_eb57325ec7156aa69f1db718');
         });
         Schema::create('tl_input_stickered_media_input_stickered_media_document', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_input_stickered_media')->cascadeOnDelete();
             $table->uuid('tl_id');
+            $table->index('tl_id', 'ix_0637c134ab05cd238c76b3c8');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_b5a805291041f7dcb0dd9bf8');
         });
         Schema::create('tl_input_stickered_media_input_stickered_media_photo', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_input_stickered_media')->cascadeOnDelete();
             $table->uuid('tl_id');
+            $table->index('tl_id', 'ix_8260217fbbf522e77c4b9b7a');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_8b770a1787ac8682c20e1c49');
         });
     }
 

@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param retry_contacts (table tl_contacts_imported_contacts_imported_contac_7e82948d3852). */
 final class TlContactsImportedContactsImportedContactsRetry_contacts extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_contacts_imported_contacts_imported_contac_7e82948d3852';
 
     public $timestamps = false; // child tables carry no timestamps columns

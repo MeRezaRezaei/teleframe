@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param users (table tl_stats_public_forwards_public_forwards__users). */
 final class TlStatsPublicForwardsPublicForwardsUsers extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_stats_public_forwards_public_forwards__users';
 
     public $timestamps = false; // child tables carry no timestamps columns

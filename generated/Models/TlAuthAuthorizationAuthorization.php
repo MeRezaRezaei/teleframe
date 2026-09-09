@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
 
 /** Constructor model for auth.authorization of auth.Authorization (crc32 2ea2c0d4). */
 final class TlAuthAuthorizationAuthorization extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_auth_authorization_authorization';
 
@@ -27,6 +30,10 @@ final class TlAuthAuthorizationAuthorization extends TlInstanceModel
         'otherwise_relogin_days' => 'int',
         'tmp_sessions' => 'int',
         'future_auth_token' => 'string',
-        'tl_user' => 'string',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(TlUser::class, 'tl_user');
+    }
 }

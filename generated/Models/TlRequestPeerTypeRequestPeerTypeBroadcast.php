@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBool;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatAdminRights;
 
 /** Constructor model for requestPeerTypeBroadcast of RequestPeerType (crc32 339bef6c). */
 final class TlRequestPeerTypeRequestPeerTypeBroadcast extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_request_peer_type_request_peer_type_broadcast';
 
@@ -24,8 +28,18 @@ final class TlRequestPeerTypeRequestPeerTypeBroadcast extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'creator' => 'bool',
-        'has_username' => 'string',
-        'user_admin_rights' => 'string',
-        'bot_admin_rights' => 'string',
     ];
+
+    public function hasUsername(): BelongsTo
+    {
+        return $this->belongsTo(TlBool::class, 'has_username');
+    }
+    public function userAdminRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatAdminRights::class, 'user_admin_rights');
+    }
+    public function botAdminRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatAdminRights::class, 'bot_admin_rights');
+    }
 }

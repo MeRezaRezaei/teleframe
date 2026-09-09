@@ -7,17 +7,21 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialogFilterDialogFilterPinned_peers;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialogFilterDialogFilterInclude_peers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialogFilterDialogFilterExclude_peers;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialogFilterDialogFilterInclude_peers;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialogFilterDialogFilterPinned_peers;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for dialogFilter of DialogFilter (crc32 aa472651). */
 final class TlDialogFilterDialogFilter extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_dialog_filter_dialog_filter';
 
@@ -36,7 +40,6 @@ final class TlDialogFilterDialogFilter extends TlInstanceModel
         'exclude_archived' => 'bool',
         'title_noanimate' => 'bool',
         'tl_id' => 'int',
-        'title' => 'string',
         'emoticon' => 'string',
         'color' => 'int',
     ];
@@ -52,5 +55,10 @@ final class TlDialogFilterDialogFilter extends TlInstanceModel
     public function excludePeers(): HasMany
     {
         return $this->tlChild(TlDialogFilterDialogFilterExclude_peers::class);
+    }
+
+    public function title(): BelongsTo
+    {
+        return $this->belongsTo(TlTextWithEntities::class, 'title');
     }
 }

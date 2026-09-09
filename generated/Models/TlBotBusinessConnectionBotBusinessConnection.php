@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBusinessBotRights;
 
 /** Constructor model for botBusinessConnection of BotBusinessConnection (crc32 8f34b2f5). */
 final class TlBotBusinessConnectionBotBusinessConnection extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_bot_business_connection_bot_business_connection';
 
@@ -28,6 +31,10 @@ final class TlBotBusinessConnectionBotBusinessConnection extends TlInstanceModel
         'user_id' => 'int',
         'dc_id' => 'int',
         'date' => 'int',
-        'rights' => 'string',
     ];
+
+    public function rights(): BelongsTo
+    {
+        return $this->belongsTo(TlBusinessBotRights::class, 'rights');
+    }
 }

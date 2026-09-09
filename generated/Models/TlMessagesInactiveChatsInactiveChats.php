@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesInactiveChatsInactiveChatsDates;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesInactiveChatsInactiveChatsChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesInactiveChatsInactiveChatsDates;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesInactiveChatsInactiveChatsUsers;
 
 /** Constructor model for messages.inactiveChats of messages.InactiveChats (crc32 a927fec5). */
 final class TlMessagesInactiveChatsInactiveChats extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_inactive_chats_inactive_chats';
 

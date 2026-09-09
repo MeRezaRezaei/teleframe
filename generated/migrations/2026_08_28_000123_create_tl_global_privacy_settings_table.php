@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_1cd478dafdbb131b2212ba1f');
+            $table->index('account_id', 'ix_69727eebcd2bef344658589a');
         });
         Schema::create('tl_global_privacy_settings_global_privacy_settings', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_global_privacy_settings')->cascadeOnDelete();
@@ -31,7 +31,10 @@ return new class extends Migration
             $table->boolean('display_gifts_button')->default(false);
             $table->bigInteger('noncontact_peers_paid_stars')->nullable();
             $table->uuid('disallowed_gifts')->nullable();
+            $table->index('disallowed_gifts', 'ix_4593efc618a49f7b94eca185');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_a19b29df5d7659ef6fc02c84');
         });
     }
 

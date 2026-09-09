@@ -7,9 +7,13 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInlineBotSwitchPM;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInlineBotWebView;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesBotResultsBotResultsResults;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesBotResultsBotResultsUsers;
 
@@ -17,6 +21,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesBotResultsBotResult
 final class TlMessagesBotResultsBotResults extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_bot_results_bot_results';
 
@@ -28,8 +33,6 @@ final class TlMessagesBotResultsBotResults extends TlInstanceModel
         'gallery' => 'bool',
         'query_id' => 'int',
         'next_offset' => 'string',
-        'switch_pm' => 'string',
-        'switch_webview' => 'string',
         'cache_time' => 'int',
     ];
 
@@ -40,5 +43,14 @@ final class TlMessagesBotResultsBotResults extends TlInstanceModel
     public function users(): HasMany
     {
         return $this->tlChild(TlMessagesBotResultsBotResultsUsers::class);
+    }
+
+    public function switchPm(): BelongsTo
+    {
+        return $this->belongsTo(TlInlineBotSwitchPM::class, 'switch_pm');
+    }
+    public function switchWebview(): BelongsTo
+    {
+        return $this->belongsTo(TlInlineBotWebView::class, 'switch_webview');
     }
 }

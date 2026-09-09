@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_bf6b435441270d740dc7e5d9');
+            $table->index('account_id', 'ix_b7f132a8b0fa696070c3f933');
         });
         Schema::create('tl_lang_pack_language_lang_pack_language', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_lang_pack_language')->cascadeOnDelete();
@@ -34,7 +34,9 @@ return new class extends Migration
             $table->integer('strings_count');
             $table->integer('translated_count');
             $table->text('translations_url');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_75e87eecc5ca8b9e176ea77f');
         });
     }
 

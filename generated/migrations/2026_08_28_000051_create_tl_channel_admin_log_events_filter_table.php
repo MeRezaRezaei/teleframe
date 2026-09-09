@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_c37d6e73857a0bb54fbcd7b3');
+            $table->index('account_id', 'ix_d64900b9e821cf6934bffd7b');
         });
         Schema::create('tl_channel_admin_log_events_filter_channel_ad_2d07b3f742d8', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_channel_admin_log_events_filter')->cascadeOnDelete();
@@ -43,7 +43,9 @@ return new class extends Migration
             $table->boolean('forums')->default(false);
             $table->boolean('sub_extend')->default(false);
             $table->boolean('edit_rank')->default(false);
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_9e653b777591d8ee37ade021');
         });
     }
 

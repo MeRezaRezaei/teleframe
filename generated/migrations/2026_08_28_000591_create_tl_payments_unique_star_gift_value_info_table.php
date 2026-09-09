@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_b243628e2d69e17f8e8073e2');
+            $table->index('account_id', 'ix_d265cc32cc9fe7d80cf0f680');
         });
         Schema::create('tl_payments_unique_star_gift_value_info_uniqu_435563956ba2', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_payments_unique_star_gift_value_info')->cascadeOnDelete();
@@ -37,7 +37,9 @@ return new class extends Migration
             $table->integer('listed_count')->nullable();
             $table->integer('fragment_listed_count')->nullable();
             $table->text('fragment_listed_url')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_5bbbd0e4681a083cb6ebaad5');
         });
     }
 

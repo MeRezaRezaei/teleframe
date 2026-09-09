@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpRecentMeUrlsRecentMeUrlsUrls;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpRecentMeUrlsRecentMeUrlsChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpRecentMeUrlsRecentMeUrlsUrls;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpRecentMeUrlsRecentMeUrlsUsers;
 
 /** Constructor model for help.recentMeUrls of help.RecentMeUrls (crc32 0e0310d7). */
 final class TlHelpRecentMeUrlsRecentMeUrls extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_help_recent_me_urls_recent_me_urls';
 

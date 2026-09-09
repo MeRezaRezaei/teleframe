@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_8b923a0c3bef6586315f8f70');
+            $table->index('account_id', 'ix_7f1b4542a1ef16dc0145b474');
         });
         Schema::create('tl_p__q_inner_data_p_q_inner_data_dc', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_p__q_inner_data')->cascadeOnDelete();
@@ -29,7 +29,9 @@ return new class extends Migration
             $table->decimal('server_nonce', 39, 0);
             $table->decimal('new_nonce', 78, 0);
             $table->integer('dc');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_4a68b80da68515c987b5c2dc');
         });
         Schema::create('tl_p__q_inner_data_p_q_inner_data_temp_dc', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_p__q_inner_data')->cascadeOnDelete();
@@ -41,7 +43,9 @@ return new class extends Migration
             $table->decimal('new_nonce', 78, 0);
             $table->integer('dc');
             $table->integer('expires_in');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_4b61e7aa77ef38215003178c');
         });
     }
 

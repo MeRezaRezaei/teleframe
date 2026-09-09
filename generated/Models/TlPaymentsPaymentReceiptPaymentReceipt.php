@@ -7,15 +7,22 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInvoice;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentRequestedInfo;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsPaymentReceiptPaymentReceiptUsers;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlShippingOption;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebDocument;
 
 /** Constructor model for payments.paymentReceipt of payments.PaymentReceipt (crc32 70c4fe03). */
 final class TlPaymentsPaymentReceiptPaymentReceipt extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_payments_payment_receipt_payment_receipt';
 
@@ -29,10 +36,6 @@ final class TlPaymentsPaymentReceiptPaymentReceipt extends TlInstanceModel
         'provider_id' => 'int',
         'title' => 'string',
         'description' => 'string',
-        'photo' => 'string',
-        'invoice' => 'string',
-        'info' => 'string',
-        'shipping' => 'string',
         'tip_amount' => 'int',
         'currency' => 'string',
         'total_amount' => 'int',
@@ -42,5 +45,22 @@ final class TlPaymentsPaymentReceiptPaymentReceipt extends TlInstanceModel
     public function users(): HasMany
     {
         return $this->tlChild(TlPaymentsPaymentReceiptPaymentReceiptUsers::class);
+    }
+
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(TlWebDocument::class, 'photo');
+    }
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(TlInvoice::class, 'invoice');
+    }
+    public function info(): BelongsTo
+    {
+        return $this->belongsTo(TlPaymentRequestedInfo::class, 'info');
+    }
+    public function shipping(): BelongsTo
+    {
+        return $this->belongsTo(TlShippingOption::class, 'shipping');
     }
 }

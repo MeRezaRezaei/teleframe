@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMediaAreaCoordinates;
 
 /** Constructor model for mediaAreaChannelPost of MediaArea (crc32 770416af). */
 final class TlMediaAreaMediaAreaChannelPost extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_media_area_media_area_channel_post';
 
@@ -22,8 +25,12 @@ final class TlMediaAreaMediaAreaChannelPost extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'coordinates' => 'string',
         'channel_id' => 'int',
         'msg_id' => 'int',
     ];
+
+    public function coordinates(): BelongsTo
+    {
+        return $this->belongsTo(TlMediaAreaCoordinates::class, 'coordinates');
+    }
 }

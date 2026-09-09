@@ -7,16 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAttachMenuBotAttachMenuBotPeer_types;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAttachMenuBotAttachMenuBotIcons;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAttachMenuBotAttachMenuBotPeer_types;
 
 /** Constructor model for attachMenuBot of AttachMenuBot (crc32 d90d8dfe). */
 final class TlAttachMenuBotAttachMenuBot extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_attach_menu_bot_attach_menu_bot';
 

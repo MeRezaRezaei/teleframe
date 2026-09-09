@@ -6,7 +6,7 @@
         "methods": 799,
         "files": 3,
         "tables": 3678,
-        "fks": 1535
+        "fks": 1379
     },
     "tables": {
         "tl_account_days_t_t_l": "2026_08_28_000001_create_tl_account_days_t_t_l_table.php",
@@ -3688,7 +3688,7 @@
         "tl_route_users_set_secure_value_errors": "2026_08_28_900633_create_tl_route_tables.php",
         "tl_route_users_suggest_birthday": "2026_08_28_900633_create_tl_route_tables.php"
     },
-    "fk_count": 1535,
+    "fk_count": 1379,
     "crc_mismatches": {
         "msg_container": {
             "stated": "73f1f8dc",
@@ -3719,7 +3719,7 @@
             "computed": "393b120f"
         }
     },
-    "hash": "f7b5c70f88dfa25fd6dec8f3ecfe32d3dae42393a447927e8f68907f4764b9dc",
+    "hash": "fcdcab816fd3291714bba7d185dd9a78997d0ec52e44a42dea281328552846be",
     "sources": [
         "TL_mtproto_v1.tl",
         "TL_secret.tl",

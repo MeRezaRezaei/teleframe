@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputSavedStarGift;
 
 /** Constructor model for inputInvoiceStarGiftUpgrade of InputInvoice (crc32 4d818d5d). */
 final class TlInputInvoiceInputInvoiceStarGiftUpgrade extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_invoice_input_invoice_star_gift_upgrade';
 
@@ -24,6 +27,10 @@ final class TlInputInvoiceInputInvoiceStarGiftUpgrade extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'keep_original_details' => 'bool',
-        'stargift' => 'string',
     ];
+
+    public function stargift(): BelongsTo
+    {
+        return $this->belongsTo(TlInputSavedStarGift::class, 'stargift');
+    }
 }

@@ -7,15 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureValueErrorSecureValueErrorTranslationFilesFile_hash;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureValueType;
 
 /** Constructor model for secureValueErrorTranslationFiles of SecureValueError (crc32 34636dd8). */
 final class TlSecureValueErrorSecureValueErrorTranslationFiles extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_secure_value_error_secure_value_error_translation_files';
 
@@ -23,12 +27,16 @@ final class TlSecureValueErrorSecureValueErrorTranslationFiles extends TlInstanc
 
     /** @var array<string, string> */
     protected $casts = [
-        'tl_type' => 'string',
         'text' => 'string',
     ];
 
     public function fileHash(): HasMany
     {
         return $this->tlChild(TlSecureValueErrorSecureValueErrorTranslationFilesFile_hash::class);
+    }
+
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(TlSecureValueType::class, 'tl_type');
     }
 }

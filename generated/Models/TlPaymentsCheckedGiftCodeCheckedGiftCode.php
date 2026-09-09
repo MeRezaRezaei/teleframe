@@ -7,9 +7,11 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsCheckedGiftCodeCheckedGiftCodeChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsCheckedGiftCodeCheckedGiftCodeUsers;
 
@@ -17,6 +19,8 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsCheckedGiftCodeChec
 final class TlPaymentsCheckedGiftCodeCheckedGiftCode extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_payments_checked_gift_code_checked_gift_code';
 
@@ -26,7 +30,6 @@ final class TlPaymentsCheckedGiftCodeCheckedGiftCode extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'via_giveaway' => 'bool',
-        'from_id' => 'string',
         'giveaway_msg_id' => 'int',
         'to_id' => 'int',
         'date' => 'int',

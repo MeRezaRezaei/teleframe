@@ -17,20 +17,26 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_c5b894fc8842cd53d4e92c72');
+            $table->index('account_id', 'ix_d19fe37cc9be8e025818bf58');
         });
         Schema::create('tl_input_bot_app_input_bot_app_i_d', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_input_bot_app')->cascadeOnDelete();
             $table->bigInteger('tl_id');
             $table->bigInteger('access_hash');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_5a036861ef31d4c57e643a22');
+            $table->unique(['account_id', 'tl_id'], 'ux_7b066168d37774544830');
         });
         Schema::create('tl_input_bot_app_input_bot_app_short_name', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_input_bot_app')->cascadeOnDelete();
             $table->uuid('bot_id');
+            $table->index('bot_id', 'ix_52ad598ee67ec36a514ec5ae');
             $table->text('short_name');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_0bb6147d502b7fd71a47bdbc');
         });
     }
 

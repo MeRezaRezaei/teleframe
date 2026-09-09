@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputUser;
 
 /** Constructor model for botCommandScopePeerUser of BotCommandScope (crc32 0a1321f3). */
 final class TlBotCommandScopeBotCommandScopePeerUser extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_bot_command_scope_bot_command_scope_peer_user';
 
@@ -22,7 +27,10 @@ final class TlBotCommandScopeBotCommandScopePeerUser extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'peer' => 'string',
-        'user_id' => 'string',
     ];
+
+    public function userId(): BelongsTo
+    {
+        return $this->belongsTo(TlInputUser::class, 'user_id');
+    }
 }

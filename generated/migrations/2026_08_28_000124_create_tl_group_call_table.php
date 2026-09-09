@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_8907b4b506973a69d5c45ae9');
+            $table->index('account_id', 'ix_5a0d730ebe890437bce3d82f');
         });
         Schema::create('tl_group_call_group_call', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_group_call')->cascadeOnDelete();
@@ -48,15 +48,22 @@ return new class extends Migration
             $table->integer('version');
             $table->text('invite_link')->nullable();
             $table->bigInteger('send_paid_messages_stars')->nullable();
-            $table->uuid('default_send_as')->nullable();
+            $table->bigInteger('default_send_as')->nullable();
+            $table->index('default_send_as', 'ix_e3c7d4bc48bc8a4e9bf8b2b8');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_4022b0026f5aeaa6c0a4b50a');
+            $table->unique(['account_id', 'default_send_as', 'tl_id'], 'ux_1fbf1b49e24501048e71');
         });
         Schema::create('tl_group_call_group_call_discarded', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_group_call')->cascadeOnDelete();
             $table->bigInteger('tl_id');
             $table->bigInteger('access_hash');
             $table->integer('duration');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_f933787f098f0429159ab53f');
+            $table->unique(['account_id', 'tl_id'], 'ux_76d81dce95ad24d7a79a');
         });
     }
 

@@ -7,9 +7,10 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsConnectedStarRefBotsConnected73bca7385b9aConnected_bots;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsConnectedStarRefBotsConnected73bca7385b9aUsers;
 
@@ -17,6 +18,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsConnectedStarRefBot
 final class TlPaymentsConnectedStarRefBotsConnectedStarRefBots extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_payments_connected_star_ref_bots_connected_73bca7385b9a';
 

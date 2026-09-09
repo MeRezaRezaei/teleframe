@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** Constructor model for inputInvoiceStarGiftResale of InputInvoice (crc32 c39f5324). */
 final class TlInputInvoiceInputInvoiceStarGiftResale extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_input_invoice_input_invoice_star_gift_resale';
 
@@ -25,6 +28,5 @@ final class TlInputInvoiceInputInvoiceStarGiftResale extends TlInstanceModel
         'flags' => 'int',
         'ton' => 'bool',
         'slug' => 'string',
-        'to_id' => 'string',
     ];
 }

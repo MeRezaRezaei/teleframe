@@ -7,17 +7,21 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesChannelDifferenceChannelDifferenceTooLongMessages;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialog;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesChannelDifferenceChannelDifferenceTooLongChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesChannelDifferenceChannelDifferenceTooLongMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesChannelDifferenceChannelDifferenceTooLongUsers;
 
 /** Constructor model for updates.channelDifferenceTooLong of updates.ChannelDifference (crc32 a4bcc6fe). */
 final class TlUpdatesChannelDifferenceChannelDifferenceTooLong extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_updates_channel_difference_channel_difference_too_long';
 
@@ -28,7 +32,6 @@ final class TlUpdatesChannelDifferenceChannelDifferenceTooLong extends TlInstanc
         'flags' => 'int',
         'final' => 'bool',
         'timeout' => 'int',
-        'dialog' => 'string',
     ];
 
     public function messages(): HasMany
@@ -42,5 +45,10 @@ final class TlUpdatesChannelDifferenceChannelDifferenceTooLong extends TlInstanc
     public function users(): HasMany
     {
         return $this->tlChild(TlUpdatesChannelDifferenceChannelDifferenceTooLongUsers::class);
+    }
+
+    public function dialog(): BelongsTo
+    {
+        return $this->belongsTo(TlDialog::class, 'dialog');
     }
 }

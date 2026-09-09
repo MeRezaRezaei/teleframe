@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputFile;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlVideoSize;
 
 /** Constructor model for inputChatUploadedPhoto of InputChatPhoto (crc32 bdcdaec0). */
 final class TlInputChatPhotoInputChatUploadedPhoto extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_chat_photo_input_chat_uploaded_photo';
 
@@ -23,9 +27,19 @@ final class TlInputChatPhotoInputChatUploadedPhoto extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'flags' => 'int',
-        'file' => 'string',
-        'video' => 'string',
         'video_start_ts' => 'float',
-        'video_emoji_markup' => 'string',
     ];
+
+    public function file(): BelongsTo
+    {
+        return $this->belongsTo(TlInputFile::class, 'file');
+    }
+    public function video(): BelongsTo
+    {
+        return $this->belongsTo(TlInputFile::class, 'video');
+    }
+    public function videoEmojiMarkup(): BelongsTo
+    {
+        return $this->belongsTo(TlVideoSize::class, 'video_emoji_markup');
+    }
 }

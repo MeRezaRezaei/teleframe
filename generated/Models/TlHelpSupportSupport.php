@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
 
 /** Constructor model for help.support of help.Support (crc32 17c6b5f6). */
 final class TlHelpSupportSupport extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_help_support_support';
 
@@ -23,6 +26,10 @@ final class TlHelpSupportSupport extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'phone_number' => 'string',
-        'tl_user' => 'string',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(TlUser::class, 'tl_user');
+    }
 }

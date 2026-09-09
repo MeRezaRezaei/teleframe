@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichText;
 
 /** Constructor model for textEmail of RichText (crc32 de5a0dd6). */
 final class TlRichTextTextEmail extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_rich_text_text_email';
 
@@ -22,7 +25,11 @@ final class TlRichTextTextEmail extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'text' => 'string',
         'email' => 'string',
     ];
+
+    public function text(): BelongsTo
+    {
+        return $this->belongsTo(TlRichText::class, 'text');
+    }
 }

@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStickerSet;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMaskCoords;
 
 /** Constructor model for documentAttributeSticker of DocumentAttribute (crc32 6319d612). */
 final class TlDocumentAttributeDocumentAttributeSticker extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_document_attribute_document_attribute_sticker';
 
@@ -25,7 +29,14 @@ final class TlDocumentAttributeDocumentAttributeSticker extends TlInstanceModel
         'flags' => 'int',
         'mask' => 'bool',
         'alt' => 'string',
-        'stickerset' => 'string',
-        'mask_coords' => 'string',
     ];
+
+    public function stickerset(): BelongsTo
+    {
+        return $this->belongsTo(TlInputStickerSet::class, 'stickerset');
+    }
+    public function maskCoords(): BelongsTo
+    {
+        return $this->belongsTo(TlMaskCoords::class, 'mask_coords');
+    }
 }

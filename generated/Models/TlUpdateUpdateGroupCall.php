@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGroupCall;
 
 /** Constructor model for updateGroupCall of Update (crc32 9d2216e0). */
 final class TlUpdateUpdateGroupCall extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_update_update_group_call';
 
@@ -24,7 +29,10 @@ final class TlUpdateUpdateGroupCall extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'live_story' => 'bool',
-        'peer' => 'string',
-        'call' => 'string',
     ];
+
+    public function call(): BelongsTo
+    {
+        return $this->belongsTo(TlGroupCall::class, 'call');
+    }
 }

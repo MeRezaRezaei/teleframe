@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_4c34fb969ffd09e74c2b309b');
+            $table->index('account_id', 'ix_0035b751a4a6a520c65e4841');
         });
         Schema::create('tl_input_business_away_message_input_business_away_message', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_input_business_away_message')->cascadeOnDelete();
@@ -26,8 +26,12 @@ return new class extends Migration
             $table->boolean('offline_only')->default(false);
             $table->integer('shortcut_id');
             $table->uuid('schedule');
+            $table->index('schedule', 'ix_ab60e283f470c2601ce05e90');
             $table->uuid('recipients');
+            $table->index('recipients', 'ix_9d3ce440655fc8ff073ece6d');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_4e57994fa98b75d1f8058d9e');
         });
     }
 

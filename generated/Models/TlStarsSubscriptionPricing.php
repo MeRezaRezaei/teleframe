@@ -6,12 +6,32 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatInviteChatInvite;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlExportedChatInviteChatInviteExported;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsSubscriptionStarsSubscription;
 
 /** Anchor model for TL type StarsSubscriptionPricing (spec §4.1). */
 final class TlStarsSubscriptionPricing extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_stars_subscription_pricing';
 
     protected $guarded = [];
+
+    public function pricing(): HasMany
+    {
+        return $this->hasMany(TlStarsSubscriptionStarsSubscription::class, 'pricing');
+    }
+    public function subscriptionPricing(): HasMany
+    {
+        return $this->hasMany(TlExportedChatInviteChatInviteExported::class, 'subscription_pricing');
+    }
+    public function subscriptionPricingChatInvite(): HasMany
+    {
+        return $this->hasMany(TlChatInviteChatInvite::class, 'subscription_pricing');
+    }
 }

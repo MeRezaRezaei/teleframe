@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat;
 
 /** Constructor model for chatInviteAlready of ChatInvite (crc32 5a686d7c). */
 final class TlChatInviteChatInviteAlready extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_chat_invite_chat_invite_already';
 
@@ -22,6 +25,10 @@ final class TlChatInviteChatInviteAlready extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'chat' => 'string',
     ];
+
+    public function chat(): BelongsTo
+    {
+        return $this->belongsTo(TlChat::class, 'chat');
+    }
 }

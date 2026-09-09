@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDecryptedMessage;
 
 /** Constructor model for decryptedMessageLayer of DecryptedMessageLayer (crc32 1be31789). */
 final class TlDecryptedMessageLayerDecryptedMessageLayer extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_decrypted_message_layer_decrypted_message_layer';
 
@@ -26,6 +29,10 @@ final class TlDecryptedMessageLayerDecryptedMessageLayer extends TlInstanceModel
         'layer' => 'int',
         'in_seq_no' => 'int',
         'out_seq_no' => 'int',
-        'message' => 'string',
     ];
+
+    public function message(): BelongsTo
+    {
+        return $this->belongsTo(TlDecryptedMessage::class, 'message');
+    }
 }

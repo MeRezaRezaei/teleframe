@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGroupCall;
 
 /** Constructor model for inputGroupCallStream of InputFileLocation (crc32 0598a92a). */
 final class TlInputFileLocationInputGroupCallStream extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_file_location_input_group_call_stream';
 
@@ -23,10 +26,14 @@ final class TlInputFileLocationInputGroupCallStream extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'flags' => 'int',
-        'call' => 'string',
         'time_ms' => 'int',
         'scale' => 'int',
         'video_channel' => 'int',
         'video_quality' => 'int',
     ];
+
+    public function call(): BelongsTo
+    {
+        return $this->belongsTo(TlInputGroupCall::class, 'call');
+    }
 }

@@ -7,14 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatAdminRights;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatBannedRights;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatPhoto;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputChannel;
 
 /** Constructor model for chat of Chat (crc32 41cbf256). */
 final class TlChatChat extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_chat_chat';
 
@@ -31,12 +37,25 @@ final class TlChatChat extends TlInstanceModel
         'noforwards' => 'bool',
         'tl_id' => 'int',
         'title' => 'string',
-        'photo' => 'string',
         'participants_count' => 'int',
         'date' => 'int',
         'version' => 'int',
-        'migrated_to' => 'string',
-        'admin_rights' => 'string',
-        'default_banned_rights' => 'string',
     ];
+
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(TlChatPhoto::class, 'photo');
+    }
+    public function migratedTo(): BelongsTo
+    {
+        return $this->belongsTo(TlInputChannel::class, 'migrated_to');
+    }
+    public function adminRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatAdminRights::class, 'admin_rights');
+    }
+    public function defaultBannedRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatBannedRights::class, 'default_banned_rights');
+    }
 }

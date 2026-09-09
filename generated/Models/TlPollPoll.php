@@ -7,16 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollPollAnswers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollPollCountries_iso2;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for poll of Poll (crc32 966e2dbf). */
 final class TlPollPoll extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_poll_poll';
 
@@ -36,7 +40,6 @@ final class TlPollPoll extends TlInstanceModel
         'hide_results_until_close' => 'bool',
         'creator' => 'bool',
         'subscribers_only' => 'bool',
-        'question' => 'string',
         'close_period' => 'int',
         'close_date' => 'int',
         'hash' => 'int',
@@ -49,5 +52,10 @@ final class TlPollPoll extends TlInstanceModel
     public function countriesIso2(): HasMany
     {
         return $this->tlChild(TlPollPollCountries_iso2::class);
+    }
+
+    public function question(): BelongsTo
+    {
+        return $this->belongsTo(TlTextWithEntities::class, 'question');
     }
 }

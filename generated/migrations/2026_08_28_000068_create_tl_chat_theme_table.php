@@ -17,25 +17,32 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_afc5810b3213a294802321b8');
+            $table->index('account_id', 'ix_09d3dc0b4b784d973506289b');
         });
         Schema::create('tl_chat_theme_chat_theme', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_chat_theme')->cascadeOnDelete();
             $table->text('emoticon');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_7a7e046277f3f889835afec2');
         });
         Schema::create('tl_chat_theme_chat_theme_unique_gift', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_chat_theme')->cascadeOnDelete();
             $table->uuid('gift');
+            $table->index('gift', 'ix_a8fef6cf9658d925f40596f6');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_1ec3e04cba3cefcf8cc3d356');
         });
         Schema::create('tl_chat_theme_chat_theme_unique_gift__theme_settings', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_chat_theme_chat_theme_unique_gift')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_e2687527348a42aaa8fe');
+            $table->index('account_id', 'ix_00ddb328c0b43f92d650bd4e');
         });
     }
 

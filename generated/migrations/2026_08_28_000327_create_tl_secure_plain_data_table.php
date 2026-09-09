@@ -17,18 +17,22 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_5ad38879a5edd17422cbc10d');
+            $table->index('account_id', 'ix_51c7ef395f1b9adec54a161c');
         });
         Schema::create('tl_secure_plain_data_secure_plain_email', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_secure_plain_data')->cascadeOnDelete();
             $table->text('email');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_5f1309f9e860f32661730133');
         });
         Schema::create('tl_secure_plain_data_secure_plain_phone', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_secure_plain_data')->cascadeOnDelete();
             $table->text('phone');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_620b7b6899172302ebde4cc0');
         });
     }
 

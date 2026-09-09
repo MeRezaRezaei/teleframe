@@ -7,17 +7,21 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsSavedStarGiftsSavedStarGiftsGifts;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBool;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsSavedStarGiftsSavedStarGiftsChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsSavedStarGiftsSavedStarGiftsGifts;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsSavedStarGiftsSavedStarGiftsUsers;
 
 /** Constructor model for payments.savedStarGifts of payments.SavedStarGifts (crc32 95f389b1). */
 final class TlPaymentsSavedStarGiftsSavedStarGifts extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_payments_saved_star_gifts_saved_star_gifts';
 
@@ -27,7 +31,6 @@ final class TlPaymentsSavedStarGiftsSavedStarGifts extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'count' => 'int',
-        'chat_notifications_enabled' => 'string',
         'next_offset' => 'string',
     ];
 
@@ -42,5 +45,10 @@ final class TlPaymentsSavedStarGiftsSavedStarGifts extends TlInstanceModel
     public function users(): HasMany
     {
         return $this->tlChild(TlPaymentsSavedStarGiftsSavedStarGiftsUsers::class);
+    }
+
+    public function chatNotificationsEnabled(): BelongsTo
+    {
+        return $this->belongsTo(TlBool::class, 'chat_notifications_enabled');
     }
 }

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureValueType;
 
 /** Constructor model for secureValueErrorReverseSide of SecureValueError (crc32 868a2aa5). */
 final class TlSecureValueErrorSecureValueErrorReverseSide extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_secure_value_error_secure_value_error_reverse_side';
 
@@ -22,8 +25,12 @@ final class TlSecureValueErrorSecureValueErrorReverseSide extends TlInstanceMode
 
     /** @var array<string, string> */
     protected $casts = [
-        'tl_type' => 'string',
         'file_hash' => 'string',
         'text' => 'string',
     ];
+
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(TlSecureValueType::class, 'tl_type');
+    }
 }

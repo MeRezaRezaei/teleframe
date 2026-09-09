@@ -7,9 +7,16 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlEmojiStatus;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerColor;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRecentStory;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserProfilePhoto;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserStatus;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUserRestriction_reason;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUserUsernames;
 
@@ -17,6 +24,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUserUsernames;
 final class TlUserUser extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_user_user';
 
@@ -62,15 +70,9 @@ final class TlUserUser extends TlInstanceModel
         'last_name' => 'string',
         'username' => 'string',
         'phone' => 'string',
-        'photo' => 'string',
-        'status' => 'string',
         'bot_info_version' => 'int',
         'bot_inline_placeholder' => 'string',
         'lang_code' => 'string',
-        'emoji_status' => 'string',
-        'stories_max_id' => 'string',
-        'color' => 'string',
-        'profile_color' => 'string',
         'bot_active_users' => 'int',
         'bot_verification_icon' => 'int',
         'send_paid_messages_stars' => 'int',
@@ -83,5 +85,30 @@ final class TlUserUser extends TlInstanceModel
     public function usernames(): HasMany
     {
         return $this->tlChild(TlUserUserUsernames::class);
+    }
+
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(TlUserProfilePhoto::class, 'photo');
+    }
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(TlUserStatus::class, 'status');
+    }
+    public function emojiStatus(): BelongsTo
+    {
+        return $this->belongsTo(TlEmojiStatus::class, 'emoji_status');
+    }
+    public function storiesMaxId(): BelongsTo
+    {
+        return $this->belongsTo(TlRecentStory::class, 'stories_max_id');
+    }
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerColor::class, 'color');
+    }
+    public function profileColor(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerColor::class, 'profile_color');
     }
 }

@@ -7,16 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsUniqueStarGiftUniqueStarGiftChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsUniqueStarGiftUniqueStarGiftUsers;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGift;
 
 /** Constructor model for payments.uniqueStarGift of payments.UniqueStarGift (crc32 416c56e8). */
 final class TlPaymentsUniqueStarGiftUniqueStarGift extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_payments_unique_star_gift_unique_star_gift';
 
@@ -24,7 +28,6 @@ final class TlPaymentsUniqueStarGiftUniqueStarGift extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'gift' => 'string',
     ];
 
     public function chats(): HasMany
@@ -34,5 +37,10 @@ final class TlPaymentsUniqueStarGiftUniqueStarGift extends TlInstanceModel
     public function users(): HasMany
     {
         return $this->tlChild(TlPaymentsUniqueStarGiftUniqueStarGiftUsers::class);
+    }
+
+    public function gift(): BelongsTo
+    {
+        return $this->belongsTo(TlStarGift::class, 'gift');
     }
 }

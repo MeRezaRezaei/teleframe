@@ -7,18 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesForumTopicsForumTopicsTopics;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesForumTopicsForumTopicsMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesForumTopicsForumTopicsChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesForumTopicsForumTopicsMessages;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesForumTopicsForumTopicsTopics;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesForumTopicsForumTopicsUsers;
 
 /** Constructor model for messages.forumTopics of messages.ForumTopics (crc32 367617d3). */
 final class TlMessagesForumTopicsForumTopics extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_forum_topics_forum_topics';
 

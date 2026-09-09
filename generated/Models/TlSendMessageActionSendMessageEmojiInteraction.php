@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDataJSON;
 
 /** Constructor model for sendMessageEmojiInteraction of SendMessageAction (crc32 25972bcb). */
 final class TlSendMessageActionSendMessageEmojiInteraction extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_send_message_action_send_message_emoji_interaction';
 
@@ -24,6 +27,10 @@ final class TlSendMessageActionSendMessageEmojiInteraction extends TlInstanceMod
     protected $casts = [
         'emoticon' => 'string',
         'msg_id' => 'int',
-        'interaction' => 'string',
     ];
+
+    public function interaction(): BelongsTo
+    {
+        return $this->belongsTo(TlDataJSON::class, 'interaction');
+    }
 }

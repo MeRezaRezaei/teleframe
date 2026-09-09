@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_f31eaafd7e0e402ff94907b6');
+            $table->index('account_id', 'ix_26df46ebec5cbff95b629a6c');
         });
         Schema::create('tl_star_gift_auction_state_star_gift_auction_state', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_star_gift_auction_state')->cascadeOnDelete();
@@ -31,28 +31,36 @@ return new class extends Migration
             $table->integer('gifts_left');
             $table->integer('current_round');
             $table->integer('total_rounds');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_152fa177a9ca00a5c5ae1870');
         });
         Schema::create('tl_star_gift_auction_state_star_gift_auction__bb6c7ebe1d9b', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_star_gift_auction_state_star_gift_auction_state')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_cc0f2fe61df4f86afd2a');
+            $table->index('account_id', 'ix_d80eeff51f4f0d64b6176a3a');
         });
         Schema::create('tl_star_gift_auction_state_star_gift_auction__3f263c3c4430', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_star_gift_auction_state_star_gift_auction_state')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_81e93d2b65274e46bc49');
+            $table->index('account_id', 'ix_c23cad57cee1193bd8eb394a');
         });
         Schema::create('tl_star_gift_auction_state_star_gift_auction_state__rounds', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_star_gift_auction_state_star_gift_auction_state')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_42ca4b4f2af788b93303');
+            $table->index('account_id', 'ix_403f17c919cb1f965ac0ef45');
         });
         Schema::create('tl_star_gift_auction_state_star_gift_auction__3ffddf14cd70', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_star_gift_auction_state')->cascadeOnDelete();
@@ -63,11 +71,15 @@ return new class extends Migration
             $table->integer('listed_count')->nullable();
             $table->integer('fragment_listed_count')->nullable();
             $table->text('fragment_listed_url')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_32e8e1791d128694bdf9658c');
         });
         Schema::create('tl_star_gift_auction_state_star_gift_auction__ba2b64ef8cf9', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_star_gift_auction_state')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_a16aac1e00b081f2244753e8');
         });
     }
 

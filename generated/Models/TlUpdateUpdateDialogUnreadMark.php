@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialogPeer;
 
 /** Constructor model for updateDialogUnreadMark of Update (crc32 b658f23e). */
 final class TlUpdateUpdateDialogUnreadMark extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_update_update_dialog_unread_mark';
 
@@ -24,7 +29,10 @@ final class TlUpdateUpdateDialogUnreadMark extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'unread' => 'bool',
-        'peer' => 'string',
-        'saved_peer_id' => 'string',
     ];
+
+    public function peer(): BelongsTo
+    {
+        return $this->belongsTo(TlDialogPeer::class, 'peer');
+    }
 }

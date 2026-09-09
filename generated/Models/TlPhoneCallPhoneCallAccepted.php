@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneCallProtocol;
 
 /** Constructor model for phoneCallAccepted of PhoneCall (crc32 3660c311). */
 final class TlPhoneCallPhoneCallAccepted extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_phone_call_phone_call_accepted';
 
@@ -30,6 +33,10 @@ final class TlPhoneCallPhoneCallAccepted extends TlInstanceModel
         'admin_id' => 'int',
         'participant_id' => 'int',
         'g_b' => 'string',
-        'protocol' => 'string',
     ];
+
+    public function protocol(): BelongsTo
+    {
+        return $this->belongsTo(TlPhoneCallProtocol::class, 'protocol');
+    }
 }

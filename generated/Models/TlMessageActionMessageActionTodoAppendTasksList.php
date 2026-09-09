@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param list (table tl_message_action_message_action_todo_append_tasks__list). */
 final class TlMessageActionMessageActionTodoAppendTasksList extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_message_action_message_action_todo_append_tasks__list';
 
     public $timestamps = false; // child tables carry no timestamps columns

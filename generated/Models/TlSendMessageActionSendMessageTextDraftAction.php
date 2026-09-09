@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for sendMessageTextDraftAction of SendMessageAction (crc32 376d975c). */
 final class TlSendMessageActionSendMessageTextDraftAction extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_send_message_action_send_message_text_draft_action';
 
@@ -23,6 +26,10 @@ final class TlSendMessageActionSendMessageTextDraftAction extends TlInstanceMode
     /** @var array<string, string> */
     protected $casts = [
         'random_id' => 'int',
-        'text' => 'string',
     ];
+
+    public function text(): BelongsTo
+    {
+        return $this->belongsTo(TlTextWithEntities::class, 'text');
+    }
 }

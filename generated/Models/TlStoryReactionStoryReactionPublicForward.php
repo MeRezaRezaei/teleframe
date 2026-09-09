@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessage;
 
 /** Constructor model for storyReactionPublicForward of StoryReaction (crc32 bbab2643). */
 final class TlStoryReactionStoryReactionPublicForward extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_story_reaction_story_reaction_public_forward';
 
@@ -22,6 +25,10 @@ final class TlStoryReactionStoryReactionPublicForward extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'message' => 'string',
     ];
+
+    public function message(): BelongsTo
+    {
+        return $this->belongsTo(TlMessage::class, 'message');
+    }
 }

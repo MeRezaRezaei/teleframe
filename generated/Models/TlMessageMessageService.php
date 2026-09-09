@@ -7,14 +7,21 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageAction;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageReactions;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageReplyHeader;
 
 /** Constructor model for messageService of Message (crc32 7a800e0a). */
 final class TlMessageMessageService extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_message_message_service';
 
@@ -31,13 +38,20 @@ final class TlMessageMessageService extends TlInstanceModel
         'post' => 'bool',
         'legacy' => 'bool',
         'tl_id' => 'int',
-        'from_id' => 'string',
-        'peer_id' => 'string',
-        'saved_peer_id' => 'string',
-        'reply_to' => 'string',
         'date' => 'int',
-        'action' => 'string',
-        'reactions' => 'string',
         'ttl_period' => 'int',
     ];
+
+    public function replyTo(): BelongsTo
+    {
+        return $this->belongsTo(TlMessageReplyHeader::class, 'reply_to');
+    }
+    public function action(): BelongsTo
+    {
+        return $this->belongsTo(TlMessageAction::class, 'action');
+    }
+    public function reactions(): BelongsTo
+    {
+        return $this->belongsTo(TlMessageReactions::class, 'reactions');
+    }
 }

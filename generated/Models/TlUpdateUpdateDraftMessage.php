@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDraftMessage;
 
 /** Constructor model for updateDraftMessage of Update (crc32 edfc111e). */
 final class TlUpdateUpdateDraftMessage extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_update_update_draft_message';
 
@@ -23,9 +28,11 @@ final class TlUpdateUpdateDraftMessage extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'flags' => 'int',
-        'peer' => 'string',
         'top_msg_id' => 'int',
-        'saved_peer_id' => 'string',
-        'draft' => 'string',
     ];
+
+    public function draft(): BelongsTo
+    {
+        return $this->belongsTo(TlDraftMessage::class, 'draft');
+    }
 }

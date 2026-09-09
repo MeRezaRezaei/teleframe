@@ -13,3 +13,13 @@ parameters:
                 - src/Laravel/*
                 - src/Schema/*
                 - src/Bot/*
+    ignoreErrors:
+        -
+            # Consumed exclusively by the generated models (generated/), which
+            # live OUTSIDE the src-only analysis paths — runtime-used traits
+            # that phpstan's trait-unused check cannot see here.
+            identifier: trait.unused
+            reportUnmatched: false
+            paths:
+                - src/Schema/Eloquent/AccountScoped.php
+                - src/Schema/Eloquent/PeerResolution.php

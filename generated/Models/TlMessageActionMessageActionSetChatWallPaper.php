@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWallPaper;
 
 /** Constructor model for messageActionSetChatWallPaper of MessageAction (crc32 5060a3f4). */
 final class TlMessageActionMessageActionSetChatWallPaper extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_action_message_action_set_chat_wall_paper';
 
@@ -25,6 +28,10 @@ final class TlMessageActionMessageActionSetChatWallPaper extends TlInstanceModel
         'flags' => 'int',
         'same' => 'bool',
         'for_both' => 'bool',
-        'wallpaper' => 'string',
     ];
+
+    public function wallpaper(): BelongsTo
+    {
+        return $this->belongsTo(TlWallPaper::class, 'wallpaper');
+    }
 }

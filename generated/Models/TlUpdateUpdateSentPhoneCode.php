@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAuthSentCode;
 
 /** Constructor model for updateSentPhoneCode of Update (crc32 504aa18f). */
 final class TlUpdateUpdateSentPhoneCode extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_update_update_sent_phone_code';
 
@@ -22,6 +25,10 @@ final class TlUpdateUpdateSentPhoneCode extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'sent_code' => 'string',
     ];
+
+    public function sentCode(): BelongsTo
+    {
+        return $this->belongsTo(TlAuthSentCode::class, 'sent_code');
+    }
 }

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlKeyboardButtonStyle;
 
 /** Constructor model for keyboardButtonCallback of KeyboardButton (crc32 e62bc960). */
 final class TlKeyboardButtonKeyboardButtonCallback extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_keyboard_button_keyboard_button_callback';
 
@@ -24,8 +27,12 @@ final class TlKeyboardButtonKeyboardButtonCallback extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'requires_password' => 'bool',
-        'style' => 'string',
         'text' => 'string',
         'data' => 'string',
     ];
+
+    public function style(): BelongsTo
+    {
+        return $this->belongsTo(TlKeyboardButtonStyle::class, 'style');
+    }
 }

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichText;
 
 /** Constructor model for textPhone of RichText (crc32 1ccb966a). */
 final class TlRichTextTextPhone extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_rich_text_text_phone';
 
@@ -22,7 +25,11 @@ final class TlRichTextTextPhone extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'text' => 'string',
         'phone' => 'string',
     ];
+
+    public function text(): BelongsTo
+    {
+        return $this->belongsTo(TlRichText::class, 'text');
+    }
 }

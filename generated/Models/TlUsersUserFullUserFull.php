@@ -7,9 +7,12 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserFull;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUsersUserFullUserFullChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUsersUserFullUserFullUsers;
 
@@ -17,6 +20,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUsersUserFullUserFullUsers;
 final class TlUsersUserFullUserFull extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_users_user_full_user_full';
 
@@ -24,7 +28,6 @@ final class TlUsersUserFullUserFull extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'full_user' => 'string',
     ];
 
     public function chats(): HasMany
@@ -34,5 +37,10 @@ final class TlUsersUserFullUserFull extends TlInstanceModel
     public function users(): HasMany
     {
         return $this->tlChild(TlUsersUserFullUserFullUsers::class);
+    }
+
+    public function fullUser(): BelongsTo
+    {
+        return $this->belongsTo(TlUserFull::class, 'full_user');
     }
 }

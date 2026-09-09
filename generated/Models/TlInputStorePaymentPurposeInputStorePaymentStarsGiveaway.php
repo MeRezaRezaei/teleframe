@@ -7,9 +7,11 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStorePaymentPurposeInputStorePaAb10defc70e9Additional_peers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStorePaymentPurposeInputStorePaAb10defc70e9Countries_iso2;
 
@@ -17,6 +19,8 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStorePaymentPurposeInp
 final class TlInputStorePaymentPurposeInputStorePaymentStarsGiveaway extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_input_store_payment_purpose_input_store_pa_ab10defc70e9';
 
@@ -28,7 +32,6 @@ final class TlInputStorePaymentPurposeInputStorePaymentStarsGiveaway extends TlI
         'only_new_subscribers' => 'bool',
         'winners_are_visible' => 'bool',
         'stars' => 'int',
-        'boost_peer' => 'string',
         'prize_description' => 'string',
         'random_id' => 'int',
         'until_date' => 'int',

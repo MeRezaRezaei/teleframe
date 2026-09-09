@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlNotifyPeer;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerNotifySettings;
 
 /** Constructor model for updateNotifySettings of Update (crc32 bec268ef). */
 final class TlUpdateUpdateNotifySettings extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_update_update_notify_settings';
 
@@ -22,7 +26,14 @@ final class TlUpdateUpdateNotifySettings extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'peer' => 'string',
-        'notify_settings' => 'string',
     ];
+
+    public function peer(): BelongsTo
+    {
+        return $this->belongsTo(TlNotifyPeer::class, 'peer');
+    }
+    public function notifySettings(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerNotifySettings::class, 'notify_settings');
+    }
 }

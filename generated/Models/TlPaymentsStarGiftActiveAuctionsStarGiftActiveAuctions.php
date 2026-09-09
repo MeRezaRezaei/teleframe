@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarGiftActiveAuctionsStarGi803614be0a98Auctions;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarGiftActiveAuctionsStarGi803614be0a98Users;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarGiftActiveAuctionsStarGi803614be0a98Chats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarGiftActiveAuctionsStarGi803614be0a98Users;
 
 /** Constructor model for payments.starGiftActiveAuctions of payments.StarGiftActiveAuctions (crc32 aef6abbc). */
 final class TlPaymentsStarGiftActiveAuctionsStarGiftActiveAuctions extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_payments_star_gift_active_auctions_star_gi_803614be0a98';
 

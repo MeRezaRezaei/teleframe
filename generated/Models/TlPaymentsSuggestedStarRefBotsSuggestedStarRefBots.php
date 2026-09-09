@@ -7,9 +7,10 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsSuggestedStarRefBotsSuggested2b419606faf4Suggested_bots;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsSuggestedStarRefBotsSuggested2b419606faf4Users;
 
@@ -17,6 +18,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsSuggestedStarRefBot
 final class TlPaymentsSuggestedStarRefBotsSuggestedStarRefBots extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_payments_suggested_star_ref_bots_suggested_2b419606faf4';
 

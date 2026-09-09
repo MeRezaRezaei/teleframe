@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for inputPhoneContact of InputContact (crc32 6a1dc4be). */
 final class TlInputContactInputPhoneContact extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_contact_input_phone_contact';
 
@@ -27,6 +30,10 @@ final class TlInputContactInputPhoneContact extends TlInstanceModel
         'phone' => 'string',
         'first_name' => 'string',
         'last_name' => 'string',
-        'note' => 'string',
     ];
+
+    public function note(): BelongsTo
+    {
+        return $this->belongsTo(TlTextWithEntities::class, 'note');
+    }
 }

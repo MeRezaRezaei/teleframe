@@ -17,47 +17,63 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_6a552607f414a2a1eb5d0930');
+            $table->index('account_id', 'ix_633b5a3e7edf0fa0777075f9');
         });
         Schema::create('tl_channel_participants_filter_channel_participants_admins', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_channel_participants_filter')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_92d4940aa86873502dc82737');
         });
         Schema::create('tl_channel_participants_filter_channel_participants_banned', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_channel_participants_filter')->cascadeOnDelete();
             $table->text('q');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_18021d52ea5cabb152ec7219');
         });
         Schema::create('tl_channel_participants_filter_channel_participants_bots', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_channel_participants_filter')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_649477dd80f022028440c835');
         });
         Schema::create('tl_channel_participants_filter_channel_partic_c5e6fc6a843c', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_channel_participants_filter')->cascadeOnDelete();
             $table->text('q');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_4e4214b88e28326fe4826503');
         });
         Schema::create('tl_channel_participants_filter_channel_participants_kicked', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_channel_participants_filter')->cascadeOnDelete();
             $table->text('q');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_7570343361eefb2dbb39cf40');
         });
         Schema::create('tl_channel_participants_filter_channel_partic_b9280c888c41', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_channel_participants_filter')->cascadeOnDelete();
             $table->bigInteger('flags')->nullable();
             $table->text('q')->nullable();
             $table->integer('top_msg_id')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_f3806d685c26155e8d83e153');
         });
         Schema::create('tl_channel_participants_filter_channel_participants_recent', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_channel_participants_filter')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_699aa4f3d4b692d73972a76a');
         });
         Schema::create('tl_channel_participants_filter_channel_participants_search', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_channel_participants_filter')->cascadeOnDelete();
             $table->text('q');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_5a1d78a40eda970e206b2010');
         });
     }
 

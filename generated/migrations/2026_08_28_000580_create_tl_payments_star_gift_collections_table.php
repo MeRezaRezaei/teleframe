@@ -17,23 +17,29 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_47b422186ad1861431ba7940');
+            $table->index('account_id', 'ix_b257e1dd30be1bca2be00c61');
         });
         Schema::create('tl_payments_star_gift_collections_star_gift_collections', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_payments_star_gift_collections')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_dcc95841c278ab804841b529');
         });
         Schema::create('tl_payments_star_gift_collections_star_gift_c_3c2191db9981', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_payments_star_gift_collections_star_gift_collections')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_930a1cd8c51888c0d18b');
+            $table->index('account_id', 'ix_b6edbda70ef030bdb65e069b');
         });
         Schema::create('tl_payments_star_gift_collections_star_gift_c_72774827a67d', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_payments_star_gift_collections')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_2def4d9f87b2c82b97e49294');
         });
     }
 

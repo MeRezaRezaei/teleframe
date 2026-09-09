@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param recent_requesters (table tl_update_update_pending_join_requests__recent_requesters). */
 final class TlUpdateUpdatePendingJoinRequestsRecent_requesters extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_update_update_pending_join_requests__recent_requesters';
 
     public $timestamps = false; // child tables carry no timestamps columns

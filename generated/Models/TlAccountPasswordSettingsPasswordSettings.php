@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureSecretSettings;
 
 /** Constructor model for account.passwordSettings of account.PasswordSettings (crc32 9a5c33e5). */
 final class TlAccountPasswordSettingsPasswordSettings extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_account_password_settings_password_settings';
 
@@ -24,6 +27,10 @@ final class TlAccountPasswordSettingsPasswordSettings extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'email' => 'string',
-        'secure_settings' => 'string',
     ];
+
+    public function secureSettings(): BelongsTo
+    {
+        return $this->belongsTo(TlSecureSecretSettings::class, 'secure_settings');
+    }
 }

@@ -7,15 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotInlineMessageBotInlineMessageMediaWebPageEntities;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReplyMarkup;
 
 /** Constructor model for botInlineMessageMediaWebPage of BotInlineMessage (crc32 809ad9a6). */
 final class TlBotInlineMessageBotInlineMessageMediaWebPage extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_bot_inline_message_bot_inline_message_media_web_page';
 
@@ -31,11 +35,15 @@ final class TlBotInlineMessageBotInlineMessageMediaWebPage extends TlInstanceMod
         'safe' => 'bool',
         'message' => 'string',
         'url' => 'string',
-        'reply_markup' => 'string',
     ];
 
     public function entities(): HasMany
     {
         return $this->tlChild(TlBotInlineMessageBotInlineMessageMediaWebPageEntities::class);
+    }
+
+    public function replyMarkup(): BelongsTo
+    {
+        return $this->belongsTo(TlReplyMarkup::class, 'reply_markup');
     }
 }

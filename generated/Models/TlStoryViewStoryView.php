@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReaction;
 
 /** Constructor model for storyView of StoryView (crc32 b0bdeac5). */
 final class TlStoryViewStoryView extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_story_view_story_view';
 
@@ -27,6 +30,10 @@ final class TlStoryViewStoryView extends TlInstanceModel
         'blocked_my_stories_from' => 'bool',
         'user_id' => 'int',
         'date' => 'int',
-        'reaction' => 'string',
     ];
+
+    public function reaction(): BelongsTo
+    {
+        return $this->belongsTo(TlReaction::class, 'reaction');
+    }
 }

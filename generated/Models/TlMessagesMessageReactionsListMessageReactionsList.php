@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessageReactionsListMessageReactionsListReactions;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessageReactionsListMessageReactionsListChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessageReactionsListMessageReactionsListReactions;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessageReactionsListMessageReactionsListUsers;
 
 /** Constructor model for messages.messageReactionsList of messages.MessageReactionsList (crc32 31bd492d). */
 final class TlMessagesMessageReactionsListMessageReactionsList extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_message_reactions_list_message_reactions_list';
 

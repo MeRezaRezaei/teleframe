@@ -7,15 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTodoListTodoListList;
 
 /** Constructor model for todoList of TodoList (crc32 49b92a26). */
 final class TlTodoListTodoList extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_todo_list_todo_list';
 
@@ -26,11 +30,15 @@ final class TlTodoListTodoList extends TlInstanceModel
         'flags' => 'int',
         'others_can_append' => 'bool',
         'others_can_complete' => 'bool',
-        'title' => 'string',
     ];
 
     public function list(): HasMany
     {
         return $this->tlChild(TlTodoListTodoListList::class);
+    }
+
+    public function title(): BelongsTo
+    {
+        return $this->belongsTo(TlTextWithEntities::class, 'title');
     }
 }

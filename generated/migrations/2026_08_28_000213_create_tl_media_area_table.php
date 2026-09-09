@@ -17,43 +17,63 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_6c928b3cdbe99b3b6e768954');
+            $table->index('account_id', 'ix_f3bb1edc2ff19109a30baf4d');
         });
         Schema::create('tl_media_area_input_media_area_channel_post', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_media_area')->cascadeOnDelete();
             $table->uuid('coordinates');
+            $table->index('coordinates', 'ix_38d1938153a54ac9de63e1d8');
             $table->uuid('channel');
+            $table->index('channel', 'ix_11bbb647c66cca98f4f61413');
             $table->integer('msg_id');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_35eaeae4b1f8bae57e2442fd');
         });
         Schema::create('tl_media_area_input_media_area_venue', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_media_area')->cascadeOnDelete();
             $table->uuid('coordinates');
+            $table->index('coordinates', 'ix_44adb56188e1330afc95ae7b');
             $table->bigInteger('query_id');
+            $table->index('query_id', 'ix_45bba37d407004ee57bb6c8d');
             $table->text('result_id');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_c1a7837cd64002772ad6a7fc');
         });
         Schema::create('tl_media_area_media_area_channel_post', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_media_area')->cascadeOnDelete();
             $table->uuid('coordinates');
+            $table->index('coordinates', 'ix_3be126cd20307558142ac3b6');
             $table->bigInteger('channel_id');
+            $table->index('channel_id', 'ix_30449886829e7a645511f6f9');
             $table->integer('msg_id');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_b26ee6f2f41fd0ee0dc8a343');
         });
         Schema::create('tl_media_area_media_area_geo_point', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_media_area')->cascadeOnDelete();
             $table->bigInteger('flags')->nullable();
             $table->uuid('coordinates');
+            $table->index('coordinates', 'ix_a97b01364730add144cc04f7');
             $table->uuid('geo');
+            $table->index('geo', 'ix_24dbcb5f2f70bcfe3ac3f013');
             $table->uuid('address')->nullable();
+            $table->index('address', 'ix_8df4abfad5aa9aac7a3a3623');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_4feff07f6c4c4614fabb4045');
         });
         Schema::create('tl_media_area_media_area_star_gift', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_media_area')->cascadeOnDelete();
             $table->uuid('coordinates');
+            $table->index('coordinates', 'ix_13829c1168124b80120b3854');
             $table->text('slug');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_5bb9313ec35b6f3aae394429');
         });
         Schema::create('tl_media_area_media_area_suggested_reaction', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_media_area')->cascadeOnDelete();
@@ -61,33 +81,47 @@ return new class extends Migration
             $table->boolean('dark')->default(false);
             $table->boolean('flipped')->default(false);
             $table->uuid('coordinates');
+            $table->index('coordinates', 'ix_07f7037a2917fb7bc2aa7095');
             $table->uuid('reaction');
+            $table->index('reaction', 'ix_077daf3a4681c1e8e34e2ec2');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_2ba20b5208b9447905a5d705');
         });
         Schema::create('tl_media_area_media_area_url', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_media_area')->cascadeOnDelete();
             $table->uuid('coordinates');
+            $table->index('coordinates', 'ix_b1f3526362a9f1961a54a8bd');
             $table->text('url');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_904246e678a938d01923326d');
         });
         Schema::create('tl_media_area_media_area_venue', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_media_area')->cascadeOnDelete();
             $table->uuid('coordinates');
+            $table->index('coordinates', 'ix_d206c3e8d4d25eccc4337018');
             $table->uuid('geo');
+            $table->index('geo', 'ix_8bedbc3fcaca3f71ad600326');
             $table->text('title');
             $table->text('address');
             $table->text('provider');
             $table->text('venue_id');
             $table->text('venue_type');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_b79e402342da2bc54803a13e');
         });
         Schema::create('tl_media_area_media_area_weather', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_media_area')->cascadeOnDelete();
             $table->uuid('coordinates');
+            $table->index('coordinates', 'ix_ea990744d228cd5d038fa6d3');
             $table->text('emoji');
             $table->double('temperature_c');
             $table->integer('color');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_56cb9a77b2c6a8066688dcae');
         });
     }
 

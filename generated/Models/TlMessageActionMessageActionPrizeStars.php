@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** Constructor model for messageActionPrizeStars of MessageAction (crc32 b00c47a2). */
 final class TlMessageActionMessageActionPrizeStars extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_message_action_message_action_prize_stars';
 
@@ -26,7 +29,6 @@ final class TlMessageActionMessageActionPrizeStars extends TlInstanceModel
         'unclaimed' => 'bool',
         'stars' => 'int',
         'transaction_id' => 'string',
-        'boost_peer' => 'string',
         'giveaway_msg_id' => 'int',
     ];
 }

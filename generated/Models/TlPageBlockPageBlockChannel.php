@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat;
 
 /** Constructor model for pageBlockChannel of PageBlock (crc32 ef1751b5). */
 final class TlPageBlockPageBlockChannel extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_page_block_page_block_channel';
 
@@ -22,6 +25,10 @@ final class TlPageBlockPageBlockChannel extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'channel' => 'string',
     ];
+
+    public function channel(): BelongsTo
+    {
+        return $this->belongsTo(TlChat::class, 'channel');
+    }
 }

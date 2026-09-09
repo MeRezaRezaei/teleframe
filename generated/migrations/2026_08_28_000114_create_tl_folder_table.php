@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_4431db0fdc9aa9b21b6202c1');
+            $table->index('account_id', 'ix_8b266de1547abcbb1a137fb9');
         });
         Schema::create('tl_folder_folder', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_folder')->cascadeOnDelete();
@@ -29,7 +29,11 @@ return new class extends Migration
             $table->integer('tl_id');
             $table->text('title');
             $table->uuid('photo')->nullable();
+            $table->index('photo', 'ix_51c5fcaffeaeee308d13a9e3');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_84620fc0b5021cde5f1e2dfc');
+            $table->unique(['account_id', 'tl_id'], 'ux_105ecc6344e8b65ce373');
         });
     }
 

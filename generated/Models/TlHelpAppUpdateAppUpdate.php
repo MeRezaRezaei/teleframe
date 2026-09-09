@@ -7,15 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpAppUpdateAppUpdateEntities;
 
 /** Constructor model for help.appUpdate of help.AppUpdate (crc32 ccbbce30). */
 final class TlHelpAppUpdateAppUpdate extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_help_app_update_app_update';
 
@@ -28,13 +32,20 @@ final class TlHelpAppUpdateAppUpdate extends TlInstanceModel
         'tl_id' => 'int',
         'version' => 'string',
         'text' => 'string',
-        'document' => 'string',
         'url' => 'string',
-        'sticker' => 'string',
     ];
 
     public function entities(): HasMany
     {
         return $this->tlChild(TlHelpAppUpdateAppUpdateEntities::class);
+    }
+
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(TlDocument::class, 'document');
+    }
+    public function sticker(): BelongsTo
+    {
+        return $this->belongsTo(TlDocument::class, 'sticker');
     }
 }

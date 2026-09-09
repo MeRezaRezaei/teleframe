@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param msg_ids (table tl_msg_resend_req_msg_resend_ans_req__msg_ids). */
 final class TlMsgResendReqMsgResendAnsReqMsg_ids extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_msg_resend_req_msg_resend_ans_req__msg_ids';
 
     public $timestamps = false; // child tables carry no timestamps columns

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAiComposeToneExample;
 
 /** Constructor model for aiComposeTone of AiComposeTone (crc32 cff63ea9). */
 final class TlAiComposeToneAiComposeTone extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_ai_compose_tone_ai_compose_tone';
 
@@ -32,6 +35,10 @@ final class TlAiComposeToneAiComposeTone extends TlInstanceModel
         'prompt' => 'string',
         'installs_count' => 'int',
         'author_id' => 'int',
-        'example_english' => 'string',
     ];
+
+    public function exampleEnglish(): BelongsTo
+    {
+        return $this->belongsTo(TlAiComposeToneExample::class, 'example_english');
+    }
 }

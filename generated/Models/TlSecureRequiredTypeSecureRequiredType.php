@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureValueType;
 
 /** Constructor model for secureRequiredType of SecureRequiredType (crc32 829d99da). */
 final class TlSecureRequiredTypeSecureRequiredType extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_secure_required_type_secure_required_type';
 
@@ -26,6 +29,10 @@ final class TlSecureRequiredTypeSecureRequiredType extends TlInstanceModel
         'native_names' => 'bool',
         'selfie_required' => 'bool',
         'translation_required' => 'bool',
-        'tl_type' => 'string',
     ];
+
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(TlSecureValueType::class, 'tl_type');
+    }
 }

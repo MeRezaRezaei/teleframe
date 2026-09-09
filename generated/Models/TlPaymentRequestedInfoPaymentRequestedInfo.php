@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPostAddress;
 
 /** Constructor model for paymentRequestedInfo of PaymentRequestedInfo (crc32 909c3f94). */
 final class TlPaymentRequestedInfoPaymentRequestedInfo extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_payment_requested_info_payment_requested_info';
 
@@ -26,6 +29,10 @@ final class TlPaymentRequestedInfoPaymentRequestedInfo extends TlInstanceModel
         'name' => 'string',
         'phone' => 'string',
         'email' => 'string',
-        'shipping_address' => 'string',
     ];
+
+    public function shippingAddress(): BelongsTo
+    {
+        return $this->belongsTo(TlPostAddress::class, 'shipping_address');
+    }
 }

@@ -17,19 +17,24 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_892ed3f654649597029d4022');
+            $table->index('account_id', 'ix_ff417f83272f5a2d06d8a165');
         });
         Schema::create('tl_help_terms_of_service_update_terms_of_service_update', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_help_terms_of_service_update')->cascadeOnDelete();
             $table->integer('expires');
             $table->uuid('terms_of_service');
+            $table->index('terms_of_service', 'ix_365ba3867016d29a640a298d');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_50519137da6f972c1bda5c22');
         });
         Schema::create('tl_help_terms_of_service_update_terms_of_serv_216c987707ad', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_help_terms_of_service_update')->cascadeOnDelete();
             $table->integer('expires');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_882cb9167280a8f1d64b7757');
         });
     }
 

@@ -6,12 +6,22 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateGroupCallMessage;
 
 /** Anchor model for TL type GroupCallMessage (spec §4.1). */
 final class TlGroupCallMessage extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_group_call_message';
 
     protected $guarded = [];
+
+    public function message(): HasMany
+    {
+        return $this->hasMany(TlUpdateUpdateGroupCallMessage::class, 'message');
+    }
 }

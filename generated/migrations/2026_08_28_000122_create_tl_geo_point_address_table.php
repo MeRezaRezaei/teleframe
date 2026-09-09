@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_2970f8ea21fbba0fe4f5da82');
+            $table->index('account_id', 'ix_4556092493a6f2404da149fe');
         });
         Schema::create('tl_geo_point_address_geo_point_address', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_geo_point_address')->cascadeOnDelete();
@@ -27,7 +27,9 @@ return new class extends Migration
             $table->text('state')->nullable();
             $table->text('city')->nullable();
             $table->text('street')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_483447a4ed62f508fa69d888');
         });
     }
 

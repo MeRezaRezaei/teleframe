@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotInlineMessage;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 
 /** Constructor model for botInlineMediaResult of BotInlineResult (crc32 17db940b). */
 final class TlBotInlineResultBotInlineMediaResult extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_bot_inline_result_bot_inline_media_result';
 
@@ -25,10 +30,20 @@ final class TlBotInlineResultBotInlineMediaResult extends TlInstanceModel
         'flags' => 'int',
         'tl_id' => 'string',
         'tl_type' => 'string',
-        'photo' => 'string',
-        'document' => 'string',
         'title' => 'string',
         'description' => 'string',
-        'send_message' => 'string',
     ];
+
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(TlPhoto::class, 'photo');
+    }
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(TlDocument::class, 'document');
+    }
+    public function sendMessage(): BelongsTo
+    {
+        return $this->belongsTo(TlBotInlineMessage::class, 'send_message');
+    }
 }

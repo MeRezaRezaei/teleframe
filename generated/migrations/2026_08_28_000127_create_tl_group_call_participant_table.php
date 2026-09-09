@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_406fa9671c014560bf295e66');
+            $table->index('account_id', 'ix_76cba4d09ffc018c85a3835a');
         });
         Schema::create('tl_group_call_participant_group_call_participant', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_group_call_participant')->cascadeOnDelete();
@@ -33,7 +33,8 @@ return new class extends Migration
             $table->boolean('volume_by_admin')->default(false);
             $table->boolean('self')->default(false);
             $table->boolean('video_joined')->default(false);
-            $table->uuid('peer');
+            $table->bigInteger('peer');
+            $table->index('peer', 'ix_6a47b0177567090ba55c22e8');
             $table->integer('date');
             $table->integer('active_date')->nullable();
             $table->integer('source');
@@ -41,9 +42,13 @@ return new class extends Migration
             $table->text('about')->nullable();
             $table->bigInteger('raise_hand_rating')->nullable();
             $table->uuid('video')->nullable();
+            $table->index('video', 'ix_574446f2e211487e93698595');
             $table->uuid('presentation')->nullable();
+            $table->index('presentation', 'ix_46fd2db71e17627078b96886');
             $table->bigInteger('paid_stars_total')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_e1fde4fc1971390020faa7c5');
         });
     }
 

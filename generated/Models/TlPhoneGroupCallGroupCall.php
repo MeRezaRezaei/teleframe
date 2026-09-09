@@ -7,17 +7,21 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupCallGroupCallParticipants;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGroupCall;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupCallGroupCallChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupCallGroupCallParticipants;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupCallGroupCallUsers;
 
 /** Constructor model for phone.groupCall of phone.GroupCall (crc32 9e727aad). */
 final class TlPhoneGroupCallGroupCall extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_phone_group_call_group_call';
 
@@ -25,7 +29,6 @@ final class TlPhoneGroupCallGroupCall extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'call' => 'string',
         'participants_next_offset' => 'string',
     ];
 
@@ -40,5 +43,10 @@ final class TlPhoneGroupCallGroupCall extends TlInstanceModel
     public function users(): HasMany
     {
         return $this->tlChild(TlPhoneGroupCallGroupCallUsers::class);
+    }
+
+    public function call(): BelongsTo
+    {
+        return $this->belongsTo(TlGroupCall::class, 'call');
     }
 }

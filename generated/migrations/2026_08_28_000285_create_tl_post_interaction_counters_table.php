@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_a160f80333fdfdd971bf77c2');
+            $table->index('account_id', 'ix_6a55c58129ce1bcd6108c9ef');
         });
         Schema::create('tl_post_interaction_counters_post_interaction_a4ecb5ab43c9', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_post_interaction_counters')->cascadeOnDelete();
@@ -26,7 +26,9 @@ return new class extends Migration
             $table->integer('views');
             $table->integer('forwards');
             $table->integer('reactions');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_8afc9fc689b137054cd549a8');
         });
         Schema::create('tl_post_interaction_counters_post_interaction_b4f5e2e1599f', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_post_interaction_counters')->cascadeOnDelete();
@@ -34,7 +36,9 @@ return new class extends Migration
             $table->integer('views');
             $table->integer('forwards');
             $table->integer('reactions');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_8ab87459ee99691425576c20');
         });
     }
 

@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputDocument;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMaskCoords;
 
 /** Constructor model for inputStickerSetItem of InputStickerSetItem (crc32 32da9e9c). */
 final class TlInputStickerSetItemInputStickerSetItem extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_sticker_set_item_input_sticker_set_item';
 
@@ -23,9 +27,16 @@ final class TlInputStickerSetItemInputStickerSetItem extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'flags' => 'int',
-        'document' => 'string',
         'emoji' => 'string',
-        'mask_coords' => 'string',
         'keywords' => 'string',
     ];
+
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(TlInputDocument::class, 'document');
+    }
+    public function maskCoords(): BelongsTo
+    {
+        return $this->belongsTo(TlMaskCoords::class, 'mask_coords');
+    }
 }

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_87caed112d4c3b3438ecd338');
+            $table->index('account_id', 'ix_d916b212d25ca87d2ee7a774');
         });
         Schema::create('tl_stars_rating_stars_rating', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_stars_rating')->cascadeOnDelete();
@@ -27,7 +27,9 @@ return new class extends Migration
             $table->bigInteger('current_level_stars');
             $table->bigInteger('stars');
             $table->bigInteger('next_level_stars')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_994a48c4641874e2f8c2c3bf');
         });
     }
 

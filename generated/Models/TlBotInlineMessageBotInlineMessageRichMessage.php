@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReplyMarkup;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichMessage;
 
 /** Constructor model for botInlineMessageRichMessage of BotInlineMessage (crc32 0a617e7b). */
 final class TlBotInlineMessageBotInlineMessageRichMessage extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_bot_inline_message_bot_inline_message_rich_message';
 
@@ -23,7 +27,14 @@ final class TlBotInlineMessageBotInlineMessageRichMessage extends TlInstanceMode
     /** @var array<string, string> */
     protected $casts = [
         'flags' => 'int',
-        'reply_markup' => 'string',
-        'rich_message' => 'string',
     ];
+
+    public function replyMarkup(): BelongsTo
+    {
+        return $this->belongsTo(TlReplyMarkup::class, 'reply_markup');
+    }
+    public function richMessage(): BelongsTo
+    {
+        return $this->belongsTo(TlRichMessage::class, 'rich_message');
+    }
 }

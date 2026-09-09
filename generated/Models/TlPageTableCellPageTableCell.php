@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichText;
 
 /** Constructor model for pageTableCell of PageTableCell (crc32 34566b6a). */
 final class TlPageTableCellPageTableCell extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_page_table_cell_page_table_cell';
 
@@ -28,8 +31,12 @@ final class TlPageTableCellPageTableCell extends TlInstanceModel
         'align_right' => 'bool',
         'valign_middle' => 'bool',
         'valign_bottom' => 'bool',
-        'text' => 'string',
         'colspan' => 'int',
         'rowspan' => 'int',
     ];
+
+    public function text(): BelongsTo
+    {
+        return $this->belongsTo(TlRichText::class, 'text');
+    }
 }

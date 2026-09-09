@@ -17,15 +17,18 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_281d267250a54f2ad36eaa08');
+            $table->index('account_id', 'ix_1cb0d14b646f4c8d968d687f');
         });
         Schema::create('tl_timezone_timezone', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_timezone')->cascadeOnDelete();
             $table->text('tl_id');
             $table->text('name');
             $table->integer('utc_offset');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_1a007e09df53dc02a2e740c8');
+            $table->unique(['account_id', 'tl_id'], 'ux_8eba4f7f938899e92f04');
         });
     }
 

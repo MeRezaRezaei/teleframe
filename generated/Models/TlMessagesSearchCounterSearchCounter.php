@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesFilter;
 
 /** Constructor model for messages.searchCounter of messages.SearchCounter (crc32 e844ebff). */
 final class TlMessagesSearchCounterSearchCounter extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_search_counter_search_counter';
 
@@ -24,7 +27,11 @@ final class TlMessagesSearchCounterSearchCounter extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'inexact' => 'bool',
-        'filter' => 'string',
         'count' => 'int',
     ];
+
+    public function filter(): BelongsTo
+    {
+        return $this->belongsTo(TlMessagesFilter::class, 'filter');
+    }
 }

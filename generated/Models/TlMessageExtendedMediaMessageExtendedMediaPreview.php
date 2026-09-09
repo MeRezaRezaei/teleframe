@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhotoSize;
 
 /** Constructor model for messageExtendedMediaPreview of MessageExtendedMedia (crc32 ad628cc8). */
 final class TlMessageExtendedMediaMessageExtendedMediaPreview extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_extended_media_message_extended_media_preview';
 
@@ -25,7 +28,11 @@ final class TlMessageExtendedMediaMessageExtendedMediaPreview extends TlInstance
         'flags' => 'int',
         'w' => 'int',
         'h' => 'int',
-        'thumb' => 'string',
         'video_duration' => 'int',
     ];
+
+    public function thumb(): BelongsTo
+    {
+        return $this->belongsTo(TlPhotoSize::class, 'thumb');
+    }
 }

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_611534b21827e1c981fc9a3f');
+            $table->index('account_id', 'ix_fcf1cc9a6a03e9c3a8afdf83');
         });
         Schema::create('tl_wall_paper_settings_wall_paper_settings', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_wall_paper_settings')->cascadeOnDelete();
@@ -32,7 +32,9 @@ return new class extends Migration
             $table->integer('intensity')->nullable();
             $table->integer('rotation')->nullable();
             $table->text('emoticon')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_e766285b55c02f7cf8b8b219');
         });
     }
 

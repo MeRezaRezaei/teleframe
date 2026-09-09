@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlFolder;
 
 /** Constructor model for dialogFolder of Dialog (crc32 71bd134c). */
 final class TlDialogDialogFolder extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_dialog_dialog_folder';
 
@@ -24,12 +29,15 @@ final class TlDialogDialogFolder extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'pinned' => 'bool',
-        'folder' => 'string',
-        'peer' => 'string',
         'top_message' => 'int',
         'unread_muted_peers_count' => 'int',
         'unread_unmuted_peers_count' => 'int',
         'unread_muted_messages_count' => 'int',
         'unread_unmuted_messages_count' => 'int',
     ];
+
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(TlFolder::class, 'folder');
+    }
 }

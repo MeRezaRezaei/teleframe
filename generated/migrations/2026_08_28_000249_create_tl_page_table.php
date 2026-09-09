@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_878e4ac0ad993380c05b28cd');
+            $table->index('account_id', 'ix_6e66dc2664ea3a6266e78a64');
         });
         Schema::create('tl_page_page', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_page')->cascadeOnDelete();
@@ -28,28 +28,36 @@ return new class extends Migration
             $table->boolean('v2')->default(false);
             $table->text('url');
             $table->integer('views')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_0262e60a0800545932c9e9e0');
         });
         Schema::create('tl_page_page__blocks', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_page_page')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_a8322462e3556f64a7b6');
+            $table->index('account_id', 'ix_91d3d2375d5990e9cc9114f3');
         });
         Schema::create('tl_page_page__photos', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_page_page')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_61e3d69f6c335b11b86d');
+            $table->index('account_id', 'ix_8e834920ced44ce78921fbad');
         });
         Schema::create('tl_page_page__documents', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_page_page')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_497017e5a2dc02aa822f');
+            $table->index('account_id', 'ix_b67564d39ee2ceb35a006b03');
         });
     }
 

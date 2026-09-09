@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBool;
 
 /** Constructor model for messageActionNoForwardsRequest of MessageAction (crc32 3e2793ba). */
 final class TlMessageActionMessageActionNoForwardsRequest extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_action_message_action_no_forwards_request';
 
@@ -24,7 +27,14 @@ final class TlMessageActionMessageActionNoForwardsRequest extends TlInstanceMode
     protected $casts = [
         'flags' => 'int',
         'expired' => 'bool',
-        'prev_value' => 'string',
-        'new_value' => 'string',
     ];
+
+    public function prevValue(): BelongsTo
+    {
+        return $this->belongsTo(TlBool::class, 'prev_value');
+    }
+    public function newValue(): BelongsTo
+    {
+        return $this->belongsTo(TlBool::class, 'new_value');
+    }
 }

@@ -17,14 +17,16 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_d29b4a378ac796f3fcb575b3');
+            $table->index('account_id', 'ix_f9165c103e4ab95483bb0a23');
         });
         Schema::create('tl_star_gift_upgrade_price_star_gift_upgrade_price', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_star_gift_upgrade_price')->cascadeOnDelete();
             $table->integer('date');
             $table->bigInteger('upgrade_stars');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_fa91aad1bbfaf4c30f41283e');
         });
     }
 

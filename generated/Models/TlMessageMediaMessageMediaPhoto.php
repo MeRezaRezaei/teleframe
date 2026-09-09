@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 
 /** Constructor model for messageMediaPhoto of MessageMedia (crc32 e216eb63). */
 final class TlMessageMediaMessageMediaPhoto extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_media_message_media_photo';
 
@@ -25,8 +29,15 @@ final class TlMessageMediaMessageMediaPhoto extends TlInstanceModel
         'flags' => 'int',
         'spoiler' => 'bool',
         'live_photo' => 'bool',
-        'photo' => 'string',
         'ttl_seconds' => 'int',
-        'video' => 'string',
     ];
+
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(TlPhoto::class, 'photo');
+    }
+    public function video(): BelongsTo
+    {
+        return $this->belongsTo(TlDocument::class, 'video');
+    }
 }

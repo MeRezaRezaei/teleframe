@@ -7,15 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlThemeThemeSettings;
 
 /** Constructor model for theme of Theme (crc32 a00e67d6). */
 final class TlThemeTheme extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_theme_theme';
 
@@ -31,7 +35,6 @@ final class TlThemeTheme extends TlInstanceModel
         'access_hash' => 'int',
         'slug' => 'string',
         'title' => 'string',
-        'document' => 'string',
         'emoticon' => 'string',
         'installs_count' => 'int',
     ];
@@ -39,5 +42,10 @@ final class TlThemeTheme extends TlInstanceModel
     public function settings(): HasMany
     {
         return $this->tlChild(TlThemeThemeSettings::class);
+    }
+
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(TlDocument::class, 'document');
     }
 }

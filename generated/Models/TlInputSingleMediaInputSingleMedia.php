@@ -7,15 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputMedia;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputSingleMediaInputSingleMediaEntities;
 
 /** Constructor model for inputSingleMedia of InputSingleMedia (crc32 1cc6e91f). */
 final class TlInputSingleMediaInputSingleMedia extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_single_media_input_single_media';
 
@@ -24,7 +28,6 @@ final class TlInputSingleMediaInputSingleMedia extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'flags' => 'int',
-        'media' => 'string',
         'random_id' => 'int',
         'message' => 'string',
     ];
@@ -32,5 +35,10 @@ final class TlInputSingleMediaInputSingleMedia extends TlInstanceModel
     public function entities(): HasMany
     {
         return $this->tlChild(TlInputSingleMediaInputSingleMediaEntities::class);
+    }
+
+    public function media(): BelongsTo
+    {
+        return $this->belongsTo(TlInputMedia::class, 'media');
     }
 }

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for factCheck of FactCheck (crc32 b89bfccf). */
 final class TlFactCheckFactCheck extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_fact_check_fact_check';
 
@@ -25,7 +28,11 @@ final class TlFactCheckFactCheck extends TlInstanceModel
         'flags' => 'int',
         'need_check' => 'bool',
         'country' => 'string',
-        'text' => 'string',
         'hash' => 'int',
     ];
+
+    public function text(): BelongsTo
+    {
+        return $this->belongsTo(TlTextWithEntities::class, 'text');
+    }
 }

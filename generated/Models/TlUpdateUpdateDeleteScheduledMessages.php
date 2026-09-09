@@ -7,9 +7,11 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateDeleteScheduledMessagesMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateDeleteScheduledMessagesSent_messages;
 
@@ -17,6 +19,8 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateDeleteScheduled
 final class TlUpdateUpdateDeleteScheduledMessages extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_update_update_delete_scheduled_messages';
 
@@ -25,7 +29,6 @@ final class TlUpdateUpdateDeleteScheduledMessages extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'flags' => 'int',
-        'peer' => 'string',
     ];
 
     public function messages(): HasMany

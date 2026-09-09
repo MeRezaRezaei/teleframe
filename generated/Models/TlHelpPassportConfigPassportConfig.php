@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDataJSON;
 
 /** Constructor model for help.passportConfig of help.PassportConfig (crc32 a098d6af). */
 final class TlHelpPassportConfigPassportConfig extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_help_passport_config_passport_config';
 
@@ -23,6 +26,10 @@ final class TlHelpPassportConfigPassportConfig extends TlInstanceModel
     /** @var array<string, string> */
     protected $casts = [
         'hash' => 'int',
-        'countries_langs' => 'string',
     ];
+
+    public function countriesLangs(): BelongsTo
+    {
+        return $this->belongsTo(TlDataJSON::class, 'countries_langs');
+    }
 }

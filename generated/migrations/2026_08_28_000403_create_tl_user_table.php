@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_9f2fd0ab12d854e5be374e98');
+            $table->index('account_id', 'ix_b1ab215b594f3c68e990b9ac');
         });
         Schema::create('tl_user_user', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_user')->cascadeOnDelete();
@@ -61,37 +61,53 @@ return new class extends Migration
             $table->text('username')->nullable();
             $table->text('phone')->nullable();
             $table->uuid('photo')->nullable();
+            $table->index('photo', 'ix_4afcba88510fa66504933906');
             $table->uuid('status')->nullable();
+            $table->index('status', 'ix_21d33b4abe86fc2b9cbb5026');
             $table->integer('bot_info_version')->nullable();
             $table->text('bot_inline_placeholder')->nullable();
             $table->text('lang_code')->nullable();
             $table->uuid('emoji_status')->nullable();
+            $table->index('emoji_status', 'ix_dcdcda67333f55f6dea61f56');
             $table->uuid('stories_max_id')->nullable();
+            $table->index('stories_max_id', 'ix_12508b98c1e1164f336fcc60');
             $table->uuid('color')->nullable();
+            $table->index('color', 'ix_391155ccc8c67bf337f4c0fc');
             $table->uuid('profile_color')->nullable();
+            $table->index('profile_color', 'ix_b66017f99a754d6bc4faca6c');
             $table->integer('bot_active_users')->nullable();
             $table->bigInteger('bot_verification_icon')->nullable();
             $table->bigInteger('send_paid_messages_stars')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_7396b862d74b8a2d74f74676');
+            $table->unique(['account_id', 'tl_id'], 'ux_39a18c96f768c733e096');
         });
         Schema::create('tl_user_user__restriction_reason', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_user_user')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_5eadffaad6686c7e1a0f');
+            $table->index('account_id', 'ix_2070a81786fc75a5547df11a');
         });
         Schema::create('tl_user_user__usernames', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_user_user')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_e4899ecc287c00863477');
+            $table->index('account_id', 'ix_9fe740cb631070eb0eada112');
         });
         Schema::create('tl_user_user_empty', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_user')->cascadeOnDelete();
             $table->bigInteger('tl_id');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_c1fc9bc13dadd99746ab5d08');
+            $table->unique(['account_id', 'tl_id'], 'ux_5f2cee603a6c457cc357');
         });
     }
 

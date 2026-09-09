@@ -17,27 +17,36 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_3554dd1cf0a2d720aff24dae');
+            $table->index('account_id', 'ix_a4e7b362bcc4230445a77a79');
         });
         Schema::create('tl_notification_sound_notification_sound_default', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_notification_sound')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_c42f46aa8ba383f76b9f4dc8');
         });
         Schema::create('tl_notification_sound_notification_sound_local', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_notification_sound')->cascadeOnDelete();
             $table->text('title');
             $table->text('data');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_2bbfdc0e22992bdb93837d6a');
         });
         Schema::create('tl_notification_sound_notification_sound_none', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_notification_sound')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_eaa2899951a7722535cf1ee1');
         });
         Schema::create('tl_notification_sound_notification_sound_ringtone', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_notification_sound')->cascadeOnDelete();
             $table->bigInteger('tl_id');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_d3e0f477a6dacf80d18406dd');
+            $table->unique(['account_id', 'tl_id'], 'ux_74b7a1d272e8b83e0eef');
         });
     }
 

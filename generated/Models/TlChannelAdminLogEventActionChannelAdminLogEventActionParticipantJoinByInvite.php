@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlExportedChatInvite;
 
 /** Constructor model for channelAdminLogEventActionParticipantJoinByInvite of ChannelAdminLogEventAction (crc32 fe9fc158). */
 final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantJoinByInvite extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_channel_admin_log_event_action_channel_adm_d1316284f5f1';
 
@@ -24,6 +27,10 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantJoi
     protected $casts = [
         'flags' => 'int',
         'via_chatlist' => 'bool',
-        'invite' => 'string',
     ];
+
+    public function invite(): BelongsTo
+    {
+        return $this->belongsTo(TlExportedChatInvite::class, 'invite');
+    }
 }

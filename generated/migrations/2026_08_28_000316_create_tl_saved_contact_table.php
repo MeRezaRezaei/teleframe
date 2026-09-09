@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_da0f765a2ece8d5ae39acf96');
+            $table->index('account_id', 'ix_3c78c198927d5379e22b4feb');
         });
         Schema::create('tl_saved_contact_saved_phone_contact', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_saved_contact')->cascadeOnDelete();
@@ -26,7 +26,9 @@ return new class extends Migration
             $table->text('first_name');
             $table->text('last_name');
             $table->integer('date');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_4dcc1e94d170a91d7f3f0912');
         });
     }
 

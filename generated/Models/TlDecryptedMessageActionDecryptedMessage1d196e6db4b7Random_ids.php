@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param random_ids (table tl_decrypted_message_action_decrypted_message_eddbfc36281f). */
 final class TlDecryptedMessageActionDecryptedMessage1d196e6db4b7Random_ids extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_decrypted_message_action_decrypted_message_eddbfc36281f';
 
     public $timestamps = false; // child tables carry no timestamps columns

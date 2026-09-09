@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageReplies;
 
 /** Constructor model for messageViews of MessageViews (crc32 455b853d). */
 final class TlMessageViewsMessageViews extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_message_views_message_views';
 
@@ -25,6 +28,10 @@ final class TlMessageViewsMessageViews extends TlInstanceModel
         'flags' => 'int',
         'views' => 'int',
         'forwards' => 'int',
-        'replies' => 'string',
     ];
+
+    public function replies(): BelongsTo
+    {
+        return $this->belongsTo(TlMessageReplies::class, 'replies');
+    }
 }

@@ -7,14 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDraftMessage;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerNotifySettings;
 
 /** Constructor model for forumTopic of ForumTopic (crc32 fcdad815). */
 final class TlForumTopicForumTopic extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_forum_topic_forum_topic';
 
@@ -31,7 +37,6 @@ final class TlForumTopicForumTopic extends TlInstanceModel
         'title_missing' => 'bool',
         'tl_id' => 'int',
         'date' => 'int',
-        'peer' => 'string',
         'title' => 'string',
         'icon_color' => 'int',
         'icon_emoji_id' => 'int',
@@ -42,8 +47,14 @@ final class TlForumTopicForumTopic extends TlInstanceModel
         'unread_mentions_count' => 'int',
         'unread_reactions_count' => 'int',
         'unread_poll_votes_count' => 'int',
-        'from_id' => 'string',
-        'notify_settings' => 'string',
-        'draft' => 'string',
     ];
+
+    public function notifySettings(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerNotifySettings::class, 'notify_settings');
+    }
+    public function draft(): BelongsTo
+    {
+        return $this->belongsTo(TlDraftMessage::class, 'draft');
+    }
 }

@@ -226,4 +226,69 @@ final class ModelGeneratorTest extends TestCase
             self::assertSame(0, $code, "php -l failed for {$name}: " . implode("\n", $out));
         }
     }
+
+    // --- Duplicate-use guard (round-1 fix) ---
+
+    /**
+     * The real crash: `user` holds two ref params to PeerColor, so the old
+     * import assembly emitted `use ...TlPeerColor;` twice in one file
+     * ("name is already in use"). Each FQCN must appear at most once.
+     */
+    public function test_multi_ref_params_to_same_base_emit_each_fqcn_once(): void
+    {
+        $models = self::generateFromString(
+            "user#dead0001 id:long color:PeerColor profile_color:PeerColor = User;\n"
+            . "peerColor#dead0002 color_id:int = PeerColor;\n",
+        );
+        $instance = $models['TlUserUser.php'];
+        self::assertStringContainsString('public function color(): BelongsTo', $instance);
+        self::assertStringContainsString('public function profileColor(): BelongsTo', $instance);
+        self::assertSame(
+            1,
+            substr_count($instance, 'use MeRezaRezaei\\Teleframe\\Schema\\Generated\\Models\\TlPeerColor;'),
+            'TlPeerColor must be imported exactly once in TlUserUser.php',
+        );
+    }
+
+    /**
+     * Same ref base appears BOTH as a forward belongsTo (ctor) and as a
+     * reverse hasMany origin (anchor) across the scheme: every emitted file
+     * must still import each FQCN at most once.
+     */
+    public function test_each_fqcn_imported_at_most_once_per_file(): void
+    {
+        $models = self::generateFromString(
+            "message#dead0001 id:int media:MessageMedia reply_to:Message = Message;\n"
+            . "mediaEmpty#dead0002 = MessageMedia;\n"
+            . "mediaPhoto#dead0003 media:Message = MessageMedia;\n"
+            . "user#dead0004 id:long color:PeerColor profile_color:PeerColor = User;\n"
+            . "peerColor#dead0005 color_id:int = PeerColor;\n",
+        );
+        foreach ($models as $name => $content) {
+            foreach (self::importsOf($content) as $fqcn => $count) {
+                self::assertSame(
+                    1,
+                    $count,
+                    "duplicate use import {$fqcn} in {$name} (count {$count})",
+                );
+            }
+        }
+    }
+
+    /**
+     * Top-level `use FQCN;` lines of a generated file.
+     *
+     * @return array<string,int> fqcn => occurrence count
+     */
+    private static function importsOf(string $content): array
+    {
+        $map = [];
+        foreach (explode("\n", $content) as $line) {
+            if (str_starts_with($line, 'use ') && str_ends_with($line, ';') && !str_contains($line, ',')) {
+                $fqcn = substr($line, 4, -1);
+                $map[$fqcn] = ($map[$fqcn] ?? 0) + 1;
+            }
+        }
+        return $map;
+    }
 }

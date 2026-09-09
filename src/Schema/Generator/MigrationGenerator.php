@@ -78,9 +78,22 @@ final class MigrationGenerator
         return ['tables' => $this->tableMap, 'fk_count' => count($this->deferredFks)];
     }
 
+    /**
+     * Index names the PG way: auto-derived "{table}_{col}_index" can
+     * collide when one table name is a prefix of another (e.g.
+     * tl_update_update_user#phone_call vs tl_update_update_user_phone#call)
+     * or when Postgres truncates to 63 bytes — so every emitted index gets
+     * an explicit content-addressed name guaranteed unique per (table, col).
+     */
+    private function indexLine(string $col): string
+    {
+        return "    \$table->index('{$col}', 'ix_" . substr(sha1($this->currentTable . ':' . $col), 0, 24) . "');";
+    }
+
     private function typeMigration(TlType $type): string
     {
         $anchor = Naming::anchorTable($type->name);
+        $this->currentTable = $anchor;
         $up = [];
         $down = [];
 
@@ -92,8 +105,8 @@ final class MigrationGenerator
         $up[] = "    \$table->string('constructor_name', 96);";
         $up[] = "    \$table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)";
         $up[] = "    \$table->timestamps();";
-        $up[] = "    \$table->index('constructor_id');";
-        $up[] = "    \$table->index('account_id');";
+        $up[] = $this->indexLine('constructor_id');
+        $up[] = $this->indexLine('account_id');
         $up[] = "});";
         $down[] = "Schema::dropIfExists('{$anchor}');";
         $this->tableMap[$anchor] = $this->currentFile;
@@ -121,7 +134,7 @@ final class MigrationGenerator
         }
         $up[] = "    \$table->bigInteger('account_id');";
         $up[] = "    \$table->timestamps();";
-        $up[] = "    \$table->index('account_id');";
+        $up[] = $this->indexLine('account_id');
 
         $params = $ctor->params();
         $hasScalarId = false;
@@ -174,7 +187,7 @@ final class MigrationGenerator
         $line = $this->scalarColumn($param, $col, $nullable);
         $up[] = $line;
         if (str_ends_with($param->name, '_id') && str_contains($line, 'bigInteger')) {
-            $up[] = "    \$table->index('{$col}');";
+            $up[] = $this->indexLine($col);
         }
     }
 
@@ -182,7 +195,7 @@ final class MigrationGenerator
     {
         if (in_array($param->baseType(), ['Peer', 'InputPeer'], true)) {
             $up[] = "    \$table->bigInteger('{$col}')" . ($nullable ? '->nullable()' : '') . ';';
-            $up[] = "    \$table->index('{$col}');";
+            $up[] = $this->indexLine($col);
             return;
         }
         $up[] = "    \$table->uuid('{$col}')" . ($nullable ? '->nullable()' : '') . ';';
@@ -190,7 +203,7 @@ final class MigrationGenerator
         if ($this->isFkTargetable($target, $param)) {
             $this->deferredFks[] = ['table' => $this->currentTable, 'column' => $col, 'target_table' => Naming::anchorTable($target)];
         }
-        $up[] = "    \$table->index('{$col}');";
+        $up[] = $this->indexLine($col);
     }
 
     private function isFkTargetable(string $target, TlParam $param): bool
@@ -237,7 +250,7 @@ final class MigrationGenerator
         }
         $up[] = "    \$table->bigInteger('account_id');";
         $up[] = "    \$table->unique(['parent_id', 'idx'], 'ux_" . substr(sha1($child), 0, 20) . "');";
-        $up[] = "    \$table->index('account_id');";
+        $up[] = $this->indexLine('account_id');
         $up[] = "});";
         $down[] = "Schema::dropIfExists('{$child}');";
     }

@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param prices (table tl_invoice_invoice__prices). */
 final class TlInvoiceInvoicePrices extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_invoice_invoice__prices';
 
     public $timestamps = false; // child tables carry no timestamps columns

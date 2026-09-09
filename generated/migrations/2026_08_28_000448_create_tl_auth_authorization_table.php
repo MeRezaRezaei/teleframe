@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_20cfcb1301b6d0b441330df5');
+            $table->index('account_id', 'ix_e7212be3377fb1706651c70d');
         });
         Schema::create('tl_auth_authorization_authorization', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_auth_authorization')->cascadeOnDelete();
@@ -28,13 +28,19 @@ return new class extends Migration
             $table->integer('tmp_sessions')->nullable();
             $table->binary('future_auth_token')->nullable();
             $table->uuid('tl_user');
+            $table->index('tl_user', 'ix_408daabd7fdc868febd8f6b3');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_3ee35cbbdb23783ce69c73dc');
         });
         Schema::create('tl_auth_authorization_authorization_sign_up_required', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_auth_authorization')->cascadeOnDelete();
             $table->bigInteger('flags')->nullable();
             $table->uuid('terms_of_service')->nullable();
+            $table->index('terms_of_service', 'ix_e50a07ffea8775c63c4b0db9');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_230851d74228afa475a073b0');
         });
     }
 

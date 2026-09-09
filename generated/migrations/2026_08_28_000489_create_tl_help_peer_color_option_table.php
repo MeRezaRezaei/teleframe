@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_c5b5f78e60fabc2b505d684f');
+            $table->index('account_id', 'ix_07dd6cb9a5965facb6036c45');
         });
         Schema::create('tl_help_peer_color_option_peer_color_option', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_help_peer_color_option')->cascadeOnDelete();
@@ -26,10 +26,14 @@ return new class extends Migration
             $table->boolean('hidden')->default(false);
             $table->integer('color_id');
             $table->uuid('colors')->nullable();
+            $table->index('colors', 'ix_cb0c1b8c26480e15157bd4f4');
             $table->uuid('dark_colors')->nullable();
+            $table->index('dark_colors', 'ix_a9cf114398fc37801741a3e4');
             $table->integer('channel_min_level')->nullable();
             $table->integer('group_min_level')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_5cb6b1d76b9be4fa77b0d31d');
         });
     }
 

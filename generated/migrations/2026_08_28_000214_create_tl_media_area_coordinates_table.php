@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_f11f916cb141ef440089c615');
+            $table->index('account_id', 'ix_2d5b0a7cd495c90dfdb7841c');
         });
         Schema::create('tl_media_area_coordinates_media_area_coordinates', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_media_area_coordinates')->cascadeOnDelete();
@@ -29,7 +29,9 @@ return new class extends Migration
             $table->double('h');
             $table->double('rotation');
             $table->double('radius')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_562ca00f261bfba833d0f057');
         });
     }
 

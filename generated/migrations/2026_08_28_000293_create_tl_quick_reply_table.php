@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_72b9e84dd70e390c2a20bd72');
+            $table->index('account_id', 'ix_b236d35e8755cdf18d111216');
         });
         Schema::create('tl_quick_reply_quick_reply', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_quick_reply')->cascadeOnDelete();
@@ -26,7 +26,9 @@ return new class extends Migration
             $table->text('shortcut');
             $table->integer('top_message');
             $table->integer('count');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_9baba98cac3b71b236c5faf3');
         });
     }
 

@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStickerSet;
 
 /** Constructor model for stickerSetNoCovered of StickerSetCovered (crc32 77b15d1c). */
 final class TlStickerSetCoveredStickerSetNoCovered extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_sticker_set_covered_sticker_set_no_covered';
 
@@ -22,6 +25,10 @@ final class TlStickerSetCoveredStickerSetNoCovered extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'set' => 'string',
     ];
+
+    public function set(): BelongsTo
+    {
+        return $this->belongsTo(TlStickerSet::class, 'set');
+    }
 }

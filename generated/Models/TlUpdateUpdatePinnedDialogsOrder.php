@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Vector child rows for param order (table tl_update_update_pinned_dialogs__order). */
 final class TlUpdateUpdatePinnedDialogsOrder extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_update_update_pinned_dialogs__order';
 
     public $timestamps = false; // child tables carry no timestamps columns

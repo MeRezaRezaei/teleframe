@@ -17,14 +17,17 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_f6241943b7587f8faf553ac1');
+            $table->index('account_id', 'ix_a3f85278ec8e56b1c7321a83');
         });
         Schema::create('tl_msgs_state_info_msgs_state_info', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_msgs_state_info')->cascadeOnDelete();
             $table->bigInteger('req_msg_id');
+            $table->index('req_msg_id', 'ix_f1fa51825a82f4f26c6ee1f5');
             $table->text('info');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_b4aabbf8e2f08821fb6828ee');
         });
     }
 

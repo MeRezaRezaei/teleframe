@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMediaAreaCoordinates;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReaction;
 
 /** Constructor model for mediaAreaSuggestedReaction of MediaArea (crc32 14455871). */
 final class TlMediaAreaMediaAreaSuggestedReaction extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_media_area_media_area_suggested_reaction';
 
@@ -25,7 +29,14 @@ final class TlMediaAreaMediaAreaSuggestedReaction extends TlInstanceModel
         'flags' => 'int',
         'dark' => 'bool',
         'flipped' => 'bool',
-        'coordinates' => 'string',
-        'reaction' => 'string',
     ];
+
+    public function coordinates(): BelongsTo
+    {
+        return $this->belongsTo(TlMediaAreaCoordinates::class, 'coordinates');
+    }
+    public function reaction(): BelongsTo
+    {
+        return $this->belongsTo(TlReaction::class, 'reaction');
+    }
 }

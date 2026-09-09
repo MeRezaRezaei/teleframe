@@ -7,15 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesInvitedUsersInvitedUsersMissing_invitees;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdates;
 
 /** Constructor model for messages.invitedUsers of messages.InvitedUsers (crc32 7f5defa6). */
 final class TlMessagesInvitedUsersInvitedUsers extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_invited_users_invited_users';
 
@@ -23,11 +27,15 @@ final class TlMessagesInvitedUsersInvitedUsers extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'updates' => 'string',
     ];
 
     public function missingInvitees(): HasMany
     {
         return $this->tlChild(TlMessagesInvitedUsersInvitedUsersMissing_invitees::class);
+    }
+
+    public function updates(): BelongsTo
+    {
+        return $this->belongsTo(TlUpdates::class, 'updates');
     }
 }

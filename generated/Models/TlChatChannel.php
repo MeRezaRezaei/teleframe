@@ -7,16 +7,25 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatAdminRights;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatBannedRights;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChannelRestriction_reason;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChannelUsernames;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatPhoto;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlEmojiStatus;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerColor;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRecentStory;
 
 /** Constructor model for channel of Chat (crc32 1c32b11c). */
 final class TlChatChannel extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_chat_channel';
 
@@ -58,16 +67,8 @@ final class TlChatChannel extends TlInstanceModel
         'access_hash' => 'int',
         'title' => 'string',
         'username' => 'string',
-        'photo' => 'string',
         'date' => 'int',
-        'admin_rights' => 'string',
-        'banned_rights' => 'string',
-        'default_banned_rights' => 'string',
         'participants_count' => 'int',
-        'stories_max_id' => 'string',
-        'color' => 'string',
-        'profile_color' => 'string',
-        'emoji_status' => 'string',
         'level' => 'int',
         'subscription_until_date' => 'int',
         'bot_verification_icon' => 'int',
@@ -82,5 +83,38 @@ final class TlChatChannel extends TlInstanceModel
     public function usernames(): HasMany
     {
         return $this->tlChild(TlChatChannelUsernames::class);
+    }
+
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(TlChatPhoto::class, 'photo');
+    }
+    public function adminRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatAdminRights::class, 'admin_rights');
+    }
+    public function bannedRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatBannedRights::class, 'banned_rights');
+    }
+    public function defaultBannedRights(): BelongsTo
+    {
+        return $this->belongsTo(TlChatBannedRights::class, 'default_banned_rights');
+    }
+    public function storiesMaxId(): BelongsTo
+    {
+        return $this->belongsTo(TlRecentStory::class, 'stories_max_id');
+    }
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerColor::class, 'color');
+    }
+    public function profileColor(): BelongsTo
+    {
+        return $this->belongsTo(TlPeerColor::class, 'profile_color');
+    }
+    public function emojiStatus(): BelongsTo
+    {
+        return $this->belongsTo(TlEmojiStatus::class, 'emoji_status');
     }
 }

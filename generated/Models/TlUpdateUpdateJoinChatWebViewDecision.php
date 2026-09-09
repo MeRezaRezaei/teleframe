@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlJoinChatBotResult;
 
 /** Constructor model for updateJoinChatWebViewDecision of Update (crc32 bdac7e70). */
 final class TlUpdateUpdateJoinChatWebViewDecision extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_update_update_join_chat_web_view_decision';
 
@@ -22,8 +27,11 @@ final class TlUpdateUpdateJoinChatWebViewDecision extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'peer' => 'string',
         'query_id' => 'int',
-        'result' => 'string',
     ];
+
+    public function result(): BelongsTo
+    {
+        return $this->belongsTo(TlJoinChatBotResult::class, 'result');
+    }
 }

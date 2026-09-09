@@ -6,12 +6,22 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesChatInviteJoinResultChatInviteJoinResultWebView;
 
 /** Anchor model for TL type WebViewResult (spec §4.1). */
 final class TlWebViewResult extends TlAnchorModel
 {
+    use AccountScoped;
+
     protected $table = 'tl_web_view_result';
 
     protected $guarded = [];
+
+    public function webview(): HasMany
+    {
+        return $this->hasMany(TlMessagesChatInviteJoinResultChatInviteJoinResultWebView::class, 'webview');
+    }
 }

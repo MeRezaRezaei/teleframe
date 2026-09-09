@@ -7,18 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSavedDialogsSavedDialogsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSavedDialogsSavedDialogsDialogs;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSavedDialogsSavedDialogsMessages;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSavedDialogsSavedDialogsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSavedDialogsSavedDialogsUsers;
 
 /** Constructor model for messages.savedDialogs of messages.SavedDialogs (crc32 f83ae221). */
 final class TlMessagesSavedDialogsSavedDialogs extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_saved_dialogs_saved_dialogs';
 

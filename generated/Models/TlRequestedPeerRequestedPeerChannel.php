@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 
 /** Constructor model for requestedPeerChannel of RequestedPeer (crc32 8ba403e4). */
 final class TlRequestedPeerRequestedPeerChannel extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_requested_peer_requested_peer_channel';
 
@@ -26,6 +29,10 @@ final class TlRequestedPeerRequestedPeerChannel extends TlInstanceModel
         'channel_id' => 'int',
         'title' => 'string',
         'username' => 'string',
-        'photo' => 'string',
     ];
+
+    public function photo(): BelongsTo
+    {
+        return $this->belongsTo(TlPhoto::class, 'photo');
+    }
 }

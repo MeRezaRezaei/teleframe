@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDataJSON;
 
 /** Constructor model for inputPaymentCredentialsApplePay of InputPaymentCredentials (crc32 0aa1c39f). */
 final class TlInputPaymentCredentialsInputPaymentCredentialsApplePay extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_payment_credentials_input_payment_cr_cf69945d7b14';
 
@@ -22,6 +25,10 @@ final class TlInputPaymentCredentialsInputPaymentCredentialsApplePay extends TlI
 
     /** @var array<string, string> */
     protected $casts = [
-        'payment_data' => 'string',
     ];
+
+    public function paymentData(): BelongsTo
+    {
+        return $this->belongsTo(TlDataJSON::class, 'payment_data');
+    }
 }

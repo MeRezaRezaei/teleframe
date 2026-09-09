@@ -7,16 +7,20 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPremiumBoostsStatusBoostsStatusPrepaid_giveaways;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPremiumBoostsStatusBoostsStatusMy_boost_slots;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPremiumBoostsStatusBoostsStatusPrepaid_giveaways;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsPercentValue;
 
 /** Constructor model for premium.boostsStatus of premium.BoostsStatus (crc32 4959427a). */
 final class TlPremiumBoostsStatusBoostsStatus extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_premium_boosts_status_boosts_status';
 
@@ -31,7 +35,6 @@ final class TlPremiumBoostsStatusBoostsStatus extends TlInstanceModel
         'boosts' => 'int',
         'gift_boosts' => 'int',
         'next_level_boosts' => 'int',
-        'premium_audience' => 'string',
         'boost_url' => 'string',
     ];
 
@@ -42,5 +45,10 @@ final class TlPremiumBoostsStatusBoostsStatus extends TlInstanceModel
     public function myBoostSlots(): HasMany
     {
         return $this->tlChild(TlPremiumBoostsStatusBoostsStatusMy_boost_slots::class);
+    }
+
+    public function premiumAudience(): BelongsTo
+    {
+        return $this->belongsTo(TlStatsPercentValue::class, 'premium_audience');
     }
 }

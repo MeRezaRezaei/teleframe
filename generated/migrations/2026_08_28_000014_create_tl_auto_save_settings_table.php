@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_37203b9dfdc33208b69c1edc');
+            $table->index('account_id', 'ix_4dcbe248bd9fc4d4228f59eb');
         });
         Schema::create('tl_auto_save_settings_auto_save_settings', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_auto_save_settings')->cascadeOnDelete();
@@ -26,7 +26,9 @@ return new class extends Migration
             $table->boolean('photos')->default(false);
             $table->boolean('videos')->default(false);
             $table->bigInteger('video_max_size')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_c44d371fc5caaaeb889e8831');
         });
     }
 

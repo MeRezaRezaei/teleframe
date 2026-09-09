@@ -7,14 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGroupCallParticipantVideo;
 
 /** Constructor model for groupCallParticipant of GroupCallParticipant (crc32 2a3dc7ac). */
 final class TlGroupCallParticipantGroupCallParticipant extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_group_call_participant_group_call_participant';
 
@@ -33,15 +38,21 @@ final class TlGroupCallParticipantGroupCallParticipant extends TlInstanceModel
         'volume_by_admin' => 'bool',
         'self' => 'bool',
         'video_joined' => 'bool',
-        'peer' => 'string',
         'date' => 'int',
         'active_date' => 'int',
         'source' => 'int',
         'volume' => 'int',
         'about' => 'string',
         'raise_hand_rating' => 'int',
-        'video' => 'string',
-        'presentation' => 'string',
         'paid_stars_total' => 'int',
     ];
+
+    public function video(): BelongsTo
+    {
+        return $this->belongsTo(TlGroupCallParticipantVideo::class, 'video');
+    }
+    public function presentation(): BelongsTo
+    {
+        return $this->belongsTo(TlGroupCallParticipantVideo::class, 'presentation');
+    }
 }

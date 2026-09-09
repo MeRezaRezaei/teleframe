@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReplyMarkup;
 
 /** Constructor model for botInlineMessageMediaContact of BotInlineMessage (crc32 18d1cdc2). */
 final class TlBotInlineMessageBotInlineMessageMediaContact extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_bot_inline_message_bot_inline_message_media_contact';
 
@@ -27,6 +30,10 @@ final class TlBotInlineMessageBotInlineMessageMediaContact extends TlInstanceMod
         'first_name' => 'string',
         'last_name' => 'string',
         'vcard' => 'string',
-        'reply_markup' => 'string',
     ];
+
+    public function replyMarkup(): BelongsTo
+    {
+        return $this->belongsTo(TlReplyMarkup::class, 'reply_markup');
+    }
 }

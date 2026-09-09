@@ -17,18 +17,23 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_2c61c971d2ef540762f301ed');
+            $table->index('account_id', 'ix_1f0d0f8094bc9af24724fe87');
         });
         Schema::create('tl_input_dialog_peer_input_dialog_peer', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_input_dialog_peer')->cascadeOnDelete();
-            $table->uuid('peer');
+            $table->bigInteger('peer');
+            $table->index('peer', 'ix_408614efba5924b8e407b81c');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_905192adeb344d3069cae6e0');
         });
         Schema::create('tl_input_dialog_peer_input_dialog_peer_folder', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_input_dialog_peer')->cascadeOnDelete();
             $table->integer('folder_id');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_068da169d9880206f4a01eed');
         });
     }
 

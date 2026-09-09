@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialogPeer;
 
 /** Constructor model for updateSavedDialogPinned of Update (crc32 aeaf9e74). */
 final class TlUpdateUpdateSavedDialogPinned extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_update_update_saved_dialog_pinned';
 
@@ -24,6 +27,10 @@ final class TlUpdateUpdateSavedDialogPinned extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'pinned' => 'bool',
-        'peer' => 'string',
     ];
+
+    public function peer(): BelongsTo
+    {
+        return $this->belongsTo(TlDialogPeer::class, 'peer');
+    }
 }

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_c227e425a4e299b4caabae30');
+            $table->index('account_id', 'ix_c5706db1969f4cd0e5d8382c');
         });
         Schema::create('tl_chat_channel', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_chat')->cascadeOnDelete();
@@ -57,35 +57,51 @@ return new class extends Migration
             $table->text('title');
             $table->text('username')->nullable();
             $table->uuid('photo');
+            $table->index('photo', 'ix_10efede4bce8aea0faf13276');
             $table->integer('date');
             $table->uuid('admin_rights')->nullable();
+            $table->index('admin_rights', 'ix_3d1308ee87098f1b532b64f2');
             $table->uuid('banned_rights')->nullable();
+            $table->index('banned_rights', 'ix_a5cab5c83b0b86b18cb96bac');
             $table->uuid('default_banned_rights')->nullable();
+            $table->index('default_banned_rights', 'ix_0fea252101f874a7fa40d9ca');
             $table->integer('participants_count')->nullable();
             $table->uuid('stories_max_id')->nullable();
+            $table->index('stories_max_id', 'ix_5cc6c164da0ab77793190142');
             $table->uuid('color')->nullable();
+            $table->index('color', 'ix_d76a70db4a7ba01b309c4dca');
             $table->uuid('profile_color')->nullable();
+            $table->index('profile_color', 'ix_2871ea1150577b7af3e2fef0');
             $table->uuid('emoji_status')->nullable();
+            $table->index('emoji_status', 'ix_ca772b021add35153249a344');
             $table->integer('level')->nullable();
             $table->integer('subscription_until_date')->nullable();
             $table->bigInteger('bot_verification_icon')->nullable();
             $table->bigInteger('send_paid_messages_stars')->nullable();
             $table->bigInteger('linked_monoforum_id')->nullable();
+            $table->index('linked_monoforum_id', 'ix_34592a2555533117b85c4e86');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_51556f3422d0983b889fca37');
+            $table->unique(['account_id', 'tl_id'], 'ux_bdea72c503f17f3117f3');
         });
         Schema::create('tl_chat_channel__restriction_reason', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_chat_channel')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_aa98ef05ad9699b2b8e7');
+            $table->index('account_id', 'ix_775c4692872f6ac373ebc77e');
         });
         Schema::create('tl_chat_channel__usernames', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_chat_channel')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_452d0ce189a06eaafe5f');
+            $table->index('account_id', 'ix_c9aac6fbeddd477cef23dac1');
         });
         Schema::create('tl_chat_channel_forbidden', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_chat')->cascadeOnDelete();
@@ -97,7 +113,10 @@ return new class extends Migration
             $table->bigInteger('access_hash');
             $table->text('title');
             $table->integer('until_date')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_d2b515d16ce4b2714257faf6');
+            $table->unique(['account_id', 'tl_id'], 'ux_259a3968ce624c970214');
         });
         Schema::create('tl_chat_chat', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_chat')->cascadeOnDelete();
@@ -111,24 +130,37 @@ return new class extends Migration
             $table->bigInteger('tl_id');
             $table->text('title');
             $table->uuid('photo');
+            $table->index('photo', 'ix_1ce66349df93fd253af19b24');
             $table->integer('participants_count');
             $table->integer('date');
             $table->integer('version');
             $table->uuid('migrated_to')->nullable();
+            $table->index('migrated_to', 'ix_5d91492ba2c9b77b2bf55bf6');
             $table->uuid('admin_rights')->nullable();
+            $table->index('admin_rights', 'ix_cad50a8f9db3b00a548363bc');
             $table->uuid('default_banned_rights')->nullable();
+            $table->index('default_banned_rights', 'ix_b7e990a757b598c1b64a391d');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_a20319775f75cf33521285a3');
+            $table->unique(['account_id', 'tl_id'], 'ux_952a3a093d89f7aac3eb');
         });
         Schema::create('tl_chat_chat_empty', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_chat')->cascadeOnDelete();
             $table->bigInteger('tl_id');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_fb343dee47fbd3f4b5b25266');
+            $table->unique(['account_id', 'tl_id'], 'ux_f6cdd70884bad6817080');
         });
         Schema::create('tl_chat_chat_forbidden', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_chat')->cascadeOnDelete();
             $table->bigInteger('tl_id');
             $table->text('title');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_4640b7de76c7a2038a377236');
+            $table->unique(['account_id', 'tl_id'], 'ux_cfe05bda07a16de894b2');
         });
     }
 

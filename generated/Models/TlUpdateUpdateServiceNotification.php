@@ -7,15 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMedia;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateServiceNotificationEntities;
 
 /** Constructor model for updateServiceNotification of Update (crc32 ebe46819). */
 final class TlUpdateUpdateServiceNotification extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_update_update_service_notification';
 
@@ -29,11 +33,15 @@ final class TlUpdateUpdateServiceNotification extends TlInstanceModel
         'inbox_date' => 'int',
         'tl_type' => 'string',
         'message' => 'string',
-        'media' => 'string',
     ];
 
     public function entities(): HasMany
     {
         return $this->tlChild(TlUpdateUpdateServiceNotificationEntities::class);
+    }
+
+    public function media(): BelongsTo
+    {
+        return $this->belongsTo(TlMessageMedia::class, 'media');
     }
 }

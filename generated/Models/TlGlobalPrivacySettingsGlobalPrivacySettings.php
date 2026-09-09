@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDisallowedGiftsSettings;
 
 /** Constructor model for globalPrivacySettings of GlobalPrivacySettings (crc32 fe41b34f). */
 final class TlGlobalPrivacySettingsGlobalPrivacySettings extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_global_privacy_settings_global_privacy_settings';
 
@@ -30,6 +33,10 @@ final class TlGlobalPrivacySettingsGlobalPrivacySettings extends TlInstanceModel
         'new_noncontact_peers_require_premium' => 'bool',
         'display_gifts_button' => 'bool',
         'noncontact_peers_paid_stars' => 'int',
-        'disallowed_gifts' => 'string',
     ];
+
+    public function disallowedGifts(): BelongsTo
+    {
+        return $this->belongsTo(TlDisallowedGiftsSettings::class, 'disallowed_gifts');
+    }
 }

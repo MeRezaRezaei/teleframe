@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGeoPoint;
 
 /** Constructor model for inputMediaGeoPoint of InputMedia (crc32 f9c44144). */
 final class TlInputMediaInputMediaGeoPoint extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_media_input_media_geo_point';
 
@@ -22,6 +25,10 @@ final class TlInputMediaInputMediaGeoPoint extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'geo_point' => 'string',
     ];
+
+    public function geoPoint(): BelongsTo
+    {
+        return $this->belongsTo(TlInputGeoPoint::class, 'geo_point');
+    }
 }

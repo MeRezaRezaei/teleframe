@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentRequestedInfo;
 
 /** Constructor model for payments.savedInfo of payments.SavedInfo (crc32 fb8fe43c). */
 final class TlPaymentsSavedInfoSavedInfo extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_payments_saved_info_saved_info';
 
@@ -24,6 +27,10 @@ final class TlPaymentsSavedInfoSavedInfo extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'has_saved_credentials' => 'bool',
-        'saved_info' => 'string',
     ];
+
+    public function savedInfo(): BelongsTo
+    {
+        return $this->belongsTo(TlPaymentRequestedInfo::class, 'saved_info');
+    }
 }

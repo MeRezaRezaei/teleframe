@@ -7,16 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputBusinessBotRecipientsInputBusine36d9b3380d51Users;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputBusinessBotRecipientsInputBusine36d9b3380d51Exclude_users;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputBusinessBotRecipientsInputBusine36d9b3380d51Users;
 
 /** Constructor model for inputBusinessBotRecipients of InputBusinessBotRecipients (crc32 c4e5921e). */
 final class TlInputBusinessBotRecipientsInputBusinessBotRecipients extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_business_bot_recipients_input_busine_36d9b3380d51';
 

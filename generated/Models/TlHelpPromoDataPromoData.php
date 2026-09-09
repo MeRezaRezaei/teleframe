@@ -7,18 +7,24 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPromoDataPromoDataPending_suggestions;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPromoDataPromoDataDismissed_suggestions;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPromoDataPromoDataChats;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPromoDataPromoDataDismissed_suggestions;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPromoDataPromoDataPending_suggestions;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPromoDataPromoDataUsers;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPendingSuggestion;
 
 /** Constructor model for help.promoData of help.PromoData (crc32 08a4d87a). */
 final class TlHelpPromoDataPromoData extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_help_promo_data_promo_data';
 
@@ -29,10 +35,8 @@ final class TlHelpPromoDataPromoData extends TlInstanceModel
         'flags' => 'int',
         'proxy' => 'bool',
         'expires' => 'int',
-        'peer' => 'string',
         'psa_type' => 'string',
         'psa_message' => 'string',
-        'custom_pending_suggestion' => 'string',
     ];
 
     public function pendingSuggestions(): HasMany
@@ -50,5 +54,10 @@ final class TlHelpPromoDataPromoData extends TlInstanceModel
     public function users(): HasMany
     {
         return $this->tlChild(TlHelpPromoDataPromoDataUsers::class);
+    }
+
+    public function customPendingSuggestion(): BelongsTo
+    {
+        return $this->belongsTo(TlPendingSuggestion::class, 'custom_pending_suggestion');
     }
 }

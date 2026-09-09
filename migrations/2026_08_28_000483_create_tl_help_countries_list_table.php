@@ -17,24 +17,30 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_2161fae328b8f375134d35dc');
+            $table->index('account_id', 'ix_00ad59d0863664e7b9b79f2e');
         });
         Schema::create('tl_help_countries_list_countries_list', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_help_countries_list')->cascadeOnDelete();
             $table->integer('hash');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_27021fb7835e4deda247e769');
         });
         Schema::create('tl_help_countries_list_countries_list__countries', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_help_countries_list_countries_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_e6a2b6398709298542b2');
+            $table->index('account_id', 'ix_537c9dda353368abdc1e2f47');
         });
         Schema::create('tl_help_countries_list_countries_list_not_modified', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_help_countries_list')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_a29065b24fa34f499520265f');
         });
     }
 

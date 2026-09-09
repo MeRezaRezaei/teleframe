@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStealthMode;
 
 /** Constructor model for stories.allStoriesNotModified of stories.AllStories (crc32 1158fe3e). */
 final class TlStoriesAllStoriesAllStoriesNotModified extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_stories_all_stories_all_stories_not_modified';
 
@@ -24,6 +27,10 @@ final class TlStoriesAllStoriesAllStoriesNotModified extends TlInstanceModel
     protected $casts = [
         'flags' => 'int',
         'state' => 'string',
-        'stealth_mode' => 'string',
     ];
+
+    public function stealthMode(): BelongsTo
+    {
+        return $this->belongsTo(TlStoriesStealthMode::class, 'stealth_mode');
+    }
 }

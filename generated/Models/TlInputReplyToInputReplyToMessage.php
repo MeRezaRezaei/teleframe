@@ -7,15 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputReplyToInputReplyToMessageQuote_entities;
 
 /** Constructor model for inputReplyToMessage of InputReplyTo (crc32 3bd4b7c2). */
 final class TlInputReplyToInputReplyToMessage extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
+    use PeerResolution;
 
     protected $table = 'tl_input_reply_to_input_reply_to_message';
 
@@ -26,10 +30,8 @@ final class TlInputReplyToInputReplyToMessage extends TlInstanceModel
         'flags' => 'int',
         'reply_to_msg_id' => 'int',
         'top_msg_id' => 'int',
-        'reply_to_peer_id' => 'string',
         'quote_text' => 'string',
         'quote_offset' => 'int',
-        'monoforum_peer_id' => 'string',
         'todo_item_id' => 'int',
         'poll_option' => 'string',
     ];

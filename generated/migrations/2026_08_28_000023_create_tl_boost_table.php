@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_44404b314e54050e9f7febe4');
+            $table->index('account_id', 'ix_3d6e2d0d957e4afa8d659eb2');
         });
         Schema::create('tl_boost_boost', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_boost')->cascadeOnDelete();
@@ -28,13 +28,17 @@ return new class extends Migration
             $table->boolean('unclaimed')->default(false);
             $table->text('tl_id');
             $table->bigInteger('user_id')->nullable();
+            $table->index('user_id', 'ix_23827ea342484da13a76d401');
             $table->integer('giveaway_msg_id')->nullable();
             $table->integer('date');
             $table->integer('expires');
             $table->text('used_gift_slug')->nullable();
             $table->integer('multiplier')->nullable();
             $table->bigInteger('stars')->nullable();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_e11789b405577971a696080e');
+            $table->unique(['account_id', 'tl_id'], 'ux_60144cf7a146b60c4a81');
         });
     }
 

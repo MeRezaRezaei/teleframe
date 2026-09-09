@@ -7,14 +7,18 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGeoPoint;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMediaAreaCoordinates;
 
 /** Constructor model for mediaAreaVenue of MediaArea (crc32 be82db9c). */
 final class TlMediaAreaMediaAreaVenue extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_media_area_media_area_venue';
 
@@ -22,12 +26,19 @@ final class TlMediaAreaMediaAreaVenue extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'coordinates' => 'string',
-        'geo' => 'string',
         'title' => 'string',
         'address' => 'string',
         'provider' => 'string',
         'venue_id' => 'string',
         'venue_type' => 'string',
     ];
+
+    public function coordinates(): BelongsTo
+    {
+        return $this->belongsTo(TlMediaAreaCoordinates::class, 'coordinates');
+    }
+    public function geo(): BelongsTo
+    {
+        return $this->belongsTo(TlGeoPoint::class, 'geo');
+    }
 }

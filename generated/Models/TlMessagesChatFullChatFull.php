@@ -7,9 +7,12 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatFull;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesChatFullChatFullChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesChatFullChatFullUsers;
 
@@ -17,6 +20,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesChatFullChatFullUse
 final class TlMessagesChatFullChatFull extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_messages_chat_full_chat_full';
 
@@ -24,7 +28,6 @@ final class TlMessagesChatFullChatFull extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'full_chat' => 'string',
     ];
 
     public function chats(): HasMany
@@ -34,5 +37,10 @@ final class TlMessagesChatFullChatFull extends TlInstanceModel
     public function users(): HasMany
     {
         return $this->tlChild(TlMessagesChatFullChatFullUsers::class);
+    }
+
+    public function fullChat(): BelongsTo
+    {
+        return $this->belongsTo(TlChatFull::class, 'full_chat');
     }
 }

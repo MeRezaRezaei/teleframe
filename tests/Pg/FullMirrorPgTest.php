@@ -7,6 +7,7 @@ namespace MeRezaRezaei\Teleframe\Tests\Pg;
 use Illuminate\Support\Facades\DB;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChannel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMessage;
@@ -112,9 +113,9 @@ final class FullMirrorPgTest extends PgTestCase
         $fromPeer = TlPeerPeerUser::query()->sole();
         $chanPeer = TlPeerPeerChannel::query()->sole();
         self::assertSame(self::FIXTURE_USER_ID, $fromPeer->user_id);
-        self::assertSame($message->from_id, $fromPeer->id);
+        self::assertSame(PeerIdTool::userLong(self::FIXTURE_USER_ID), (int) $message->from_id, 'message.from_id = canonical user long (T1.2)');
         self::assertSame(self::FIXTURE_CHANNEL_ID, $chanPeer->channel_id);
-        self::assertSame($message->peer_id, $chanPeer->id);
+        self::assertSame(PeerIdTool::channelLong(self::FIXTURE_CHANNEL_ID), (int) $message->peer_id, 'message.peer_id = canonical channel long (T1.2)');
         self::assertSame(2, TlPeer::query()->count());
 
         // Entities vector → child rows keep wire order by idx.

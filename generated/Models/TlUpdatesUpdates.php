@@ -7,17 +7,19 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesUpdatesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesUpdatesUpdates;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesUpdatesUsers;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesUpdatesChats;
 
 /** Constructor model for updates of Updates (crc32 74ae4240). */
 final class TlUpdatesUpdates extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_updates_updates';
 

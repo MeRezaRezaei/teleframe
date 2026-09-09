@@ -7,14 +7,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGame;
 
 /** Constructor model for inputMediaGame of InputMedia (crc32 d33f43f3). */
 final class TlInputMediaInputMediaGame extends TlInstanceModel
 {
     use HasFactory, HasTlChildren;
+    use AccountScoped;
 
     protected $table = 'tl_input_media_input_media_game';
 
@@ -22,6 +25,10 @@ final class TlInputMediaInputMediaGame extends TlInstanceModel
 
     /** @var array<string, string> */
     protected $casts = [
-        'tl_id' => 'string',
     ];
+
+    public function id(): BelongsTo
+    {
+        return $this->belongsTo(TlInputGame::class, 'tl_id');
+    }
 }

@@ -17,19 +17,23 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_828e17dcb079316d212d026f');
+            $table->index('account_id', 'ix_cf1373290dc8e69415345ef9');
         });
         Schema::create('tl_cdn_config_cdn_config', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_cdn_config')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_cc91a254ce999fa2f172459d');
         });
         Schema::create('tl_cdn_config_cdn_config__public_keys', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_cdn_config_cdn_config')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_91f95444ff45c073df5f');
+            $table->index('account_id', 'ix_a8a34629f12bfcc9d193b9b0');
         });
     }
 

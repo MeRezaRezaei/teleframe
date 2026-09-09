@@ -17,24 +17,30 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)
             $table->timestamps();
-            $table->index('constructor_id');
-            $table->index('account_id');
+            $table->index('constructor_id', 'ix_c4a77c58e650404b93d01f1c');
+            $table->index('account_id', 'ix_008ab8962d6658e7c4578bc3');
         });
         Schema::create('tl_messages_saved_gifs_saved_gifs', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_messages_saved_gifs')->cascadeOnDelete();
             $table->bigInteger('hash');
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_d077cff3ae2163fcdfd4e2f1');
         });
         Schema::create('tl_messages_saved_gifs_saved_gifs__gifs', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('parent_id')->constrained('tl_messages_saved_gifs_saved_gifs')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->uuid('value_id')->nullable();
+            $table->bigInteger('account_id');
             $table->unique(['parent_id', 'idx'], 'ux_9be9d5773b7ba95d6909');
+            $table->index('account_id', 'ix_246526dd4fa0048442b2d798');
         });
         Schema::create('tl_messages_saved_gifs_saved_gifs_not_modified', function (Blueprint $table) {
             $table->foreignUuid('id')->primary()->constrained('tl_messages_saved_gifs')->cascadeOnDelete();
+            $table->bigInteger('account_id');
             $table->timestamps();
+            $table->index('account_id', 'ix_c36d8da49dc68af7f6836f1c');
         });
     }
 
