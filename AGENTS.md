@@ -68,10 +68,14 @@ mirrors `src/`, one test class per file.
 
 ## Known gaps / limitations (2026-09-09 audit)
 
-- **No logging seam.** `src/` contains zero `LoggerInterface`/`Log::` usage and
-  `psr/log` is not required. The engine intentionally delegates observability
-  to the host app (Laravel writes its own logs); an injectable PSR-3 logger is
-  an open application-layer item, not an engine bug.
+- **Logging seam delivered — PSR-3, silent by default (2026-09-09).** The
+  engine logs through `Psr\Log\LoggerInterface` (resolved by the provider:
+  host binding wins → `teleframe.logging.logger` FQCN → `NullLogger`).
+  `UpdateDispatcher` logs handler failures, `TeleframeClient` logs RPC/batch
+  failures at `error` level and ALWAYS rethrows — logging never swallows.
+  Unconfigured, the engine is byte-for-byte silent (NullLogger). Deep MTProto
+  transport internals (`Core\MTProto`) are the next extension point, not yet
+  wired.
 - **StreamSocket proxy tunneling not implemented.** `StreamSocket` accepts a
   `proxy` config (SOCKS5/HTTP shape) but connects directly — `@todo` in the
   class. Wire-path spec's proxy option remains inert by design.

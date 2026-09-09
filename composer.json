@@ -37,6 +37,7 @@
         "ext-sodium": "*",
         "ext-zlib": "*",
         "phpseclib/phpseclib": "^3.0",
+        "psr/log": "^3.0",
         "vlucas/phpdotenv": "^5.6",
         "illuminate/contracts": "^10.0 || ^11.0 || ^12.0",
         "illuminate/support": "^10.0 || ^11.0 || ^12.0",

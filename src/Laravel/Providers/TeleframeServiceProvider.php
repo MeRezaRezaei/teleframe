@@ -35,6 +35,8 @@ use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountContext;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use MeRezaRezaei\Teleframe\Teleclient;
 use MeRezaRezaei\Teleframe\Teleframe;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Psr\SimpleCache\CacheInterface;
 use RuntimeException;
 use Throwable;
@@ -54,6 +56,27 @@ class TeleframeServiceProvider extends ServiceProvider
         $this->app->singleton(Teleclient::class);
 
         $this->app->singleton(HandlerRegistry::class);
+
+        // PSR-3 logging seam (gap #1 closed 2026-09-09): a host-registered
+        // Psr\Log\LoggerInterface binding wins; otherwise honor the
+        // teleframe.logging.logger FQCN from config; otherwise stay silent
+        // with a NullLogger. The engine never requires a concrete logger.
+        $this->app->singleton(LoggerInterface::class, static function ($app): LoggerInterface {
+            /** @var ConfigRepository $config */
+            $config = $app->make('config');
+            $class = (string) $config->get('teleframe.logging.logger', '');
+
+            if ($class !== '' && class_exists($class)) {
+                $logger = new $class();
+
+                if ($logger instanceof LoggerInterface) {
+                    return $logger;
+                }
+            }
+
+            return new NullLogger();
+        });
+
         $this->app->singleton(UpdateDispatcher::class, static function ($app): UpdateDispatcher {
             $sends = $app->bound(CacheInterface::class)
                 ? $app->make(CacheInterface::class)
@@ -64,6 +87,7 @@ class TeleframeServiceProvider extends ServiceProvider
                 new Pipeline(),
                 $app,
                 $sends,
+                logger: $app->make(LoggerInterface::class),
             );
         });
 
@@ -99,7 +123,8 @@ class TeleframeServiceProvider extends ServiceProvider
                 defaultProxyConfig: $config['proxy'] ?? null,
                 defaultUserSession: $config['user_session'] ?? null,
                 defaultBotSession: $config['bot_session'] ?? null,
-                defaultDcId: (int)($config['dc_id'] ?? 2)
+                defaultDcId: (int)($config['dc_id'] ?? 2),
+                logger: $app->make(LoggerInterface::class),
             );
         });
 

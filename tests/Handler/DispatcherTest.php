@@ -11,6 +11,7 @@ use MeRezaRezaei\Teleframe\Handler\Update;
 use MeRezaRezaei\Teleframe\Handler\UpdateDispatcher;
 use MeRezaRezaei\Teleframe\Tests\Support\ArrayCache;
 use MeRezaRezaei\Teleframe\Tests\Support\ArrayContainer;
+use MeRezaRezaei\Teleframe\Tests\Support\ArrayLogger;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -107,6 +108,51 @@ final class DispatcherTest extends TestCase
         $this->dispatcher->dispatch(new Update(['_' => 'somethingElse'], 1));
 
         self::assertFalse($ran);
+    }
+
+    public function test_handler_exception_is_logged_then_rethrown(): void
+    {
+        $logger = new ArrayLogger();
+        $this->dispatcher = new UpdateDispatcher(
+            $this->registry,
+            $this->pipeline,
+            $this->container,
+            $this->sends,
+            logger: $logger,
+        );
+
+        $this->registry->on('updateNewMessage', function (Update $update): void {
+            throw new \RuntimeException('handler boom');
+        });
+
+        try {
+            $this->dispatcher->dispatch(Update::fromBus(['_' => 'updateNewMessage'], 123));
+            self::fail('expected the handler exception to propagate');
+        } catch (\RuntimeException $e) {
+            self::assertSame('handler boom', $e->getMessage());
+        }
+
+        self::assertCount(1, $logger->records);
+        self::assertSame('error', $logger->records[0]['level']);
+        self::assertSame('teleframe.dispatch.failed', $logger->records[0]['message']);
+        self::assertSame('updateNewMessage', $logger->records[0]['context']['constructor']);
+        self::assertSame(123, $logger->records[0]['context']['account']);
+        self::assertSame('handler boom', $logger->records[0]['context']['error']);
+        self::assertSame(\RuntimeException::class, $logger->records[0]['context']['exception']);
+    }
+
+    public function test_dispatch_is_silent_with_default_null_logger(): void
+    {
+        $this->registry->on('updateNewMessage', function (Update $update): void {
+            throw new \RuntimeException('propagates despite the NullLogger');
+        });
+
+        try {
+            $this->dispatcher->dispatch(Update::fromBus(['_' => 'updateNewMessage'], 1));
+            self::fail('expected the handler exception to propagate');
+        } catch (\RuntimeException $e) {
+            self::assertSame('propagates despite the NullLogger', $e->getMessage());
+        }
     }
 
     public function test_handler_receives_container_bound_context(): void

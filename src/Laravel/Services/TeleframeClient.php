@@ -12,6 +12,8 @@ use RuntimeException;
 use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
 use MeRezaRezaei\Teleframe\Bot\Services\BotAccountScope;
 use MeRezaRezaei\Teleframe\Bot\Services\BotClient;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * High-level Laravel Telegram Client Manager.
@@ -21,6 +23,8 @@ class TeleframeClient
 {
     private ?HttpFactory $http = null;
 
+    private readonly LoggerInterface $logger;
+
     public function __construct(
         public int $defaultApiId = 0,
         public string $defaultApiHash = '',
@@ -29,9 +33,11 @@ class TeleframeClient
         public ?string $defaultUserSession = null,
         public ?string $defaultBotSession = null,
         public int $defaultDcId = 2,
-        ?HttpFactory $http = null
+        ?HttpFactory $http = null,
+        ?LoggerInterface $logger = null,
     ) {
         $this->http = $http;
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**
@@ -50,9 +56,22 @@ class TeleframeClient
         $api = MethodRegistry::apiOf($name);
         unset($request['_']);
 
-        return $api === 'mtproto'
-            ? $this->user()->call($name, $request)
-            : $this->bot()->call($name, $request);
+        try {
+            return $api === 'mtproto'
+                ? $this->user()->call($name, $request)
+                : $this->bot()->call($name, $request);
+        } catch (\Throwable $e) {
+            // PSR-3 seam: RPC/wire failures are logged, never swallowed —
+            // the original exception still propagates unchanged.
+            $this->logger->error('teleframe.rpc.failed', [
+                'method' => $name,
+                'api' => $api,
+                'error' => $e->getMessage(),
+                'exception' => $e::class,
+            ]);
+
+            throw $e;
+        }
     }
 
     /**
@@ -64,7 +83,20 @@ class TeleframeClient
      */
     public function callMany(array $requests): array
     {
-        return $this->user()->mtproto->callMany($requests);
+        try {
+            return $this->user()->mtproto->callMany($requests);
+        } catch (\Throwable $e) {
+            $this->logger->error('teleframe.rpc.batch_failed', [
+                'methods' => array_map(
+                    static fn (array $r): string => (string) $r['method'],
+                    $requests,
+                ),
+                'error' => $e->getMessage(),
+                'exception' => $e::class,
+            ]);
+
+            throw $e;
+        }
     }
 
     /**

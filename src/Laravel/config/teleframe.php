@@ -74,6 +74,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Logging (PSR-3 seam)
+    |--------------------------------------------------------------------------
+    | FQCN of a PSR-3 logger class (default '' → Psr\Log\NullLogger, i.e. the
+    | engine is SILENT unless you opt in). When you publish this config and
+    | set e.g. TELEFRAME_LOGGER=Monolog\Logger::class, the class is
+    | instantiated with `new` and used everywhere the engine logs. A binding
+    | of Psr\Log\LoggerInterface you register in your own service provider
+    | always takes precedence over this value.
+    */
+    'logging' => [
+        'logger' => env('TELEFRAME_LOGGER', ''),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Schema Mirror (regeneration sources + curated migration dial)
     |--------------------------------------------------------------------------
     */

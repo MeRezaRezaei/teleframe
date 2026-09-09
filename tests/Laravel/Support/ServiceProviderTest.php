@@ -7,7 +7,10 @@ namespace MeRezaRezaei\Teleframe\Laravel\Tests\Support;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 use MeRezaRezaei\Teleframe\Laravel\Providers\TeleframeServiceProvider;
+use MeRezaRezaei\Teleframe\Tests\Support\ArrayLogger;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 final class ServiceProviderTest extends TestbenchTestCase
 {
@@ -26,5 +29,22 @@ final class ServiceProviderTest extends TestbenchTestCase
         sort($keys);
         self::assertContains('api_id', $keys);
         self::assertContains('dc_id', $keys);
+        self::assertContains('logging', $keys);
+    }
+
+    public function testLoggerInterfaceDefaultsToSilentNullLogger(): void
+    {
+        self::assertInstanceOf(NullLogger::class, $this->app->make(LoggerInterface::class));
+
+        // the default TeleframeClient singleton receives the same logger
+        $client = $this->app->make(TeleframeClient::class);
+        self::assertInstanceOf(TeleframeClient::class, $client);
+    }
+
+    public function testLoggerInterfaceHonorsConfiguredLoggerClass(): void
+    {
+        config()->set('teleframe.logging.logger', ArrayLogger::class);
+
+        self::assertInstanceOf(ArrayLogger::class, $this->app->make(LoggerInterface::class));
     }
 }

@@ -7,7 +7,10 @@ namespace MeRezaRezaei\Teleframe\Handler;
 use MeRezaRezaei\Teleframe\Handler\Middleware\EchoEliminator;
 use MeRezaRezaei\Teleframe\Handler\Middleware\ReplayDedup;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Psr\SimpleCache\CacheInterface;
+use Throwable;
 
 /**
  * The one dispatch point both intake rows funnel through (friction I.1
@@ -31,9 +34,14 @@ final class UpdateDispatcher
     /** @var list<\Closure|EchoEliminator|ReplayDedup> */
     private array $middleware;
 
+    private readonly LoggerInterface $logger;
+
     /**
      * @param list<callable> $middleware extra middleware layered AFTER the
      *        echo eliminator and replay dedup (which stay first)
+     * @param LoggerInterface|null $logger PSR-3 log target; NullLogger by
+     *        default (silent). Handler/middleware failures are logged at
+     *        error level and ALWAYS rethrown — logging never swallows.
      */
     public function __construct(
         private readonly HandlerRegistry $registry,
@@ -42,7 +50,9 @@ final class UpdateDispatcher
         private readonly CacheInterface $sends,
         array $middleware = [],
         int $dedupTtl = 60,
+        ?LoggerInterface $logger = null,
     ) {
+        $this->logger = $logger ?? new NullLogger();
         $eliminator = new EchoEliminator($sends, new HandlerMatcher($registry));
         $dedup = new ReplayDedup($sends, $dedupTtl, function (): void {
             ++$this->seenReplays;
@@ -80,7 +90,23 @@ final class UpdateDispatcher
 
         $runner = $this->pipeline->then($this->middleware, $terminal);
 
-        return $runner($update);
+        try {
+            return $runner($update);
+        } catch (Throwable $e) {
+            // Log, never swallow: caller's behavior is byte-for-byte the
+            // pre-seam contract, a failing handler simply also reaches a
+            // PSR-3 logger (NullLogger → no-op).
+            $this->logger->error('teleframe.dispatch.failed', [
+                'constructor' => $update->constructor(),
+                'handler' => $match->handler::class,
+                'account' => $update->accountId,
+                'source' => $update->source,
+                'error' => $e->getMessage(),
+                'exception' => $e::class,
+            ]);
+
+            throw $e;
+        }
     }
 
     /** Resolve a PSR-11-addressable handler to an invocable callable. */

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **PSR-3 logging seam (`psr/log` ^3, silent by default):** `LoggerInterface` is
+  now resolved by the provider (host binding → `teleframe.logging.logger` FQCN →
+  `NullLogger`). `UpdateDispatcher` logs handler failures and `TeleframeClient`
+  logs MTProto RPC/batch failures at `error` level with structured context
+  (method, constructor, account, exception); failures are ALWAYS rethrown —
+  logging never swallows. Unconfigured, engine behavior is byte-for-byte
+  unchanged (NullLogger no-ops).
+
 ### Fixed
 - **Generic TL method support — 823 methods parsed (was 812):** `TLSignatureParser`
   now understands schema type-variable declarations (`{X:Type}`) and generic
