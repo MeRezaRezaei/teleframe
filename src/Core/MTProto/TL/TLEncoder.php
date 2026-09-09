@@ -75,11 +75,13 @@ class TLEncoder
     /**
      * BC wrapper kept for tests and external callers: [name, type] pairs in
      * schema order. Registered lines — including the generic wrappers
-     * (invokeWithLayer/initConnection) whose `X:Type`/`!X` tokens the strict
-     * parser rejects — resolve through TLRegistry's cached parse (same
-     * degraded path the registry itself uses); unregistered lines strict-parse
-     * via TLSignatureParser. Conditional types render back as `flagWord.N?Type`
-     * for readability. Name extraction uses string functions only — no regex.
+     * (invokeWithLayer/initConnection) with their `{X:Type}`/`X:Type` generic
+     * declarations and `!X` bound-variable uses — resolve through
+     * TLRegistry's cached strict parse; unregistered lines strict-parse via
+     * TLSignatureParser. Generic bound variables normalize to the bare
+     * variable name (`!X` -> `X`). Conditional types render back as
+     * `flagWord.N?Type` for readability. Name extraction uses string
+     * functions only — no regex.
      *
      * @return list<array{0: string, 1: string}> [name, type] pairs in schema order
      */

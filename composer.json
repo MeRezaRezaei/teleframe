@@ -72,7 +72,11 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "MeRezaRezaei\\Teleframe\\Tests\\": "tests/"
+            "MeRezaRezaei\\Teleframe\\Tests\\": "tests/",
+            "MeRezaRezaei\\Teleframe\\Core\\Tests\\": "tests/Core/",
+            "MeRezaRezaei\\Teleframe\\Bot\\Tests\\": "tests/Bot/",
+            "MeRezaRezaei\\Teleframe\\Laravel\\Tests\\": "tests/Laravel/",
+            "MeRezaRezaei\\Teleframe\\Schema\\Tests\\": "tests/Schema/"
         }
     },
     "scripts": {

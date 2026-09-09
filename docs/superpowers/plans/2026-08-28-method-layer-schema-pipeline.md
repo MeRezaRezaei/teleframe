@@ -1,6 +1,8 @@
 # Method-Object Layer & Schema Pipeline Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+> **✅ VALIDATED 2026-09-09 (tasks G1–G3 fully shipped, ticked).** Post-split/consolidation locations: generators in `bin/generate-{method-schema,botapi-schema,method-builders,skill-files}.php`, artifacts under `src/Schema/schema/`, catalog `MethodRegistry` in `src/Core/Schema/`, curated dial in `src/Schema/config/curated-methods.json`, commands `teleframe:schema-audit` / `teleframe:schema-update`. **Completeness amendment:** generic TL function signatures (`{X:Type}` type-variable declarations and `!X` bound-variable uses) are now parsed by `TLSignatureParser` (2026-09-09), so `methods-mtproto.json` carries **823 methods, 0 skipped** — including `invokeWithLayer`, `initConnection`, `invokeWithBusinessConnection`, `invokeWithReCaptcha`, `invokeAfterMsg(s)` and the other formerly-skipped generic wrappers.
 >
 > **PARALLEL DISPATCH:** Groups must complete in order **G1 → G2 → G3**. Tasks inside a group touch disjoint files and MAY run as parallel implementers.
 > **PREREQUISITE PLAN:** `2026-08-28-zero-regex-hardening.md` must be COMPLETE (this plan consumes `TLSignatureParser`/`ParsedSignature`).

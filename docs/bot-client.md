@@ -7,14 +7,14 @@ The Bot API client provides simple, clean methods to interact with Telegram Bots
 ## 1. Basic Usage
 
 ```php
-use MeRezaRezaei\Teleproto\Facades\Teleproto;
+use MeRezaRezaei\Teleframe\Laravel\Facades\Teleframe;
 
 // Send message via default bot (TELEGRAM_BOT_TOKEN from .env)
-$bot = Teleproto::bot();
+$bot = Teleframe::bot();
 $bot->sendMessage(chatId: '@mychannel', text: 'Hello Channel Subscribers!');
 
 // Send message via dynamic bot token
-$customBot = Teleproto::bot('123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11');
+$customBot = Teleframe::bot('123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11');
 $customBot->sendMessage(chatId: 987654321, text: 'Direct notification');
 ```
 
@@ -68,7 +68,7 @@ $bot->call('answerCallbackQuery', [
 
 ## 4. Handling Inbound Updates (Webhooks & Long Polling)
 
-Teleproto provides a zero-boilerplate way to receive and process updates:
+Teleframe provides a zero-boilerplate way to receive and process updates:
 
 ### Option A: Webhook in `routes/api.php`
 ```php
@@ -80,19 +80,19 @@ Route::telegramWebhook('telegram/webhook');
 
 ### Option B: Local Polling (No HTTPS/ngrok required)
 ```bash
-php artisan teleproto:poll
+php artisan teleframe:poll
 ```
 
 ### Listening to Updates Anywhere in Laravel:
 ```php
 use Illuminate\Support\Facades\Event;
-use MeRezaRezaei\Teleproto\Events\TelegramUpdateReceived;
-use MeRezaRezaei\Teleproto\Facades\TP;
+use MeRezaRezaei\Teleframe\Laravel\Events\TelegramUpdateReceived;
+use MeRezaRezaei\Teleframe\Laravel\Facades\TF;
 
 Event::listen(TelegramUpdateReceived::class, function (TelegramUpdateReceived $event) {
     $msg = $event->getMessage();
     if ($msg && ($msg['text'] ?? '') === '/start') {
-        TP::bot($event->botToken)->sendMessage($msg['chat']['id'], 'Hello! Bot is live on Teleproto.');
+        TP::bot($event->botToken)->sendMessage($msg['chat']['id'], 'Hello! Bot is live on Teleframe.');
     }
 });
 ```
@@ -104,8 +104,8 @@ Event::listen(TelegramUpdateReceived::class, function (TelegramUpdateReceived $e
 You can also run your bots directly over Telegram's native binary **MTProto 2.0 TCP sockets** using `auth.importBotAuthorization`, unlocking raw MTProto RPC calls, large file uploads (up to 4GB), and zero HTTP polling latency:
 
 ```php
-use MeRezaRezaei\Teleproto\Facades\TP;
-use MeRezaRezaei\Teleproto\Types\InputPeer;
+use MeRezaRezaei\Teleframe\Laravel\Facades\TF;
+use MeRezaRezaei\Teleframe\Core\Types\InputPeer;
 
 $botMtproto = TP::botMtproto('123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11');
 $botMtproto->login();

@@ -1,6 +1,6 @@
 # Quickstart — 5 Recipes
 
-Copy-paste recipes against real Teleproto APIs. Every snippet assumes `use MeRezaRezaei\Teleproto\Facades\TP;` unless shown.
+Copy-paste recipes against real Teleframe APIs. Every snippet assumes `use MeRezaRezaei\Teleframe\Laravel\Facades\TF;` unless shown.
 
 > **Phase 2 + 3 consumers.** For the merged consumer layer the public face is
 > `MeRezaRezaei\Teleframe\Teleframe` (composes `ingest` / `onMessage` /
@@ -14,7 +14,7 @@ Copy-paste recipes against real Teleproto APIs. Every snippet assumes `use MeRez
 **When:** fire-and-forget notifications from any Laravel code — zero setup beyond the token.
 
 ```php
-use MeRezaRezaei\Teleproto\Facades\TP;
+use MeRezaRezaei\Teleframe\Laravel\Facades\TF;
 
 TP::bot()->sendMessage(chatId: '@mychannel', text: 'Deploy finished ✅');
 
@@ -32,7 +32,7 @@ TP::bot('123456:ABC-DEF...')->sendMessage(chatId: 987654321, text: 'Direct ping'
 
 ```bash
 # 1. One-time wizard: phone → code → (2FA if set) → session string
-php artisan teleproto:login --phone=+1234567890
+php artisan teleframe:login --phone=+1234567890
 #    ...confirm saving the session to .env as TELEGRAM_USER_SESSION
 ```
 
@@ -49,7 +49,7 @@ $history = $user->call('messages.getHistory', [
 ]);
 ```
 
-**.env:** `TELEGRAM_API_ID=`, `TELEGRAM_API_HASH=`, `TELEGRAM_USER_SESSION=` (wizard writes the last one for you). QR login: `php artisan teleproto:login --qr`.
+**.env:** `TELEGRAM_API_ID=`, `TELEGRAM_API_HASH=`, `TELEGRAM_USER_SESSION=` (wizard writes the last one for you). QR login: `php artisan teleframe:login --qr`.
 
 ---
 
@@ -77,7 +77,7 @@ The middleware reads the `X-Telegram-Init-Data` header, verifies Telegram's HMAC
 **When:** a user submits identity documents via Passport to your bot.
 
 ```php
-use MeRezaRezaei\Teleproto\Passport\PassportDecryptor;
+use MeRezaRezaei\Teleframe\Core\Passport\PassportDecryptor;
 
 $cred = $update['message']['passport_data']['credentials'];
 
@@ -103,7 +103,7 @@ $name = $decrypted['personal_details']['first_name']; // verified identity data
 $user = TP::user();
 $fileId = random_int(1, PHP_INT_MAX);
 $md5 = hash_init('md5');
-foreach (\MeRezaRezaei\Teleproto\Media\StorageMedia::readFromDisk('exports/report.pdf', disk: 's3') as $part) {
+foreach (\MeRezaRezaei\Teleframe\Laravel\Media\StorageMedia::readFromDisk('exports/report.pdf', disk: 's3') as $part) {
     hash_update($md5, $part['bytes']);
     $user->call($part['is_big'] ? 'upload.saveBigFilePart' : 'upload.saveFilePart', [
         'file_id' => $fileId, 'file_part' => $part['part_index'],
@@ -140,8 +140,8 @@ them in env/secrets, never in committed files.
 ### (f) First update → Postgres row
 
 ```bash
-# 1. Login once — teleproto's wizard prints a session string:
-php artisan teleproto:login
+# 1. Login once — teleframe's wizard prints a session string:
+php artisan teleframe:login
 
 # 2. Register the account (config/teleframe.php):
 # 'daemon' => ['accounts' => [
@@ -149,7 +149,7 @@ php artisan teleproto:login
 # ]],
 
 # 3. Produce: run the daemon bootstrap (pattern in docs/bus.md — host
-#    command wrapping Daemon + RedisStreamSink) with TELEPROTO_LIVE=true.
+#    command wrapping Daemon + RedisStreamSink) with TELEFRAME_LIVE=true.
 
 # 4. Consume one batch:
 php artisan teleframe:ingest --once

@@ -23,10 +23,10 @@ Telegram gates direct binary TCP socket connections to its core Data Centers beh
 
 ### Step 1: Initialize User Login
 ```php
-use MeRezaRezaei\Teleproto\Facades\Teleproto;
+use MeRezaRezaei\Teleframe\Laravel\Facades\Teleframe;
 
 // Initialize client with user's API credentials (or fallback to .env)
-$user = Teleproto::user(
+$user = Teleframe::user(
     accountId: 123456789,
     apiId: 123456,
     apiHash: 'your_api_hash'
@@ -64,7 +64,7 @@ $authResult = $user->call('auth.checkPassword', [
 ```
 
 ### Step 4: Exporting the Session (Stateless Architecture)
-Teleproto does not lock your filesystem or require a local SQLite database. The entire cryptographic state (DC ID, 256-byte AuthKey, user ID, and clock delta) is packed into a lightweight string:
+Teleframe does not lock your filesystem or require a local SQLite database. The entire cryptographic state (DC ID, 256-byte AuthKey, user ID, and clock delta) is packed into a lightweight string:
 ```php
 $sessionString = $user->session->exportString();
 
@@ -79,10 +79,10 @@ $userModel->update([
 ## 2. Making Calls from Stored Session
 
 ```php
-use MeRezaRezaei\Teleproto\Facades\Teleproto;
+use MeRezaRezaei\Teleframe\Laravel\Facades\Teleframe;
 
 // Load and initialize client from stored session string
-$user = Teleproto::fromSession(
+$user = Teleframe::fromSession(
     sessionString: Crypt::decryptString($userModel->telegram_session),
     apiId: $userModel->api_id,
     apiHash: $userModel->api_hash

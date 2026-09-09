@@ -9435,6 +9435,331 @@
             ],
             "description": "Informs the server about the number of pending bot updates if they haven't been processed for a long time; for bots only"
         },
+        "initConnection": {
+            "id": "0xc1cd5ea9",
+            "params": [
+                {
+                    "name": "api_id",
+                    "type": "int",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Application identifier (see. [App configuration](https://core.telegram.org/myapp))"
+                },
+                {
+                    "name": "device_model",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Device model"
+                },
+                {
+                    "name": "system_version",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Operation system version"
+                },
+                {
+                    "name": "app_version",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Application version"
+                },
+                {
+                    "name": "system_lang_code",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Code for the language used on the device's OS, ISO 639-1 standard"
+                },
+                {
+                    "name": "lang_pack",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Platform identifier (i.e. `android`, `tdesktop`, etc)."
+                },
+                {
+                    "name": "lang_code",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Either an ISO 639-1 language code or a language pack name obtained from a [language pack link](https://core.telegram.org/api/links#language-pack-links)."
+                },
+                {
+                    "name": "proxy",
+                    "type": "InputClientProxy",
+                    "flag_word": "flags",
+                    "bit": 0,
+                    "description": "Info about an MTProto proxy"
+                },
+                {
+                    "name": "params",
+                    "type": "JSONValue",
+                    "flag_word": "flags",
+                    "bit": 1,
+                    "description": "Additional initConnection parameters. <br>For now, only the `tz_offset` field is supported, for specifying the timezone offset in seconds."
+                },
+                {
+                    "name": "query",
+                    "type": "X",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": ""
+                }
+            ],
+            "return": "X",
+            "docs": "https://core.telegram.org/method/initConnection",
+            "errors": [
+                "CONNECTION_LAYER_INVALID"
+            ],
+            "description": "Initialize connection"
+        },
+        "invokeAfterMsg": {
+            "id": "0xcb9f372d",
+            "params": [
+                {
+                    "name": "msg_id",
+                    "type": "long",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Message identifier on which a current query depends"
+                },
+                {
+                    "name": "query",
+                    "type": "X",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": ""
+                }
+            ],
+            "return": "X",
+            "docs": "https://core.telegram.org/method/invokeAfterMsg",
+            "errors": [],
+            "description": "Invokes a query after successful completion of one of the previous queries."
+        },
+        "invokeAfterMsgs": {
+            "id": "0x3dc4b4f0",
+            "params": [
+                {
+                    "name": "msg_ids",
+                    "type": "Vector<long>",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "List of messages on which a current query depends"
+                },
+                {
+                    "name": "query",
+                    "type": "X",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": ""
+                }
+            ],
+            "return": "X",
+            "docs": "https://core.telegram.org/method/invokeAfterMsgs",
+            "errors": [],
+            "description": "Invokes a query after a successful completion of previous queries"
+        },
+        "invokeWithApnsSecret": {
+            "id": "0x0dae54f8",
+            "params": [
+                {
+                    "name": "nonce",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Nonce."
+                },
+                {
+                    "name": "secret",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Secret."
+                },
+                {
+                    "name": "query",
+                    "type": "X",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": ""
+                }
+            ],
+            "return": "X",
+            "docs": "https://core.telegram.org/method/invokeWithApnsSecret",
+            "errors": [],
+            "description": "Official clients only, invoke with Apple push verification."
+        },
+        "invokeWithBusinessConnection": {
+            "id": "0xdd289f8e",
+            "params": [
+                {
+                    "name": "connection_id",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Business connection ID."
+                },
+                {
+                    "name": "query",
+                    "type": "X",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": ""
+                }
+            ],
+            "return": "X",
+            "docs": "https://core.telegram.org/method/invokeWithBusinessConnection",
+            "errors": [],
+            "description": "Invoke a method using a [Telegram Business Bot connection, see here \u00bb for more info, including a list of the methods that can be wrapped in this constructor](https://core.telegram.org/api/bots/connected-business-bots).\n\nMake sure to always send queries wrapped in a `invokeWithBusinessConnection` to the datacenter ID, specified in the `dc_id` field of the [botBusinessConnection](../constructors/botBusinessConnection.md) that is being used."
+        },
+        "invokeWithGooglePlayIntegrity": {
+            "id": "0x1df92984",
+            "params": [
+                {
+                    "name": "nonce",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Nonce."
+                },
+                {
+                    "name": "token",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Token."
+                },
+                {
+                    "name": "query",
+                    "type": "X",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": ""
+                }
+            ],
+            "return": "X",
+            "docs": "https://core.telegram.org/method/invokeWithGooglePlayIntegrity",
+            "errors": [],
+            "description": "Official clients only, invoke with Google Play Integrity token."
+        },
+        "invokeWithLayer": {
+            "id": "0xda9b0d0d",
+            "params": [
+                {
+                    "name": "layer",
+                    "type": "int",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "The layer to use"
+                },
+                {
+                    "name": "query",
+                    "type": "X",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": ""
+                }
+            ],
+            "return": "X",
+            "docs": "https://core.telegram.org/method/invokeWithLayer",
+            "errors": [
+                "AUTH_BYTES_INVALID",
+                "CDN_METHOD_INVALID",
+                "CHAT_WRITE_FORBIDDEN",
+                "CONNECTION_API_ID_INVALID",
+                "CONNECTION_LAYER_INVALID",
+                "INVITE_HASH_EXPIRED"
+            ],
+            "description": "Invoke the specified query using the specified API [layer](https://core.telegram.org/api/invoking#layers)"
+        },
+        "invokeWithMessagesRange": {
+            "id": "0x365275f2",
+            "params": [
+                {
+                    "name": "range",
+                    "type": "MessageRange",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "Message range"
+                },
+                {
+                    "name": "query",
+                    "type": "X",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": ""
+                }
+            ],
+            "return": "X",
+            "docs": "https://core.telegram.org/method/invokeWithMessagesRange",
+            "errors": [],
+            "description": "Invoke with the given message range"
+        },
+        "invokeWithReCaptcha": {
+            "id": "0xadbb0f94",
+            "params": [
+                {
+                    "name": "token",
+                    "type": "string",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "reCAPTCHA token received after verification."
+                },
+                {
+                    "name": "query",
+                    "type": "X",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": ""
+                }
+            ],
+            "return": "X",
+            "docs": "https://core.telegram.org/method/invokeWithReCaptcha",
+            "errors": [],
+            "description": "Official clients only: re-execute a method call that required reCAPTCHA verification via a `RECAPTCHA_CHECK_%s__%s`, where the first placeholder is the `action`, and the second one is the reCAPTCHA key ID."
+        },
+        "invokeWithTakeout": {
+            "id": "0xaca9fd2e",
+            "params": [
+                {
+                    "name": "takeout_id",
+                    "type": "long",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": "[Takeout session ID \u00bb](https://core.telegram.org/api/takeout)"
+                },
+                {
+                    "name": "query",
+                    "type": "X",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": ""
+                }
+            ],
+            "return": "X",
+            "docs": "https://core.telegram.org/method/invokeWithTakeout",
+            "errors": [],
+            "description": "Invoke a method within a [takeout session, see here \u00bb for more info](https://core.telegram.org/api/takeout)."
+        },
+        "invokeWithoutUpdates": {
+            "id": "0xbf9459b7",
+            "params": [
+                {
+                    "name": "query",
+                    "type": "X",
+                    "flag_word": null,
+                    "bit": null,
+                    "description": ""
+                }
+            ],
+            "return": "X",
+            "docs": "https://core.telegram.org/method/invokeWithoutUpdates",
+            "errors": [],
+            "description": "Invoke a request without subscribing the used connection for [updates](https://core.telegram.org/api/updates) (this is enabled by default for [file queries](https://core.telegram.org/api/files))."
+        },
         "langpack.getDifference": {
             "id": "0xcd984aa5",
             "params": [

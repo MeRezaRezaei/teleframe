@@ -128,30 +128,35 @@ class TLRegistryTest extends TestCase
     /**
      * Wrapper routing must follow the constructor NAME ('invokeWithLayer',
      * 'initConnection'), never an 'X:Type' substring: the maxX:Type token
-     * contains the substring and would hijack the whole line into the
-     * degraded wrapper walk, which keeps `flags.0?Type` conditionals as
-     * wire fields the strict tokenizer correctly skips as declarations.
+     * contains the substring but is a REAL field (name is not a single
+     * uppercase type-variable), so it must be kept — only the single-char
+     * bare declarations `X:Type` are schema-level bindings, never wire fields.
      */
     public function testWrapperRoutingIsNameBasedNotXTypeSubstring(): void
     {
         TLRegistry::register('trapCond#5a5a5a5c maxX:Type val:flags.0?Type = TrapCond');
-        $this->assertSame([], TLRegistry::signatureOf('trapCond')->fields);
+        $sig = TLRegistry::signatureOf('trapCond');
+        $this->assertSame('maxX', $sig->fields[0]['name']);
+        $this->assertSame('Type', $sig->fields[0]['type']);
+        $this->assertSame(['name' => 'val', 'type' => 'Type', 'flagWord' => 'flags', 'bit' => 0], $sig->fields[1]);
     }
 
-    public function testWrapperNameWithoutXTypeDeclarationIsRejected(): void
+    public function testWrapperWithoutBareDeclarationParsesStrictly(): void
     {
-        // secondary assertion: the name routes to the degraded parse, which
-        // only makes sense for generic wrapper lines declaring X:Type
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('X:Type');
+        // no brace-less `X:Type` declaration — the strict tokenizer still
+        // parses the line (return `X` stays a plain return type), proving
+        // no name/'X:Type'-substring heuristic is involved
         TLRegistry::register('initConnection api_id:int = X');
+        $sig = TLRegistry::signatureOf('initConnection');
+        $this->assertSame([['name' => 'api_id', 'type' => 'int', 'flagWord' => null, 'bit' => null]], $sig->fields);
+        $this->assertSame('X', $sig->returnType);
     }
 
-    public function testDegradedWrapperLineMissingEqualsThrows(): void
+    public function testGenericWrapperLineMissingEqualsThrows(): void
     {
         // (int) strpos-cast of false used to garbage-parse silently
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("degraded wrapper line missing '='");
+        $this->expectExceptionMessage('before return type');
         TLRegistry::register('invokeWithLayer X:Type layer:int query:!X');
     }
 

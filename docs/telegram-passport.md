@@ -24,7 +24,7 @@ When a user submits passport data, decrypt it in your webhook controller:
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use MeRezaRezaei\Teleproto\Passport\PassportDecryptor;
+use MeRezaRezaei\Teleframe\Core\Passport\PassportDecryptor;
 
 class TelegramWebhookController extends Controller
 {

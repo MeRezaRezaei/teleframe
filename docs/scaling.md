@@ -1,12 +1,12 @@
 # Scaling Guide
 
-How to run Teleproto across many accounts and bots today, and what the roadmap changes. Every claim below reflects the current code in `src/` — where a limit exists, it is stated as a limit.
+How to run Teleframe across many accounts and bots today, and what the roadmap changes. Every claim below reflects the current code in `src/` — where a limit exists, it is stated as a limit.
 
 ---
 
 ## 📦 Today (v1.0): One Process per Account
 
-Teleproto's MTProto connection is a **blocking request/response socket**: a sequential `call()` sends one query and reads until its `rpc_result` returns, while `callMany()` batches N independent queries into a single `msg_container` round-trip (`EncryptedConnection::callBatch` + receive demux by inner msg_id). There is no shared event loop and no in-process multiplexing *across* batches — one batch in flight at a time — by design, this is what keeps the engine small and stateless.
+Teleframe's MTProto connection is a **blocking request/response socket**: a sequential `call()` sends one query and reads until its `rpc_result` returns, while `callMany()` batches N independent queries into a single `msg_container` round-trip (`EncryptedConnection::callBatch` + receive demux by inner msg_id). There is no shared event loop and no in-process multiplexing *across* batches — one batch in flight at a time — by design, this is what keeps the engine small and stateless.
 
 The supported scaling model is **horizontal: one process per account/bot**, driven by Laravel queue workers or Horizon.
 
@@ -23,9 +23,9 @@ Dispatch one long-running polling job per account onto a dedicated queue; Horizo
 // config/horizon.php
 'supervisors' => [
     [
-        'name' => 'teleproto',
+        'name' => 'teleframe',
         'connection' => 'redis',
-        'queue' => ['teleproto-accounts'],
+        'queue' => ['teleframe-accounts'],
         'processes' => 20,          // one process per account
         'balance' => 'simple',      // each process takes exactly one job
         'maxTime' => 0,             // polling jobs run until deployed/stopped
@@ -39,8 +39,8 @@ Dispatch one long-running polling job per account onto a dedicated queue; Horizo
 ```php
 // App\Jobs\PollTelegramAccount — dispatched once per account row
 use Illuminate\Support\Facades\Crypt;
-use MeRezaRezaei\Teleproto\Facades\TP;
-use MeRezaRezaei\Teleproto\Services\UpdatePollerService;
+use MeRezaRezaei\Teleframe\Laravel\Facades\TF;
+use MeRezaRezaei\Teleframe\Laravel\Services\UpdatePollerService;
 
 public function handle(): void
 {
@@ -59,7 +59,7 @@ public function handle(): void
 ```php
 // Bootstrap: push 20 jobs (idempotent — re-dispatch on deploy)
 TelegramAccount::query()->pluck('id')->each(
-    fn ($id) => PollTelegramAccount::dispatch($id)->onQueue('teleproto-accounts')
+    fn ($id) => PollTelegramAccount::dispatch($id)->onQueue('teleframe-accounts')
 );
 ```
 
@@ -78,7 +78,7 @@ Real numbers from a live measurement (fresh PHP process → one delivered `messa
 | **Cold** — fresh process, session string loaded from `.env`/DB | **~49 ms** |
 | **Warm** — client already connected in-process | **~5 ms** |
 
-The key fact: the ~49 ms cold cost is **socket + encrypted-session setup only — never the handshake**. The expensive Diffie–Hellman handshake happens **once, ever**: `php artisan teleproto:login` performs it and packs the resulting auth key into the session string (`TELEGRAM_USER_SESSION`). Every later process loads that string and pays only the ~49 ms setup before its first call, then ~5 ms per call.
+The key fact: the ~49 ms cold cost is **socket + encrypted-session setup only — never the handshake**. The expensive Diffie–Hellman handshake happens **once, ever**: `php artisan teleframe:login` performs it and packs the resulting auth key into the session string (`TELEGRAM_USER_SESSION`). Every later process loads that string and pays only the ~49 ms setup before its first call, then ~5 ms per call.
 
 What that means per Laravel runtime:
 
@@ -89,7 +89,7 @@ What that means per Laravel runtime:
 ```text
 once, ever                every process                   per call
 ──────────────────       ────────────────────────        ─────────────────
-teleproto:login     ──▶  load session string        ──▶  warm RPC ≈ 5 ms
+teleframe:login     ──▶  load session string        ──▶  warm RPC ≈ 5 ms
   (DH handshake            (~49 ms cold start:             │
    → auth key)              TCP + session setup)            ├── FPM: cold every request
                                                             │     (fine: occasional)
@@ -97,7 +97,7 @@ teleproto:login     ──▶  load session string        ──▶  warm RPC �
                                                                   warm from call #2
 ```
 
-The honest takeaway: Teleproto has no daemon precisely because cold start is cheap. You only reach for long-lived workers when you want *warm* latency or continuous polling — not because the library forces you to.
+The honest takeaway: Teleframe has no daemon precisely because cold start is cheap. You only reach for long-lived workers when you want *warm* latency or continuous polling — not because the library forces you to.
 
 ---
 
@@ -117,7 +117,7 @@ $results['me'][0]['id'];   // key => decoded result, input key order preserved
 $results['state']['pts'];  // each result is the same decoded array call() returns
 
 // Or via the service passthrough on the default user scope:
-TP::callMany([...]);       // MeRezaRezaei\Teleproto\Services\TeleprotoClient::callMany
+TP::callMany([...]);       // MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient::callMany
 ```
 
 **Live-measured** (production DC4, warm connection, 2026-08-29, `php examples/batch-bench.php`):

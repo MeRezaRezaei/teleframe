@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `teleproto` will be documented in this file.
+All notable changes to `teleframe` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -9,8 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Generic TL method support — 823 methods parsed (was 812):** `TLSignatureParser`
+  now understands schema type-variable declarations (`{X:Type}`) and generic
+  bound-variable uses (`!X`/`%X`). All 11 previously-skipped methods are parsed,
+  including `invokeWithLayer`, `initConnection`, `invokeWithBusinessConnection`,
+  and `invokeWithReCaptcha` — zero regex added.
+- **Test autoloading:** `composer dump-autoload` no longer warns; dev PSR-4 now
+  maps the `Core/Bot/Laravel/Schema\Tests` sub-namespaces to their `tests/` dirs.
+- **Docs + branding polish:** `AGENTS.md`, user-facing docs (`quickstart`,
+  `bot-client`, `user-client`, `scaling`, `bus`, `telegram-passport`) and the
+  changelog now carry the shipped `Teleframe` API (`TeleframeClient`,
+  `TF`/`Teleframe` facades, `TELEFRAME_LIVE`, `teleframe:*` commands) —
+  the legacy `Teleproto` identifiers are gone from user-facing material.
+
 ### Added
-- **`msg_container` batching — N independent RPCs in ONE round-trip.** `EncryptedConnection::callBatch()` packs up to 1020 prebuilt request bodies (32 KB container limit) into a single naked `msg_container` — one encrypted packet, one TCP write — and demultiplexes the per-request `rpc_result`s by inner msg_id: gzip-aware result unwrap, typed `rpc_error` resolution carrying the failing request's method context, one whole-batch resend after `bad_server_salt`, poison-frame cap. The container envelope uses the protocol-correct even (non-content-related) seq_no — live DC4 rejects an odd one with `bad_msg_notification` code 34. `Client::callMany()` validates and builds every body up front and returns key => result with input order preserved (fresh connections still pay the `invokeWithLayer` init once; warm connections send all N in one container); `TeleprotoClient::callMany()` passes it through on the default user scope. Live-measured on production DC4: 3 requests in one 21–33 ms container vs 58–81 ms sequential (**2.3–2.7×**, `php examples/batch-bench.php`).
+- **`msg_container` batching — N independent RPCs in ONE round-trip.** `EncryptedConnection::callBatch()` packs up to 1020 prebuilt request bodies (32 KB container limit) into a single naked `msg_container` — one encrypted packet, one TCP write — and demultiplexes the per-request `rpc_result`s by inner msg_id: gzip-aware result unwrap, typed `rpc_error` resolution carrying the failing request's method context, one whole-batch resend after `bad_server_salt`, poison-frame cap. The container envelope uses the protocol-correct even (non-content-related) seq_no — live DC4 rejects an odd one with `bad_msg_notification` code 34. `Client::callMany()` validates and builds every body up front and returns key => result with input order preserved (fresh connections still pay the `invokeWithLayer` init once; warm connections send all N in one container); `TeleframeClient::callMany()` passes it through on the default user scope. Live-measured on production DC4: 3 requests in one 21–33 ms container vs 58–81 ms sequential (**2.3–2.7×**, `php examples/batch-bench.php`).
 
 ## [v1.0.0] - 2026-08-28
 
@@ -46,17 +60,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UpdatePollerService` with pluggable `UpdateSinkInterface` to stream updates into Redis Streams, PostgreSQL, or Spatie Laravel-Data DTOs.
 - Standard 1-line Webhook macro (`Route::telegramWebhook`) with secret token verification and `TelegramUpdateReceived` event dispatching.
 - Gap detection and resync events: `TelegramGapDetected` (kind `slice|too_long|hole` + context) and `TelegramResynced` (adopted `{pts, date, qts, seq}` state), both dispatched with the same Laravel-availability guard as `TelegramUpdateReceived`.
-- Interactive terminal development poller (`php artisan teleproto:poll`).
+- Interactive terminal development poller (`php artisan teleframe:poll`).
 
 #### 5. Interactive CLI & Programmatic Authentication
-- Interactive Artisan Login Wizard (`php artisan teleproto:login`):
+- Interactive Artisan Login Wizard (`php artisan teleframe:login`):
   - 📱 Phone number + code verification.
   - 🔒 2FA Cloud Password auto-retry loop.
   - 📷 ANSI terminal QR Code Scan (`TerminalQr`).
   - 🤖 Bot MTProto Token authorization.
   - 💾 Automatic `.env` session persistence.
-- `teleproto:doctor` live verification command (no Telegram account needed).
-- Standalone `TeleprotoAuthService` for programmatic login flows in web controllers, Livewire components, or background jobs.
+- `teleframe:doctor` live verification command (no Telegram account needed).
+- Standalone `TeleframeAuthService` for programmatic login flows in web controllers, Livewire components, or background jobs.
 
 #### 6. Developer Infrastructure & CI
 - GitHub Actions CI matrix testing PHP 8.2, 8.3, and 8.4.
@@ -71,8 +85,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BC break (pre-release)**: `UpdateSinkInterface::handle()` now returns `bool` (true = processed, false = skip/not-now backpressure) instead of `void`; `EventDispatcherSink` returns true after dispatching. Custom sinks written against earlier pre-release builds must be updated.
 - `TelegramUpdateReceived` is enriched with `?int $accountId` and `string $source` (`'mtproto-user'|'bot-http'`); `EventDispatcherSink` derives both automatically from the sink source string (numeric account id → mtproto-user, bot token → bot-http) or takes them explicitly via constructor.
 - `pollUser()` now implements the full `updates.getDifference` state machine: `differenceSlice` adopts `intermediate_state` and keeps fetching without ever re-requesting the same window (fixes an infinite-refetch loop), `differenceTooLong` hard-resets pts to the server's, `new_encrypted_messages` (qts items) are wrapped as `updateNewEncryptedMessage` and streamed to the sink instead of being dropped, and sequence state is exposed via `getSequenceState()`/`setSequenceState()` plus a per-channel pts map via `getChannelPts()`.
-- Presentation pass for the 1.0 release: Packagist metadata (description, keywords, support links), `bin/teleproto` exposed via `vendor/bin`, `SUPPORT.md`, and this changelog finalized in Keep-a-Changelog format.
+- Presentation pass for the 1.0 release: Packagist metadata (description, keywords, support links), `bin/teleframe` exposed via `vendor/bin`, `SUPPORT.md`, and this changelog finalized in Keep-a-Changelog format.
 
 ### Removed
-- Deprecated BC alias `MeRezaRezaei\Teleproto\Exceptions\FloodWaitException` — use `MeRezaRezaei\Teleproto\Exceptions\Rpc\FloodWaitException` (pre-release internal BC break; the alias never shipped in a tagged release).
-- Dead config keys `redis_connection`, `update_stream`, `command_queue_prefix`, and `bot_username` from `config/teleproto.php` (referenced nowhere in the codebase).
+- Deprecated BC alias `MeRezaRezaei\Teleframe\Core\Exceptions\FloodWaitException` — use `MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\FloodWaitException` (pre-release internal BC break; the alias never shipped in a tagged release).
+- Dead config keys `redis_connection`, `update_stream`, `command_queue_prefix`, and `bot_username` from `config/teleframe.php` (referenced nowhere in the codebase).

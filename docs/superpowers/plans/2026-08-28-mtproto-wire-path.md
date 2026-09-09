@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **✅ VALIDATED 2026-09-09 (all 12 tasks shipped, fully ticked).** Shipped-state amendments vs. this historical text: the engine is now brand `Teleframe` — live gate env **`TELEFRAME_LIVE`**, command **`php artisan teleframe:doctor`**, namespaces `MeRezaRezaei\Teleframe\Core\MTProto\*`; **abridged** framing (`FrameCodec` also implements intermediate) became the default transport because production DCs drop intermediate framing (commit `313b945`); schema artifacts are catalogued at **Layer 229** while the wire `EncryptedConnection::LAYER` stays **227** (intentional per `AGENTS.md`).
+
 **Goal:** Make `teleproto` actually speak MTProto 2.0 to real Telegram DCs — TCP framing, auth-key handshake, and real RPC calls — verified live by a `teleproto:doctor` command, while keeping all existing offline tests green.
 
 **Architecture:** A layered wire path: `FrameCodec` (TCP intermediate framing) wraps `StreamSocket`; `TLRegistry` maps constructor names → CRC32 ids from canonical schema strings; `AuthKeyFactory` runs the DH handshake over an unencrypted `PlainConnection`; `Connection` performs encrypted RPC (MTProto 2.0 envelopes via existing `PacketCodec`); `MTProto\Client::call()` gains a `live` mode that is opt-in (env `TELEPROTO_LIVE=1`) so the current offline stub — and every existing test — keeps working. Live verification runs through a new `teleproto:doctor` command which needs **no Telegram account** (key exchange + `help.getNearestDc` + optional bot MTProto login).

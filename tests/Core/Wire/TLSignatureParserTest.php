@@ -36,6 +36,44 @@ class TLSignatureParserTest extends TestCase
         $this->assertSame(['name' => 'flags', 'type' => '#', 'flagWord' => null, 'bit' => null], $sig->fields[1]);
     }
 
+    public function testGenericTypeVarDeclarationIsSkippedNotAFreeField(): void
+    {
+        $sig = TLSignatureParser::parse('invokeWithLayer#da9b0d0d {X:Type} layer:int query:!X = X');
+        $this->assertSame('invokeWithLayer', $sig->name);
+        $this->assertSame(0xda9b0d0d, $sig->id);
+        $this->assertSame('X', $sig->returnType);
+        // `{X:Type}` must NOT surface as a field; !X binds to the variable
+        $this->assertSame([
+            ['name' => 'layer', 'type' => 'int', 'flagWord' => null, 'bit' => null],
+            ['name' => 'query', 'type' => 'X', 'flagWord' => null, 'bit' => null],
+        ], $sig->fields);
+    }
+
+    public function testGenericRecaptchaMethodParsesToTwoRealFields(): void
+    {
+        $sig = TLSignatureParser::parse('invokeWithReCaptcha#adbb0f94 {X:Type} token:string query:!X = X');
+        $this->assertSame('invokeWithReCaptcha', $sig->name);
+        $this->assertSame(['token' => 'string', 'query' => 'X'], array_column($sig->fields, 'type', 'name'));
+    }
+
+    public function testMultipleGenericDeclarationsAndVectorField(): void
+    {
+        $sig = TLSignatureParser::parse('invokeAfterMsgs#3dc4b4f0 {X:Type} msg_ids:Vector<long> query:!X = X');
+        $this->assertSame('Vector<long>', $sig->fields[0]['type']);
+        $this->assertSame('X', $sig->fields[1]['type']);
+    }
+
+    public function testBareCrcFormGenericDeclarationIsSkippedToo(): void
+    {
+        // the CRC-id canonical form drops the braces: `X:Type` is the same
+        // single-char type-variable declaration and must not be a field
+        $sig = TLSignatureParser::parse('invokeWithLayer#da9b0d0d X:Type layer:int query:!X = X');
+        $this->assertSame([
+            ['name' => 'layer', 'type' => 'int', 'flagWord' => null, 'bit' => null],
+            ['name' => 'query', 'type' => 'X', 'flagWord' => null, 'bit' => null],
+        ], $sig->fields);
+    }
+
     public function testBareVectorTwoTokenFormNormalizes(): void
     {
         $sig = TLSignatureParser::parse('help.getNearestDc = NearestDc');

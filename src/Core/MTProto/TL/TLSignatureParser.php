@@ -9,6 +9,9 @@ use InvalidArgumentException;
 /**
  * Deterministic tokenizer for canonical TL schema lines:
  *   name[#id] field:type [field2:flags.N?Type ...] = ReturnType
+ * Also understands generics: `{X:Type}` (braced) and `X:Type` (bare CRC-id
+ * form) type-variable declarations — never wire fields — and `!X`/`%X`
+ * bound-variable uses in field/return types.
  * Malformed input throws with the exact column and reason. No regex anywhere.
  */
 final class TLSignatureParser
@@ -17,6 +20,7 @@ final class TLSignatureParser
     private const IDENT_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
     private const DIGIT_CHARS = '0123456789';
     private const HEX_CHARS = '0123456789abcdefABCDEF';
+    private const UPPER_LEGAL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
     public static function parse(string $line): ParsedSignature
     {
@@ -50,6 +54,12 @@ final class TLSignatureParser
             if ($col >= $len || $line[$col] === '=') {
                 break;
             }
+            // generic type-variable declaration `{X:Type}` / `{t:Type}` is a
+            // schema-level binding, not a wire field -> consume and move on
+            if ($line[$col] === '{') {
+                self::skipBalancedBraces($line, $col);
+                continue;
+            }
             $fName = self::takeWhile($line, $col, self::IDENT_CHARS);
             if ($fName === '') {
                 throw new InvalidArgumentException("TLSignatureParser: col {$col}: expected field name");
@@ -60,10 +70,12 @@ final class TLSignatureParser
             $col++;
             [$type, $flagWord, $bit] = self::parseType($line, $col);
 
-            // generic declaration `{X:Type}` arrives here as type 'Type' — skip, not a wire field
-            if ($type !== 'Type') {
-                $fields[] = ['name' => $fName, 'type' => $type, 'flagWord' => $flagWord, 'bit' => $bit];
+            // bare generic declaration in CRC-id form (`X:Type`, no braces):
+            // a single uppercase type-variable bound to Type — skip, not a wire field
+            if ($type === 'Type' && $flagWord === null && strlen($fName) === 1 && str_contains(self::UPPER_LEGAL, $fName)) {
+                continue;
             }
+            $fields[] = ['name' => $fName, 'type' => $type, 'flagWord' => $flagWord, 'bit' => $bit];
         }
 
         if ($col >= $len || $line[$col] !== '=') {
@@ -96,6 +108,16 @@ final class TLSignatureParser
             if ($col < $len && $line[$col] === '#') {
                 $col++;
                 return ['#', null, null];
+            }
+            // generic bound-variable use `!X` (or `%X` inlined form) —
+            // normalized to the variable's name for the method catalog
+            if ($col < $len && ($line[$col] === '!' || $line[$col] === '%')) {
+                $col++;
+                $inner = self::takeWhile($line, $col, self::IDENT_CHARS);
+                if ($inner === '') {
+                    throw new InvalidArgumentException("TLSignatureParser: col {$col}: expected type variable after '{$line[$col - 1]}'");
+                }
+                return [$inner, null, null];
             }
             throw new InvalidArgumentException("TLSignatureParser: col {$col}: expected type token");
         }
@@ -177,6 +199,31 @@ final class TLSignatureParser
             throw new InvalidArgumentException("TLSignatureParser: col {$col}: expected type inside '<...>'");
         }
         return $inner;
+    }
+
+    /**
+     * Precondition: `$line[$col] === '{'`. Consumes one balanced `{...}`
+     * group — a generic type-variable declaration like `{X:Type}` — and
+     * returns its raw inner text without the outer braces.
+     */
+    private static function skipBalancedBraces(string $line, int &$col): string
+    {
+        $len = strlen($line);
+        $col++;
+        $start = $col;
+        $depth = 1;
+        while ($col < $len && $depth > 0) {
+            if ($line[$col] === '{') {
+                $depth++;
+            } elseif ($line[$col] === '}') {
+                $depth--;
+            }
+            $col++;
+        }
+        if ($depth !== 0) {
+            throw new InvalidArgumentException("TLSignatureParser: col {$col}: expected '}' to close '{'");
+        }
+        return substr($line, $start, $col - 1 - $start);
     }
 
     private static function takeWhile(string $line, int &$col, string $allowed): string

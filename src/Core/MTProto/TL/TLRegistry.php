@@ -218,22 +218,11 @@ class TLRegistry
     public static function register(string $canonicalLine): void
     {
         self::boot(); // seeding must not depend on call order: register-before-lookup still seeds SCHEMA
-        // Generic wrapper routing is NAME-based ('invokeWithLayer',
-        // 'initConnection'); an 'X:Type' substring test false-positives on
-        // tokens like `maxX:Type`. Wrapper lines carry brace-less `{X:Type}`
-        // declarations and `!X` result tokens that are outside the tokenizer
-        // grammar; they get a hand-built degraded struct instead (see parseGenericWrapper).
-        $constructorName = self::constructorNameOf($canonicalLine);
-        $isWrapper = $constructorName === 'invokeWithLayer' || $constructorName === 'initConnection';
-        if ($isWrapper && !str_contains($canonicalLine, 'X:Type')) {
-            throw new InvalidArgumentException(
-                "TLRegistry: wrapper line '{$constructorName}' is missing its X:Type generic declaration: {$canonicalLine}"
-            );
-        }
-        $parsed = $isWrapper
-            ? self::parseGenericWrapper($canonicalLine)
-            : self::parseStrictly($canonicalLine);
-        $name = $parsed->name;
+        // Wrapper lines ('invokeWithLayer', 'initConnection') carry generic
+        // declarations `{X:Type}` / `X:Type` and `!X` bound-variable uses that
+        // the strict tokenizer now parses directly — no degraded fallback.
+        $name = self::constructorNameOf($canonicalLine);
+        $parsed = self::parseStrictly($canonicalLine);
         $id = $parsed->hasExplicitId ? $parsed->id : self::crc32Canonical($canonicalLine);
         static::$parsed[$name] = $parsed;
         static::$ids[$name] = $id;
@@ -267,57 +256,6 @@ class TLRegistry
                 $e,
             );
         }
-    }
-
-    /**
-     * Degraded parse for the two generic wrapper lines whose `!X`/`X:Type`
-     * tokens the tokenizer rejects. Field walk is byte-identical to what the
-     * regex-era fieldsOf produced for them: `X:Type` declarations are skipped,
-     * `!X` stays a plain (nested-object) type, conditionals decompose to
-     * flagWord/bit. String functions only — no regex.
-     *
-     * @return ParsedSignature
-     */
-    protected static function parseGenericWrapper(string $canonicalLine): ParsedSignature
-    {
-        $line = trim($canonicalLine);
-        $name = explode(' ', $line, 2)[0];
-        $id = 0;
-        $hasId = false;
-        $hash = strpos($name, '#');
-        if ($hash !== false) {
-            $id = (int) hexdec(substr($name, $hash + 1));
-            $name = substr($name, 0, $hash);
-            $hasId = true;
-        }
-        $equals = strpos($line, '=');
-        if ($equals === false) {
-            throw new InvalidArgumentException("TLRegistry: degraded wrapper line missing '=': {$canonicalLine}");
-        }
-        $returnType = trim(substr($line, $equals + 1));
-        $body = trim(substr($line, strlen(explode(' ', $line, 2)[0]), $equals - strlen(explode(' ', $line, 2)[0])));
-
-        /** @var list<array{name: string, type: string, flagWord: string|null, bit: int|null}> $fields */
-        $fields = [];
-        if ($body !== '') {
-            foreach (explode(' ', $body) as $token) {
-                [$fieldName, $type] = explode(':', $token, 2);
-                if ($type === 'Type') {
-                    continue; // generic declaration (canonical brace-less `{X:Type}`), not a wire field
-                }
-                $flagWord = null;
-                $bit = null;
-                $question = strpos($type, '?');
-                if ($question !== false) {
-                    [$conditional, $type] = explode('?', $type, 2);
-                    [$flagWord, $bitDigits] = explode('.', $conditional, 2);
-                    $bit = (int) $bitDigits;
-                }
-                $fields[] = ['name' => $fieldName, 'type' => $type, 'flagWord' => $flagWord, 'bit' => $bit];
-            }
-        }
-
-        return new ParsedSignature($name, $id, $hasId, $fields, $returnType);
     }
 
     public static function id(string $constructorName): int

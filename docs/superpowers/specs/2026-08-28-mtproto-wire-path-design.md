@@ -2,6 +2,17 @@
 
 Adds to: `2026-08-27-teleproto-core-design.md`
 
+> **✅ VALIDATED 2026-09-09 — shipped-state amendments.** Live gate env is
+> **`TELEFRAME_LIVE`** (was `TELEPROTO_LIVE`); the verification command is
+> **`php artisan teleframe:doctor`**; classes live under
+> `MeRezaRezaei\Teleframe\Core\MTProto\{Transport,Connection,Crypto,TL}`.
+> **Transport decision updated in code:** production DCs drop intermediate
+> framing, so `FrameCodec` made **abridged** (`0xef` init) the default while
+> keeping the `0xee` intermediate path implemented and tested for
+> compatibility. Schema artifacts catalogue Layer 229; wire
+> `EncryptedConnection::LAYER` remains 227 — both claims verified in the
+> current source.
+
 ## Problem
 
 The engine's MTProto layer is a facade: `MTProto\Client::call()` returns a mock

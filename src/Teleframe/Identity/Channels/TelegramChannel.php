@@ -20,8 +20,9 @@ use MeRezaRezaei\Teleframe\Identity\TlUserBinding;
  * notifiable's binding.
  *
  * Delivery engine (ruled — see design doc §Q9): `BotClient::sendMessage()`.
- * Inspected candidates: `Core\Services\TeleprotoClient` does NOT exist
- * anywhere in this tree (absent), and `Teleframe::send()` is the Q2
+ * Inspected candidates: `Laravel\Services\TeleframeClient` is the account-
+ * bound MTProto entry point, but it takes a method request — there is no
+ * direct "deliver to this tg_id" helper — and `Teleframe::send()` is the Q2
  * echo-elimination registry write, not a delivery. BotClient is the single
  * real in-tree send surface today; the route's `account` value is carried
  * through to the sender so a host can inject its own MTProto-aware sender
@@ -171,8 +172,8 @@ final class TelegramChannel
     {
         $token = IdentityConfig::defaultSender();
 
-        // Numeric default sender = an MTProto account id. No TeleprotoClient
-        // exists in-tree to deliver through it, so the default deliverer
+        // Numeric default sender = an MTProto account id. No in-tree MTProto
+        // deliverer maps an account id to a send, so the default deliverer
         // no-ops (never throws) and a host injects its own sender callable.
         if ($token !== null && ctype_digit($token)) {
             return null;

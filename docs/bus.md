@@ -6,7 +6,7 @@
 
 # Bus — Redis Streams, Ingest, Daemon & Backfill
 
-The Phase 3 live pipeline: teleproto pollers → one Redis stream per
+The Phase 3 live pipeline: teleframe pollers → one Redis stream per
 installation (multi-account fan-in) → `teleframe:ingest` consumer
 → P2 Postgres truth, with hot zero-regex routing, a standalone
 multi-account daemon and a quota-aware history backfill. illuminate/redis
@@ -36,7 +36,7 @@ ts          "1690000000"                     append time
 `StreamSchema::encode/decode` is the only codec — stable key order
 (`account_id`, `update`, `ts`), so forwarded/dead-lettered entries stay
 byte-identical to what was appended. Producers use `RedisStreamSink`
-(implements teleproto's `UpdateSinkInterface`); every account derives its
+(implements teleframe's `UpdateSinkInterface`); every account derives its
 `account_id` from the poller source string automatically.
 
 ## Routes protocol
@@ -91,7 +91,7 @@ Idle batches back off 100ms. Exit 0 always; batch counts per line.
 (`Daemon::TICK_SECONDS = 30`) per account per rotation, so a wedged
 account cannot starve the rest:
 
-- **FloodWait** → interruptible sleep (clamped by teleproto's
+- **FloodWait** → interruptible sleep (clamped by teleframe's
   `secondsToWait`, chunked so stop lands within a second), then resume
   from the adopted difference cursor;
 - **DC migration** → rebuild the scope at the DC Telegram moved the
@@ -128,7 +128,7 @@ use MeRezaRezaei\Teleframe\Bus\RedisStreamSink;
 use MeRezaRezaei\Teleframe\Daemon\AccountWorker;
 use MeRezaRezaei\Teleframe\Daemon\Daemon;
 use MeRezaRezaei\Teleframe\Daemon\WorkerInterface;
-use MeRezaRezaei\Teleproto\Contracts\UpdateSinkInterface;
+use MeRezaRezaei\Teleframe\Core\Contracts\UpdateSinkInterface;
 
 $accounts = config('teleframe.daemon.accounts');
 $redis    = app('redis')->connection(config('teleframe.bus.connection'));
@@ -152,8 +152,8 @@ $daemon = new Daemon($accounts, function (array $account) use ($redis): WorkerIn
 exit($daemon->run());
 ```
 
-The live MTProto wire stays behind teleproto's tri-state flag — run the
-daemon process with `TELEPROTO_LIVE=true` (and `TELEGRAM_API_ID` /
+The live MTProto wire stays behind teleframe's tri-state flag — run the
+daemon process with `TELEFRAME_LIVE=true` (and `TELEGRAM_API_ID` /
 `TELEGRAM_API_HASH`, or per-account `api_id`/`api_hash` overrides).
 `AccountWorker::lastSequenceState()` returns the account's difference
 cursor (`{pts, date, qts, seq}`) after `run()` ends — persist it per
@@ -174,7 +174,7 @@ Type=simple
 User=www-data
 Group=www-data
 WorkingDirectory=/var/www/app
-Environment=TELEPROTO_LIVE=true
+Environment=TELEFRAME_LIVE=true
 ExecStart=/usr/bin/php /var/www/app/artisan teleframe:daemon   # host-provided command (bootstrap above)
 Restart=on-failure          # the daemon's all-fail exit 1 lands here
 RestartSec=5
