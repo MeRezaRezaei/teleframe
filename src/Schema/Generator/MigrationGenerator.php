@@ -119,11 +119,34 @@ final class MigrationGenerator
         foreach ($ctor->params() as $param) {
             $this->columnLines($param, $up);
         }
+        $up[] = "    \$table->bigInteger('account_id');";
         $up[] = "    \$table->timestamps();";
+        $up[] = "    \$table->index('account_id');";
+
+        $params = $ctor->params();
+        $hasScalarId = false;
+        $peerCol = null;
+        foreach ($params as $param) {
+            if ($param->kind() === 'scalar' && $param->name === 'id') {
+                $hasScalarId = true;
+            }
+            if ($param->kind() === 'ref' && in_array($param->baseType(), ['Peer', 'InputPeer'], true)) {
+                $peerCol = Naming::column($param->name);
+            }
+        }
+        if ($hasScalarId) {
+            $uniqueCols = ['account_id'];
+            if ($peerCol !== null) {
+                $uniqueCols[] = $peerCol;
+            }
+            $uniqueCols[] = Naming::column('id');
+            $up[] = "    \$table->unique(['" . implode("', '", $uniqueCols) . "'], 'ux_" . substr(sha1($instance), 0, 20) . "');";
+        }
+
         $up[] = "});";
         $down[] = "Schema::dropIfExists('{$instance}');";
 
-        foreach ($ctor->params() as $param) {
+        foreach ($params as $param) {
             if ($param->kind() === 'vector') {
                 $this->childTable($instance, $param, $up, $down);
             }
@@ -142,17 +165,32 @@ final class MigrationGenerator
             'true' => $up[] = "    \$table->boolean('{$col}')->default(false);",
             'ref' => $this->refColumn($param, $col, $nullable, $up),
             'vector', 'generic' => null, // child tables / not stored
-            default => $up[] = $this->scalarColumn($param, $col, $nullable),
+            default => $this->scalarColumnLines($param, $col, $nullable, $up),
         };
+    }
+
+    private function scalarColumnLines(TlParam $param, string $col, bool $nullable, array &$up): void
+    {
+        $line = $this->scalarColumn($param, $col, $nullable);
+        $up[] = $line;
+        if (str_ends_with($param->name, '_id') && str_contains($line, 'bigInteger')) {
+            $up[] = "    \$table->index('{$col}');";
+        }
     }
 
     private function refColumn(TlParam $param, string $col, bool $nullable, array &$up): void
     {
+        if (in_array($param->baseType(), ['Peer', 'InputPeer'], true)) {
+            $up[] = "    \$table->bigInteger('{$col}')" . ($nullable ? '->nullable()' : '') . ';';
+            $up[] = "    \$table->index('{$col}');";
+            return;
+        }
         $up[] = "    \$table->uuid('{$col}')" . ($nullable ? '->nullable()' : '') . ';';
         $target = $param->baseType();
         if ($this->isFkTargetable($target, $param)) {
             $this->deferredFks[] = ['table' => $this->currentTable, 'column' => $col, 'target_table' => Naming::anchorTable($target)];
         }
+        $up[] = "    \$table->index('{$col}');";
     }
 
     private function isFkTargetable(string $target, TlParam $param): bool
@@ -197,7 +235,9 @@ final class MigrationGenerator
                 $this->deferredFks[] = ['table' => $child, 'column' => 'value_id', 'target_table' => Naming::anchorTable($elementParam->baseType())];
             }
         }
+        $up[] = "    \$table->bigInteger('account_id');";
         $up[] = "    \$table->unique(['parent_id', 'idx'], 'ux_" . substr(sha1($child), 0, 20) . "');";
+        $up[] = "    \$table->index('account_id');";
         $up[] = "});";
         $down[] = "Schema::dropIfExists('{$child}');";
     }

@@ -121,4 +121,55 @@ final class MigrationGeneratorTest extends TestCase
             self::assertSame(0, $code, "php -l failed for {$name}: " . implode("\n", $out));
         }
     }
+
+    public function test_peer_ref_columns_are_bigInteger_canonical_long(): void
+    {
+        $gen = new MigrationGenerator();
+        $scheme = TlParser::parseString(
+            "---types---\n"
+            . "peerUser#00000001 user_id:long = Peer;\n"
+            . "message#00000002 id:int from_id:flags.8?Peer peer_id:Peer media:flags.9?MessageMedia = Message;\n"
+            . "mediaEmpty#00000003 = MessageMedia;\n",
+        );
+        $files = $gen->generate($scheme);
+        $message = $files['2026_08_28_000001_create_tl_message_table.php'];
+        self::assertStringContainsString("\$table->bigInteger('from_id')->nullable();", $message);
+        self::assertStringContainsString("\$table->bigInteger('peer_id');", $message);
+        self::assertStringContainsString("\$table->index('peer_id');", $message);
+        self::assertStringContainsString("\$table->index('from_id');", $message);
+        self::assertStringContainsString("\$table->uuid('media')", $message);
+        self::assertStringContainsString("\$table->index('media');", $message);
+        self::assertStringNotContainsString("uuid('peer_id')", $message);
+        $stats = $gen->stats();
+        self::assertSame(1, $stats['fk_count']); // media ref emits FK; Peer refs no longer do
+    }
+
+    public function test_every_generated_table_has_account_id_column_and_index(): void
+    {
+        $gen = new MigrationGenerator();
+        $files = $gen->generate(TlParser::parseString(
+            "---types---\n"
+            . "user#00000001 id:long = User;\n"
+            . "message#00000002 id:int text:string entities:flags.0?Vector<string> = Message;\n",
+        ));
+        foreach ($files as $name => $content) {
+            if (str_contains($name, 'route') || str_contains($name, 'foreign_keys')) {
+                continue;
+            }
+            self::assertStringContainsString("\$table->bigInteger('account_id');", $content, "{$name} missing account_id column");
+            self::assertStringContainsString("\$table->index('account_id');", $content, "{$name} missing account_id index");
+        }
+    }
+
+    public function test_message_table_upholds_account_scoped_uniqueness(): void
+    {
+        $gen = new MigrationGenerator();
+        $scheme = TlParser::parseString(
+            "---types---\n"
+            . "message#00000001 id:int peer_id:Peer = Message;\n",
+        );
+        $files = $gen->generate($scheme);
+        $migration = $files['2026_08_28_000001_create_tl_message_table.php'];
+        self::assertStringContainsString("\$table->unique(['account_id', 'peer_id', 'tl_id']", $migration);
+    }
 }
