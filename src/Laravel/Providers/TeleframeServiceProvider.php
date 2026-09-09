@@ -31,6 +31,7 @@ use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Http\Middleware\VerifyMiniAppInitData;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountContext;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use MeRezaRezaei\Teleframe\Teleclient;
 use MeRezaRezaei\Teleframe\Teleframe;
@@ -44,6 +45,7 @@ class TeleframeServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/teleframe.php', 'teleframe');
 
+        $this->app->singleton(AccountContext::class, static fn (): AccountContext => new AccountContext());
         $this->app->singleton(SchemaRegenerator::class);
         $this->app->singleton(UpdateIngestor::class, static fn ($app): UpdateIngestor => new UpdateIngestor(
             events: $app->make(\Illuminate\Contracts\Events\Dispatcher::class),
