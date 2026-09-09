@@ -140,7 +140,7 @@ final class SchemaRegenerator
      */
     /** Ship-exempt migrations the owning app checks in (ShipDialGoldenTest
      *  mirrors this contract): the ship purge must never delete them. */
-    private const APP_OWNED_MIGRATIONS = ['2026_09_08_000100_create_tl_user_bindings_table.php'];
+    private const APP_OWNED_MIGRATIONS = ['2026_09_08_000100_create_tl_user_bindings_table.php', '2026_09_09_000200_create_telegram_apps_table.php', '2026_09_09_000201_create_telegram_accounts_table.php'];
 
     /** Safety gate: refuse to wipe the generated tree when the ctor count
      *  drifts by more than this ratio vs. the committed manifest (pass

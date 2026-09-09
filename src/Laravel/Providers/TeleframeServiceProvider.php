@@ -93,6 +93,8 @@ class TeleframeServiceProvider extends ServiceProvider
 
         $this->app->singleton(Teleframe::class, static fn ($app): Teleframe => new Teleframe($app));
 
+        $this->app->singleton(\MeRezaRezaei\Teleframe\Vault\Vault::class);
+
         $this->app->bind(RedisConnectionContract::class, static function ($app): RedisConnectionContract {
             $manager = $app->bound('redis') ? $app->make('redis') : null;
 
@@ -235,6 +237,10 @@ class TeleframeServiceProvider extends ServiceProvider
                 \MeRezaRezaei\Teleframe\Laravel\Console\DoctorCommand::class,
                 \MeRezaRezaei\Teleframe\Laravel\Console\SchemaAuditCommand::class,
                 \MeRezaRezaei\Teleframe\Laravel\Console\SchemaUpdateCommand::class,
+                \MeRezaRezaei\Teleframe\Laravel\Console\VaultAddAppCommand::class,
+                \MeRezaRezaei\Teleframe\Laravel\Console\VaultAddAccountCommand::class,
+                \MeRezaRezaei\Teleframe\Laravel\Console\VaultListCommand::class,
+                \MeRezaRezaei\Teleframe\Laravel\Console\VaultUseDefaultCommand::class,
                 RegenerateCommand::class,
                 IngestCommand::class,
                 BackfillCommand::class,
