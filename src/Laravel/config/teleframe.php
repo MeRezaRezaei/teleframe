@@ -74,6 +74,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Credential Vault (DB-encrypted apps + accounts)
+    |--------------------------------------------------------------------------
+    | Only the DEFAULT account label lives in env
+    | (TELEFRAME_DEFAULT_ACCOUNT_ID); every secret lives in the
+    | telegram_apps / telegram_accounts tables with `encrypted` casts.
+    */
+    'vault' => [
+        'default_account' => env('TELEFRAME_DEFAULT_ACCOUNT_ID'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Logging (PSR-3 seam)
     |--------------------------------------------------------------------------
     | FQCN of a PSR-3 logger class (default '' → Psr\Log\NullLogger, i.e. the

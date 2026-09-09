@@ -28,7 +28,7 @@ TP::bot('123456:ABC-DEF...')->sendMessage(chatId: 987654321, text: 'Direct ping'
 
 ## (b) Log in as a User, then send via MTProto
 
-**When:** act *as the user's own account* (channels, DMs, history) over native MTProto 2.0.
+**When:** act _as the user's own account_ (channels, DMs, history) over native MTProto 2.0.
 
 ```bash
 # 1. One-time wizard: phone → code → (2FA if set) → session string
@@ -50,6 +50,30 @@ $history = $user->call('messages.getHistory', [
 ```
 
 **.env:** `TELEGRAM_API_ID=`, `TELEGRAM_API_HASH=`, `TELEGRAM_USER_SESSION=` (wizard writes the last one for you). QR login: `php artisan teleframe:login --qr`.
+
+> **Multi-account vault (DB-encrypted).** One Laravel user can own N
+> my.telegram.org apps and N logged-in accounts; secrets live in
+> `telegram_apps` / `telegram_accounts` with `encrypted` casts and only
+> the default account label stays in `.env`:
+>
+> ```bash
+> # 1. Store the my.telegram.org app once (manual-first: create it at
+> #    https://my.telegram.org yourself, then paste id/hash):
+> php artisan teleframe:vault-add-app teleframe
+> # 2. Register one named account on that app:
+> php artisan teleframe:vault-add-account main --app=teleframe --type=user
+> # 3. Sign it in — session lands in the vault row (encrypted):
+> php artisan teleframe:login --app=teleframe --account=main --phone=+1234567890
+> # 4. Point the env default at it (the ONLY vault value in .env):
+> php artisan teleframe:vault-use-default main   # writes TELEFRAME_DEFAULT_ACCOUNT_ID
+> php artisan teleframe:vault-list               # labels only, never secrets
+> ```
+>
+> ```php
+> $user = TP::userFromVault('main');          // user (MTProto session)
+> $bot = TP::botFromVault('my-bot');          // bot (HTTP token-only)
+> $mtBot = TP::botFromVault('my-bot', 'mtproto'); // bot over MTProto
+> ```
 
 ---
 

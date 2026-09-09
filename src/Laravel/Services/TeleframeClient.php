@@ -12,6 +12,7 @@ use RuntimeException;
 use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
 use MeRezaRezaei\Teleframe\Bot\Services\BotAccountScope;
 use MeRezaRezaei\Teleframe\Bot\Services\BotClient;
+use MeRezaRezaei\Teleframe\Vault\Vault;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -25,6 +26,8 @@ class TeleframeClient
 
     private readonly LoggerInterface $logger;
 
+    private ?Vault $vault;
+
     public function __construct(
         public int $defaultApiId = 0,
         public string $defaultApiHash = '',
@@ -35,9 +38,11 @@ class TeleframeClient
         public int $defaultDcId = 2,
         ?HttpFactory $http = null,
         ?LoggerInterface $logger = null,
+        ?Vault $vault = null,
     ) {
         $this->http = $http;
         $this->logger = $logger ?? new NullLogger();
+        $this->vault = $vault;
     }
 
     /**
@@ -265,5 +270,80 @@ class TeleframeClient
         }
 
         return new BotAccountScope($mtproto, $sessionData, $finalToken);
+    }
+
+    /**
+     * Named user scope from the DB vault (Task 4: thin wrapper).
+     */
+    public function userFromVault(?string $label = null, ...$overrides): UserAccountScope
+    {
+        $account = $this->resolveVaultAccount($label);
+        $creds = $account !== null ? $account->credentials() : [];
+
+        return $this->user(
+            accountId: $overrides['accountId'] ?? null,
+            session: $overrides['session'] ?? $creds['session'] ?? null,
+            dcId: $overrides['dcId'] ?? $creds['dc_id'] ?? null,
+            apiId: $overrides['apiId'] ?? $creds['api_id'] ?? null,
+            apiHash: $overrides['apiHash'] ?? $creds['api_hash'] ?? null,
+            proxyConfig: $overrides['proxyConfig'] ?? null,
+        );
+    }
+
+    /**
+     * Named bot client from the DB vault (Task 4: thin wrapper).
+     *
+     * @param string $transport 'http' → bot(), 'mtproto' → botMtproto()
+     */
+    public function botFromVault(?string $label = null, string $transport = 'http', ...$overrides): BotClient|BotAccountScope
+    {
+        $account = $this->resolveVaultAccount($label);
+        $creds = $account !== null ? $account->credentials() : [];
+
+        if ($transport === 'mtproto') {
+            return $this->botMtproto(
+                botToken: $overrides['botToken'] ?? $creds['bot_token'] ?? null,
+                session: $overrides['session'] ?? $creds['session'] ?? null,
+                dcId: $overrides['dcId'] ?? $creds['dc_id'] ?? null,
+                apiId: $overrides['apiId'] ?? $creds['api_id'] ?? null,
+                apiHash: $overrides['apiHash'] ?? $creds['api_hash'] ?? null,
+                proxyConfig: $overrides['proxyConfig'] ?? null,
+            );
+        }
+
+        return $this->bot(
+            botToken: $overrides['botToken'] ?? $creds['bot_token'] ?? null,
+            proxyConfig: $overrides['proxyConfig'] ?? null,
+        );
+    }
+
+    private function resolveVaultAccount(?string $label): ?\MeRezaRezaei\Teleframe\Vault\TelegramAccount
+    {
+        $vault = $this->vault;
+        if ($vault === null && function_exists('app')) {
+            try {
+                $vault = app(Vault::class);
+            } catch (\Throwable) {
+                $vault = null;
+            }
+        }
+
+        if ($vault === null) {
+            if ($label === null) {
+                return null;
+            }
+            throw new RuntimeException("no vault bound: cannot resolve vault account '{$label}'.");
+        }
+
+        if ($label !== null) {
+            $account = $vault->account($label);
+            if ($account === null) {
+                throw new RuntimeException("unknown vault account '{$label}'.");
+            }
+
+            return $account;
+        }
+
+        return $vault->defaultAccount();
     }
 }

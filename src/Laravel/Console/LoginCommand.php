@@ -9,6 +9,8 @@ use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
 use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use MeRezaRezaei\Teleframe\Core\Support\TerminalQr;
+use MeRezaRezaei\Teleframe\Vault\TelegramAccount;
+use MeRezaRezaei\Teleframe\Vault\TelegramApp;
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
@@ -23,7 +25,9 @@ class LoginCommand extends Command
                             {--bot : Authenticate a Bot token over MTProto}
                             {--qr : Authenticate user account by scanning a QR Code}
                             {--phone= : Phone number with country code (e.g. +1234567890)}
-                            {--dc=2 : Target Telegram Data Center ID (1-5)}';
+                            {--dc=2 : Target Telegram Data Center ID (1-5)}
+                            {--app= : Vault app label (api_id/hash source)}
+                            {--account= : Vault account label (session is stored here, encrypted)}';
 
     protected $description = 'Interactive Telegram MTProto 2.0 Login (User Phone, QR Code Scan, or Bot Token)';
 
@@ -31,12 +35,17 @@ class LoginCommand extends Command
     {
         $this->components->info('Teleframe MTProto 2.0 Authentication Wizard');
 
-        $apiId = (int) (config('teleframe.api_id') ?: text(
+        $vaultApp = $this->resolveVaultApp();
+        if ($vaultApp === false) {
+            return self::FAILURE;
+        }
+
+        $apiId = $vaultApp instanceof TelegramApp ? (int) $vaultApp->getAttribute('api_id') : (int) (config('teleframe.api_id') ?: text(
             'Telegram API ID',
             placeholder: 'from https://my.telegram.org',
             validate: fn (string $v) => ($v !== '' && strspn($v, '0123456789') === strlen($v) && (int) $v > 0) ? null : 'API ID must be a positive integer.'
         ));
-        $apiHash = (string) (config('teleframe.api_hash') ?: text(
+        $apiHash = $vaultApp instanceof TelegramApp ? (string) $vaultApp->getAttribute('api_hash') : (string) (config('teleframe.api_hash') ?: text(
             'Telegram API Hash',
             placeholder: 'from https://my.telegram.org',
             validate: fn (string $v) => strlen($v) >= 30 ? null : 'API Hash looks too short.'
@@ -175,6 +184,8 @@ class LoginCommand extends Command
     {
         $sessionString = $session->exportString();
 
+        $this->storeSessionInVault($sessionString, $accountType);
+
         $this->newLine();
         $this->components->info("✅ Successfully Authenticated {$accountType}!");
 
@@ -199,5 +210,70 @@ class LoginCommand extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Resolve the vault app for --app (exact-match; null = env/config
+     * path, false = unknown label → error already printed).
+     */
+    protected function resolveVaultApp(): TelegramApp|null|false
+    {
+        $label = (string) ($this->option('app') ?? '');
+        if ($label === '') {
+            return null;
+        }
+
+        if (! class_exists(TelegramApp::class)) {
+            $this->components->error('Vault models unavailable.');
+
+            return false;
+        }
+
+        try {
+            $app = TelegramApp::query()->where('label', $label)->first();
+        } catch (\Throwable $e) {
+            $this->components->error('Vault unreachable (run migrations first): ' . $e->getMessage());
+
+            return false;
+        }
+
+        if ($app === null) {
+            $this->components->error("unknown vault app '{$label}'. Create it with teleframe:vault-add-app first.");
+
+            return false;
+        }
+
+        return $app;
+    }
+
+    /**
+     * When --account is passed, ALSO persist the exported session into the
+     * named vault account row (encrypted cast). The .env prompt below stays
+     * untouched: single-account hosts keep the old flow, vault users get
+     * both (env for now, vault for named/multi).
+     */
+    protected function storeSessionInVault(string $sessionString, string $accountType): void
+    {
+        $label = (string) ($this->option('account') ?? '');
+        if ($label === '') {
+            return;
+        }
+
+        try {
+            $account = TelegramAccount::query()->where('label', $label)->first();
+            if ($account === null) {
+                $this->components->warn("unknown vault account '{$label}' — session kept in .env flow only.");
+
+                return;
+            }
+            $account->setAttribute('session', $sessionString);
+            if (str_contains($accountType, 'Bot') && $account->getAttribute('type') === TelegramAccount::TYPE_BOT) {
+                $account->setAttribute('bot_token', (string) (config('teleframe.bot_token') ?? $account->getAttribute('bot_token')));
+            }
+            $account->save();
+            $this->components->info("Session stored in vault account '{$label}' (encrypted).");
+        } catch (\Throwable $e) {
+            $this->components->warn('Vault store skipped (migrations not run?): ' . $e->getMessage());
+        }
     }
 }
