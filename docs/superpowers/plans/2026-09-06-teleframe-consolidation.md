@@ -31,7 +31,7 @@ Move the source files from the sub-packages into the root `src/` directory and m
 **Interfaces:**
 - Produces: Base `teleframe` folder structure and PSR-4 resolution map.
 
-- [ ] **Step 1: Write the unified composer.json**
+- [x] **Step 1: Write the unified composer.json**
 
 ```json
 {
@@ -99,7 +99,7 @@ Move the source files from the sub-packages into the root `src/` directory and m
 }
 ```
 
-- [ ] **Step 2: Move package source files into the unified root**
+- [x] **Step 2: Move package source files into the unified root**
 
 ```bash
 rm composer.lock
@@ -114,12 +114,12 @@ cp -r packages/schema/skills src/Schema/skills
 cp -r packages/schema/config src/Schema/config
 ```
 
-- [ ] **Step 3: Test composer setup**
+- [x] **Step 3: Test composer setup**
 
 Run: `composer install`
 Expected: Passes and generates autoload files mapped to `src/Core`, etc.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add composer.json src/
@@ -139,7 +139,7 @@ Execute a bulk replacement across the entire `src/` directory to switch from `Me
 - Consumes: The combined `src/` directory from Task 1.
 - Produces: Correctly namespaced codebase representing the Teleframe brand.
 
-- [ ] **Step 1: Write and apply the bulk rename script**
+- [x] **Step 1: Write and apply the bulk rename script**
 
 ```bash
 cat << 'EOF' > rename.php
@@ -175,12 +175,12 @@ php rename.php
 rm rename.php
 ```
 
-- [ ] **Step 2: Run verification**
+- [x] **Step 2: Run verification**
 
 Run: `composer dump-autoload`
 Expected: No parsing errors (graceful completion). Tests will fail, which is expected before Task 3.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/
@@ -201,7 +201,7 @@ Migrate tests from the sub-packages into a single unified `tests/` directory und
 - Consumes: The `tests/` payloads from previous packages.
 - Produces: Unified green test suite.
 
-- [ ] **Step 1: Scaffold test directory and move definitions**
+- [x] **Step 1: Scaffold test directory and move definitions**
 
 ```bash
 mkdir -p tests/Core tests/Bot tests/Laravel tests/Schema
@@ -211,7 +211,7 @@ mv packages/laravel/tests/* tests/Laravel/
 mv packages/schema/tests/* tests/Schema/
 ```
 
-- [ ] **Step 2: Apply namespace updates to tests**
+- [x] **Step 2: Apply namespace updates to tests**
 
 ```bash
 cat << 'EOF' > rename_tests.php
@@ -235,7 +235,7 @@ php rename_tests.php
 rm rename_tests.php
 ```
 
-- [ ] **Step 3: Write unified `phpunit.xml.dist`**
+- [x] **Step 3: Write unified `phpunit.xml.dist`**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -260,12 +260,12 @@ rm rename_tests.php
 </phpunit>
 ```
 
-- [ ] **Step 4: Test execution**
+- [x] **Step 4: Test execution**
 
 Run: `vendor/bin/phpunit`
 Expected: 100% PASS (Address minor fully-qualified replacements inline if any fail).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/ phpunit.xml.dist
@@ -286,7 +286,7 @@ Move binary scripts from `packages/schema/bin/*` to `bin/` at the root. Update p
 **Interfaces:**
 - Produces: Correct executable tools for the schema pipeline in a unified repo.
 
-- [ ] **Step 1: Re-align binaries and configuration**
+- [x] **Step 1: Re-align binaries and configuration**
 
 ```bash
 mkdir -p bin
@@ -294,7 +294,7 @@ mv packages/schema/bin/* bin/
 rm -rf packages/ # Package folder is fully deprecated
 ```
 
-- [ ] **Step 2: Update SchemaArtifacts.php manually**
+- [x] **Step 2: Update SchemaArtifacts.php manually**
 
 Write minimal implementation fixing the artifact path inside `src/Schema/SchemaArtifacts.php`:
 ```php
@@ -312,7 +312,7 @@ class SchemaArtifacts
 }
 ```
 
-- [ ] **Step 3: Unified PHPStan**
+- [x] **Step 3: Unified PHPStan**
 
 Create root `phpstan.neon.dist`:
 ```neon
@@ -330,13 +330,13 @@ parameters:
                 - src/Bot/*
 ```
 
-- [ ] **Step 4: Run static analysis**
+- [x] **Step 4: Run static analysis**
 
 Run: `composer require --dev spaze/phpstan-disallowed-calls`
 Run: `vendor/bin/phpstan analyse -c phpstan.neon.dist`
 Expected: [OK] No Errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add bin/ src/Schema/ phpstan.neon.dist
@@ -354,7 +354,7 @@ Switch the consumer `teleclient` in the neighboring directory (`../teleclient`) 
 - Modify: `../teleclient/composer.json`
 - Modify: `../teleclient/src/**/*.php` (Namespace updates to `Teleframe`)
 
-- [ ] **Step 1: Set teleclient `composer.json` back to base repo**
+- [x] **Step 1: Set teleclient `composer.json` back to base repo**
 
 ```json
     "require": {
@@ -372,7 +372,7 @@ Switch the consumer `teleclient` in the neighboring directory (`../teleclient`) 
     ]
 ```
 
-- [ ] **Step 2: Mass rename teleclient imports**
+- [x] **Step 2: Mass rename teleclient imports**
 
 ```bash
 cd ../teleclient
@@ -380,13 +380,13 @@ find src tests -type f -name "*.php" -exec sed -i '' 's/MeRezaRezaei\\Teleproto/
 find src tests -type f -name "*.php" -exec sed -i '' 's/TeleprotoClient/TeleframeClient/g' {} +
 ```
 
-- [ ] **Step 3: Install & Verify teleclient**
+- [x] **Step 3: Install & Verify teleclient**
 
 Run: `composer update` in `teleclient`.
 Run: `vendor/bin/phpunit` in `teleclient`.
 Expected: Tests pass, proving transparent capability.
 
-- [ ] **Step 4: Commit teleclient**
+- [x] **Step 4: Commit teleclient**
 
 ```bash
 git add composer.json src/ tests/

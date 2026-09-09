@@ -121,7 +121,7 @@ Directory-level rule (from spec §3): **a file moves into the package whose conc
 
 Steps 3–5 replace the legacy configs now (not later) so no task afterwards can accidentally run the old root suite against a half-moved `src/`.
 
-- [ ] **Step 1: Write the new root composer.json**
+- [x] **Step 1: Write the new root composer.json**
 
 Replace the entire contents of `ROOT/composer.json` with:
 
@@ -202,14 +202,14 @@ Notes for the implementer:
 - `test:core` runs the core suite through the **root** vendor bin (`phpunit -c packages/core` resolves core's own `phpunit.xml.dist`) because core's dev deps are a subset of root's; laravel/schema/bot use their own `composer test` since testbench lives per-package. This asymmetry is deliberate and locked in by the root scripts.
 - The four `merezarezaei/teleproto-*` require-dev entries will be uninstallable until Tasks 3–7 create the packages. **Do not run `composer update` at root yet.** Validation-only until Task 3 Step 6.
 
-- [ ] **Step 2: Create packages/ placeholder and extend .gitignore**
+- [x] **Step 2: Create packages/ placeholder and extend .gitignore**
 
 ```bash
 mkdir -p packages && touch packages/.gitkeep
 printf '\n# monorepo: per-package vendor + caches\npackages/*/vendor/\npackages/*/.phpunit.cache/\n' >> .gitignore
 ```
 
-- [ ] **Step 3: Remove legacy root test/static configs**
+- [x] **Step 3: Remove legacy root test/static configs**
 
 The old root `phpunit.xml.dist` points at `tests` and `src` which are about to dissolve; old `phpstan.neon.dist` points at root `src`. Delete both:
 
@@ -219,12 +219,12 @@ git rm phpunit.xml.dist phpstan.neon.dist
 
 Keep `phpstan/laravel-helpers.php` (root) for now — Task 5 copies it into `packages/laravel/phpstan/` and Task 6 deletes the original.
 
-- [ ] **Step 4: Validate root manifest**
+- [x] **Step 4: Validate root manifest**
 
 Run: `composer validate --strict` (from `ROOT`)
 Expected: `./composer.json is valid` — path repositories pointing at not-yet-existing directories do not fail validation.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add composer.json .gitignore packages/.gitkeep
@@ -249,7 +249,7 @@ Without pinning, Composer assigns path-repo packages to `vendor/merezarezaei/tel
 - Consumes: root composer.json from Task 1.
 - Produces: composer plugin package `merezarezaei/teleproto-monorepo-plugin` type `composer-plugin` with class `MeRezaRezaei\\TeleprotoMonorepo\\InstallPathPlugin` implementing `PluginInterface` + `EventSubscriberInterface`; `scripts/verify-monorepo.sh` with exit 0 on full success (invoked as `composer verify`), which Tasks 3–7 keep green and Task 9 extends.
 
-- [ ] **Step 1: Write the failing test for the plugin's suggested installer paths**
+- [x] **Step 1: Write the failing test for the plugin's suggested installer paths**
 
 Create `plugins/monorepo/tests/InstallPathPluginTest.php`:
 
@@ -356,7 +356,7 @@ final class InstallPathPluginTest extends TestCase
 
 The `setExtra` expectation matches the exact data shape the plugin writes in Step 3 (`'installer-paths' => [packageName => [installPath, ...]]` keyed by **package name** — composer's canonical shape, so composer core honors it natively).
 
-- [ ] **Step 2: Run the plugin test to verify it fails**
+- [x] **Step 2: Run the plugin test to verify it fails**
 
 Create the plugin package manifest first (the test needs its autoload):
 
@@ -416,7 +416,7 @@ composer test --working-dir=plugins/monorepo 2>/dev/null || echo '{"scripts":{"t
 Run: `composer test --working-dir=plugins/monorepo`
 Expected: FAIL — `Error: Class "MeRezaRezaei\TeleProtoMonorepo\InstallPathPlugin" not found`.
 
-- [ ] **Step 3: Write the plugin implementation**
+- [x] **Step 3: Write the plugin implementation**
 
 `plugins/monorepo/src/InstallPathPlugin.php`:
 
@@ -480,12 +480,12 @@ final class InstallPathPlugin implements PluginInterface, EventSubscriberInterfa
 }
 ```
 
-- [ ] **Step 4: Run the plugin test to verify it passes**
+- [x] **Step 4: Run the plugin test to verify it passes**
 
 Run: `composer test --working-dir=plugins/monorepo`
 Expected: PASS — `OK (2 tests, 2 assertions)` (assertion count may differ slightly by mock wiring; the hard requirement is 0 failures).
 
-- [ ] **Step 5: Register the plugin in root composer.json**
+- [x] **Step 5: Register the plugin in root composer.json**
 
 In `ROOT/composer.json`:
 
@@ -505,7 +505,7 @@ In `ROOT/composer.json`:
 Run: `composer validate --strict`
 Expected: valid. (Still no root `composer update` — packages don't exist yet.)
 
-- [ ] **Step 6: Write the verify script**
+- [x] **Step 6: Write the verify script**
 
 `scripts/verify-monorepo.sh`:
 
@@ -556,7 +556,7 @@ Make it executable: `chmod +x scripts/verify-monorepo.sh`
 
 Note the `--check` flag: it doesn't exist in the generators yet — Task 6 adds `--check` (dry-run: regenerate to a temp dir and diff against the committed file, exit 1 on drift) to exactly these three generators. Until Task 6 lands, `composer verify` is expected to fail at the idempotence step if run; Tasks 3–6 use the granular per-package commands instead.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add plugins scripts composer.json
@@ -577,7 +577,7 @@ git commit -m "feat(monorepo): install-path pinning plugin + full-chain verify s
 - Consumes: root path repos (Task 1), plugin pin (Task 2).
 - Produces: installable package `merezarezaei/teleproto-core` with PSR-4 mappings `MeRezaRezaei\Teleproto\{Contracts,Entities,Exceptions,Methods,MTProto,Passport,Schema,Support,Types}\` → `src/<sub>`; suite green via `composer test --working-dir=packages/core` **except** `Schema/MethodRegistryTest` which fails on artifact paths until Task 4 — that test file moves in this task but its expected state is documented red.
 
-- [ ] **Step 1: Create the core package manifest**
+- [x] **Step 1: Create the core package manifest**
 
 `packages/core/composer.json`:
 
@@ -643,7 +643,7 @@ Dependency rationale (verify each against actual imports before committing — `
 - `merezarezaei/teleproto-schema` — `Schema/MethodRegistry` artifact lookup (Task 4 rewires it); constraint `*` while path-linked, becomes `^1.0` at publish time.
 - **No illuminate/\\* entry may appear** — spec §3.
 
-- [ ] **Step 2: Move core source subtrees with git mv**
+- [x] **Step 2: Move core source subtrees with git mv**
 
 ```bash
 mkdir -p packages/core/src
@@ -661,7 +661,7 @@ grep -rn "Illuminate" packages/core/src || echo "CLEAN: no illuminate in core"
 
 Expected: `CLEAN: no illuminate in core`. If anything matches, that file belongs in laravel (Task 5) — move it there now with `git mv packages/core/src/<Sub>/<File>.php /tmp/laravel-staging/<Sub>/` and record it in a scratch note for Task 5 (the earlier repo-wide grep showed zero matches in these nine subtrees, so any hit here means an import added since).
 
-- [ ] **Step 3: Move core-owned tests**
+- [x] **Step 3: Move core-owned tests**
 
 Core owns these files from the old root `tests/` (they exercise only core classes):
 
@@ -687,7 +687,7 @@ git mv packages/core/tests/Wire/DoctorCommandTest.php tests/Wire/DoctorCommandTe
 
 Also stays behind: `tests/Schema/SkillFilesTest.php` (tests generated `skills/`, owned by schema package — moves in Task 6).
 
-- [ ] **Step 4: Write core phpunit + phpstan configs**
+- [x] **Step 4: Write core phpunit + phpstan configs**
 
 `packages/core/phpunit.xml.dist`:
 
@@ -729,7 +729,7 @@ parameters:
             message: 'src/ is regex-free by spec 2026-08-28 §A — use sscanf/string functions/the TL tokenizer'
 ```
 
-- [ ] **Step 5: Install and run the core suite (expected partial red)**
+- [x] **Step 5: Install and run the core suite (expected partial red)**
 
 ```bash
 composer update --working-dir=packages/core
@@ -738,7 +738,7 @@ composer test --working-dir=packages/core
 
 Expected: **`Schema/MethodRegistryTest` fails** with `RuntimeException: Cannot read schema artifact [...]` — MethodRegistry still resolves `dirname(__DIR__, 2) . '/schema/'` which no longer exists relative to the package. Every other test passes. This red is Task 4's entry condition; do not fix it here.
 
-- [ ] **Step 6: Run core phpstan (expected green)**
+- [x] **Step 6: Run core phpstan (expected green)**
 
 ```bash
 composer analyse --working-dir=packages/core
@@ -746,7 +746,7 @@ composer analyse --working-dir=packages/core
 
 Expected: `[OK] No errors` — if phpstan flags a missing class from `Services\\` (laravel) inside core src, that import was missed in the boundary audit; relocate the file per Step 2's fallback rule and re-run.
 
-- [ ] **Step 7: Root install smoke + prune residues**
+- [x] **Step 7: Root install smoke + prune residues**
 
 ```bash
 git status --short
@@ -755,7 +755,7 @@ ls src 2>/dev/null && { git add -A src && git commit -m \"chore(monorepo): remov
 
 If `src/` still contains `Console/ Events/ Facades/ Http/ Media/ Services/ TeleprotoServiceProvider.php` — that is correct and expected; they are Task 5's payload. Only an EMPTY root `src/` (after Task 5) gets deleted. This step is a no-op checkpoint until then; keep it as `echo "root src residue (expected, Task 5 payload):" && ls src`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add packages/core composer.lock 2>/dev/null || git add packages/core
@@ -780,7 +780,7 @@ git commit -m "feat(core): extract zero-illuminate wire engine into packages/cor
   - `packages/schema/schema/{methods-mtproto.json,methods-botapi.json}` at those exact relative paths (MethodRegistry + verify script + generators depend on them).
   - A green `composer test --working-dir=packages/core` including `MethodRegistryTest`.
 
-- [ ] **Step 1: Create the schema package skeleton**
+- [x] **Step 1: Create the schema package skeleton**
 
 `packages/schema/composer.json`:
 
@@ -813,7 +813,7 @@ git commit -m "feat(core): extract zero-illuminate wire engine into packages/cor
 
 `packages/schema/phpunit.xml.dist`: same shape as core's with testsuite name `Teleproto Schema`.
 
-- [ ] **Step 2: Move the schema artifacts and sources**
+- [x] **Step 2: Move the schema artifacts and sources**
 
 ```bash
 mkdir -p packages/schema
@@ -822,7 +822,7 @@ git mv schema packages/schema/schema
 
 `sources/` rides along inside it (`packages/schema/schema/sources/`). The `.tl` mirror previously referenced as root `schema/sources/` is now `packages/schema/schema/sources/` — teleclient's own mirror is independent (its AGENTS.md documents a committed layer-227 mirror under teleclient, untouched by this task).
 
-- [ ] **Step 3: Write the failing SchemaArtifacts test**
+- [x] **Step 3: Write the failing SchemaArtifacts test**
 
 `packages/schema/tests/SchemaArtifactsTest.php`:
 
@@ -855,7 +855,7 @@ final class SchemaArtifactsTest extends TestCase
 }
 ```
 
-- [ ] **Step 4: Run it red**
+- [x] **Step 4: Run it red**
 
 ```bash
 composer update --working-dir=packages/schema
@@ -864,7 +864,7 @@ composer test --working-dir=packages/schema
 
 Expected: FAIL — `Class "MeRezaRezaei\TeleProtoSchema\SchemaArtifacts" not found`.
 
-- [ ] **Step 5: Implement SchemaArtifacts**
+- [x] **Step 5: Implement SchemaArtifacts**
 
 `packages/schema/src/SchemaArtifacts.php`:
 
@@ -915,12 +915,12 @@ final class SchemaArtifacts
 }
 ```
 
-- [ ] **Step 6: Run it green**
+- [x] **Step 6: Run it green**
 
 Run: `composer test --working-dir=packages/schema`
 Expected: PASS (2 tests).
 
-- [ ] **Step 7: Rewire MethodRegistry and run core green**
+- [x] **Step 7: Rewire MethodRegistry and run core green**
 
 Edit `packages/core/src/Schema/MethodRegistry.php`. Current shape (lines ~33–38):
 
@@ -965,7 +965,7 @@ Note: `packages/core/composer.json` has no `repositories` block, so its standalo
 
 (Path repos in a published package's manifest are ignored by consumers — this is the standard dev-link pattern and harmless post-publish; root install is unaffected since root already declares all four.)
 
-- [ ] **Step 8: Root-level install now works**
+- [x] **Step 8: Root-level install now works**
 
 ```bash
 composer update
@@ -1009,7 +1009,7 @@ composer update
 
 Expected: install succeeds; `vendor/merezarezaei/teleproto-core` and `vendor/merezarezaei/teleproto-schema` are symlinks to `packages/core` and `packages/schema` (the plugin pin + `"symlink": true`).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add packages/schema packages/core packages/laravel packages/bot composer.lock
@@ -1033,7 +1033,7 @@ git commit -m "feat(schema): SchemaArtifacts locator package; MethodRegistry res
 - Consumes: `merezarezaei/teleproto-core` classes (all FQCNs unchanged), `merezarezaei/teleproto-bot` (only from `TeleprotoClient::bot()` — which this task keeps compiling by leaving the method body as-is; bot package placeholder from Task 4 makes the class missing at runtime, so this task's `TeleprotoClientTest` run must avoid `bot()` paths — verify with grep in Step 2 and, if any existing test calls `bot()`, guard the move of that specific test file into Task 7's window: keep it at root `tests/` until then, deleted in Task 7 Step 6).
 - Produces: installable `merezarezaei/teleproto-laravel` with PSR-4 `MeRezaRezaei\\Teleproto\\{Console,Events,Facades,Http,Media,Services}\\` → `src/<sub>` **plus root mapping** `MeRezaRezaei\\Teleproto\\` → `src/` (for `TeleprotoServiceProvider` only — one class file at src root); Laravel service-provider discovery via `extra.laravel.providers`; green suite incl. two new orchestration tests.
 
-- [ ] **Step 1: Write the real laravel manifest**
+- [x] **Step 1: Write the real laravel manifest**
 
 Replace `packages/laravel/composer.json`:
 
@@ -1096,7 +1096,7 @@ Replace `packages/laravel/composer.json`:
 
 Add the same dev-link `repositories` block as core got in Task 4 Step 7 (core, bot as path repos, symlinked).
 
-- [ ] **Step 2: Move laravel source and tests**
+- [x] **Step 2: Move laravel source and tests**
 
 ```bash
 for sub in Console Events Facades Http Media Services; do
@@ -1144,7 +1144,7 @@ Finally remove now-empty roots:
 rmdir src tests config 2>/dev/null; git add -A
 ```
 
-- [ ] **Step 3: Write laravel configs**
+- [x] **Step 3: Write laravel configs**
 
 `packages/laravel/phpunit.xml.dist`:
 
@@ -1200,7 +1200,7 @@ parameters:
 
 (SchemaAuditCommand's proc_open exemption travels with it; its path rewiring is Task 6.)
 
-- [ ] **Step 4: Write the failing orchestration tests**
+- [x] **Step 4: Write the failing orchestration tests**
 
 `packages/laravel/tests/Support/ServiceProviderTest.php`:
 
@@ -1266,7 +1266,7 @@ final class FacadeSmokeTest extends TestbenchTestCase
 
 (`use TP;` resolves via the alias registered by `extra.laravel.aliases` under testbench package discovery.)
 
-- [ ] **Step 5: Run laravel suite red → wire → green**
+- [x] **Step 5: Run laravel suite red → wire → green**
 
 ```bash
 composer update --working-dir=packages/laravel
@@ -1277,7 +1277,7 @@ Expected first run: FAIL in `ServiceProviderTest` on `config('teleproto.default'
 
 Expected final: all PASS including the two new tests.
 
-- [ ] **Step 6: Root verify checkpoint**
+- [x] **Step 6: Root verify checkpoint**
 
 ```bash
 composer update
@@ -1293,7 +1293,7 @@ grep -n "Bots" packages/core/tests/Schema/GeneratedBuildersTest.php
 
 For each hit: remove the Bots-specific test method (keep every other group), because from now on the Bots builders belong to the bot package's surface.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -1315,7 +1315,7 @@ git commit -m "feat(laravel): extract illuminate glue into packages/laravel; add
 - Consumes: `SchemaArtifacts::path()` (Task 4); laravel's `InstalledVersions`-based lookup needs `composer-runtime-api` — **add `"composer-runtime-api": "^2.0"` to laravel's require** in this task (Step 6).
 - Produces: generators runnable in-place from the monorepo (`php packages/schema/bin/generate-*.php`) that read sources/config from and write products into the sibling packages deterministically; `--check` dry-run mode on `generate-method-builders.php`, `generate-userscope-schema.php`, `generate-skill-files.php` (exit 0 clean, exit 1 drift); a working `composer verify` full chain (Task 2 script's idempotence step becomes live).
 
-- [ ] **Step 1: Move the tooling**
+- [x] **Step 1: Move the tooling**
 
 ```bash
 git mv bin/generate-botapi-schema.php packages/schema/bin/generate-botapi-schema.php
@@ -1334,7 +1334,7 @@ git add -A
 
 `bin/teleproto`, `bin/test-e2e.php`, `bin/test-me.php` stay at root (dev CLI against root vendor — unchanged concern).
 
-- [ ] **Step 2: Fix generator path resolution (write targets now live in sibling packages)**
+- [x] **Step 2: Fix generator path resolution (write targets now live in sibling packages)**
 
 Every generator currently resolves repo paths as `__DIR__ . '/../<thing>'`. From `packages/schema/bin/`, the monorepo root is `dirname(__DIR__, 2)` and targets are:
 
@@ -1369,7 +1369,7 @@ Also fix autoload requires where present: `generate-skill-files.php` line 16 (`d
 grep -n "MeRezaRezaei" packages/schema/bin/*.php || echo "generators are framework-independent — no core autoload needed"
 ```
 
-- [ ] **Step 3: Add --check (dry-run) mode to the three product-writing generators**
+- [x] **Step 3: Add --check (dry-run) mode to the three product-writing generators**
 
 `--check` semantics: build the would-be output **in memory / temp dir**, byte-compare against the committed product, print drift, exit 1 on drift / 0 clean; never write the real target. Implementation per generator — apply this identical pattern:
 
@@ -1403,7 +1403,7 @@ if ($checkOnly) {
 
 Apply the same three-part edit (`$checkOnly` flag → guarded compare vs write → drift exit) to `generate-userscope-schema.php` (single product: compare its `$out` string against `dirname(__DIR__, 2) . '/core/src/MTProto/TL/Schema/UserScopeSchema.php'`) and `generate-skill-files.php` (loop over generated skill files, compare each under `__DIR__/../skills/`). The existing non-check behavior must remain byte-identical — `git diff` after a real run shows nothing (Step 5 proves it).
 
-- [ ] **Step 4: Rewire SchemaAuditCommand**
+- [x] **Step 4: Rewire SchemaAuditCommand**
 
 `packages/laravel/src/Console/SchemaAuditCommand.php` currently (lines 28, 64, 69):
 
@@ -1424,7 +1424,7 @@ if ($root === null || $root === '' || !is_dir($root)) {
 
 The `{$root}/bin/{$generator}` and cwd `$root` arguments then resolve inside the schema package in both dev (symlink → `packages/schema`) and installed contexts. Add `use Composer\\InstalledVersions;` to the imports and `"composer-runtime-api": "^2.0"` to laravel's require block.
 
-- [ ] **Step 5: Run generators, prove idempotence**
+- [x] **Step 5: Run generators, prove idempotence**
 
 ```bash
 composer update --working-dir=packages/schema
@@ -1438,7 +1438,7 @@ php packages/schema/bin/generate-method-builders.php --check && echo "CHECK CLEA
 
 Expected: schema tests PASS (SchemaArtifactsTest + SkillFilesTest), real runs produce zero diff (nothing changes — the moved generators must reproduce committed bytes), `--check` exits 0. If a real run produces a diff, the path edits changed output content (not just location) — stop and fix before continuing; committed artifacts must remain byte-stable across this task.
 
-- [ ] **Step 6: Full verify chain goes live**
+- [x] **Step 6: Full verify chain goes live**
 
 ```bash
 composer install
@@ -1447,7 +1447,7 @@ composer verify
 
 Expected: `verify complete` — install, pin check (4 symlinks), four suites, phpstan ×3, idempotence all pass. (The script's `--check` calls are now implemented.)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -1471,7 +1471,7 @@ git commit -m "feat(schema): rehome generators + sources; add --check dry-run; S
 - Consumes: `MeRezaRezaei\\Teleproto\\Types\\InlineKeyboard` (core), `MeRezaRezaei\\Teleproto\\Exceptions\\TelegramException` (core), `MeRezaRezaei\\Teleproto\\Schema\\MethodRegistry` (core) — all FQCNs unchanged; `Illuminate\\Http\\Client\\Factory`.
 - Produces: package `merezarezaei/teleproto-bot` mapping `MeRezaRezaei\\Teleproto\\Services\\` → `src/Services` and `MeRezaRezaei\\Teleproto\\Methods\\` → `src/Methods` (subset directories; overlapping prefixes with laravel/core are legal — each class exists in exactly one package, verified by the load-order smoke test below). `TeleprotoClient::bot()` in laravel keeps instantiating `new BotClient($finalToken, $proxyConfig ?? $this->defaultProxyConfig, http: $this->http)` — read the file before editing and preserve that exact constructor call; if its signature differs from what Task 5 recorded, the signature wins, not this plan.
 
-- [ ] **Step 1: Write the bot manifest**
+- [x] **Step 1: Write the bot manifest**
 
 Replace `packages/bot/composer.json`:
 
@@ -1511,7 +1511,7 @@ Replace `packages/bot/composer.json`:
 }
 ```
 
-- [ ] **Step 2: Move the three files (exactly one source location each)**
+- [x] **Step 2: Move the three files (exactly one source location each)**
 
 ```bash
 mkdir -p packages/bot/src/Services packages/bot/src/Methods/Generated
@@ -1530,7 +1530,7 @@ find packages -name "BotClient.php" -o -name "Bots.php" -not -path "*/vendor/*" 
 
 Expected: `packages/bot/src/Services/BotClient.php`, `packages/bot/src/Services/BotAccountScope.php`, `packages/bot/src/Methods/Generated/Bots.php` — each exactly once, nowhere else.
 
-- [ ] **Step 3: Write the failing package-load test**
+- [x] **Step 3: Write the failing package-load test**
 
 `packages/bot/tests/BotPackageTest.php`:
 
@@ -1572,7 +1572,7 @@ If `BotClient::__construct` requires the HttpFactory argument as non-nullable, t
 
 `packages/bot/phpunit.xml.dist`: same shape as schema's, testsuite name `Teleproto Bot`, autoload-dev prefix `MeRezaRezaei\\Teleproto\\Bot\\Tests\\`.
 
-- [ ] **Step 4: Run red → install → green**
+- [x] **Step 4: Run red → install → green**
 
 ```bash
 composer update --working-dir=packages/bot
@@ -1588,7 +1588,7 @@ composer verify
 
 Expected: `verify complete` — laravel suite still green (its `TeleprotoClient` autoloads BotClient from the bot package now), core green, idempotence green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1610,7 +1610,7 @@ All commands in this task run from `/home/me/Documents/projects/tele/teleclient`
 - Consumes: the four packages installable from `../teleproto/packages/*` (Tasks 3–7).
 - Produces: teleclient green against the new family; documented dev-link swap in `composer.local.json.example`; **published constraint untouched** (`merezarezaei/teleproto: ^1.2.1 || ^1.1` stays until the family ships).
 
-- [ ] **Step 1: Edit teleclient composer.json**
+- [x] **Step 1: Edit teleclient composer.json**
 
 Add BEFORE `"require"`:
 
@@ -1632,7 +1632,7 @@ In `"require"`, ADD (do not yet remove the old entry):
         "merezarezaei/teleproto-bot": "*",
 ```
 
-- [ ] **Step 2: Prove it fails first against the new names only**
+- [x] **Step 2: Prove it fails first against the new names only**
 
 Temporarily comment out `"merezarezaei/teleproto": ...` (keep the line in a scratch buffer — Step 3 restores a decision about it), then:
 
@@ -1642,7 +1642,7 @@ composer update
 
 Expected: resolver failure OR duplicate-class errors: teleproto (old) is gone while `teleproto-laravel` currently ALSO maps `MeRezaRezaei\\Teleproto\\` — with old teleproto commented out, resolution should succeed where classes come only from the new family. If you instead see `Class MeRezaRezaei\\Teleproto\\Services\\UserAccountScope not found` during test bootstrap, the laravel package didn't install — check `vendor/merezarezaei/` symlinks. Document whatever failure appears; it defines Step 3's fix list.
 
-- [ ] **Step 3: Resolve the old-package question and go green**
+- [x] **Step 3: Resolve the old-package question and go green**
 
 Old `merezarezaei/teleproto` and new `teleproto-laravel` both map root-adjacent `MeRezaRezaei\\Teleproto\\` namespaces → they CANNOT coexist in one install (duplicate-class ambiguity). Decision locked by this plan: in the dev-link state the old entry is REMOVED (it stays recorded for the published state in `composer.local.json.example`):
 
@@ -1666,7 +1666,7 @@ git diff --stat -- src/
 
 Expected: **empty** (zero diffs under teleclient/src — spec acceptance criterion).
 
-- [ ] **Step 4: Write the dev-link example doc**
+- [x] **Step 4: Write the dev-link example doc**
 
 `teleclient/composer.local.json.example`:
 
@@ -1683,7 +1683,7 @@ Expected: **empty** (zero diffs under teleclient/src — spec acceptance criteri
 }
 ```
 
-- [ ] **Step 5: Commit (in teleclient repo)**
+- [x] **Step 5: Commit (in teleclient repo)**
 
 ```bash
 git add composer.json composer.local.json.example composer.lock
@@ -1703,7 +1703,7 @@ git commit -m "build: consume teleproto monorepo packages via path repositories 
 - Consumes: everything from Tasks 1–8 (`composer verify` chain, four green packages).
 - Produces: CI that fails when any package regresses; docs that describe the four-piece puzzle and their attach rules; an explicit, user-gated publish runbook (NOT executed in this plan).
 
-- [ ] **Step 1: Replace CI with the monorepo matrix**
+- [x] **Step 1: Replace CI with the monorepo matrix**
 
 `.github/workflows/run-tests.yml`:
 
@@ -1745,7 +1745,7 @@ jobs:
 
 Run it locally first: `bash -n scripts/verify-monorepo.sh && composer verify`.
 
-- [ ] **Step 2: Update README + llms.txt architecture sections**
+- [x] **Step 2: Update README + llms.txt architecture sections**
 
 In `README.md`, replace the single-package architecture description with the package table:
 
@@ -1764,7 +1764,7 @@ schema is pulled in transitively by core and only needed directly when regenerat
 
 Mirror the same table in `llms.txt` (it duplicates architecture for LLM consumers). Update any `php artisan teleproto:*` quickstart that assumes one package: note `composer require merezarezaei/teleproto-laravel` as the Laravel user entry point, bare `teleproto-core` for framework-free usage.
 
-- [ ] **Step 3: Update AGENTS.md for the new repo shape**
+- [x] **Step 3: Update AGENTS.md for the new repo shape**
 
 Rewrite the architecture map paths (`src/MTProto/` → `packages/core/src/MTProto/`, `src/Services/` → `packages/laravel/src/Services/`, `bin/generate-*` → `packages/schema/bin/*`, `schema/` → `packages/schema/schema/`, `skills/` → `packages/schema/skills/`), replace the gates block with:
 
@@ -1783,7 +1783,7 @@ Live gates (opt-in, real credentials) are unchanged:
 
 Keep the hard-rules section (zero regex, generated artifacts, session credentials) — it now applies per package with `packages/*/src` as the target surface. Update the teleclient dev-link paragraph to point at `packages/*` path repos.
 
-- [ ] **Step 4: CHANGELOG entries (both repos)**
+- [x] **Step 4: CHANGELOG entries (both repos)**
 
 teleproto `CHANGELOG.md` under a new `## [Unreleased]` heading:
 
@@ -1811,7 +1811,7 @@ teleclient `CHANGELOG.md` `## [Unreleased]`:
   `composer.local.json.example`.
 ```
 
-- [ ] **Step 5: Final acceptance sweep**
+- [x] **Step 5: Final acceptance sweep**
 
 ```bash
 composer verify
@@ -1822,7 +1822,7 @@ cd ../teleclient && git diff --stat -- src/ | wc -l
 
 Expected: verify complete; core clean; paths rewired; `0` (zero src diffs in teleclient).
 
-- [ ] **Step 6: Commit (both repos)**
+- [x] **Step 6: Commit (both repos)**
 
 teleproto:
 
@@ -1838,7 +1838,7 @@ git add CHANGELOG.md
 git commit -m "docs: changelog for monorepo dev-link switch"
 ```
 
-- [ ] **Step 7: Publish gate (NOT executed — user decision)**
+- [x] **Step 7: Publish gate (NOT executed — user decision)**
 
 The family is releasable when: `composer verify` is green on all PHP versions in CI, the user confirms Packagist names, and the subtree-split (or per-package repo) strategy is chosen. Present the runbook to the user and STOP. Publishing is a separate task with its own approval; nothing in this plan tags, pushes, or releases anything.
 

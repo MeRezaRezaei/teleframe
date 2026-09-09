@@ -78,7 +78,7 @@ skills/telegram-methods/*.md                      (T6 output)
 - Consumes: `TLSignatureParser::parse` (Plan 1).
 - Produces: `schema/methods-mtproto.json` in the canonical format; `bin/generate-method-schema.php` exit 0 with a one-line summary.
 
-- [ ] **Step 1: Fetch + commit sources (network, one-time, not from tests)**
+- [x] **Step 1: Fetch + commit sources (network, one-time, not from tests)**
 
 ```bash
 mkdir -p schema/sources
@@ -90,7 +90,7 @@ curl -fsSL https://raw.githubusercontent.com/danog/MadelineProto/master/extracte
 head -3 schema/sources/api.tl   # sanity: starts with // scheme tl ...
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```php
 <?php
@@ -138,9 +138,9 @@ class MtprotoSchemaTest extends TestCase
 }
 ```
 
-- [ ] **Step 3: Run — verify failure** (artifact missing): `vendor/bin/phpunit tests/Schema/MtprotoSchemaTest.php` → FAIL.
+- [x] **Step 3: Run — verify failure** (artifact missing): `vendor/bin/phpunit tests/Schema/MtprotoSchemaTest.php` → FAIL.
 
-- [ ] **Step 4: Implement generator + run it**
+- [x] **Step 4: Implement generator + run it**
 
 `bin/generate-method-schema.php` (complete file; no regex):
 
@@ -246,7 +246,7 @@ printf("methods-mtproto.json: %d methods, layer %d\n", count($methods), $layer);
 
 Run: `php bin/generate-method-schema.php` → then `vendor/bin/phpunit tests/Schema/MtprotoSchemaTest.php` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add schema/ bin/generate-method-schema.php tests/Schema/MtprotoSchemaTest.php
@@ -267,7 +267,7 @@ git commit -m "feat(schema): derive full mtproto method schema from tdesktop sou
 - Consumes: the committed api.json only (no network in tests/generators).
 - Produces: `schema/methods-botapi.json` canonical bot-http format, enriched with per-param `description` (from api.json) — Task 6's skill tables get docs text for free.
 
-- [ ] **Step 1: Fetch + commit source**
+- [x] **Step 1: Fetch + commit source**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/PaulSonOfLars/telegram-bot-api-spec/main/api.json -o schema/sources/botapi-spec.json
@@ -275,7 +275,7 @@ php -r '$j=json_decode(file_get_contents("schema/sources/botapi-spec.json"),true
 ```
 Expected: 100+ methods; sendMessage fields > 5.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```php
 <?php
@@ -311,9 +311,9 @@ class BotApiSchemaTest extends TestCase
 }
 ```
 
-- [ ] **Step 3: Run — FAIL** (artifact missing).
+- [x] **Step 3: Run — FAIL** (artifact missing).
 
-- [ ] **Step 4: Implement transformer + run**
+- [x] **Step 4: Implement transformer + run**
 
 `bin/generate-botapi-schema.php` (complete; pure array transforms, zero regex, zero DOM):
 
@@ -376,7 +376,7 @@ printf("methods-botapi.json: %d methods\n", count($methods));
 
 Run: `php bin/generate-botapi-schema.php && vendor/bin/phpunit tests/Schema/BotApiSchemaTest.php` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add schema/sources/botapi-spec.json bin/generate-botapi-schema.php schema/methods-botapi.json tests/Schema/BotApiSchemaTest.php
@@ -400,7 +400,7 @@ git commit -m "feat(schema): derive bot-http method schema from PaulSonOfLars ap
 - `MethodRegistry::apiOf(string $name): 'mtproto'|'bot-http'`
 - `TelegramMethod` readonly: `name`, `api`, `id` (string, mtproto only), `params: list<array{name,type,flag_word,bit}>`, `returnType: string`, `docs: string`, `errors: list<string>`, `required: list<string>` (bot-http only), plus `paramNames(): list<string>`.
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```php
 <?php
@@ -440,13 +440,13 @@ class MethodRegistryTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: FAIL** (classes missing).
+- [x] **Step 2: FAIL** (classes missing).
 
-- [ ] **Step 3: Implement** — `TelegramMethod` readonly with named constructor `fromArtifact(string $name, array $raw): self` mapping the canonical JSON entry; `MethodRegistry` static with `load()` reading `__DIR__.'/../../schema/methods-*.json'` via glob-free explicit two paths, storing `array<string, TelegramMethod>`.
+- [x] **Step 3: Implement** — `TelegramMethod` readonly with named constructor `fromArtifact(string $name, array $raw): self` mapping the canonical JSON entry; `MethodRegistry` static with `load()` reading `__DIR__.'/../../schema/methods-*.json'` via glob-free explicit two paths, storing `array<string, TelegramMethod>`.
 
-- [ ] **Step 4: PASS gates**: `vendor/bin/phpunit tests/Schema/ && vendor/bin/phpunit` → green.
+- [x] **Step 4: PASS gates**: `vendor/bin/phpunit tests/Schema/ && vendor/bin/phpunit` → green.
 
-- [ ] **Step 5: Commit**: `feat(schema): TelegramMethod value object + MethodRegistry lookup`
+- [x] **Step 5: Commit**: `feat(schema): TelegramMethod value object + MethodRegistry lookup`
 
 ### Task 5 (G2): SchemaDiffer + update/audit commands
 
@@ -459,7 +459,7 @@ class MethodRegistryTest extends TestCase
 - `SchemaAuditCommand` (`teleproto:schema-audit {--against=}`): regenerates artifacts to temp via the two generators (proc_open PHP), diffs against committed, prints a markdown report to storage path `schema/audit-report.md` when `--write`, exits 1 on any difference, 0 when identical.
 - `SchemaUpdateCommand` (`teleproto:schema-update`): fetches fresh sources (curl via proc_open; network documented as manual/CI step), regenerates in place, then delegates the audit diff vs git HEAD versions.
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```php
 <?php
@@ -500,7 +500,7 @@ class SchemaDifferTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: FAIL** → **Step 3: Implement** — `SchemaDiffer::diff` with `array_diff_key`/`array_intersect_key` and `json_encode` equality per shared method. Commands: audit shell is `proc_open([PHP_BINARY, generator])` to temp dir, then `SchemaDiffer::diff` + `make:...`-free plain output (`$this->line`); registration in provider's `commands([...])` array. Keep commands thin — ALL logic in `SchemaDiffer` (tested) and generators (tested); commands orchestrate only.
+- [x] **Step 2: FAIL** → **Step 3: Implement** — `SchemaDiffer::diff` with `array_diff_key`/`array_intersect_key` and `json_encode` equality per shared method. Commands: audit shell is `proc_open([PHP_BINARY, generator])` to temp dir, then `SchemaDiffer::diff` + `make:...`-free plain output (`$this->line`); registration in provider's `commands([...])` array. Keep commands thin — ALL logic in `SchemaDiffer` (tested) and generators (tested); commands orchestrate only.
 - **Step 4: PASS gates** + `vendor/bin/phpstan analyse` clean.
 - **Step 5: Commit**: `feat(schema): SchemaDiffer + teleproto:schema-update/audit pipeline`
 
@@ -518,7 +518,7 @@ class SchemaDifferTest extends TestCase
 - `Methods::messages(): Generated\Messages`, `Methods::users(): Generated\Users`, `Methods::auth(): Generated\Auth`, `Methods::bots(): Generated\Bots` (bot-http group), plus `__callStatic` fallback throwing with the curated-list pointer.
 - Every generated builder: named constructor per method returning a fresh builder instance with named setters per param (`->peer($v)`, `->randomId($v)` — snake→camel), `toRequest(): array` returning `['_' => <method>, ...setParams]` and validating every REQUIRED param (mtproto: params without flag_word; bot-http: `required` list) is set, else `InvalidArgumentException` naming the missing ones.
 
-- [ ] **Step 1: Curated dial + failing test**
+- [x] **Step 1: Curated dial + failing test**
 
 `config/curated-methods.json` (seed — the documented scope):
 ```json
@@ -577,9 +577,9 @@ class GeneratedBuildersTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: FAIL** (Methods missing).
+- [x] **Step 2: FAIL** (Methods missing).
 
-- [ ] **Step 3: Implement generator + facade, run generator**
+- [x] **Step 3: Implement generator + facade, run generator**
 
 `bin/generate-method-builders.php`: reads curated list + `MethodRegistry`; groups mtproto methods by first dot-namespace (`messages.`, `users.`, `contacts.`, `account.`, `auth.`, `help.` → classes `Messages`, `Users`, ...; bot-http → single `Bots` class); emits one file per group with `@generated` header. Per method (template):
 
@@ -607,7 +607,7 @@ class GeneratedBuildersTest extends TestCase
 
 Run: `php bin/generate-method-builders.php && vendor/bin/phpunit tests/Schema/GeneratedBuildersTest.php` → PASS. Full suite + phpstan + e2e green.
 
-- [ ] **Step 4: Commit**: `feat(methods): generated fluent builders for the curated scope`
+- [x] **Step 4: Commit**: `feat(methods): generated fluent builders for the curated scope`
 
 ### Task 6 (G3): AI skill file generation
 
@@ -617,7 +617,7 @@ Run: `php bin/generate-method-builders.php && vendor/bin/phpunit tests/Schema/Ge
 
 **Interfaces:** Consumes `MethodRegistry`, `RpcErrorCatalog::documentedEntry`, builders' `toRequest()` shape. Produces deterministic markdown per curated method.
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```php
 <?php
@@ -644,7 +644,7 @@ class SkillFilesTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: FAIL** → **Step 3: Implement** — renderer walks curated list; per method emits: H1 name, docs link, params table (`| name | type |` rows; required marker `*` for non-optional), return type, errors section (each message + `RpcErrorCatalog` rendered description via existing `lookup()`), and a Usage example constructed from the builder signature (setters for the first 3 required params with placeholder values, `->toRequest()` + `TeleprotoClient::dispatch($request)`). Deterministic ordering (params order, sorted errors). Run `php bin/generate-skill-files.php` → test PASS; full gates green.
+- [x] **Step 2: FAIL** → **Step 3: Implement** — renderer walks curated list; per method emits: H1 name, docs link, params table (`| name | type |` rows; required marker `*` for non-optional), return type, errors section (each message + `RpcErrorCatalog` rendered description via existing `lookup()`), and a Usage example constructed from the builder signature (setters for the first 3 required params with placeholder values, `->toRequest()` + `TeleprotoClient::dispatch($request)`). Deterministic ordering (params order, sorted errors). Run `php bin/generate-skill-files.php` → test PASS; full gates green.
 - **Step 4: Commit**: `feat(skills): generated AI skill reference for curated methods`
 
 ---

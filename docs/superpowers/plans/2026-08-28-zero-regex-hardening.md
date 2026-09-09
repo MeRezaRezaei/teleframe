@@ -57,7 +57,7 @@ composer.json                               (modify — require vlucas/phpdotenv
   - `ParsedSignature` readonly: `->name: string`, `->id: int` (0 when absent), `->fields: list<array{name: string, type: string, flagWord: ?string, bit: ?int}>`, `->returnType: string`, `->hasExplicitId: bool`.
   - Type normalization identical to today's output: bare `Vector t` becomes `Vector<t>`; conditional types keep the form `flags.N?T` in `type` with `flagWord='flags'`, `bit=N` parsed out; the naked-typename marker `Type` fields are EXCLUDED from `fields` (generic declarations).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```php
 <?php
@@ -136,12 +136,12 @@ class TLSignatureParserTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: Run — verify failure**
+- [x] **Step 2: Run — verify failure**
 
 Run: `vendor/bin/phpunit tests/Wire/TLSignatureParserTest.php`
 Expected: FAIL — class not found.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `ParsedSignature.php`:
 
@@ -320,12 +320,12 @@ final class TLSignatureParser
 }
 ```
 
-- [ ] **Step 4: Run — verify pass**
+- [x] **Step 4: Run — verify pass**
 
 Run: `vendor/bin/phpunit tests/Wire/TLSignatureParserTest.php`
 Expected: PASS (6 tests). If `users.getUsers#d91a548 id:Vector InputUser = Vector User` style ever appears with angle brackets already (`Vector<User>`), the `<`/`>` chars simply aren't consumed by `takeWhile` and the two-token branch does not trigger — behavior matches the old normalizer.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/MTProto/TL/TLSignatureParser.php src/MTProto/TL/ParsedSignature.php tests/Wire/TLSignatureParserTest.php
@@ -344,7 +344,7 @@ git commit -m "feat(tl): deterministic TLSignatureParser with column-precise err
 - Consumes: existing `RpcErrorCatalog::DESCRIPTIONS` (templates with `%d`).
 - Produces: identical public behavior. New private `RpcErrorCatalog::templateMatches(string $template, string $message): bool` — pure, testable indirectly via `lookup()`.
 
-- [ ] **Step 1: Write the failing tests** (append to `RpcExceptionResolverTest`)
+- [x] **Step 1: Write the failing tests** (append to `RpcExceptionResolverTest`)
 
 ```php
     public function testParameterizedMatchesWorkWithoutRegex(): void
@@ -362,12 +362,12 @@ git commit -m "feat(tl): deterministic TLSignatureParser with column-precise err
     }
 ```
 
-- [ ] **Step 2: Run — verify failure**
+- [x] **Step 2: Run — verify failure**
 
 Run: `vendor/bin/phpunit tests/Wire/RpcExceptionResolverTest.php`
 Expected: FAIL — `SLOWMODE_WAIT_3O` currently matches nothing but the test asserts null on lookup… it should already return null; instead the *new* failing point is none. If it passes trivially, strengthen: temporarily assert `lookup('SLOWMODE_WAIT_30')` returns non-null first (sanity), keep the `3O` null assertion. The regex-free refactor in Step 3 must leave both behaviors identical — that is the test's real job: pinning edge behavior across the refactor.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `RpcExceptionResolver::resolve`, replace both `preg_match` blocks:
 
@@ -431,12 +431,12 @@ with two tiny pure helpers (same file):
     }
 ```
 
-- [ ] **Step 4: Run — full catalog suite green**
+- [x] **Step 4: Run — full catalog suite green**
 
 Run: `vendor/bin/phpunit tests/Wire/RpcExceptionResolverTest.php && vendor/bin/phpunit`
 Expected: PASS (all).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Exceptions/Rpc/RpcExceptionResolver.php src/Exceptions/Rpc/RpcErrorCatalog.php tests/Wire/RpcExceptionResolverTest.php
@@ -455,7 +455,7 @@ git commit -m "refactor(rpc): sscanf + string template matching, zero regex"
 - Consumes: phpseclib `PublicKeyLoader`, `RSA\PublicKey::toString('PKCS1')`.
 - Produces: unchanged `AuthKeyFactory::fingerprintOf/pkcs1DerOf` signatures. Multi-PEM bundle still selects the FIRST key.
 
-- [ ] **Step 1: Write the failing test** (append to the offline test — must pass BOTH before and after refactor: it pins behavior)
+- [x] **Step 1: Write the failing test** (append to the offline test — must pass BOTH before and after refactor: it pins behavior)
 
 ```php
     public function testFingerprintOfEachBundledKeyStaysStable(): void
@@ -474,9 +474,9 @@ git commit -m "refactor(rpc): sscanf + string template matching, zero regex"
     }
 ```
 
-- [ ] **Step 2: Run** — `vendor/bin/phpunit tests/Wire/AuthKeyFactoryOfflineTest.php` — Expected: PASS (pins current behavior before refactor).
+- [x] **Step 2: Run** — `vendor/bin/phpunit tests/Wire/AuthKeyFactoryOfflineTest.php` — Expected: PASS (pins current behavior before refactor).
 
-- [ ] **Step 3: Implement** — replace the regex-scraping `pkcs1DerOf` body with structured conversion:
+- [x] **Step 3: Implement** — replace the regex-scraping `pkcs1DerOf` body with structured conversion:
 
 ```php
     /**
@@ -501,12 +501,12 @@ git commit -m "refactor(rpc): sscanf + string template matching, zero regex"
 
 (Keep the multi-key bundle selection logic — callers pass a single PEM slice; if `generate()` currently extracts the first PEM via regex, replace that extraction with the same line-walk over the bundle: accumulate lines between the first `-----BEGIN` and its `-----END`.)
 
-- [ ] **Step 4: Run — transcript vectors + suite**
+- [x] **Step 4: Run — transcript vectors + suite**
 
 Run: `vendor/bin/phpunit tests/Wire/AuthKeyFactoryOfflineTest.php && vendor/bin/phpunit`
 Expected: PASS — the transcript decrypt tests are the byte-identical proof.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/MTProto/Crypto/AuthKeyFactory.php tests/Wire/AuthKeyFactoryOfflineTest.php
@@ -525,7 +525,7 @@ git commit -m "refactor(crypto): phpseclib-structured PEM normalization, zero re
 - Consumes: `Dotenv::parse` from `vlucas/phpdotenv`; `Illuminate\Support\Str`.
 - Produces: `EnvFile::read/upsert` unchanged signatures.
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 `tests/Support/EnvFileTest.php`:
 
@@ -577,9 +577,9 @@ class EnvFileTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: Run — verify failure** (`EnvFileTest` new file: `testReadParsesValuesIncludingQuoted` may pass already — the pinning matters for the Dotenv swap; `vendor/bin/phpunit tests/Support/EnvFileTest.php`, then proceed).
+- [x] **Step 2: Run — verify failure** (`EnvFileTest` new file: `testReadParsesValuesIncludingQuoted` may pass already — the pinning matters for the Dotenv swap; `vendor/bin/phpunit tests/Support/EnvFileTest.php`, then proceed).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `composer require vlucas/phpdotenv:^5.6 --quiet` then rewrite `EnvFile`:
 
@@ -637,12 +637,12 @@ if ($ok) { /* treat as language, strip */ }
 
 (The markdown lexer test `testMarkdownEscapedCharactersAndPreBlocks` pins this behavior — must stay green.)
 
-- [ ] **Step 4: Run — targeted + full**
+- [x] **Step 4: Run — targeted + full**
 
 Run: `vendor/bin/phpunit tests/Support/EnvFileTest.php tests/TeleprotoClientTest.php && vendor/bin/phpunit`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -663,7 +663,7 @@ git commit -m "refactor(support): Dotenv parsing, string-only env upsert + valid
 - Consumes: `TLSignatureParser::parse`, `ParsedSignature` (Task 1).
 - Produces: `TLRegistry::signatureOf(string $name): ParsedSignature` (new). Existing `id()/signature()/nameOf()/register()` unchanged externally. `TLEncoder::fieldsOf` becomes a thin wrapper (kept for BC with tests) returning `list<array{0:string,1:string}>` derived from the cached struct.
 
-- [ ] **Step 1: Write the failing test** (append to `TLRegistryTest`)
+- [x] **Step 1: Write the failing test** (append to `TLRegistryTest`)
 
 ```php
     public function testSignatureOfReturnsParsedStructWithCache(): void
@@ -677,9 +677,9 @@ git commit -m "refactor(support): Dotenv parsing, string-only env upsert + valid
     }
 ```
 
-- [ ] **Step 2: Run — verify failure** (`signatureOf` undefined).
+- [x] **Step 2: Run — verify failure** (`signatureOf` undefined).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `TLRegistry`: keep the static arrays; on `register($line)` store `self::$parsed[$name] = TLSignatureParser::parse($line)`; compute id via `$parsed->hasExplicitId ? $parsed->id : self::crc32Canonical($line)`. Add:
 
@@ -697,12 +697,12 @@ git commit -m "refactor(support): Dotenv parsing, string-only env upsert + valid
 
 Delete the now-unused `preg_replace('/:Vector .../)` normalization and the `#`-stripping regex from both classes (the tokenizer normalizes).
 
-- [ ] **Step 4: Run — the byte-identical gate**
+- [x] **Step 4: Run — the byte-identical gate**
 
 Run: `vendor/bin/phpunit` (full suite) AND `./bin/teleproto test-e2e`
 Expected: ALL PASS unchanged — goldens, transcript vectors, flag-words, containers.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/MTProto/TL/ && git commit -m "refactor(tl): parse-once ParsedSignature cache drives encoder/decoder"
@@ -722,7 +722,7 @@ git add src/MTProto/TL/ && git commit -m "refactor(tl): parse-once ParsedSignatu
 
 **Interfaces:** Produces: `composer analyse` fails on any `preg_*` call under `src/` with a custom message; `bin/` + `examples/` exempted.
 
-- [ ] **Step 1: Install + configure**
+- [x] **Step 1: Install + configure**
 
 ```bash
 composer require --dev spaze/phpstan-disallowed-calls --quiet
@@ -745,16 +745,16 @@ parameters:
 
 (If `excludesPaths` placement fights the existing config, use the extension's `allowInPaths` on `bin/*`, `examples/*` instead — both documented in the extension README.)
 
-- [ ] **Step 2: Verify the gate fires**
+- [x] **Step 2: Verify the gate fires**
 
 Temporary: add `preg_match('/x/','x');` to any src file → `vendor/bin/phpstan analyse --no-progress` must report the disallowed call with the custom message. Remove the sabotage line afterwards. Run again → `[OK] No errors`.
 
-- [ ] **Step 3: Full gates**
+- [x] **Step 3: Full gates**
 
 Run: `vendor/bin/phpunit && vendor/bin/phpstan analyse --no-progress && ./bin/teleproto test-e2e`
 Expected: all green.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add composer.json composer.lock phpstan.neon.dist
