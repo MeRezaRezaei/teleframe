@@ -181,3 +181,8 @@ Rules of thumb:
 - **One process per account/bot.** Multiple processes may share one auth key (distinct `session_id`s); do not share one `EncryptedConnection` across processes — it is a socket, not a broker.
 - **Batch independent calls** with `callMany()` when you control the request set (fan-out reads, profile + state warmups); keep sequential `call()` for dependent chains.
 - **Fan out processes when** you are latency-bound beyond what batching removes, or volume-bound across accounts (add workers). Fan-out remains the multi-account answer.
+
+## Ops notes
+
+- Pg collation warning `2.39 vs 2.43` on dev boxes is benign; on prod run `ALTER DATABASE <db> REFRESH COLLATION VERSION`.
+- Live-test limits (2026-09-09 triage): proxy tunneling inert (connect direct), wire Layer 227 vs schema catalog 229 is intentional, `Core\MTProto` transport runs silent (PSR-3 logger covers dispatcher + client RPC paths only).
