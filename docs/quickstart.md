@@ -209,3 +209,11 @@ php artisan teleframe:backup restore --set=default --passphrase='...' --target=/
 ```
 
 Deeper treatment: [ingest.md](ingest.md), [bus.md](bus.md), [backup.md](backup.md).
+
+## Live test (opt-in, needs Telegram credentials)
+
+1. `cp .env.example .env` and fill `TELEGRAM_API_ID` + `TELEGRAM_API_HASH` (my.telegram.org).
+2. `./bin/teleframe doctor` — no account needed (handshake + `help.getNearestDc`).
+3. `./bin/teleframe login` — writes the session string into `.env` (never commit it).
+4. `./bin/teleframe me` — live `users.getUsers inputUserSelf`.
+5. Optional: `php bin/live-walkthrough.php`, `./bin/teleframe test-e2e`, `php examples/batch-bench.php`.
