@@ -100,33 +100,14 @@ final class MigrationGenerator
         $ctors = $type->constructors();
         ksort($ctors);
 
-        // Collect param names present in ALL constructors — any column not
-        // in this set must be nullable because the anchor row is shared by
-        // every constructor and can be created by one that lacks the column.
-        $allParamNames = null;
         foreach ($ctors as $ctor) {
-            $names = array_map(
-                static fn (TlParam $p): string => $p->name,
-                array_filter($ctor->params(), static fn (TlParam $p): bool => !$p->isFiller),
-            );
-            $allParamNames = $allParamNames === null
-                ? array_flip($names)
-                : array_intersect_key($allParamNames, array_flip($names));
-        }
-
-        foreach ($ctors as $ctor) {
-            $this->constructorTable($type, $ctor, $up, $down, $allParamNames !== null ? array_keys($allParamNames) : []);
+            $this->constructorTable($type, $ctor, $up, $down);
         }
 
         return CodeWriter::migrationFile($up, array_reverse($down));
     }
 
-    /**
-     * @param list<string> $universalParams Param names present in ALL constructors of this type.
-     *                                      Columns not in this set are forced nullable because the
-     *                                      shared anchor table can be created by any constructor.
-     */
-    private function constructorTable(TlType $type, TlConstructor $ctor, array &$up, array &$down, array $universalParams = []): void
+    private function constructorTable(TlType $type, TlConstructor $ctor, array &$up, array &$down): void
     {
         $table = Naming::constructorTable($type->name, $ctor->name);
         $this->currentTable = $table;
@@ -150,9 +131,8 @@ final class MigrationGenerator
         // emitted as the reserved-word alias 'tl_id' (via Naming::column)
         // so the Telegram ID lives in a queryable column separate from the
         // auto-increment PK — enabling multi-tenant anchor reuse.
-        $universalSet = array_flip($universalParams);
         foreach ($ctor->params() as $param) {
-            $this->columnLines($param, $up, $universalSet);
+            $this->columnLines($param, $up);
         }
 
         $up[] = "    \$table->bigInteger('account_id');";
@@ -232,11 +212,7 @@ final class MigrationGenerator
         $down[] = "Schema::dropIfExists('{$child}');";
     }
 
-    /**
-     * @param array<string, true> $universalSet Param names present in ALL constructors.
-     *                                          Columns not in this set are forced nullable.
-     */
-    private function columnLines(TlParam $param, array &$up, array $universalSet = []): void
+    private function columnLines(TlParam $param, array &$up): void
     {
         if ($param->isFiller) {
             return;

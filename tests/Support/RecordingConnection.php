@@ -22,7 +22,7 @@ final class RecordingConnection extends Connection
         parent::__construct(null, 'testing', '', ['name' => 'testing', 'driver' => $driver]);
     }
 
-    public function select($query, $bindings = [], $useReadPdo = true): array
+    public function select($query, $bindings = [], $useReadPdo = true, array $fetchUsing = []): array
     {
         $this->selects[] = [$query, $bindings];
 

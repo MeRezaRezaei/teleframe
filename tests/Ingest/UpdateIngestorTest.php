@@ -130,8 +130,8 @@ final class UpdateIngestorTest extends IngestTestCase
         $ingestor->ingest(self::userPayload(), self::ACCOUNT);
         $ingestor->ingest(self::userPayload(), self::ACCOUNT);
 
-        // Merged schema: identity column is 'id' (not 'tl_id').
-        self::assertSame(0, IdentityLock::depth('tl_anchor:' . self::ACCOUNT . ':id:501558149'));
+        // Merged schema: identity column is 'tl_id' (Naming::RESERVED maps 'id' → 'tl_id').
+        self::assertSame(0, IdentityLock::depth('tl_anchor:' . self::ACCOUNT . ':tl_id:501558149'));
         self::assertSame(1, TlUser::query()->count(), 'guard: idempotent ingest still holds');
     }
 
