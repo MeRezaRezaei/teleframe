@@ -49,7 +49,7 @@ Study TDLib's production algorithms to harden Teleframe's engine before building
 | E | Multi-DC management (DC info caching, file references) | DC migration implementation |
 | F | Wire protocol edge cases (ACK, seqno, containers, gzip) | Wire hardening |
 
-**Gate:** Each phase produces analysis doc + improved code + tests
+**Gate:** Each phase produces analysis doc + improved code + tests ✅ (6/6 docs committed)
 
 ---
 
@@ -72,15 +72,15 @@ Study TDLib's production algorithms to harden Teleframe's engine before building
 **Recommendation:** Telegram ID as PK (shared). The shared-anchor model in the working tree is correct. A Telegram entity is a global object — it exists once, regardless of how many accounts observe it. `account_id` goes on child tables (messages, participants) where multi-tenant isolation matters.
 
 **Tasks:**
-- [ ] Lock decision: global-ID types = Telegram ID as PK, shared anchors
-- [ ] Fix `TlPeerPeerChannel::sole()` 2-record bug (entity aggregation issue)
-- [ ] Regenerate all migrations with final schema
-- [ ] Pass `composer verify` (phpunit + phpstan + regeneration idempotence)
-- [ ] Pass `standalone-smoke.php` (30/30)
-- [ ] Pass `TELEFRAME_PG=1 vendor/bin/phpunit tests/Pg`
-- [ ] Commit: `fix(schema): lock global-ID shared-anchor model + gates green`
+- [x] Lock decision: global-ID types = Telegram ID as PK, shared anchors
+- [x] Fix `TlPeerPeerChannel::sole()` 2-record bug (entity aggregation issue)
+- [x] Regenerate all migrations with final schema
+- [x] Pass `composer verify` (phpunit + phpstan + regeneration idempotence)
+- [x] Pass `standalone-smoke.php` (30/30)
+- [x] Pass `TELEFRAME_PG=1 vendor/bin/phpunit tests/Pg`
+- [x] Commit: `fix(schema): lock global-ID shared-anchor model + gates green` (d54eadd, c4266ea)
 
-**Gate:** All 3 test suites green, committed
+**Gate:** All 3 test suites green, committed ✅
 
 ---
 
