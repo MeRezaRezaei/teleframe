@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Schema;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlConstructor;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlParam;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
@@ -137,7 +136,7 @@ final class UpdateIngestor
     /** @var array<string, bool> table => migrated on this connection (checked once) */
     private static array $tablesReady = [];
 
-    /** @var array<string, list<string>>|null anchor table => family instance tables (lazy) */
+    /** @var array<string, list<string>>|null type name => family constructor tables (lazy) */
     private static ?array $familyTables = null;
 
     private static function constructor(string $name): TlConstructor
@@ -175,7 +174,7 @@ final class UpdateIngestor
      *
      * @param array<string, mixed> $payload
      */
-    public function ingest(array $payload, int $accountId): TlInstanceModel
+    public function ingest(array $payload, int $accountId): TlAnchorModel
     {
         $nodes = iterator_to_array(PayloadWalker::walk($payload), false);
         if ($nodes === []) {
@@ -184,12 +183,12 @@ final class UpdateIngestor
             );
         }
 
-        /** @var array<string, TlInstanceModel> $instances path => written model */
+        /** @var array<string, TlAnchorModel> $instances path => written model */
         $instances = [];
         /** @var list<array{class: class-string<TlAnchorModel>, parent_path: string, idx: int, value_path?: string, value?: mixed}> $childRows */
         $childRows = [];
 
-        $root = DB::transaction(function () use ($nodes, $accountId, &$instances, &$childRows): TlInstanceModel {
+        $root = DB::transaction(function () use ($nodes, $accountId, &$instances, &$childRows): TlAnchorModel {
             // Bottom-up: the walker yields parents before children, so the
             // reversed order writes deepest nodes first — every ref column
             // then holds an already-written child instance PK.
@@ -210,8 +209,8 @@ final class UpdateIngestor
                 $valuePath = $row['value_path'] ?? null;
                 $this->upsertChildRow(
                     $row,
-                    (string) $instances[$row['parent_path']]->getKey(),
-                    $valuePath !== null ? (string) $instances[$valuePath]->getKey() : null,
+                    (int) $instances[$row['parent_path']]->getKey(),
+                    $valuePath !== null ? (int) $instances[$valuePath]->getKey() : null,
                     $accountId,
                 );
             }
@@ -237,7 +236,7 @@ final class UpdateIngestor
      * @param array<string, mixed> $params
      * @param array<string, mixed> $response
      */
-    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TlInstanceModel
+    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TlAnchorModel
     {
         if (RouteIdempotency::isUpdatePayload($response)) {
             return $this->ingest($response, $accountId);
@@ -260,8 +259,8 @@ final class UpdateIngestor
         // recorded under another route (content-aggregated roots can be
         // byte-identical across params) must not be re-marked — the unique
         // PK would reject it.
-        if (!DB::table($table)->where('id', (string) $root->getKey())->exists()) {
-            $this->routes->mark($method, $key, $accountId, (string) $root->getKey());
+        if (!DB::table($table)->where('id', (int) $root->getKey())->exists()) {
+            $this->routes->mark($method, $key, $accountId, (int) $root->getKey());
         }
 
         return $root;
@@ -272,16 +271,16 @@ final class UpdateIngestor
      * response's constructor tables (normally the same constructor that
      * answered first; null if the family drifted and the id misses).
      */
-    private function storedInstance(string $constructor, string $storedId): ?TlInstanceModel
+    private function storedInstance(string $constructor, int $storedId): ?TlAnchorModel
     {
         if ($constructor === '') {
             return null;
         }
 
-        /** @var class-string<TlInstanceModel> $instanceClass */
+        /** @var class-string<TlAnchorModel> $instanceClass */
         $instanceClass = self::modelClass(Naming::ctorModel(self::constructor($constructor)->resultType, $constructor));
 
-        /** @var TlInstanceModel|null $instance */
+        /** @var TlAnchorModel|null $instance */
         $instance = $instanceClass::query()->find($storedId);
 
         return $instance;
@@ -289,7 +288,7 @@ final class UpdateIngestor
 
     /**
      * @param array<string, mixed> $payload
-     * @param array<string, TlInstanceModel> $instances
+     * @param array<string, TlAnchorModel> $instances
      * @param list<array{class: class-string<TlAnchorModel>, parent_path: string, idx: int, value_path?: string, value?: mixed}> $childRows
      */
     private function writeNode(
@@ -299,11 +298,11 @@ final class UpdateIngestor
         int $accountId,
         array $instances,
         array &$childRows,
-    ): TlInstanceModel {
+    ): TlAnchorModel {
         $ctor = self::constructor($name);
         /** @var class-string<TlAnchorModel> $anchorClass */
         $anchorClass = self::modelClass(Naming::model($ctor->resultType));
-        /** @var class-string<TlInstanceModel> $instanceClass */
+        /** @var class-string<TlAnchorModel> $instanceClass */
         $instanceClass = self::modelClass(Naming::ctorModel($ctor->resultType, $name));
         self::assertTableReady((new $anchorClass())->getTable(), $name);
 
@@ -351,7 +350,7 @@ final class UpdateIngestor
                     }
                     $child = $instances[self::joinPath($path, $key, null)] ?? null;
                     if ($child !== null) {
-                        $columns[Naming::column($key)] = (string) $child->getKey(); // ref column = child instance PK
+                        $columns[Naming::column($key)] = (int) $child->getKey(); // ref column = child instance PK
                     }
                 }
                 continue;
@@ -377,7 +376,7 @@ final class UpdateIngestor
 
         try {
             $anchorId = $identity !== null
-                ? $this->existingAnchorId($instanceClass, $anchorClass, $identity[0], $identity[1], $accountId)
+                ? $this->existingAnchorId($instanceClass, $anchorClass, $ctor->resultType, $identity[0], $identity[1], $accountId)
                 : $this->contentAnchorId($instanceClass, $anchorClass, $columns, $accountId);
 
             if ($anchorId === null) {
@@ -387,9 +386,9 @@ final class UpdateIngestor
                     'constructor_name' => $name,
                     'account_id' => $accountId,
                 ]);
-                $anchor->save(); // TlAnchorModel::booted assigns the UUIDv7 PK
+                $anchor->save(); // Auto-increment PK assigned by Eloquent
 
-                $anchorId = (string) $anchor->getKey();
+                $anchorId = (int) $anchor->getKey();
             } else {
                 // Reused anchor: keep the discriminator truthful when the
                 // constructor changed (user → userEmpty transition) — the
@@ -472,16 +471,16 @@ final class UpdateIngestor
      * through ANY family instance table carrying the identity, so the
      * namespace keeps exactly one anchor per (tenant, telegram id).
      *
-     * @param class-string<TlInstanceModel> $instanceClass
+     * @param class-string<TlAnchorModel> $instanceClass
      * @param class-string<TlAnchorModel> $anchorClass
      */
-    private function existingAnchorId(string $instanceClass, string $anchorClass, string $column, int|string $value, int $accountId): ?string
+    private function existingAnchorId(string $instanceClass, string $anchorClass, string $type, string $column, int|string $value, int $accountId): ?int
     {
         $ids = $instanceClass::query()->where($column, $value)->pluck('id')->all();
 
         if ($ids === []) {
             $ownTable = (new $instanceClass())->getTable();
-            foreach (self::familyInstanceTables((new $anchorClass())->getTable()) as $table) {
+            foreach (self::familyInstanceTables($type) as $table) {
                 if ($table === $ownTable || !Schema::hasTable($table) || !Schema::hasColumn($table, $column)) {
                     continue;
                 }
@@ -500,22 +499,22 @@ final class UpdateIngestor
     }
 
     /**
-     * Instance tables sharing an anchor table (the constructor family of a
-     * TL type), straight off the metamodel — exact, no table-name guessing.
+     * Constructor tables for a TL type (the constructor family),
+     * straight off the metamodel — exact, no table-name guessing.
      *
      * @return list<string>
      */
-    private static function familyInstanceTables(string $anchorTable): array
+    private static function familyInstanceTables(string $type): array
     {
         if (self::$familyTables === null) {
             $map = [];
             foreach (self::constructors() as $ctor) {
-                $map[Naming::anchorTable($ctor->resultType)][] = Naming::instanceTable($ctor->resultType, $ctor->name);
+                $map[$ctor->resultType][] = Naming::constructorTable($ctor->resultType, $ctor->name);
             }
             self::$familyTables = $map;
         }
 
-        return self::$familyTables[$anchorTable] ?? [];
+        return self::$familyTables[$type] ?? [];
     }
 
     /**
@@ -525,10 +524,10 @@ final class UpdateIngestor
      * payload touches nothing.
      *
      * @param array<string, mixed> $columns
-     * @param class-string<TlInstanceModel> $instanceClass
+     * @param class-string<TlAnchorModel> $instanceClass
      * @param class-string<TlAnchorModel> $anchorClass
      */
-    private function contentAnchorId(string $instanceClass, string $anchorClass, array $columns, int $accountId): ?string
+    private function contentAnchorId(string $instanceClass, string $anchorClass, array $columns, int $accountId): ?int
     {
         $query = $instanceClass::query();
         foreach ($columns as $column => $value) {
@@ -541,9 +540,9 @@ final class UpdateIngestor
 
     /**
      * @param class-string<TlAnchorModel> $anchorClass
-     * @param list<string> $ids
+     * @param list<int|string> $ids
      */
-    private function anchorIdFor(string $anchorClass, array $ids, int $accountId): ?string
+    private function anchorIdFor(string $anchorClass, array $ids, int $accountId): ?int
     {
         if ($ids === []) {
             return null;
@@ -555,7 +554,7 @@ final class UpdateIngestor
             ->whereIn('id', $ids)
             ->first();
 
-        return $anchor !== null ? (string) $anchor->getKey() : null;
+        return $anchor !== null ? (int) $anchor->getKey() : null;
     }
 
     /**
@@ -566,7 +565,7 @@ final class UpdateIngestor
      *
      * @param array{class: class-string<TlAnchorModel>, parent_path: string, idx: int, value_path?: string, value?: mixed} $row
      */
-    private function upsertChildRow(array $row, string $parentId, ?string $valueId, int $accountId): void
+    private function upsertChildRow(array $row, int $parentId, ?int $valueId, int $accountId): void
     {
         /** @var class-string<TlAnchorModel> $class */
         $class = $row['class'];
@@ -588,7 +587,7 @@ final class UpdateIngestor
         if ($existing !== null) {
             $changed = $isScalar
                 ? $existing->getAttribute('value') !== $row['value']
-                : (string) $existing->getAttribute('value_id') !== (string) $valueId;
+                : (int) $existing->getAttribute('value_id') !== (int) $valueId;
             if ($changed) {
                 $existing->forceFill($fill)->save();
             }
@@ -598,13 +597,13 @@ final class UpdateIngestor
 
         $new = new $class();
         $new->forceFill($fill);
-        $new->save(); // TlAnchorModel::booted assigns the UUIDv7 PK
+        $new->save(); // Auto-increment PK
     }
 
     /** @return class-string<TlAnchorModel> */
     private static function childModelClass(TlConstructor $ctor, string $name, string $param): string
     {
-        $instanceTable = Naming::instanceTable($ctor->resultType, $name);
+        $instanceTable = Naming::constructorTable($ctor->resultType, $name);
 
         return self::modelClass(ModelGenerator::childModelClass($instanceTable, $param));
     }
