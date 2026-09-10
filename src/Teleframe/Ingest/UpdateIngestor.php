@@ -12,7 +12,6 @@ use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlConstructor;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlParam;
-use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
 use MeRezaRezaei\Teleframe\Schema\Generator\ModelGenerator;
 use MeRezaRezaei\Teleframe\Schema\Generator\Naming;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;

@@ -126,7 +126,7 @@ final class EntityAggregator
      *
      * @param list<class-string<TlAnchorModel>> $instanceClasses
      */
-    private function currentInstance(array $instanceClasses, string $anchorId, int $anchorConstructorId): ?TlAnchorModel
+    private function currentInstance(array $instanceClasses, int $anchorId, int $anchorConstructorId): ?TlAnchorModel
     {
         $best = null;
         $bestTs = null;
