@@ -22,4 +22,6 @@ parameters:
             reportUnmatched: false
             paths:
                 - src/Schema/Eloquent/AccountScoped.php
+                - src/Schema/Eloquent/HasTlChildren.php
                 - src/Schema/Eloquent/PeerResolution.php
+                - src/Teleframe/Vault/Concerns/HasTeleframe.php

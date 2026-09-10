@@ -160,25 +160,49 @@ final class NestedIngestTest extends IngestTestCase
     public function test_tenants_isolate_nested_trees(): void
     {
         $rootA = $this->ingestTree(self::ACCOUNT);
-        $rootB = $this->ingestTree(8);
+
+        // Use different Telegram IDs for account 8 to avoid global-ID PK
+        // collisions (global types share one row across tenants).
+        $ingestor = new UpdateIngestor();
+        $otherChannelId = self::CHANNEL_ID + 100;
+        $otherUserId = self::USER_ID + 100;
+        $ingestor->ingest([
+            '_' => 'channel',
+            'flags' => (1 << 7) | (1 << 8) | (1 << 13),
+            'verified' => true,
+            'megagroup' => true,
+            'id' => $otherChannelId,
+            'access_hash' => -7779317524312221622,
+            'title' => 'Other Café',
+            'photo' => ['_' => 'chatPhotoEmpty'],
+            'date' => 1712345678,
+        ], 8);
+        $ingestor->ingest([
+            '_' => 'user',
+            'flags' => (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3),
+            'id' => $otherUserId,
+            'access_hash' => -5988024083302710253,
+            'first_name' => 'Ali',
+            'last_name' => 'Alirezaei',
+            'username' => 'AliAlirezaei',
+        ], 8);
+        $rootB = $ingestor->ingest(self::buildUpdateMessage($otherChannelId, $otherUserId), 8);
 
         self::assertNotSame((string) $rootA->id, (string) $rootB->id, 'separate roots per account');
 
-        // Anchor namespaces are per-tenant: two rows, one visible per account.
+        // Scoped types (Update, Message) are per-tenant: two rows each.
         self::assertSame(2, TlUpdate::query()->count());
         self::assertSame(2, TlMessage::query()->count());
-        self::assertSame(2, TlChat::query()->count());
-        self::assertSame(2, TlUser::query()->count());
-        self::assertSame(1, TlChat::query()->where('account_id', self::ACCOUNT)->count());
-        $chatB = TlChat::query()->where('account_id', 8)->sole();
-        self::assertSame('Teleframe Café', TlChatChannel::query()->findOrFail((string) $chatB->id)->title);
 
-        // Account 7's view is untouched by the account 8 ingest: the canonical
-        // peer long STILL denotes account 7's peer, and account 7's own
-        // peer child row is what its message column points at semantically.
+        // Global-ID types (Chat, User) share one row per Telegram entity.
+        self::assertSame(2, TlChat::query()->count(), 'two distinct Telegram channels');
+        self::assertSame(2, TlUser::query()->count(), 'two distinct Telegram users');
+
+        // Account 7's view is untouched by the account 8 ingest.
         $messageA = TlMessageMessage::query()->where('id', $rootA->message)->sole();
         self::assertSame(PeerIdTool::channelLong(self::CHANNEL_ID), (int) $messageA->peer_id, 'account 7 peer_id = canonical channel long');
-        self::assertSame(4, TlPeerPeerChannel::query()->count(), 'peer rows (channel + user anchors) stay per-tenant');
+
+        // Scoped peer rows are per-tenant (different channels per account).
         self::assertSame(self::CHANNEL_ID, TlPeerPeerChannel::query()->where('account_id', self::ACCOUNT)->where('constructor_name', 'peerChannel')->sole()->channel_id);
 
         // Child rows hang off each tenant's own message instance with
@@ -188,6 +212,35 @@ final class NestedIngestTest extends IngestTestCase
         self::assertCount(3, $rowsA);
         self::assertCount(3, $rowsB);
         self::assertSame([], array_intersect($rowsA, $rowsB));
+    }
+
+    /**
+     * Build an updateNewMessage payload with explicit channel/user IDs.
+     */
+    private static function buildUpdateMessage(int $channelId, int $userId): array
+    {
+        return [
+            '_' => 'updateNewMessage',
+            'message' => [
+                '_' => 'message',
+                'flags' => (1 << 1) | (1 << 7) | (1 << 8) | (1 << 9),
+                'out' => true,
+                'id' => 2001,
+                'from_id' => ['_' => 'peerUser', 'user_id' => $userId],
+                'peer_id' => ['_' => 'peerChannel', 'channel_id' => $channelId],
+                'date' => 1724852400,
+                'message' => 'Other tenant message',
+                'media' => ['_' => 'messageMediaEmpty'],
+                'entities' => [
+                    ['_' => 'messageEntityBold', 'offset' => 0, 'length' => 5],
+                    ['_' => 'messageEntityUrl', 'offset' => 6, 'length' => 21],
+                    ['_' => 'messageEntityMentionName', 'offset' => 33, 'length' => 4, 'user_id' => $userId],
+                ],
+                'flags2' => 0,
+            ],
+            'pts' => 2001,
+            'pts_count' => 1,
+        ];
     }
 
     public function test_full_re_ingest_keeps_counts_stable(): void

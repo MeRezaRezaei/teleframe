@@ -163,8 +163,26 @@ final class IngestResponseTest extends IngestTestCase
     public function test_routes_are_tenant_scoped(): void
     {
         $ingestor = new UpdateIngestor();
-        $a = $ingestor->ingestResponse(self::METHOD, self::historyParams(), self::messagesMessagesResponse(), self::ACCOUNT);
-        $b = $ingestor->ingestResponse(self::METHOD, self::historyParams(), self::messagesMessagesResponse(), self::OTHER_ACCOUNT);
+        // Use different channel IDs and message IDs per account to avoid
+        // global-ID PK collision and child-row unique constraint conflicts.
+        $otherChannelId = self::CHANNEL_ID + 1;
+        $otherUserId = self::USER_ID + 1;
+        $paramsA = self::historyParams();
+        $paramsB = self::historyParams($otherChannelId);
+        $responseA = self::messagesMessagesResponse();
+
+        $responseB = self::messagesMessagesResponse();
+        $responseB['chats'][0]['id'] = $otherChannelId;
+        $responseB['users'][0]['id'] = $otherUserId;
+        foreach ($responseB['messages'] as &$msg) {
+            $msg['id'] = 2186;
+            $msg['peer_id']['channel_id'] = $otherChannelId;
+            $msg['from_id']['user_id'] = $otherUserId;
+        }
+        unset($msg);
+
+        $a = $ingestor->ingestResponse(self::METHOD, $paramsA, $responseA, self::ACCOUNT);
+        $b = $ingestor->ingestResponse(self::METHOD, $paramsB, $responseB, self::OTHER_ACCOUNT);
 
         self::assertNotSame((string) $a?->id, (string) $b?->id, 'each tenant stores its own response');
         self::assertSame(2, DB::table('tl_route_messages_get_history')->count(), 'one route row per tenant');

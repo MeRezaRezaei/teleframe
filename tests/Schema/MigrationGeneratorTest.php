@@ -45,11 +45,12 @@ final class MigrationGeneratorTest extends TestCase
     public function test_scoped_id_table_shape(): void
     {
         $files = self::generate();
-        // Message has id:int -> scoped, needs composite unique.
+        // Message has id:int -> scoped: surrogate PK, NO composite unique
+        // (idempotency handled at application level).
         $msgs = $files['2026_08_28_000001_create_tl_message_tables.php'];
         self::assertStringContainsString("Schema::create('tl_message_message'", $msgs);
         self::assertStringContainsString("\$table->bigIncrements('id');", $msgs);
-        self::assertStringContainsString("\$table->unique(", $msgs); // composite unique for scoped
+        self::assertStringNotContainsString("\$table->unique(", $msgs); // no DB-level unique for scoped
         self::assertStringNotContainsString("uuid", $msgs);
     }
 
@@ -157,7 +158,7 @@ final class MigrationGeneratorTest extends TestCase
         }
     }
 
-    public function test_message_table_upholds_account_scoped_uniqueness(): void
+    public function test_message_table_scoped_id_no_db_unique(): void
     {
         $gen = new MigrationGenerator();
         $scheme = TlParser::parseString(
@@ -166,6 +167,8 @@ final class MigrationGeneratorTest extends TestCase
         );
         $files = $gen->generate($scheme);
         $migration = array_values($files)[0];
-        self::assertStringContainsString("\$table->unique(", $migration); // scoped unique
+        // Scoped-ID types: no DB-level unique constraint — idempotency is
+        // handled at application level (message tl_id is per-chat, not global).
+        self::assertStringNotContainsString("\$table->unique(", $migration);
     }
 }

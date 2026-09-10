@@ -111,7 +111,7 @@ final class FullMirrorPgTest extends PgTestCase
         self::assertSame('Check https://t.me/teleframe from @Reza', $message->message);
         self::assertSame($root->message, (int) $message->id);
         $fromPeer = TlPeerPeerUser::query()->sole();
-        $chanPeer = TlPeerPeerChannel::query()->sole();
+        $chanPeer = TlPeerPeerChannel::query()->where('constructor_name', 'peerChannel')->sole();
         self::assertSame(self::FIXTURE_USER_ID, $fromPeer->user_id);
         self::assertSame(PeerIdTool::userLong(self::FIXTURE_USER_ID), (int) $message->from_id, 'message.from_id = canonical user long (T1.2)');
         self::assertSame(self::FIXTURE_CHANNEL_ID, $chanPeer->channel_id);

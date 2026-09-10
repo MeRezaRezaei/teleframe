@@ -109,16 +109,17 @@ final class UpdateIngestorTest extends IngestTestCase
         self::assertSame($first->username, $second->username);
     }
 
-    public function test_tenants_get_separate_anchors_for_the_same_telegram_id(): void
+    public function test_global_id_anchor_is_shared_across_tenants(): void
     {
+        // Global-ID types (id:long → Telegram ID IS the PK) produce ONE
+        // row per Telegram entity — multiple accounts share the same anchor.
         $ingestor = new UpdateIngestor();
-        $ingestor->ingest(self::userPayload(), self::ACCOUNT);
-        $ingestor->ingest(self::userPayload(), 8);
+        $a = $ingestor->ingest(self::userPayload(), self::ACCOUNT);
+        $b = $ingestor->ingest(self::userPayload(), 8);
 
-        self::assertSame(2, TlUser::query()->count(), 'one anchor per account');
-        self::assertSame(2, TlUserUser::query()->count());
-        self::assertSame(1, TlUser::query()->where('account_id', self::ACCOUNT)->count());
-        self::assertSame(1, TlUser::query()->where('account_id', 8)->count());
+        self::assertSame(1, TlUser::query()->count(), 'one shared anchor for global-ID type');
+        self::assertSame(1, TlUserUser::query()->count(), 'one shared instance');
+        self::assertSame((int) $a->id, (int) $b->id, 'both accounts get the same anchor PK');
     }
 
     public function test_identity_resolution_serializes_and_releases_its_lock(): void

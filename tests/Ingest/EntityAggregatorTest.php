@@ -96,21 +96,17 @@ final class EntityAggregatorTest extends IngestTestCase
         self::assertNull((new EntityAggregator())->user(self::ACCOUNT, 999999));
     }
 
-    public function test_user_lookup_is_tenant_scoped(): void
+    public function test_global_id_anchor_is_shared_across_tenants(): void
     {
         $this->ingestUser();
 
-        self::assertNull((new EntityAggregator())->user(self::OTHER_ACCOUNT, self::USER_ID), 'account 8 has no such user');
-
-        $this->ingestUser(self::OTHER_ACCOUNT, 'Other Reza');
-
+        // Global-ID anchor is shared: both accounts resolve to the same row.
         $a = (new EntityAggregator())->user(self::ACCOUNT, self::USER_ID);
         $b = (new EntityAggregator())->user(self::OTHER_ACCOUNT, self::USER_ID);
         self::assertNotNull($a);
         self::assertNotNull($b);
-        self::assertNotSame((int) $a->id, (int) $b->id, 'one anchor per tenant');
+        self::assertSame((int) $a->id, (int) $b->id, 'shared anchor across tenants for global-ID type');
         self::assertSame('Reza', $a->currentInstance->first_name);
-        self::assertSame('Other Reza', $b->currentInstance->first_name);
     }
 
     public function test_current_instance_follows_latest_constructor(): void
@@ -165,6 +161,9 @@ final class EntityAggregatorTest extends IngestTestCase
         self::assertTrue((bool) $chat->currentInstance->verified);
 
         self::assertNull($aggregator->chat(self::ACCOUNT, 42), 'unknown chat id');
-        self::assertNull($aggregator->chat(self::OTHER_ACCOUNT, self::CHANNEL_ID), 'tenant scoped');
+        // Global-ID shared anchor: other account resolves the same entity.
+        $chatOther = $aggregator->chat(self::OTHER_ACCOUNT, self::CHANNEL_ID);
+        self::assertNotNull($chatOther, 'shared global-ID anchor visible to other account');
+        self::assertSame((int) $chat->id, (int) $chatOther->id, 'same shared anchor');
     }
 }
