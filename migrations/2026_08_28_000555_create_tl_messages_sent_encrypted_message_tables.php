@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->integer('date');
+            $table->integer('date')->nullable();
             $table->bigInteger('file')->nullable();
             $table->index('file', 'ix_2912ed65ebf0c9784a577a6d');
             $table->bigInteger('account_id');
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->integer('date');
+            $table->integer('date')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_598c9320a77c21f8ae93d992');

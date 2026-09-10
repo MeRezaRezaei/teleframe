@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_imported_contacts_imported_contacts__imported', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_imported_contacts_imported_contacts', 'id', 'fk_0a00a921990a1b68bb0ab909')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0a00a921990a1b68bb0ab909')->references('id')->on('tl_contacts_imported_contacts_imported_contacts')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_imported_contacts_imported_contac_05412ff68ebc', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_imported_contacts_imported_contacts', 'id', 'fk_a20e6096a5308001262d62c4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a20e6096a5308001262d62c4')->references('id')->on('tl_contacts_imported_contacts_imported_contacts')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_imported_contacts_imported_contac_7e82948d3852', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_imported_contacts_imported_contacts', 'id', 'fk_ee8ff3011c6c181f1e71fd6d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_ee8ff3011c6c181f1e71fd6d')->references('id')->on('tl_contacts_imported_contacts_imported_contacts')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -49,7 +52,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_imported_contacts_imported_contacts__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_imported_contacts_imported_contacts', 'id', 'fk_4c4ba1b9dfa4fb90739d0b32')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4c4ba1b9dfa4fb90739d0b32')->references('id')->on('tl_contacts_imported_contacts_imported_contacts')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

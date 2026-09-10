@@ -7,7 +7,6 @@ namespace MeRezaRezaei\Teleframe\Tests\Pg;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
-use Symfony\Component\Uid\UuidV7;
 
 /**
  * Night W3 deferrable-FK proof — the behavior sqlite structurally cannot
@@ -17,6 +16,12 @@ use Symfony\Component\Uid\UuidV7;
  * inside one transaction, and a real violation surfaces at COMMIT — not at
  * INSERT. Peer refs carry NO FK at all (T1.2: canonical peer longs), so the
  * proof rides the still-FK'd `media:flags.9?MessageMedia` ref.
+ *
+ * Merged schema (2026-09-10): there is no separate `tl_message` anchor —
+ * the anchor columns live on the instance table `tl_message_message`
+ * (bigint id, `constructor_id`, `constructor_name`, `account_id`); the
+ * media ref is a bigint column FK'd to the primary MessageMedia ctor table
+ * `tl_message_media_message_media_contact(id)` by the bucketed artifact.
  */
 final class DeferredFkTest extends PgTestCase
 {
@@ -24,13 +29,11 @@ final class DeferredFkTest extends PgTestCase
 
     private const MSG_CTOR_ID = 0x7600b9d3; // message#7600b9d3 (schema/sources truth)
 
-    private const PEER_USER_CTOR_ID = 0x59511722; // peerUser#59511722
-
     protected function setUp(): void
     {
         parent::setUp();
         // Full generated set — the bucketed deferrable-FK artifact spans all
-        // 3678 tables and is NOT part of the shipped dial, so the ingest
+        // 3045 tables and is NOT part of the shipped dial, so the ingest
         // subset alone can never prove deferrable behavior.
         $this->migrateFullGeneratedSet();
     }
@@ -44,19 +47,14 @@ final class DeferredFkTest extends PgTestCase
         self::assertNotNull($colType);
         self::assertSame('bigint', $colType->t, 'message.peer_id is a canonical long column');
 
-        $messageId = (string) UuidV7::v7();
-        $peerLong = PeerIdTool::userLong(501558149);
-        DB::table('tl_message')->insert([
-            'id' => $messageId,
+        // Merged schema: tl_message_message IS the anchor-equipped table;
+        // anchor columns (constructor_id/name, account_id) go on the same row.
+        $messageId = DB::table('tl_message_message')->insertGetId([
             'constructor_id' => self::MSG_CTOR_ID,
             'constructor_name' => 'message',
-            'account_id' => self::ACCOUNT,
-        ]);
-        DB::table('tl_message_message')->insert([
-            'id' => $messageId,
             'tl_id' => 7,
-            'from_id' => $peerLong,
-            'peer_id' => $peerLong,
+            'from_id' => PeerIdTool::userLong(501558149),
+            'peer_id' => PeerIdTool::userLong(501558149),
             'date' => 1724852400,
             'message' => 'canonical peer longs',
             'account_id' => self::ACCOUNT,
@@ -93,21 +91,17 @@ final class DeferredFkTest extends PgTestCase
      */
     public function test_child_before_parent_in_one_transaction_commits(): void
     {
-        $messageId = (string) UuidV7::v7();
-        $mediaId = (string) UuidV7::v7();
+        $messageId = 1001;
+        $mediaId = 2001;
 
         DB::beginTransaction();
         try {
-            // Child first: anchor + instance referencing a media object that
+            // Child first: instance row referencing a media object that
             // does NOT exist yet (deferred FK — INSERT succeeds).
-            DB::table('tl_message')->insert([
+            DB::table('tl_message_message')->insert([
                 'id' => $messageId,
                 'constructor_id' => self::MSG_CTOR_ID,
                 'constructor_name' => 'message',
-                'account_id' => self::ACCOUNT,
-            ]);
-            DB::table('tl_message_message')->insert([
-                'id' => $messageId,
                 'tl_id' => 42,
                 'from_id' => PeerIdTool::userLong(501558149),
                 'peer_id' => PeerIdTool::userLong(501558149),
@@ -118,11 +112,12 @@ final class DeferredFkTest extends PgTestCase
             ]);
 
             // Parent afterwards, SAME transaction — the deferred FK
-            // checks at COMMIT now find it.
-            DB::table('tl_message_media')->insert([
+            // checks at COMMIT now find it. Merged schema: the parent is
+            // the primary MessageMedia ctor table the FK actually points at.
+            DB::table('tl_message_media_message_media_contact')->insert([
                 'id' => $mediaId,
                 'constructor_id' => 0,
-                'constructor_name' => 'messageMediaEmpty',
+                'constructor_name' => 'messageMediaContact',
                 'account_id' => self::ACCOUNT,
             ]);
             DB::commit();
@@ -132,7 +127,7 @@ final class DeferredFkTest extends PgTestCase
         }
 
         self::assertSame(1, DB::table('tl_message_message')->where('id', $messageId)->where('media', $mediaId)->count(), 'committed child row references the late parent');
-        self::assertSame(1, DB::table('tl_message_media')->where('id', $mediaId)->count());
+        self::assertSame(1, DB::table('tl_message_media_message_media_contact')->where('id', $mediaId)->count());
     }
 
     /**
@@ -141,22 +136,18 @@ final class DeferredFkTest extends PgTestCase
      */
     public function test_real_violation_fails_at_commit_not_at_insert(): void
     {
-        $messageId = (string) UuidV7::v7();
+        $messageId = 1002;
 
         DB::beginTransaction();
         // The INSERT itself must NOT throw — that is the deferrable part.
-        DB::table('tl_message')->insert([
+        DB::table('tl_message_message')->insert([
             'id' => $messageId,
             'constructor_id' => self::MSG_CTOR_ID,
             'constructor_name' => 'message',
-            'account_id' => self::ACCOUNT,
-        ]);
-        DB::table('tl_message_message')->insert([
-            'id' => $messageId,
             'tl_id' => 43,
             'from_id' => PeerIdTool::userLong(501558149),
             'peer_id' => PeerIdTool::userLong(501558149),
-            'media' => (string) UuidV7::v7(), // no tl_message_media row will ever exist
+            'media' => 42, // no tl_message_media_* row will ever exist
             'date' => 1724852400,
             'message' => 'doomed at commit',
             'account_id' => self::ACCOUNT,
@@ -181,19 +172,21 @@ final class DeferredFkTest extends PgTestCase
     }
 
     /**
-     * Control for the same proof: the instance→anchor FK created inline by
-     * Schema (foreignUuid…constrained) is the standard IMMEDIATE kind —
-     * deferral is a property the generator attaches to CROSS-type refs only.
+     * Control for the same proof: the child-table parent FK created inline
+     * by Schema (constrained) is the standard IMMEDIATE kind — deferral is
+     * a property the generator attaches to CROSS-type (object) refs only.
+     * Merged schema: the inline candidate is the entities child table's
+     * parent_id FK back to its tl_message_message parent.
      */
-    public function test_inline_instance_fk_stays_immediate(): void
+    public function test_inline_child_fk_stays_immediate(): void
     {
         $row = DB::selectOne(
             'SELECT condeferrable, condeferred FROM pg_constraint '
-            . "WHERE conrelid = 'tl_message_message'::regclass AND conname = ?",
-            ['tl_message_message_id_foreign'],
+            . "WHERE conrelid = 'tl_message_message__entities'::regclass AND conname = ?",
+            ['fk_9cd693eead33d586ad1284f4'],
         );
 
-        self::assertNotNull($row, 'inline instance→anchor FK exists');
+        self::assertNotNull($row, 'inline child→parent FK exists');
         self::assertFalse((bool) $row->condeferrable, 'inline FK is NOT deferrable');
         self::assertFalse((bool) $row->condeferred);
     }

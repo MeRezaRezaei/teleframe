@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->bigInteger('settings');
+            $table->bigInteger('settings')->nullable();
             $table->index('settings', 'ix_20db4dbde7c36c1a48c1278d');
             $table->bigInteger('account_id');
             $table->timestamps();
@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_peer_settings_peer_settings__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_peer_settings_peer_settings', 'id', 'fk_f9c95d4692e9a59bac5df141')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f9c95d4692e9a59bac5df141')->references('id')->on('tl_messages_peer_settings_peer_settings')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -33,7 +34,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_peer_settings_peer_settings__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_peer_settings_peer_settings', 'id', 'fk_ede4d935be14fb112960baf3')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_ede4d935be14fb112960baf3')->references('id')->on('tl_messages_peer_settings_peer_settings')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

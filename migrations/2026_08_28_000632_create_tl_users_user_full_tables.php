@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->bigInteger('full_user');
+            $table->bigInteger('full_user')->nullable();
             $table->index('full_user', 'ix_cfded6d34d5161ff5bb7e54d');
             $table->bigInteger('account_id');
             $table->timestamps();
@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_users_user_full_user_full__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_users_user_full_user_full', 'id', 'fk_08a743c27849661c07b8beed')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_08a743c27849661c07b8beed')->references('id')->on('tl_users_user_full_user_full')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -33,7 +34,8 @@ return new class extends Migration
         });
         Schema::create('tl_users_user_full_user_full__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_users_user_full_user_full', 'id', 'fk_fd1ec5bdfe85a86820adc8c9')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fd1ec5bdfe85a86820adc8c9')->references('id')->on('tl_users_user_full_user_full')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

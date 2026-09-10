@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->integer('count');
+            $table->integer('count')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_88e585338589a7c1f1830bdd');
@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_archived_stickers_archived_stickers__sets', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_archived_stickers_archived_stickers', 'id', 'fk_de45cd821a766107e46e4383')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_de45cd821a766107e46e4383')->references('id')->on('tl_messages_archived_stickers_archived_stickers')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_countries_list_countries_list__countries', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_countries_list_countries_list', 'id', 'fk_f5d0dbd28c603184107b88cd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f5d0dbd28c603184107b88cd')->references('id')->on('tl_help_countries_list_countries_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

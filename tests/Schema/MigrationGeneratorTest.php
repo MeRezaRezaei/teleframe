@@ -136,7 +136,7 @@ final class MigrationGeneratorTest extends TestCase
         $files = $gen->generate($scheme);
         $message = array_values($files)[0]; // first file contains message table
         self::assertStringContainsString("\$table->bigInteger('from_id')->nullable();", $message);
-        self::assertStringContainsString("\$table->bigInteger('peer_id');", $message);
+        self::assertStringContainsString("\$table->bigInteger('peer_id')->nullable();", $message);
         self::assertStringNotContainsString("uuid", $message);
     }
 

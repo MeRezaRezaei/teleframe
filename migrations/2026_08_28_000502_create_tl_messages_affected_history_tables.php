@@ -15,9 +15,9 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->integer('pts');
-            $table->integer('pts_count');
-            $table->integer('tl_offset');
+            $table->integer('pts')->nullable();
+            $table->integer('pts_count')->nullable();
+            $table->integer('tl_offset')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_f268a6133e105be90ea8df92');

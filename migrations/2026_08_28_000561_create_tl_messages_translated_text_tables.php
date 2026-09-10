@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_translated_text_translate_result__result', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_translated_text_translate_result', 'id', 'fk_4f1e46ac99c8530c54b5161d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4f1e46ac99c8530c54b5161d')->references('id')->on('tl_messages_translated_text_translate_result')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

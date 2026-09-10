@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->bigInteger('peer');
+            $table->bigInteger('peer')->nullable();
             $table->index('peer', 'ix_f0ecee8658e2d5bdecebd8a7');
             $table->bigInteger('account_id');
             $table->timestamps();
@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_resolved_peer_resolved_peer__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_resolved_peer_resolved_peer', 'id', 'fk_40a02b7c5f33afee0a5721f5')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_40a02b7c5f33afee0a5721f5')->references('id')->on('tl_contacts_resolved_peer_resolved_peer')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -33,7 +34,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_resolved_peer_resolved_peer__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_resolved_peer_resolved_peer', 'id', 'fk_384a8735996c7ee210b8d8d8')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_384a8735996c7ee210b8d8d8')->references('id')->on('tl_contacts_resolved_peer_resolved_peer')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

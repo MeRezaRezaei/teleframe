@@ -20,7 +20,6 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateNewMessage;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUser;
 use MeRezaRezaei\Teleframe\Tests\Ingest\Concerns\HasNestedUpdateFixtures;
-use Symfony\Component\Uid\UuidV7;
 
 /**
  * Night W3 full Postgres mirror: the ENTIRE generated migration set
@@ -36,8 +35,8 @@ final class FullMirrorPgTest extends PgTestCase
     /** Files in generated/migrations (schema-manifest parity: 637). */
     private const FULL_SET_FILES = 637;
 
-    /** Schema::create calls across the full set (3678 user tables + migrations bookkeeping). */
-    private const FULL_SET_TABLES = 3678;
+    /** Schema::create calls across the full set (3045 user tables + migrations bookkeeping). */
+    private const FULL_SET_TABLES = 3045;
 
     protected function setUp(): void
     {
@@ -50,7 +49,7 @@ final class FullMirrorPgTest extends PgTestCase
         // All 637 migration files recorded as run…
         self::assertSame(self::FULL_SET_FILES, (int) DB::table('migrations')->count());
 
-        // …and the schema carries exactly the expected tables: the 3678
+        // …and the schema carries exactly the expected tables: the 3045
         // generated tables plus the migrations bookkeeping table.
         self::assertSame(self::FULL_SET_TABLES + 1, $this->pgTableCount());
         self::assertSame(self::FULL_SET_TABLES, (int) DB::selectOne(
@@ -61,30 +60,31 @@ final class FullMirrorPgTest extends PgTestCase
         // Flagship members of every band: anchor, instance, child, route
         // (methods keep TL namespaces: messages.sendMessage), and the
         // bucketed deferrable-FK artifacts.
-        foreach (['tl_user', 'tl_user_user', 'tl_message_message__entities', 'tl_route_messages_send_message', 'tl_update_update_new_message'] as $table) {
+        foreach (['tl_user_user', 'tl_message_message', 'tl_message_message__entities', 'tl_route_messages_send_message', 'tl_update_update_new_message'] as $table) {
             self::assertTrue(DB::getSchemaBuilder()->hasTable($table), "table {$table} exists");
         }
         self::assertNotEmpty(array_filter(glob(dirname(__DIR__, 2) . '/generated/migrations/*_add_tl_foreign_keys.php') ?: [], 'is_file'), 'bucketed FK migrations present');
     }
 
-    public function test_native_uuid_columns_and_identity_precision(): void
+    public function test_native_pk_columns_and_identity_precision(): void
     {
-        // What sqlite hides as TEXT: PG carries native uuid PK/FKs and
-        // keeps crc32 constructor ids and 64-bit telegram ids as bigint.
+        // What sqlite hides as TEXT: PG carries native bigint PKs (surrogate
+        // serial bigint for every constructor table) and keeps crc32
+        // constructor ids and 64-bit telegram ids as bigint.
         $columns = DB::select(
             'SELECT table_name, column_name, data_type FROM information_schema.columns '
             . 'WHERE table_schema = ? AND ((table_name = ? AND column_name = ?) '
             . 'OR (table_name = ? AND column_name = ?) '
             . 'OR (table_name = ? AND column_name = ?))',
-            [self::$pgSchema, 'tl_user', 'id', 'tl_user', 'constructor_id', 'tl_peer_peer_user', 'user_id'],
+            [self::$pgSchema, 'tl_user_user', 'id', 'tl_user_user', 'constructor_id', 'tl_peer_peer_user', 'user_id'],
         );
         $byColumn = [];
         foreach ($columns as $row) {
             $byColumn[$row->table_name . '.' . $row->column_name] = $row->data_type;
         }
 
-        self::assertSame('uuid', $byColumn['tl_user.id'] ?? null, 'anchor PK is a native uuid');
-        self::assertSame('bigint', $byColumn['tl_user.constructor_id'] ?? null, 'crc32 constructor id stays bigint');
+        self::assertSame('bigint', $byColumn['tl_user_user.id'] ?? null, 'every constructor PK is a native bigint');
+        self::assertSame('bigint', $byColumn['tl_user_user.constructor_id'] ?? null, 'crc32 constructor id stays bigint');
         self::assertSame('bigint', $byColumn['tl_peer_peer_user.user_id'] ?? null, 'telegram identity stays bigint');
     }
 
@@ -98,7 +98,7 @@ final class FullMirrorPgTest extends PgTestCase
         // Root anchor + instance: update namespace, tenant, verbatim pts cols.
         self::assertInstanceOf(TlUpdateUpdateNewMessage::class, $root);
         $anchor = TlUpdate::query()->sole();
-        self::assertTrue(UuidV7::isValid((string) $anchor->id), 'uuidv7 PK survives the PG roundtrip');
+        self::assertIsInt((int) $anchor->id, 'integer PK survives the PG roundtrip');
         self::assertSame(0x1f2b0afd, $anchor->constructor_id);
         self::assertSame('updateNewMessage', $anchor->constructor_name);
         self::assertSame(self::FIXTURE_ACCOUNT, (int) $anchor->account_id);
@@ -109,7 +109,7 @@ final class FullMirrorPgTest extends PgTestCase
         $message = TlMessageMessage::query()->sole();
         self::assertSame(1186, $message->tl_id);
         self::assertSame('Check https://t.me/teleframe from @Reza', $message->message);
-        self::assertSame($root->message, (string) $message->id);
+        self::assertSame($root->message, (int) $message->id);
         $fromPeer = TlPeerPeerUser::query()->sole();
         $chanPeer = TlPeerPeerChannel::query()->sole();
         self::assertSame(self::FIXTURE_USER_ID, $fromPeer->user_id);

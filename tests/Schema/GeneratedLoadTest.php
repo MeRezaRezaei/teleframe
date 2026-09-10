@@ -27,11 +27,11 @@ final class GeneratedLoadTest extends TestCase
         // Anchor model (root-namespace User) — the wire-decode entry point.
         self::assertTrue(class_exists(TlUser::class));
         $anchor = new TlUser();
-        self::assertSame('tl_user', $anchor->getTable());
+        self::assertSame('tl_user_user', $anchor->getTable());
 
         // User instance model (constructor table row).
         self::assertTrue(class_exists(TlUserFull::class));
-        self::assertSame('tl_user_full', (new TlUserFull())->getTable());
+        self::assertSame('tl_user_full_user_full', (new TlUserFull())->getTable());
 
         // Message instance model; the `use HasFactory, HasTlChildren;` trait
         // lines must resolve via the restored import (review C1).

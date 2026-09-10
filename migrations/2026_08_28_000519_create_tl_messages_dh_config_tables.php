@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('g')->nullable();
             $table->binary('p')->nullable();
             $table->integer('version')->nullable();
-            $table->binary('random');
+            $table->binary('random')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_b9cacc6baedfc1e93608321a');
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->binary('random');
+            $table->binary('random')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_91eaa9290fe07edd95bf2686');

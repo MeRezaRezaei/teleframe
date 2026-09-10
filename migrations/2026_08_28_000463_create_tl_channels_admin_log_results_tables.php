@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_channels_admin_log_results_admin_log_results__events', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channels_admin_log_results_admin_log_results', 'id', 'fk_4af53bd7903a546eaece0c05')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4af53bd7903a546eaece0c05')->references('id')->on('tl_channels_admin_log_results_admin_log_results')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_channels_admin_log_results_admin_log_results__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channels_admin_log_results_admin_log_results', 'id', 'fk_bb6938771e2c91e370b78ce2')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bb6938771e2c91e370b78ce2')->references('id')->on('tl_channels_admin_log_results_admin_log_results')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_channels_admin_log_results_admin_log_results__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channels_admin_log_results_admin_log_results', 'id', 'fk_0c13748c33655db4d54f2154')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0c13748c33655db4d54f2154')->references('id')->on('tl_channels_admin_log_results_admin_log_results')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

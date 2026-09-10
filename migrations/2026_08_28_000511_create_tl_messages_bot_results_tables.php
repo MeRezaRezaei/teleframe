@@ -17,14 +17,14 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
             $table->boolean('gallery')->default(false);
-            $table->bigInteger('query_id');
+            $table->bigInteger('query_id')->nullable();
             $table->index('query_id', 'ix_e40c2979d885fe60581cc64e');
             $table->text('next_offset')->nullable();
             $table->bigInteger('switch_pm')->nullable();
             $table->index('switch_pm', 'ix_99f2b04f915a902966c4d28d');
             $table->bigInteger('switch_webview')->nullable();
             $table->index('switch_webview', 'ix_3d6a7461b5ba990095dd7fa2');
-            $table->integer('cache_time');
+            $table->integer('cache_time')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_ba68cec54567f92867fac56f');
@@ -32,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_bot_results_bot_results__results', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_bot_results_bot_results', 'id', 'fk_c747c16160ca9ce92a8cebd8')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c747c16160ca9ce92a8cebd8')->references('id')->on('tl_messages_bot_results_bot_results')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -41,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_bot_results_bot_results__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_bot_results_bot_results', 'id', 'fk_bd37637eef57b5c20fc9347d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bd37637eef57b5c20fc9347d')->references('id')->on('tl_messages_bot_results_bot_results')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

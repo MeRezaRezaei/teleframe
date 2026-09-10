@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
             $table->boolean('hidden')->default(false);
-            $table->integer('color_id');
+            $table->integer('color_id')->nullable();
             $table->bigInteger('colors')->nullable();
             $table->index('colors', 'ix_cb0c1b8c26480e15157bd4f4');
             $table->bigInteger('dark_colors')->nullable();

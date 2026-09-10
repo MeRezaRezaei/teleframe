@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->bigInteger('invite');
+            $table->bigInteger('invite')->nullable();
             $table->index('invite', 'ix_045577008ebf56b87ebd5f0b');
             $table->bigInteger('account_id');
             $table->timestamps();
@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_exported_chat_invite_exported_cha_0c41e9ae4e71', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_exported_chat_invite_exported_chat_invite', 'id', 'fk_5f7cf3f7f873ffa8b8bd6653')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5f7cf3f7f873ffa8b8bd6653')->references('id')->on('tl_messages_exported_chat_invite_exported_chat_invite')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -35,7 +36,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->bigInteger('invite');
+            $table->bigInteger('invite')->nullable();
             $table->index('invite', 'ix_33d236cc63f4fade37c8f43c');
             $table->bigInteger('new_invite')->nullable();
             $table->index('new_invite', 'ix_b9880912d43ea8c7c20d694e');
@@ -46,7 +47,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_exported_chat_invite_exported_cha_4638a2b5d812', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_exported_chat_invite_exported_cha_d180f3d61600', 'id', 'fk_63d2d6ebba083cd549703feb')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_63d2d6ebba083cd549703feb')->references('id')->on('tl_messages_exported_chat_invite_exported_cha_d180f3d61600')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

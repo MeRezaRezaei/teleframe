@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->bigInteger('webpage');
+            $table->bigInteger('webpage')->nullable();
             $table->index('webpage', 'ix_5ac75bc3b2b7211a762fa050');
             $table->bigInteger('account_id');
             $table->timestamps();
@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_web_page_web_page__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_web_page_web_page', 'id', 'fk_c5036728e99be901535603ef')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c5036728e99be901535603ef')->references('id')->on('tl_messages_web_page_web_page')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -33,7 +34,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_web_page_web_page__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_web_page_web_page', 'id', 'fk_28e599ef6e3774a0119ba6f5')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_28e599ef6e3774a0119ba6f5')->references('id')->on('tl_messages_web_page_web_page')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

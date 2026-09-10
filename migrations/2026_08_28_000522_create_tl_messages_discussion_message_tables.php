@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('max_id')->nullable();
             $table->integer('read_inbox_max_id')->nullable();
             $table->integer('read_outbox_max_id')->nullable();
-            $table->integer('unread_count');
+            $table->integer('unread_count')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_af6f9d745dec00733e7ce5f8');
@@ -27,7 +27,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_discussion_message_discussion_mes_ff71ddca7c9e', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_discussion_message_discussion_message', 'id', 'fk_95ffc10431ef3960b10c3b3e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_95ffc10431ef3960b10c3b3e')->references('id')->on('tl_messages_discussion_message_discussion_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -36,7 +37,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_discussion_message_discussion_message__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_discussion_message_discussion_message', 'id', 'fk_8fdbce1de898e84b3b147c72')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_8fdbce1de898e84b3b147c72')->references('id')->on('tl_messages_discussion_message_discussion_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -45,7 +47,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_discussion_message_discussion_message__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_discussion_message_discussion_message', 'id', 'fk_3e04ddeb31c590f25e73678b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_3e04ddeb31c590f25e73678b')->references('id')->on('tl_messages_discussion_message_discussion_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

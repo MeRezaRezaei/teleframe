@@ -48,7 +48,7 @@ final class ShipDialGoldenTest extends TestCase
     public function test_shipped_subset_contains_core_namespace_migrations(): void
     {
         $names = self::migrationNames(self::SHIP_DIR);
-        self::assertContains('2026_08_28_000632_create_tl_users_user_full_table.php', $names);
+        self::assertContains('2026_08_28_000633_create_tl_users_users_tables.php', $names);
         foreach (['create_tl_users_', 'create_tl_auth_', 'create_tl_messages_'] as $prefix) {
             self::assertContains(true, array_map(
                 static fn (string $n): bool => str_starts_with($n, '2026_08_28_') && str_contains($n, $prefix),

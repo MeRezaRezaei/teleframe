@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->integer('expires');
+            $table->integer('expires')->nullable();
             $table->bigInteger('terms_of_service')->nullable();
             $table->index('terms_of_service', 'ix_365ba3867016d29a640a298d');
             $table->bigInteger('account_id');
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->integer('expires');
+            $table->integer('expires')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_05d5f2f5ea726ea0d62e0bc2');

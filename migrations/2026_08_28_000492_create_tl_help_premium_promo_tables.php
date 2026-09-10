@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->text('status_text');
+            $table->text('status_text')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_321ab53451683a817a861bc6');
@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_premium_promo_premium_promo__status_entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_premium_promo_premium_promo', 'id', 'fk_2cc57e2d82096ab08070f1e9')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2cc57e2d82096ab08070f1e9')->references('id')->on('tl_help_premium_promo_premium_promo')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -32,7 +33,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_premium_promo_premium_promo__video_sections', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_premium_promo_premium_promo', 'id', 'fk_53e78fd427f488d7fc1a3bc3')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_53e78fd427f488d7fc1a3bc3')->references('id')->on('tl_help_premium_promo_premium_promo')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');
@@ -41,7 +43,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_premium_promo_premium_promo__videos', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_premium_promo_premium_promo', 'id', 'fk_9088c54a9a3a00ee640b876a')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9088c54a9a3a00ee640b876a')->references('id')->on('tl_help_premium_promo_premium_promo')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -50,7 +53,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_premium_promo_premium_promo__period_options', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_premium_promo_premium_promo', 'id', 'fk_6f8755b291e62a35d32f5382')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6f8755b291e62a35d32f5382')->references('id')->on('tl_help_premium_promo_premium_promo')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -59,7 +63,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_premium_promo_premium_promo__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_premium_promo_premium_promo', 'id', 'fk_446bb1e1a2fa32f41c4bb015')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_446bb1e1a2fa32f41c4bb015')->references('id')->on('tl_help_premium_promo_premium_promo')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

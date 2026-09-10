@@ -15,11 +15,11 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->integer('pts');
-            $table->integer('qts');
-            $table->integer('date');
-            $table->integer('seq');
-            $table->integer('unread_count');
+            $table->integer('pts')->nullable();
+            $table->integer('qts')->nullable();
+            $table->integer('date')->nullable();
+            $table->integer('seq')->nullable();
+            $table->integer('unread_count')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_1519b95e7213a4e9d4b8dd05');

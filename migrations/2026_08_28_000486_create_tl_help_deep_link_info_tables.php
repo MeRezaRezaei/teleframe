@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_deep_link_info_deep_link_info__entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_deep_link_info_deep_link_info', 'id', 'fk_a5ea6040a4d0b0969137358f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a5ea6040a4d0b0969137358f')->references('id')->on('tl_help_deep_link_info_deep_link_info')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

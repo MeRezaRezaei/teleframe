@@ -27,7 +27,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_emoji_game_info_emoji_game_dice_info__params', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_emoji_game_info_emoji_game_dice_info', 'id', 'fk_c3d23fe2f04f9d261894897e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c3d23fe2f04f9d261894897e')->references('id')->on('tl_messages_emoji_game_info_emoji_game_dice_info')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');

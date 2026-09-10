@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_updates_difference_difference__new_messages', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_updates_difference_difference', 'id', 'fk_1fe075c2ed01d5d4f456fb54')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1fe075c2ed01d5d4f456fb54')->references('id')->on('tl_updates_difference_difference')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -33,7 +34,8 @@ return new class extends Migration
         });
         Schema::create('tl_updates_difference_difference__new_encrypted_messages', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_updates_difference_difference', 'id', 'fk_8a0b05bff033725c6033090d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_8a0b05bff033725c6033090d')->references('id')->on('tl_updates_difference_difference')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -42,7 +44,8 @@ return new class extends Migration
         });
         Schema::create('tl_updates_difference_difference__other_updates', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_updates_difference_difference', 'id', 'fk_82defd002f900d94854e6032')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_82defd002f900d94854e6032')->references('id')->on('tl_updates_difference_difference')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -51,7 +54,8 @@ return new class extends Migration
         });
         Schema::create('tl_updates_difference_difference__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_updates_difference_difference', 'id', 'fk_4174363f3a078eab80892beb')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4174363f3a078eab80892beb')->references('id')->on('tl_updates_difference_difference')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -60,7 +64,8 @@ return new class extends Migration
         });
         Schema::create('tl_updates_difference_difference__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_updates_difference_difference', 'id', 'fk_c10010a11ed87bcf1e2c53bf')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c10010a11ed87bcf1e2c53bf')->references('id')->on('tl_updates_difference_difference')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -91,7 +96,8 @@ return new class extends Migration
         });
         Schema::create('tl_updates_difference_difference_slice__new_messages', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_updates_difference_difference_slice', 'id', 'fk_7e8e32fa23416f2bd82c2a95')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7e8e32fa23416f2bd82c2a95')->references('id')->on('tl_updates_difference_difference_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -100,7 +106,8 @@ return new class extends Migration
         });
         Schema::create('tl_updates_difference_difference_slice__new_e_864e87a82655', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_updates_difference_difference_slice', 'id', 'fk_6d12f4576e5753de4f5c45f4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6d12f4576e5753de4f5c45f4')->references('id')->on('tl_updates_difference_difference_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -109,7 +116,8 @@ return new class extends Migration
         });
         Schema::create('tl_updates_difference_difference_slice__other_updates', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_updates_difference_difference_slice', 'id', 'fk_2a71b8214f94ceab54b90d38')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2a71b8214f94ceab54b90d38')->references('id')->on('tl_updates_difference_difference_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -118,7 +126,8 @@ return new class extends Migration
         });
         Schema::create('tl_updates_difference_difference_slice__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_updates_difference_difference_slice', 'id', 'fk_88a9a833aa3b7e6ef865347f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_88a9a833aa3b7e6ef865347f')->references('id')->on('tl_updates_difference_difference_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -127,7 +136,8 @@ return new class extends Migration
         });
         Schema::create('tl_updates_difference_difference_slice__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_updates_difference_difference_slice', 'id', 'fk_0965be8652376601cff6532a')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0965be8652376601cff6532a')->references('id')->on('tl_updates_difference_difference_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

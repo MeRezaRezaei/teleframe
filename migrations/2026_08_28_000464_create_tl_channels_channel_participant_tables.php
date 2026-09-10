@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->bigInteger('participant');
+            $table->bigInteger('participant')->nullable();
             $table->index('participant', 'ix_f2db847beb0e8f5cb32c4a54');
             $table->bigInteger('account_id');
             $table->timestamps();
@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_channels_channel_participant_channel_participant__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channels_channel_participant_channel_participant', 'id', 'fk_1d99b0f717dc80c6c946cf9f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1d99b0f717dc80c6c946cf9f')->references('id')->on('tl_channels_channel_participant_channel_participant')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -33,7 +34,8 @@ return new class extends Migration
         });
         Schema::create('tl_channels_channel_participant_channel_participant__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channels_channel_participant_channel_participant', 'id', 'fk_573309f4a1839069e2f23426')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_573309f4a1839069e2f23426')->references('id')->on('tl_channels_channel_participant_channel_participant')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

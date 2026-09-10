@@ -21,7 +21,7 @@ return new class extends Migration
             $table->boolean('native_ui')->default(false);
             $table->text('message')->nullable();
             $table->text('url')->nullable();
-            $table->integer('cache_time');
+            $table->integer('cache_time')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_b8442aae8705df3eab91b8de');

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->bigInteger('updates');
+            $table->bigInteger('updates')->nullable();
             $table->index('updates', 'ix_cebaf1e37bcf32de13df3993');
             $table->bigInteger('account_id');
             $table->timestamps();
@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_invited_users_invited_users__missing_invitees', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_invited_users_invited_users', 'id', 'fk_17235e058e23007b01b94cc1')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_17235e058e23007b01b94cc1')->references('id')->on('tl_messages_invited_users_invited_users')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

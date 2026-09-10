@@ -15,13 +15,12 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->text('tl_id');
-            $table->integer('expire_date');
+            $table->text('tl_id')->nullable();
+            $table->integer('expire_date')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_469a1cdbdfef101691028c03');
             $table->index('account_id', 'ix_f11914430ddb64345fba01c0');
-            $table->unique(['account_id'], 'ux_55e3c46038fac11868bc');
         });
     }
 

@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_blocked_blocked__blocked', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_blocked_blocked', 'id', 'fk_5619210ec379eafd8b7924a2')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5619210ec379eafd8b7924a2')->references('id')->on('tl_contacts_blocked_blocked')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_blocked_blocked__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_blocked_blocked', 'id', 'fk_d0742702cf796cff2e068d1c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d0742702cf796cff2e068d1c')->references('id')->on('tl_contacts_blocked_blocked')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_blocked_blocked__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_blocked_blocked', 'id', 'fk_bda356bb3071fb8d0ca08ba6')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bda356bb3071fb8d0ca08ba6')->references('id')->on('tl_contacts_blocked_blocked')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -59,7 +62,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_blocked_blocked_slice__blocked', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_blocked_blocked_slice', 'id', 'fk_02b68d3cf1ad1f4c3c62a3ed')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_02b68d3cf1ad1f4c3c62a3ed')->references('id')->on('tl_contacts_blocked_blocked_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -68,7 +72,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_blocked_blocked_slice__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_blocked_blocked_slice', 'id', 'fk_1b1d047cee236d5d37724d1e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1b1d047cee236d5d37724d1e')->references('id')->on('tl_contacts_blocked_blocked_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -77,7 +82,8 @@ return new class extends Migration
         });
         Schema::create('tl_contacts_blocked_blocked_slice__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_contacts_blocked_blocked_slice', 'id', 'fk_3944f362b2d22d655bd100dd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_3944f362b2d22d655bd100dd')->references('id')->on('tl_contacts_blocked_blocked_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

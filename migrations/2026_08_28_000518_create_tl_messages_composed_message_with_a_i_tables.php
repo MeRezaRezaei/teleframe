@@ -16,7 +16,7 @@ return new class extends Migration
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
-            $table->bigInteger('result_text');
+            $table->bigInteger('result_text')->nullable();
             $table->index('result_text', 'ix_112868f3990a95285076d035');
             $table->bigInteger('diff_text')->nullable();
             $table->index('diff_text', 'ix_f9ba296d101e063e11613535');

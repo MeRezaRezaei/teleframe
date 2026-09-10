@@ -14,7 +14,7 @@ final class TlParserTest extends TestCase
     {
         $s = TlParser::parseFile(__DIR__ . '/fixtures/mini.tl', 0, strict: true);
         self::assertSame(227, $s->layer);
-        self::assertSame(5, $s->counts()['types']); // User, UserStatus, messages.Messages, MsgsStateInfo, Config (method return)
+        self::assertSame(6, $s->counts()['types']); // User, UserStatus, ForumTopic, messages.Messages, MsgsStateInfo, Config (method return)
         self::assertArrayHasKey('userEmpty', $s->types()['User']->constructors());
         $user = $s->types()['User']->constructors()['userEmpty'];
         self::assertSame(0xd3bc4b7a, $user->id);

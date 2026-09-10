@@ -16,7 +16,7 @@ return new class extends Migration
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
-            $table->text('country_code');
+            $table->text('country_code')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_c5d5139934af604d5db2e33e');
@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_country_code_country_code__prefixes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_country_code_country_code', 'id', 'fk_5468d348bd09814ce7c5061f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5468d348bd09814ce7c5061f')->references('id')->on('tl_help_country_code_country_code')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');
@@ -33,7 +34,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_country_code_country_code__patterns', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_country_code_country_code', 'id', 'fk_bfc51756738d3b6608438604')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bfc51756738d3b6608438604')->references('id')->on('tl_help_country_code_country_code')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');

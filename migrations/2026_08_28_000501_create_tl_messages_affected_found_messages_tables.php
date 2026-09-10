@@ -15,9 +15,9 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->integer('pts');
-            $table->integer('pts_count');
-            $table->integer('tl_offset');
+            $table->integer('pts')->nullable();
+            $table->integer('pts_count')->nullable();
+            $table->integer('tl_offset')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_d0ad0d9e936aea329c13f958');
@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_affected_found_messages_affected__84127c85d979', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_affected_found_messages_affected__d0b5b58c5216', 'id', 'fk_928fb01080a90c1a37032aad')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_928fb01080a90c1a37032aad')->references('id')->on('tl_messages_affected_found_messages_affected__d0b5b58c5216')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');

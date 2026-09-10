@@ -25,7 +25,7 @@ final class RegenerationGoldenTest extends TestCase
     private const MANIFEST = self::PACKAGE_ROOT . '/generated/schema-manifest.json';
 
     /** sha256 of the committed generated/schema-manifest.json (full-run pin). */
-    private const COMMITTED_MANIFEST_SHA256 = 'b833e98935caed278ccf373a36ecdac508d1d855546550ba422c1778751f83e2';
+    private const COMMITTED_MANIFEST_SHA256 = 'f46157d52b866a44f1903194a7940ee56e922c4ef343729306d98f3ca12983e5';
 
     public function test_committed_manifest_exists_and_pins_layer_227(): void
     {
@@ -80,11 +80,11 @@ final class RegenerationGoldenTest extends TestCase
     {
         self::assertFileExists(self::PACKAGE_ROOT . '/generated/Models/TlUser.php');
         self::assertStringContainsString(
-            "protected \$table = 'tl_user';",
+            "protected \$table = 'tl_user_user';",
             (string) file_get_contents(self::PACKAGE_ROOT . '/generated/Models/TlUser.php'),
         );
         $manifest = json_decode((string) file_get_contents(self::MANIFEST), true);
-        self::assertArrayHasKey('tl_user', $manifest['tables']);
+        self::assertArrayHasKey('tl_user_user', $manifest['tables']);
     }
 
     /**

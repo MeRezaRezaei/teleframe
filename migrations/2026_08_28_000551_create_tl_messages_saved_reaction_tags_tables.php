@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_saved_reaction_tags_saved_reaction_tags__tags', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_saved_reaction_tags_saved_reaction_tags', 'id', 'fk_af0021956632f5dec766f37d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_af0021956632f5dec766f37d')->references('id')->on('tl_messages_saved_reaction_tags_saved_reaction_tags')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
             $table->boolean('pending')->default(false);
-            $table->bigInteger('transcription_id');
+            $table->bigInteger('transcription_id')->nullable();
             $table->index('transcription_id', 'ix_34513b4634d72631dd82e016');
-            $table->text('text');
+            $table->text('text')->nullable();
             $table->integer('trial_remains_num')->nullable();
             $table->integer('trial_remains_until_date')->nullable();
             $table->bigInteger('account_id');

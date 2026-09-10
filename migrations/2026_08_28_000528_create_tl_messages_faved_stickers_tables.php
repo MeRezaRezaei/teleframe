@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_faved_stickers_faved_stickers__packs', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_faved_stickers_faved_stickers', 'id', 'fk_37a83d6b49398cbab6726ccb')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_37a83d6b49398cbab6726ccb')->references('id')->on('tl_messages_faved_stickers_faved_stickers')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -32,7 +33,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_faved_stickers_faved_stickers__stickers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_faved_stickers_faved_stickers', 'id', 'fk_bec5f2b49f9851718dd2123e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bec5f2b49f9851718dd2123e')->references('id')->on('tl_messages_faved_stickers_faved_stickers')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

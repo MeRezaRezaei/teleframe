@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_dialog_filters_dialog_filters__filters', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_dialog_filters_dialog_filters', 'id', 'fk_634b7bf85553709053ce56ab')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_634b7bf85553709053ce56ab')->references('id')->on('tl_messages_dialog_filters_dialog_filters')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

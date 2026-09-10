@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_user_info_user_info__entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_user_info_user_info', 'id', 'fk_f3e476584b92314f6d6484d1')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f3e476584b92314f6d6484d1')->references('id')->on('tl_help_user_info_user_info')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

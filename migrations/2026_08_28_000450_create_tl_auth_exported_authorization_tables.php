@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_auth_exported_authorization_exported_authorization', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->bigInteger('tl_id');
-            $table->binary('bytes');
+            $table->bigInteger('tl_id')->nullable();
+            $table->binary('bytes')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_410a0a82d51ac527ffa72388');

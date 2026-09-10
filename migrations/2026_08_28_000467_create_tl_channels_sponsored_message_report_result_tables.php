@@ -32,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_channels_sponsored_message_report_result_s_4f877f3b1319', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channels_sponsored_message_report_result_s_90d28813b853', 'id', 'fk_eba12914aba18dd6ca1272cb')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_eba12914aba18dd6ca1272cb')->references('id')->on('tl_channels_sponsored_message_report_result_s_90d28813b853')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

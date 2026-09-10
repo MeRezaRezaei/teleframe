@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
             $table->boolean('inexact')->default(false);
-            $table->bigInteger('filter');
+            $table->bigInteger('filter')->nullable();
             $table->index('filter', 'ix_f2841075d96bf41459874d1c');
-            $table->integer('count');
+            $table->integer('count')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_e98c5ff624b0a5e134876498');

@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_peer_color_set_peer_color_profile_set_fb247985ae1f', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_peer_color_set_peer_color_profile_set', 'id', 'fk_f4fc2354bb6cd98ca038f744')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f4fc2354bb6cd98ca038f744')->references('id')->on('tl_help_peer_color_set_peer_color_profile_set')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_peer_color_set_peer_color_profile_set__bg_colors', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_peer_color_set_peer_color_profile_set', 'id', 'fk_f14516c0b28a7c85559e9fa0')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f14516c0b28a7c85559e9fa0')->references('id')->on('tl_help_peer_color_set_peer_color_profile_set')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_peer_color_set_peer_color_profile_set_d09cf1f8f0b4', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_peer_color_set_peer_color_profile_set', 'id', 'fk_2b14b41fa0dba8a63db042f4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2b14b41fa0dba8a63db042f4')->references('id')->on('tl_help_peer_color_set_peer_color_profile_set')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');
@@ -58,7 +61,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_peer_color_set_peer_color_set__colors', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_peer_color_set_peer_color_set', 'id', 'fk_44e448e76abfa2762887d299')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_44e448e76abfa2762887d299')->references('id')->on('tl_help_peer_color_set_peer_color_set')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');

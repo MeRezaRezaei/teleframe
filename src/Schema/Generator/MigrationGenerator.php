@@ -119,7 +119,12 @@ final class MigrationGenerator
         $idStrategy = $this->classifyId($ctor);
 
         match ($idStrategy) {
-            'global' => $up[] = "    \$table->bigInteger('id')->primary();",   // Telegram ID is PK
+            // Global-ID types (User, Chat, …): surrogate auto-increment PK;
+            // the Telegram ID lives in the reserved-word alias `tl_id`
+            // (identityColumn resolution + aggregator lookups query tl_id,
+            // scoped by account_id — per-tenant anchors for the same
+            // telegram id require a surrogate PK).
+            'global' => $up[] = "    \$table->bigIncrements('id');",
             'scoped' => $up[] = "    \$table->bigIncrements('id');",           // Surrogate PK
             default  => $up[] = "    \$table->bigIncrements('id');",           // Identity-less: surrogate
         };
@@ -140,12 +145,12 @@ final class MigrationGenerator
         $up[] = $this->indexLine('constructor_id');
         $up[] = $this->indexLine('account_id');
 
-        // Scoped-ID types get a composite unique constraint
-        if ($idStrategy === 'scoped') {
-            $peerCol = $this->findPeerColumn($ctor);
-            $uniqueCols = $peerCol !== null ? [$peerCol, 'account_id'] : ['account_id'];
-            $up[] = "    \$table->unique(['" . implode("', '", $uniqueCols) . "'], 'ux_" . substr(sha1($table), 0, 20) . "');";
-        }
+        // Scoped-ID types: no DB-level unique constraint — the ingest
+        // handles idempotency at the application level. A composite unique
+        // on (peerCol, account_id) is wrong for message-like types where
+        // multiple rows share the same sender+tenant, and (tl_id,
+        // account_id) alone is not unique because tl_id is scoped to a
+        // chat, not globally unique.
 
         $up[] = "});";
         $down[] = "Schema::dropIfExists('{$table}');";
@@ -160,7 +165,7 @@ final class MigrationGenerator
 
     /**
      * Classify a constructor's ID strategy:
-     * - 'global': has `id:long` param → Telegram ID is PK
+     * - 'global': has `id:long` param → surrogate PK, Telegram ID in tl_id
      * - 'scoped': has `id:int` param → surrogate PK + composite unique
      * - null: no ID param → auto-increment
      */
@@ -169,16 +174,6 @@ final class MigrationGenerator
         foreach ($ctor->params() as $param) {
             if ($param->kind() === 'scalar' && $param->name === 'id') {
                 return $param->baseType() === 'long' ? 'global' : 'scoped';
-            }
-        }
-        return null;
-    }
-
-    private function findPeerColumn(TlConstructor $ctor): ?string
-    {
-        foreach ($ctor->params() as $param) {
-            if ($param->kind() === 'ref' && in_array($param->baseType(), ['Peer', 'InputPeer'], true)) {
-                return Naming::column($param->name);
             }
         }
         return null;
@@ -195,7 +190,11 @@ final class MigrationGenerator
         $up[] = "Schema::create('{$child}', function (Blueprint \$table) {";
         $up[] = "    \$table->bigIncrements('id');";
         $fkName = 'fk_' . substr(sha1($child . ':' . $parentTable), 0, 24);
-        $up[] = "    \$table->bigInteger('parent_id')->constrained('{$parentTable}', 'id', '{$fkName}')->cascadeOnDelete();";
+        // NOTE: constrained() on a plain bigInteger() is a silent no-op —
+        // it only exists on ForeignIdColumnDefinition. Emit the FK
+        // explicitly so the child→parent constraint actually lands.
+        $up[] = "    \$table->bigInteger('parent_id');";
+        $up[] = "    \$table->foreign('parent_id', '{$fkName}')->references('id')->on('{$parentTable}')->cascadeOnDelete();";
         $up[] = "    \$table->bigInteger('idx');";
         if (in_array($elementParam->kind(), ['scalar', 'nat', 'true'], true)) {
             $up[] = ltrim($this->scalarColumn($elementParam, 'value', true), ' ');
@@ -253,9 +252,13 @@ final class MigrationGenerator
 
     private function isFkTargetable(string $target, TlParam $param): bool
     {
+        // Peer/InputPeer refs are NOT FK-targetable: T1.2 stores the
+        // canonical peer long (PeerIdTool::userLong &c.) in the column, so
+        // a FK to a constructor table (tl_peer_peer_channel…) could never
+        // match. ModelGenerator skips them the same way (Task 2.2).
         return !$param->isAny()
             && !str_contains($target, '<')
-            && !in_array($target, ['Object', 'Type', 'TLObject', 'X', 'True'], true);
+            && !in_array($target, ['Object', 'Type', 'TLObject', 'X', 'True', 'Peer', 'InputPeer'], true);
     }
 
     private function scalarColumn(TlParam $param, string $col, bool $nullable): string

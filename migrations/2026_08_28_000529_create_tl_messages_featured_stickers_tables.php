@@ -18,7 +18,7 @@ return new class extends Migration
             $table->bigInteger('flags')->nullable();
             $table->boolean('premium')->default(false);
             $table->bigInteger('hash')->nullable();
-            $table->integer('count');
+            $table->integer('count')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_6083be9a5864f2bf3577fea0');
@@ -26,7 +26,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_featured_stickers_featured_stickers__sets', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_featured_stickers_featured_stickers', 'id', 'fk_0a8dc86421698d3699ac4389')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0a8dc86421698d3699ac4389')->references('id')->on('tl_messages_featured_stickers_featured_stickers')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -35,7 +36,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_featured_stickers_featured_stickers__unread', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_featured_stickers_featured_stickers', 'id', 'fk_34eb6e772c0631c133e5bf1d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_34eb6e772c0631c133e5bf1d')->references('id')->on('tl_messages_featured_stickers_featured_stickers')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -46,7 +48,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->integer('count');
+            $table->integer('count')->nullable();
             $table->bigInteger('account_id');
             $table->timestamps();
             $table->index('constructor_id', 'ix_2b368ad0dd56a9df4b3884b3');

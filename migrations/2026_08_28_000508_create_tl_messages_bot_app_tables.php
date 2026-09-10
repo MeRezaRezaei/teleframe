@@ -19,7 +19,7 @@ return new class extends Migration
             $table->boolean('inactive')->default(false);
             $table->boolean('request_write_access')->default(false);
             $table->boolean('has_settings')->default(false);
-            $table->bigInteger('app');
+            $table->bigInteger('app')->nullable();
             $table->index('app', 'ix_289205534c4658317b9430ab');
             $table->bigInteger('account_id');
             $table->timestamps();

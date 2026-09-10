@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_available_reactions_available_rea_505a84565215', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_available_reactions_available_reactions', 'id', 'fk_4c4a16fcbef96353ace0651e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4c4a16fcbef96353ace0651e')->references('id')->on('tl_messages_available_reactions_available_reactions')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

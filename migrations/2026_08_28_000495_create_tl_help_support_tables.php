@@ -15,8 +15,8 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
-            $table->text('phone_number');
-            $table->bigInteger('tl_user');
+            $table->text('phone_number')->nullable();
+            $table->bigInteger('tl_user')->nullable();
             $table->index('tl_user', 'ix_b04ee344a13d90832e8bfe21');
             $table->bigInteger('account_id');
             $table->timestamps();

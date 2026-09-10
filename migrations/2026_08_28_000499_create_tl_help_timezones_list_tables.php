@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_timezones_list_timezones_list__timezones', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_timezones_list_timezones_list', 'id', 'fk_2d9fd33f3d5c6a7c9d351827')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2d9fd33f3d5c6a7c9d351827')->references('id')->on('tl_help_timezones_list_timezones_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
