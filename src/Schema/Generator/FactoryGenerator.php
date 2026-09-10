@@ -82,7 +82,8 @@ final class FactoryGenerator
             return (string) $idx;
         }
         if ($param->kind() === 'ref') {
-            return "(string) new \Symfony\Component\Uid\UuidV7()";
+            // Fake Telegram ID: positive for user refs, negative for chat refs
+            return (string) (1000 + $idx);
         }
         return match ($param->baseType()) {
             'int' => (string) $idx,
