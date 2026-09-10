@@ -14,7 +14,7 @@ final class PortSmokeTest extends TestCase
         $classes = ['Generator\\SchemaRegenerator', 'Generator\\Naming', 'Generator\\MigrationGenerator',
             'Eloquent\\TlAnchorModel', 'Generator\\TlParser', 'Generator\\TlCanon',
             'Generator\\ModelGenerator', 'Generator\\DtoGenerator', 'Generator\\FactoryGenerator',
-            'Generator\\Model\\TlScheme', 'Eloquent\\TlInstanceModel', ];
+            'Generator\\Model\\TlScheme', ];
         foreach ($classes as $c) {
             $this->assertTrue(class_exists($prefix . $c), $c);
         }

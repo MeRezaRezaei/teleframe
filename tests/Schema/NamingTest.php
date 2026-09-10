@@ -10,18 +10,12 @@ use MeRezaRezaei\Teleframe\Schema\Generator\Naming;
 
 final class NamingTest extends TestCase
 {
-    public function test_anchor_table(): void
+    public function test_constructor_table(): void
     {
-        self::assertSame('tl_user', Naming::anchorTable('User'));
-        self::assertSame('tl_updates_state', Naming::anchorTable('updates.state'));
-        self::assertSame('tl_messages_messages', Naming::anchorTable('messages.Messages'));
-    }
-
-    public function test_instance_table(): void
-    {
-        self::assertSame('tl_user_user', Naming::instanceTable('User', 'user'));
-        self::assertSame('tl_user_user_empty', Naming::instanceTable('User', 'userEmpty'));
-        self::assertSame('tl_messages_dialogs_dialogs_slice', Naming::instanceTable('messages.Dialogs', 'messages.dialogsSlice'));
+        self::assertSame('tl_user_user', Naming::constructorTable('User', 'user'));
+        self::assertSame('tl_user_user_empty', Naming::constructorTable('User', 'userEmpty'));
+        self::assertSame('tl_messages_dialogs_dialogs_slice', Naming::constructorTable('messages.Dialogs', 'messages.dialogsSlice'));
+        self::assertSame('tl_messages_messages_messages', Naming::constructorTable('messages.Messages', 'messages.messages'));
     }
 
     public function test_child_table(): void
@@ -78,8 +72,8 @@ final class NamingTest extends TestCase
         }
         self::assertSame('numeric(39,0)', Naming::dbType(new TlParam('p', 'int128'), precision: true));
         self::assertSame('numeric(78,0)', Naming::dbType(new TlParam('p', 'int256'), precision: true));
-        self::assertSame('uuid', Naming::dbType(new TlParam('p', 'User')));
-        self::assertSame('string', Naming::cast(new TlParam('p', 'User')));
+        self::assertSame('bigint', Naming::dbType(new TlParam('p', 'User')));
+        self::assertSame('int', Naming::cast(new TlParam('p', 'User')));
     }
 
     public function test_vector_db_type_throws(): void

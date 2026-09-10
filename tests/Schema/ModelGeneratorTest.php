@@ -31,7 +31,7 @@ final class ModelGeneratorTest extends TestCase
         $files = self::generate();
         self::assertArrayHasKey('TlUser.php', $files);
         self::assertStringContainsString('final class TlUser extends TlAnchorModel', $files['TlUser.php']);
-        self::assertStringContainsString("protected \$table = 'tl_user';", $files['TlUser.php']);
+        self::assertStringContainsString("protected \$table = 'tl_user_user_empty';", $files['TlUser.php']);
     }
 
     public function test_ctor_model_casts(): void
@@ -39,7 +39,7 @@ final class ModelGeneratorTest extends TestCase
         $files = self::generate();
         self::assertArrayHasKey('TlUserUserEmpty.php', $files);
         $model = $files['TlUserUserEmpty.php'];
-        self::assertStringContainsString('final class TlUserUserEmpty extends TlInstanceModel', $model);
+        self::assertStringContainsString('final class TlUserUserEmpty extends TlAnchorModel', $model);
         self::assertStringContainsString("protected \$table = 'tl_user_user_empty';", $model);
         self::assertStringContainsString("'tl_id' => 'int'", $model);
         self::assertStringContainsString('use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;', $model);
