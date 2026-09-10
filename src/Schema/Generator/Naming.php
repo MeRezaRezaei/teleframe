@@ -51,6 +51,11 @@ final class Naming
         return self::fit('tl_' . self::snake($tlType) . '_' . self::snake($ctor));
     }
 
+    public static function childTable(string $parentTable, string $param): string
+    {
+        return self::fit($parentTable . '__' . self::snake($param));
+    }
+
     public static function column(string $param): string
     {
         $snake = self::snake($param);

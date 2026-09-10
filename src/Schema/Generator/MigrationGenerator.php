@@ -10,10 +10,10 @@ use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlType;
 
 /**
- * Emits Laravel migrations for the class-table-inheritance mirror (spec §4).
+ * Emits Laravel migrations for the single-table-per-constructor mirror (spec §4).
  *
  * File layout (deterministic, ksort order):
- *  - one file per abstract type: anchor + its instance tables + child tables
+ *  - one file per abstract type: one Schema::create per constructor + child tables
  *  - one file with ALL method route tables
  *  - final 9999xx files with cross-type deferred FKs (raw ALTERs), split
  *    into buckets so each migration transaction stays within stock PG's
@@ -30,7 +30,7 @@ final class MigrationGenerator
      * FK ALTERs per migration file. Each ALTER locks the altered table and
      * the referenced table for the file's whole transaction: 512 keeps a
      * bucket around ~1k relation locks, safely under stock Postgres's
-     * shared lock budget (max_locks_per_transaction 64 × max_connections
+     * shared lock budget (max_locks_per_transaction 64 x max_connections
      * 100 = 6400 slots), independent of host tuning.
      */
     public const FK_BUCKET_SIZE = 512;
@@ -41,12 +41,14 @@ final class MigrationGenerator
     private array $tableMap = [];
     private string $currentFile = '';
     private string $currentTable = '';
+    private TlScheme $scheme;
 
     /** @return array<string,string> filename => content */
     public function generate(TlScheme $scheme): array
     {
         $this->deferredFks = [];
         $this->tableMap = [];
+        $this->scheme = $scheme;
         $files = [];
 
         $types = $scheme->types();
@@ -57,7 +59,7 @@ final class MigrationGenerator
                 continue; // generic instantiation / referenced-only type: no tables
             }
             $seq++;
-            $this->currentFile = sprintf('%s_%06d_create_%s_table.php', self::DATE_TOKEN, $seq, Naming::anchorTable($type->name));
+            $this->currentFile = sprintf('%s_%06d_create_%s_tables.php', self::DATE_TOKEN, $seq, 'tl_' . Naming::snake($type->name));
             $files[$this->currentFile] = $this->typeMigration($type);
         }
 
@@ -92,78 +94,122 @@ final class MigrationGenerator
 
     private function typeMigration(TlType $type): string
     {
-        $anchor = Naming::anchorTable($type->name);
-        $this->currentTable = $anchor;
         $up = [];
         $down = [];
 
-        // Anchor table (spec §4.1) — tenant-scoped (roadmap contract:
-        // account_id on every anchor; no global singletons by telegram id).
-        $up[] = "Schema::create('{$anchor}', function (Blueprint \$table) {";
-        $up[] = "    \$table->uuid('id')->primary();";
-        $up[] = "    \$table->bigInteger('constructor_id'); // crc32, may exceed signed i32";
-        $up[] = "    \$table->string('constructor_name', 96);";
-        $up[] = "    \$table->bigInteger('account_id'); // tenant (roadmap: account_id on every anchor)";
-        $up[] = "    \$table->timestamps();";
-        $up[] = $this->indexLine('constructor_id');
-        $up[] = $this->indexLine('account_id');
-        $up[] = "});";
-        $down[] = "Schema::dropIfExists('{$anchor}');";
-        $this->tableMap[$anchor] = $this->currentFile;
-
         $ctors = $type->constructors();
         ksort($ctors);
+
         foreach ($ctors as $ctor) {
-            $this->instanceTables($type, $ctor, $up, $down);
+            $this->constructorTable($type, $ctor, $up, $down);
         }
 
         return CodeWriter::migrationFile($up, array_reverse($down));
     }
 
-    private function instanceTables(TlType $type, TlConstructor $ctor, array &$up, array &$down): void
+    private function constructorTable(TlType $type, TlConstructor $ctor, array &$up, array &$down): void
     {
-        $anchor = Naming::anchorTable($type->name);
-        $instance = Naming::instanceTable($type->name, $ctor->name);
-        $this->currentTable = $instance;
-        $this->tableMap[$instance] = $this->currentFile;
+        $table = Naming::constructorTable($type->name, $ctor->name);
+        $this->currentTable = $table;
+        $this->tableMap[$table] = $this->currentFile;
 
-        $up[] = "Schema::create('{$instance}', function (Blueprint \$table) {";
-        $up[] = "    \$table->foreignUuid('id')->primary()->constrained('{$anchor}')->cascadeOnDelete();";
+        $up[] = "Schema::create('{$table}', function (Blueprint \$table) {";
+
+        // Determine ID strategy from the constructor's params
+        $idStrategy = $this->classifyId($ctor);
+
+        match ($idStrategy) {
+            'global' => $up[] = "    \$table->bigInteger('id')->primary();",   // Telegram ID is PK
+            'scoped' => $up[] = "    \$table->bigIncrements('id');",           // Surrogate PK
+            default  => $up[] = "    \$table->bigIncrements('id');",           // Identity-less: surrogate
+        };
+
+        $up[] = "    \$table->bigInteger('constructor_id');";
+        $up[] = "    \$table->string('constructor_name', 96);";
+
+        // Emit columns (skip the 'id' param for global types — it IS the PK)
         foreach ($ctor->params() as $param) {
+            if ($idStrategy === 'global' && $param->kind() === 'scalar' && $param->name === 'id') {
+                continue; // Already emitted as PK
+            }
             $this->columnLines($param, $up);
         }
+
         $up[] = "    \$table->bigInteger('account_id');";
         $up[] = "    \$table->timestamps();";
+        $up[] = $this->indexLine('constructor_id');
         $up[] = $this->indexLine('account_id');
 
-        $params = $ctor->params();
-        $hasScalarId = false;
-        $peerCol = null;
-        foreach ($params as $param) {
-            if ($param->kind() === 'scalar' && $param->name === 'id') {
-                $hasScalarId = true;
-            }
-            if ($param->kind() === 'ref' && in_array($param->baseType(), ['Peer', 'InputPeer'], true)) {
-                $peerCol = Naming::column($param->name);
-            }
-        }
-        if ($hasScalarId) {
-            $uniqueCols = ['account_id'];
-            if ($peerCol !== null) {
-                $uniqueCols[] = $peerCol;
-            }
-            $uniqueCols[] = Naming::column('id');
-            $up[] = "    \$table->unique(['" . implode("', '", $uniqueCols) . "'], 'ux_" . substr(sha1($instance), 0, 20) . "');";
+        // Scoped-ID types get a composite unique constraint
+        if ($idStrategy === 'scoped') {
+            $peerCol = $this->findPeerColumn($ctor);
+            $uniqueCols = $peerCol !== null ? [$peerCol, 'account_id'] : ['account_id'];
+            $up[] = "    \$table->unique(['" . implode("', '", $uniqueCols) . "'], 'ux_" . substr(sha1($table), 0, 20) . "');";
         }
 
         $up[] = "});";
-        $down[] = "Schema::dropIfExists('{$instance}');";
+        $down[] = "Schema::dropIfExists('{$table}');";
 
-        foreach ($params as $param) {
+        // Vector child tables
+        foreach ($ctor->params() as $param) {
             if ($param->kind() === 'vector') {
-                $this->childTable($instance, $param, $up, $down);
+                $this->childTable($table, $param, $up, $down);
             }
         }
+    }
+
+    /**
+     * Classify a constructor's ID strategy:
+     * - 'global': has `id:long` param → Telegram ID is PK
+     * - 'scoped': has `id:int` param → surrogate PK + composite unique
+     * - null: no ID param → auto-increment
+     */
+    private function classifyId(TlConstructor $ctor): ?string
+    {
+        foreach ($ctor->params() as $param) {
+            if ($param->kind() === 'scalar' && $param->name === 'id') {
+                return $param->baseType() === 'long' ? 'global' : 'scoped';
+            }
+        }
+        return null;
+    }
+
+    private function findPeerColumn(TlConstructor $ctor): ?string
+    {
+        foreach ($ctor->params() as $param) {
+            if ($param->kind() === 'ref' && in_array($param->baseType(), ['Peer', 'InputPeer'], true)) {
+                return Naming::column($param->name);
+            }
+        }
+        return null;
+    }
+
+    private function childTable(string $parentTable, TlParam $param, array &$up, array &$down): void
+    {
+        $child = Naming::childTable($parentTable, $param->name);
+        $this->currentTable = $child;
+        $this->tableMap[$child] = $this->currentFile;
+        $element = $param->baseType();
+        $elementParam = new TlParam($param->name, $element);
+
+        $up[] = "Schema::create('{$child}', function (Blueprint \$table) {";
+        $up[] = "    \$table->bigIncrements('id');";
+        $fkName = 'fk_' . substr(sha1($child . ':' . $parentTable), 0, 24);
+        $up[] = "    \$table->bigInteger('parent_id')->constrained('{$parentTable}', 'id', '{$fkName}')->cascadeOnDelete();";
+        $up[] = "    \$table->bigInteger('idx');";
+        if (in_array($elementParam->kind(), ['scalar', 'nat', 'true'], true)) {
+            $up[] = ltrim($this->scalarColumn($elementParam, 'value', true), ' ');
+        } else {
+            $up[] = "    \$table->bigInteger('value_id')->nullable();";
+            if ($elementParam->kind() === 'ref' && $this->isFkTargetable($elementParam->baseType(), $elementParam)) {
+                $this->deferredFks[] = ['table' => $child, 'column' => 'value_id', 'target_table' => $this->resolveFkTarget($elementParam->baseType())];
+            }
+        }
+        $up[] = "    \$table->bigInteger('account_id');";
+        $up[] = "    \$table->unique(['parent_id', 'idx'], 'ux_" . substr(sha1($child), 0, 20) . "');";
+        $up[] = $this->indexLine('account_id');
+        $up[] = "});";
+        $down[] = "Schema::dropIfExists('{$child}');";
     }
 
     private function columnLines(TlParam $param, array &$up): void
@@ -193,15 +239,10 @@ final class MigrationGenerator
 
     private function refColumn(TlParam $param, string $col, bool $nullable, array &$up): void
     {
-        if (in_array($param->baseType(), ['Peer', 'InputPeer'], true)) {
-            $up[] = "    \$table->bigInteger('{$col}')" . ($nullable ? '->nullable()' : '') . ';';
-            $up[] = $this->indexLine($col);
-            return;
-        }
-        $up[] = "    \$table->uuid('{$col}')" . ($nullable ? '->nullable()' : '') . ';';
+        $up[] = "    \$table->bigInteger('{$col}')" . ($nullable ? '->nullable()' : '') . ';';
         $target = $param->baseType();
         if ($this->isFkTargetable($target, $param)) {
-            $this->deferredFks[] = ['table' => $this->currentTable, 'column' => $col, 'target_table' => Naming::anchorTable($target)];
+            $this->deferredFks[] = ['table' => $this->currentTable, 'column' => $col, 'target_table' => $this->resolveFkTarget($target)];
         }
         $up[] = $this->indexLine($col);
     }
@@ -228,31 +269,20 @@ final class MigrationGenerator
         };
     }
 
-    private function childTable(string $instance, TlParam $param, array &$up, array &$down): void
+    /**
+     * Resolve a TL type name to its default constructor table name.
+     * Looks up the first constructor (ksort order) of the referenced type.
+     */
+    private function resolveFkTarget(string $typeName): string
     {
-        $child = Naming::childTable($instance, $param->name);
-        $this->currentTable = $child;
-        $this->tableMap[$child] = $this->currentFile;
-        $element = $param->baseType();
-        $elementParam = new TlParam($param->name, $element);
-
-        $up[] = "Schema::create('{$child}', function (Blueprint \$table) {";
-        $up[] = "    \$table->uuid('id')->primary();";
-        $up[] = "    \$table->foreignUuid('parent_id')->constrained('{$instance}')->cascadeOnDelete();";
-        $up[] = "    \$table->bigInteger('idx');";
-        if (in_array($elementParam->kind(), ['scalar', 'nat', 'true'], true)) {
-            $up[] = ltrim($this->scalarColumn($elementParam, 'value', true), ' ');
-        } else {
-            $up[] = "    \$table->uuid('value_id')->nullable();";
-            if ($elementParam->kind() === 'ref' && $this->isFkTargetable($elementParam->baseType(), $elementParam)) {
-                $this->deferredFks[] = ['table' => $child, 'column' => 'value_id', 'target_table' => Naming::anchorTable($elementParam->baseType())];
-            }
+        $type = $this->scheme->types()[$typeName] ?? null;
+        if ($type === null) {
+            return Naming::constructorTable($typeName, $typeName); // fallback
         }
-        $up[] = "    \$table->bigInteger('account_id');";
-        $up[] = "    \$table->unique(['parent_id', 'idx'], 'ux_" . substr(sha1($child), 0, 20) . "');";
-        $up[] = $this->indexLine('account_id');
-        $up[] = "});";
-        $down[] = "Schema::dropIfExists('{$child}');";
+        $ctors = $type->constructors();
+        ksort($ctors);
+        $firstCtor = reset($ctors);
+        return Naming::constructorTable($typeName, $firstCtor->name);
     }
 
     private function routeMigration(TlScheme $scheme): string
@@ -270,8 +300,8 @@ final class MigrationGenerator
             $this->currentTable = $route;
             $this->tableMap[$route] = $this->currentFile;
             $up[] = "Schema::create('{$route}', function (Blueprint \$table) {";
-            $up[] = "    \$table->uuid('id')->primary();";
-            $up[] = "    \$table->uuid('route_id')->unique();";
+            $up[] = "    \$table->bigIncrements('id');";
+            $up[] = "    \$table->string('route_id', 36)->unique();";
             $up[] = "    \$table->timestamps();";
             $up[] = "});";
             $down[] = "Schema::dropIfExists('{$route}');";
