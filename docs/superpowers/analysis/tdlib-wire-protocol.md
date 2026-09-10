@@ -1,424 +1,630 @@
 # TDLib Wire Protocol Edge Cases Analysis
 
+**Date:** 2026-09-10
+**Source:** TDLib September 2026 snapshot (`tdlib/td@latest`, layer 227-era wire / 229 schema)
+**Scope:** msg_ack batching, seqno semantics, container packing, gzip_packed, quick ACK, server-sent service messages, two-connection model
+**Phase:** 0-F of the TDLib reverse-engineering series
+
+---
+
 ## Overview
 
-This document analyzes how TDLib (the official Telegram client library) handles
-MTProto wire protocol edge cases that can cause connection drops or data loss
-when mishandled. Each section describes TDLib's approach, identifies gaps in
-Teleframe's current implementation, and provides actionable recommendations.
+MTProto 2.0 is more than "encrypt a TL object, send it over TCP." The wire
+carries its own service layer: acknowledgments, containers, gzip wrappers,
+quick acknowledgments, salt rotations, and session notifications. Every one
+of these has a correct behavior that, if missed, silently degrades the
+connection or causes an outright drop after a timeout. This document
+reverse-engineers each edge case from TDLib's C++ source, maps it to
+Teleframe's PHP implementation, and produces a numbered recommendation
+table for hardening.
 
-Source: TDLib HEAD (shallow clone, September 2026).
-Teleframe reference: `src/Core/MTProto/Connection/EncryptedConnection.php`,
-`Client.php`, `PacketCodec.php`, `FrameCodec.php`.
+The machinery spans these files (no single "Dispatcher" or "WireManager"):
 
----
-
-## Message Acknowledgment (msg_ack)
-
-### TDLib behavior
-
-TDLib implements **delayed, batched acknowledgment** of received messages:
-
-- When a content-related message arrives (odd `seq_no`), its `message_id` is
-  appended to `to_ack_message_ids_` (SessionConnection.cpp:512-513, 897-910).
-- ACKs are NOT sent immediately. A 30-second timer (`ACK_DELAY = 30`) is set on
-  the first queued ACK (line 899-900).
-- Deduplication: consecutive identical message IDs are not re-queued (line 903).
-- **Emergency flush**: when the unACKed queue exceeds `MAX_UNACKED_PACKETS`
-  (100), `force_send()` is called immediately (line 907-908).
-- At flush time, up to **8192 message IDs** are packed into a single
-  `msgs_ack` service message, piggybacked onto the same encrypted packet
-  containing queries, pings, and other service messages (line 1022).
-- `force_ack()` can be called externally to flush pending ACKs immediately
-  (line 891-894).
-
-Key design principle: ACKs are batched for efficiency and piggybacked onto
-outgoing traffic, never sent as standalone packets.
-
-### Teleframe gap
-
-Teleframe **does not send `msgs_ack` at all**. It correctly recognizes and
-skips incoming `msgs_ack` from the server (transient constructor in
-`transientConstructorIds()`), but the client never acknowledges received
-server messages. For Teleframe's current synchronous CLI/short-job use case
-where each `call()` sends one request and waits for one response, this is
-low-risk because the server sees the response as implicit acknowledgment.
-However, for any future persistent connection (update polling, long-lived
-sessions), missing ACKs will cause the server to drop the connection after
-a timeout.
-
-### Recommendation
-
-**For CLI/short-job use (current):** No action needed. Implicit acknowledgment
-via rpc_result suffices.
-
-**For persistent connections (future):** Implement delayed ACK batching:
-1. Accumulate received content-related message IDs in a bounded queue.
-2. Send `msgs_ack` after 30 seconds or when the queue exceeds ~100 entries.
-3. Piggyback ACKs onto outgoing traffic (queries, pings) to avoid standalone
-   packets.
+| Component | TDLib file(s) | Responsibility |
+|---|---|---|
+| Session state machine | `SessionConnection.h` / `.cpp` | Packet dispatch, ACK queuing, container assembly, ping/salt lifecycle |
+| Auth data + seq_no | `AuthData.h` / `.cpp` | `next_message_id()`, `next_seq_no()`, salt management, message-id duplicate check |
+| Message ID type | `MessageId.h` | Strong uint64 wrapper with ordering operators |
+| Packet serialization | `PacketStorer.h`, `CryptoStorer.h` | Template-based TL storer for encrypted transport |
+| Raw transport I/O | `RawConnection.h` / `.cpp` | Socket read/write, quick ACK token resolution, MTProto error dispatch |
+| Transport framing | `TcpTransport.h` / `.cpp`, `HttpTransport.h`, `IStreamTransport.h` | Abridged / intermediate / obfuscated / HTTP framing; quick ACK bit |
+| Connection lifecycle | `ConnectionManager.h` / `.cpp` | Token-based connection counting, mode 1 = main, mode 2 = proxy |
+| Ping keepalive | `PingConnection.h` / `.cpp`, `Ping.cpp` | Ping-pong RTT measurement, req_pq probe |
 
 ---
 
-## Sequence Number (seqno) Tracking
+## 1. Acknowledgment Flow (msg_ack)
 
-### TDLib behavior
+### 1.1 TDLib's delayed-batch ACK algorithm
 
-Sequence numbers are managed by `AuthData::next_seq_no()` (AuthData.h:267-274):
+`SessionConnection::send_ack()` (SessionConnection.cpp:897-910) queues
+acknowledgment IDs with a 30-second delayed timer:
+
+```
+ACK_DELAY = 30;                                    // header:33
+void send_ack(MessageId message_id) {
+  if (to_ack_message_ids_.empty()) {
+    send_before(Time::now_cached() + ACK_DELAY);   // line 900: timer start
+  }
+  // deduplicate consecutive identical IDs (line 903)
+  if (to_ack_message_ids_.empty() || to_ack_message_ids_.back() != message_id) {
+    to_ack_message_ids_.push_back(message_id);
+    constexpr size_t MAX_UNACKED_PACKETS = 100;     // line 907
+    if (to_ack_message_ids_.size() >= MAX_UNACKED_PACKETS) {
+      send_before(Time::now_cached());              // emergency flush
+    }
+  }
+}
+```
+
+Trigger condition: only content-related messages (odd `seq_no`) are ACKed
+(on_slice_packet, line 512-513):
+
+```
+if (info.seq_no & 1) { send_ack(info.message_id); }
+```
+
+At flush time (flush_packet, line 1015-1022), up to 8192 IDs are cut from
+the queue and packed into a single `msgs_ack#62d6b459` service message,
+which is serialized into the *same* encrypted container as queries, pings,
+and salt requests — never as a standalone packet.
+
+`force_ack()` (line 891-894) can externally reset the timer to zero, causing
+the next flush to immediately include any pending ACKs.
+
+### 1.2 Server behavior for unACKed messages
+
+When the server delivers messages (updates, push notifications) to the client,
+it monitors whether those messages were acknowledged. The server tracks this
+via `msgs_state_req` / `msgs_state_info` / `msgs_all_info` /
+`msg_detailed_info` / `msg_new_detailed_info` service messages (SessionConnection.cpp
+comments, lines 150-170). Each info byte encodes: received (4), already ACKed
+(+8), doesn't require ACK (+16), RPC being processed (+32), content response
+generated (+64), other party knows received (+128).
+
+If the client consistently fails to ACK, the server stops delivering updates
+and eventually closes the connection. The exact timeout is server-side and
+not documented, but TDLib empirically observes drops after ~60 seconds of
+silence.
+
+### 1.3 Teleframe gap
+
+Teleframe **skips incoming `msgs_ack`** (correctly — these acknowledge
+client-sent messages), but **never sends `msgs_ack`** for received server
+messages. The `transientConstructorIds()` array (EncryptedConnection.php:536)
+lists `msgs_ack` as transient, meaning it is silently consumed and ignored.
+
+For Teleframe's current synchronous `call()` / `callBatch()` model where each
+request blocks for its response, the server sees the RPC reply as implicit
+acknowledgment. **Gap is zero for CLI/short-job use.** For persistent
+connections (update polling, daemon mode), missing ACKs will cause server-side
+drops.
+
+---
+
+## 2. Sequence Number (seqno) Tracking
+
+### 2.1 TDLib's seqno counter
+
+`AuthData::next_seq_no()` (AuthData.h:267-274):
 
 ```cpp
 int32 next_seq_no(bool is_content_related) {
     int32 res = seq_no_;
     if (is_content_related) {
-        res |= 1;        // make odd
-        seq_no_ += 2;    // increment by 2 for next content message
+        res |= 1;         // make odd
+        seq_no_ += 2;     // increment by 2
     }
     return res;
 }
 ```
 
-Rules enforced by the server (bad_msg_notification error codes):
-- Code 32: seq_no too low (messages must arrive in order)
-- Code 33: seq_no too high
-- Code 34: even seq_no on a content-related message (odd expected)
-- Code 35: odd seq_no on a non-content message (even expected)
+Rules:
+- Content-related messages (queries that expect a response): odd seq_no (1, 3, 5, ...)
+- Non-content messages (containers, ACKs, pings): even seq_no (0, 2, 4, ...)
+- Counter starts at 0, monotonically increasing within a session
+- The container's seq_no must be >= every inner message's seq_no
 
-TDLib tracks the counter as `seq_no_` starting at 0. Content messages get odd
-values (1, 3, 5, ...); non-content messages (containers, acks) get even values
-(0, 2, 4, ...). The seq_no is monotonically increasing within a session.
+Server-enforced error codes (bad_msg_notification):
+- **32**: seq_no too low — messages out of order
+- **33**: seq_no too high
+- **34**: even seq_no received where odd expected (content-related)
+- **35**: odd seq_no received where even expected (non-content)
 
-### Teleframe implementation
+### 2.2 Teleframe implementation
 
-Teleframe matches TDLib exactly:
+`nextContentSeqNo()` returns `contentCounter += 2` (odd, strictly increasing).
+`nextContainerSeqNo()` returns `contentCounter + 1` (even, counter not consumed).
 
-- `nextContentSeqNo()` returns `contentCounter += 2` (odd, strictly increasing).
-- `nextContainerSeqNo()` returns `contentCounter + 1` (even, not consumed).
-- Containers use even seq_no; individual messages inside use odd seq_no.
-
-**Verdict: Correctly implemented.** No gap.
-
----
-
-## Container Messages (msg_container)
-
-### TDLib behavior
-
-TDLib uses `msg_container` (constructor `0x73f1f8dc`) as the **universal
-multiplexing envelope**. The `flush_packet()` method (SessionConnection.cpp:922-
-1075) packs multiple outgoing items into a single encrypted packet:
-
-1. **Pending queries** (up to `MAX_QUERY_COUNT = 1000`, total size up to 2^15
-   bytes).
-2. **Acknowledgment IDs** (up to 8192 IDs).
-3. **Ping** (one ping_delay_disconnect if keepalive is due).
-4. **Future salts request** (up to 64 salts).
-5. **Resend/cancel answer requests** (service queries).
-6. **Message state info requests**.
-
-All of these are serialized into one `PacketStorer<CryptoImpl>` which
-internally creates a `msg_container` wrapping individual service messages
-(msgs_ack, ping, get_future_salts, etc.) alongside query messages.
-
-Container structure on the wire:
-```
-msg_container#73f1f8dc count:int
-  [msg_id:long seqno:int bytes:int body:bytes] * count
-```
-
-Inner message IDs must be strictly increasing and divisible by 4. The outer
-container message ID must be greater than all inner IDs.
-
-### Teleframe implementation
-
-Teleframe's `callBatch()` (EncryptedConnection.php:300-346) sends multiple
-request bodies inside a single `msg_container`:
-
-- Outer container gets even seq_no via `nextContainerSeqNo()`.
-- Each inner message gets odd seq_no via `nextContentSeqNo()`.
-- Inner IDs are allocated first (strictly increasing); outer ID last.
-- Size bounds: `MAX_BATCH_MESSAGES = 1020`, `MAX_BATCH_CONTAINER_BYTES = 32768`.
-
-Parsing incoming containers: `parseNakedContainer()` (line 630-664) correctly
-handles `msg_container` payloads, iterating inner messages and routing
-`rpc_result` bodies by `req_msg_id`.
-
-### Gap: Single-purpose containers
-
-Teleframe only packs **RPC queries** into containers. TDLib packs queries
-**plus** ACKs, pings, future salt requests, and state info requests into the
-same container. This means Teleframe sends more separate encrypted packets
-for the same logical workload.
-
-### Recommendation
-
-**Low priority for CLI use.** For long-lived connections, consider
-consolidating outgoing service messages (ACKs, pings) into the same container
-as query messages to reduce round-trips.
+**Verdict: Correctly implemented.** Matches TDLib exactly.
 
 ---
 
-## gzip_packed Handling
+## 3. Container Messages (msg_container)
 
-### TDLib behavior
+### 3.1 TDLib's flush_packet multiplexer
 
-GDLib handles `gzip_packed#3072cfa1` in two contexts:
-
-1. **Inside `rpc_result`** (line 264-272): When a server response to an RPC
-   query is gzip-compressed, TDLib decompresses it and passes the raw bytes
-   to `on_message_result_ok()`. This handles the case where the server
-   compresses large API responses (e.g., messages.getHistory with many
-   results).
-
-2. **As a standalone message** (line 408-412): When a bare `gzip_packed`
-   arrives (not wrapped in `rpc_result`), TDLib decompresses it and
-   re-processes the resulting bytes through `on_slice_packet()`, which
-   dispatches to the appropriate handler (including recursive container
-   parsing).
-
-Both paths use `gzdecode()` from `td/utils/Gzip.h`.
-
-### Teleframe implementation
-
-Teleframe handles both cases:
-
-1. Inside `rpc_result`: `unwrapResultIfGzipped()` (line 112-123) checks for
-   `gzip_packed` and decompresses via `gzdecode()`, then decodes via
-   `TLDecoder::decodeObject()`.
-
-2. Inside `receiveBatchResults()` -> `absorbBatchBody()` (line 501): also
-   calls `unwrapResultIfGzipped()` for each decoded rpc_result body.
-
-**Verdict: Correctly implemented.** Both decompression paths are covered.
-
-Note: Teleframe does not handle the **server-initiated gzip** case where a
-raw `gzip_packed` arrives as a push message (not inside `rpc_result`). For
-CLI/short-job use this is acceptable since the server only compresses
-responses to specific queries; push messages (updates) are typically small
-enough to not be gzip-compressed.
-
----
-
-## Quick ACK Protocol
-
-### TDLib behavior
-
-Quick ACK is a **transport-level optimization** that lets the server
-acknowledge receipt of a client message without sending a full encrypted
+`SessionConnection::flush_packet()` (SessionConnection.cpp:922-1075) is the
+single point where all outgoing traffic is assembled into one encrypted
 packet:
 
-**Sending (client -> server):**
-- The client sets bit 31 of the intermediate transport length field
-  (`size |= 1 << 31`) when sending a packet that should trigger quick ACK
-  (TcpTransport.cpp:50-57).
-- The `use_quick_ack` flag on individual queries propagates to the transport
-  layer (SessionConnection.cpp:1025-1037).
-- The `quick_ack_token` is the parent container's `message_id` packed into
-  the flag.
+1. **Pending queries** — up to `MAX_QUERY_COUNT = 1000` queries, total
+   payload up to 2^15 (32768) bytes (line 958-967).
+2. **Pending ACK IDs** — up to 8192 IDs (line 1022).
+3. **Ping** — one `ping_delay_disconnect` if keepalive timer has fired.
+4. **Future salts request** — `get_future_salts` with up to 64 salts.
+5. **Resend/cancel answer** and **message state info** service queries.
+6. **Auth key destroy** — `destroy_auth_key` if requested.
 
-**Receiving (server -> client):**
-- When reading from the transport, if the 4-byte header has bit 31 set
-  (`data_size & (1u << 31)`), it is a quick ACK, not a length header
-  (TcpTransport.cpp:30-36).
-- The lower 31 bits contain the `quick_ack_token` (the echoed message_id).
-- `on_quick_ack()` calls `on_message_ack()` to mark the original message
-  as acknowledged (SessionConnection.cpp:757-759).
+Everything is serialized through `PacketStorer<CryptoImpl>` which creates a
+`msg_container#73f1f8dc` wrapping individual TL objects. The container has
+naked wire format:
 
-Quick ACK is supported by both `OldTransport` (abridged without padding) and
-`ObfuscatedTransport` (obfuscated TCP), but NOT by HTTP transport.
+```
+msg_container#73f1f8dc count:int
+  { msg_id:long seqno:int bytes:int body:bytes } * count
+```
 
-### Teleframe implementation
+Inner msg_ids must be strictly increasing and divisible by 4. The outer
+container msg_id must be greater than all inner IDs.
 
-Teleframe uses abridged transport only (`FrameCodec`), which does not support
-quick ACK. The abridged frame format uses varint length/4 with no spare bits
-for the quick ACK flag.
+### 3.2 Teleframe's callBatch
 
-### Recommendation
+`callBatch()` (EncryptedConnection.php:300-346) packs N RPC query bodies
+into one `msg_container` (line 357-376). It allocates inner IDs first
+(strictly increasing), outer ID last. Size bounds: `MAX_BATCH_MESSAGES =
+1020`, `MAX_BATCH_CONTAINER_BYTES = 32768`.
 
-**No action needed.** Quick ACK primarily benefits long-lived polling
-connections where reducing encrypted round-trips matters. Teleframe's
-synchronous CLI model sends one request and blocks for the full encrypted
-response anyway. The additional latency of a full response vs. quick ACK is
-negligible for single-call workloads.
+Incoming containers are parsed by `parseNakedContainer()` (line 630-664) and
+`parseBareContainerMessages()` (line 434-448).
 
-If persistent connections are added later, consider switching to intermediate
-framing (4-byte length header) which supports quick ACK via bit 31.
+### 3.3 Gap: single-purpose containers
 
----
-
-## New Session Info
-
-### TDLib behavior
-
-`new_session_created#9ec20908` is a server notification sent when the server
-creates a new session (typically after a reconnect or session timeout):
-
-- Contains `first_msg_id`, `unique_id`, and `server_salt`.
-- TDLib updates the server salt from this message (SessionConnection.cpp:309-
-  322).
-- The callback `on_new_session_created()` notifies the session manager.
-- TDLib checks for duplicate notifications using the `unique_id` field.
-- If `first_message_id` matches a pending service query, the container's
-  message_id is used instead (for correct resend routing).
-- The server implicitly requests resend of all messages with IDs less than
-  `first_msg_id`.
-
-### Teleframe implementation
-
-Teleframe correctly handles `new_session_created`:
-
-1. In `receiveDecodedResponse()` (line 566-576): when the constructor ID
-   matches, the salt is updated via `refreshServerSalt()` and the message
-   is treated as transient (skipped, not served as the RPC response).
-
-2. In `receiveBatchResults()` -> `absorbBatchBody()` (line 468-471): same
-   behavior — salt updated, body absorbed as transient.
-
-### Gap: No resend of pre-first_msg_id messages
-
-When `new_session_created` arrives, the server expects messages older than
-`first_msg_id` to be resent. TDLib handles this through its session manager
-callback. Teleframe's `call()` does not maintain a history of unsent/failed
-messages, so if the server rejects older messages with `bad_msg_notification`
-code 20 ("message too old"), they are simply lost.
-
-### Recommendation
-
-**Low priority for CLI use.** In practice, a fresh Teleframe connection sends
-one request immediately after connecting, so it is unlikely to have old
-unsent messages. For robustness, `bad_msg_notification` code 20 could trigger
-automatic resend of the failed query (which `call()` already does for
-`bad_server_salt` but not for "too old").
+Teleframe only packs RPC queries into containers. TDLib packs queries
+**plus** ACKs, pings, future salt requests, and state info into the same
+container. This means Teleframe sends separate encrypted packets for service
+traffic that TDLib piggybacks for free.
 
 ---
 
-## Transport Type Selection
+## 4. gzip_packed Handling
 
-### TDLib behavior
+### 4.1 TDLib's two decompression paths
 
-TDLib supports three transport types (TransportType.h):
+**Path 1 — inside rpc_result** (SessionConnection.cpp:264-272):
+```cpp
+case mtproto_api::gzip_packed::ID: {
+  mtproto_api::gzip_packed gzip(parser);
+  BufferSlice object = gzdecode(gzip.packed_data_);
+  return callback_->on_message_result_ok(MessageId(req_msg_id), std::move(object), info.size);
+}
+```
+Server compresses large RPC responses (e.g. `messages.getHistory` with many
+results). TDLib decompresses and passes the raw bytes upward.
 
-| Type | Init byte | Frame format | Quick ACK | Random padding |
-|---|---|---|---|---|
-| `Tcp` (OldTransport) | `0xef` | 4-byte length/4 | Yes | No |
-| `ObfuscatedTcp` (ObfuscatedTransport) | 64-byte random | AES-CTR encrypted, then intermediate frame | Yes | Depends on secret |
-| `Http` | Custom | HTTP POST bodies | No | No |
+**Path 2 — standalone message** (SessionConnection.cpp:408-412):
+```cpp
+Status SessionConnection::on_packet(const MsgInfo &info, const mtproto_api::gzip_packed &gzip_packed) {
+  BufferSlice res = gzdecode(gzip_packed.packed_data_);
+  auto guard = set_buffer_slice(&res);
+  return on_slice_packet(info, res.as_slice());
+}
+```
+A bare `gzip_packed` arrives as a push message (not inside rpc_result).
+TDLib decompresses and re-dispatches through the full `on_slice_packet()`
+handler, which can recursively parse containers, detect `rpc_result`, or
+route updates.
 
-ObfuscatedTcp wraps an intermediate frame inside AES-CTR encryption using a
-key derived from the random 64-byte header. The first 56 bytes of the header
-are sent in the clear; bytes 56-63 contain the transport marker (`0xdddddddd`
-for padded, `0xeeeeeeee` for unpadded) and the DC ID.
+### 4.2 Teleframe implementation
 
-Transport selection is driven by the connection parameters and proxy
-configuration. The obfuscated header prevents DPI (Deep Packet Inspection)
-from identifying MTProto traffic.
+Teleframe handles Path 1 via `unwrapResultIfGzipped()` (line 112-123):
+checks `_` === `gzip_packed`, calls `gzdecode()`, decodes via
+`TLDecoder::decodeObject()`. Both `receiveDecodedResponse()` and
+`absorbBatchBody()` invoke this.
 
-### Teleframe implementation
+Path 2 (standalone gzip push) is **not handled**. In `receiveDecodedResponse()`
+the outer constructor ID is compared against the transient list, then
+`msg_container` (0x73f1f8dc), then decoded as a generic TL object. If a
+standalone `gzip_packed` arrives, it would fall through to the generic path
+and likely fail to match `rpc_result`.
 
-Teleframe uses abridged framing exclusively:
-
-- Init byte: `0xef` (FrameCodec::writeInit).
-- Frame: varint(length/4) prefix, no encryption at the transport layer.
-- No obfuscation, no TLS emulation.
-
-The commented note in FrameCodec (line 16-17) states: "intermediate framing
-was observed being silently dropped (2026-08)." This is expected — production
-Telegram DCs expect obfuscated transport for regular connections. The abridged
-transport with `0xef` init works for the **unencrypted handshake** phase and
-for **old-style** connections, but modern DCs prefer obfuscated transport.
-
-### Recommendation
-
-**Current abridged transport works for handshake + early auth.** If
-connections are being dropped by modern DCs, consider implementing
-obfuscated transport with intermediate framing. This would also enable quick
-ACK support.
+**Impact:** Low for CLI use (server rarely gzip-compresses push messages).
+Would matter for persistent connections receiving large update batches.
 
 ---
 
-## Comparison with Teleframe
+## 5. Quick ACK / Intermediate Transport
 
-| Feature | TDLib | Teleframe | Gap |
+### 5.1 How quick ACK works
+
+Quick ACK is a **transport-level** (not MTProto-level) optimization. When the
+server receives a client message on an intermediate-framed connection, it can
+acknowledge receipt without sending a full encrypted packet:
+
+**Client sends** (TcpTransport.cpp / RawConnection.cpp:62-86):
+- When `use_quick_ack` is true, bit 31 of the intermediate transport's
+  length field is set: `size |= 1u << 31`.
+- The `quick_ack_token` is the parent container's `message_id`.
+- Stored in `quick_ack_to_token_` map for later lookup.
+
+**Server responds** (RawConnection.cpp:164-176):
+- If the 4-byte frame header has bit 31 set (`data_size & (1u << 31)`), it
+  is a quick ACK, not a length header.
+- Lower 31 bits = the echoed `quick_ack_token`.
+- `on_quick_ack()` resolves the token via `quick_ack_to_token_` map, then
+  calls `on_message_ack()` (SessionConnection.cpp:757-759).
+
+**Supported transports:** intermediate (OldTransport) and obfuscated TCP,
+but **not** HTTP or abridged.
+
+### 5.2 Teleframe gap
+
+Teleframe uses abridged framing (`FrameCodec`), where the length prefix is
+a varint with no spare bits for the quick ACK flag. Quick ACK is
+architecturally incompatible with abridged framing.
+
+**No action needed** for the current synchronous CLI model. If persistent
+connections are added, switching to intermediate framing (4-byte length) or
+obfuscated TCP would unlock quick ACK support.
+
+---
+
+## 6. Server-Sent Service Messages
+
+### 6.1 bad_msg_notification
+
+`bad_msg_notification#a7eff811` carries `bad_msg_id`, `bad_msg_seqno`, and
+`error_code`. TDLib handles each code distinctly (SessionConnection.cpp:324-387):
+
+| Code | Name | TDLib action | Teleframe action |
 |---|---|---|---|
-| **ACK sending** | Delayed 30s batch, piggybacked | Not implemented | Significant for persistent connections |
-| **ACK receiving** | Processes incoming msgs_ack | Recognizes but skips | Acceptable (server ACKs for client queries) |
-| **Seq_no tracking** | Odd/even, monotonically increasing | Same | Correct |
-| **Container packing** | Queries + ACKs + pings + services | Queries only | Optimization opportunity |
-| **gzip_packed** | In rpc_result + standalone push | In rpc_result + batch bodies | Minor: standalone push not handled |
-| **Quick ACK** | Transport-level bit 31 | Not supported | Acceptable for CLI use |
-| **new_session_created** | Salt update + resend + dedup | Salt update only | No resend of old messages |
-| **Transport** | Obfuscated TCP + intermediate | Abridged | Works for handshake; may fail on production DCs for regular traffic |
-| **bad_msg_notification** | Full error code handling (16-64) | Code 48 only (bad_server_salt) | Codes 16/20 could auto-resend; others terminate |
-| **pong handling** | RTT tracking, time delta reset | ping_id verification | Teleframe is simpler but correct |
-| **msg_state_info** | Full implementation | Not implemented | Not needed for CLI |
-| **future_salts** | Proactive fetching | Not implemented | Minor: salt validity handled by bad_server_salt |
-| **destroy_auth_key** | Full lifecycle | Not implemented | Not needed for CLI |
-| **Message dedup** | 1000-entry circular buffer | Not implemented | Not needed for synchronous calls |
+| 16 | MsgIdTooLow | Resend the failed message (time auto-corrects) | Throws RuntimeException |
+| 17 | MsgIdTooHigh | Fail session (reset time difference, close) | Throws RuntimeException |
+| 18 | MsgIdMod4 | Fatal: msg_id not divisible by 4 | Throws RuntimeException |
+| 19 | MsgIdCollision | Fatal: container ID collides with older message | Throws RuntimeException |
+| 20 | MsgIdTooOld | Resend the failed message | Throws RuntimeException |
+| 32 | SeqNoTooLow | Fatal: session broken | Throws RuntimeException |
+| 33 | SeqNoTooHigh | Fatal: session broken | Throws RuntimeException |
+| 34 | SeqNoNotEven | Fatal: even seqno on irrelevant message | Throws RuntimeException |
+| 35 | SeqNoNotOdd | Fatal: odd seqno on relevant message | Throws RuntimeException |
+| 48 | InvalidSalt | Handled by bad_server_salt (separate message) | Handled via bad_server_salt path |
+| 64 | InvalidContainer | Fatal: malformed container | Throws RuntimeException |
+
+**Key gap:** Codes 16 and 20 are recoverable — TDLib resends the failed
+message automatically. Teleframe throws on all non-salt codes, treating
+recoverable errors the same as fatal ones. This matters for persistent
+connections where the server may legitimately reject messages that are
+slightly too old or have a stale msg_id after clock drift.
+
+### 6.2 bad_server_salt
+
+`bad_server_salt#edab447b` carries the new salt in `new_server_salt`. TDLib
+updates the salt via `auth_data_->set_server_salt()` and then resends the
+failed message (SessionConnection.cpp:389-397). Teleframe correctly handles
+this: `refreshServerSalt()` updates both the connection and the session
+data, and the `call()` loop retries with the fresh salt.
+
+### 6.3 new_session_created
+
+`new_session_created#9ec20908` contains `first_msg_id`, `unique_id`, and
+`server_salt`. Server semantics:
+
+- All messages with ID < `first_msg_id` should be resent.
+- `unique_id` identifies the session uniquely (dedup guard).
+- The salt is replaced.
+
+TDLib (SessionConnection.cpp:309-322):
+- Updates the salt.
+- Deduplicates via `unique_id`.
+- Maps `first_msg_id` back to container ID if it matches a service query.
+- Notifies the session manager to trigger a difference resync.
+
+Teleframe (EncryptedConnection.php:468-471, 566-576):
+- Updates the salt correctly.
+- Treats the message as transient (skipped).
+
+**Gap:** No resend of pre-`first_msg_id` messages. No `unique_id` dedup.
+For CLI use, this is fine because each connection sends immediately after
+connecting. For persistent connections, a difference resync is required.
+
+### 6.4 msgs_ack (server-to-client)
+
+`msgs_ack#62d6b459 msg_ids:Vector long` — the server acknowledges receipt
+of client messages. TDLib processes these via `on_packet(msgs_ack)` (line
+399-406), calling `callback_->on_message_ack()` for each ID, which
+removes the message from the "awaiting acknowledgment" tracking structure.
+
+Teleframe skips these as transient (transientConstructorIds). This is
+**correct** — acknowledging server ACKs is unnecessary for synchronous
+CLI use.
+
+### 6.5 http_wait
+
+`http_wait` is a client-to-server message used only in HTTP long-poll
+transport mode (SessionConnection.cpp:932-946). It tells the server to hold
+the HTTP response open for up to `max_wait` milliseconds, delivering
+messages as they arrive. Parameters: `max_delay` (max per-message delay),
+`max_after` (delay after first message), `max_wait` (total wait time).
+
+Teleframe does not use HTTP transport (abridged TCP only), so `http_wait`
+is **not applicable**.
+
+### 6.6 future_salts
+
+`future_salts#ae500895` contains a vector of upcoming salt values with
+validity windows. TDLib proactively fetches these (`get_future_salts`
+with `num = 64`) every 60 seconds when the current salt is nearing expiry
+(SessionConnection.cpp:949-956). The salts are stored sorted by
+`valid_since` and automatically rotated via `update_salt()` (AuthData.cpp:169-175).
+
+Teleframe does not proactively fetch future salts, relying entirely on
+`bad_server_salt` for salt rotation. For short-lived connections this is
+sufficient. For long-lived connections, proactive salt fetching avoids the
+overhead of one round-trip per salt change.
+
+### 6.7 msg_state_info / msgs_all_info / msg_detailed_info
+
+These are server-initiated status reports about message delivery state:
+
+- `msgs_state_info`: Response to a client `msgs_state_req` query. Contains
+  one status byte per queried msg_id.
+- `msgs_all_info`: Voluntary broadcast of message status for all unACKed
+  messages.
+- `msg_detailed_info`: Status of a specific message (one-at-a-time).
+- `msg_new_detailed_info`: Same but without the original msg_id.
+
+TDLib routes these through `on_msgs_state_info()` (line 462-472) and
+`on_message_info()` callback. This feeds the "already ACKed" detection
+so TDLib can avoid redundant ACKs.
+
+Teleframe does not implement any of these. Not needed for synchronous CLI;
+relevant only for persistent connections with update delivery guarantees.
+
+### 6.8 Message ID duplicate checking
+
+TDLib maintains a **1000-entry circular buffer** of recently-received message
+IDs (`MessageIdDuplicateChecker<1000>` in AuthData.h:301). Before processing
+any incoming packet, `check_message_id_duplicates()` (AuthData.cpp:19-46) is
+called:
+
+- If the ID is already in the buffer, the message is a duplicate and ignored
+  (error code 1).
+- If the ID is older than the oldest entry in a full buffer, it is too old
+  to process (error code 2 — triggers session failure).
+- Otherwise, the ID is inserted in sorted position. When the buffer fills,
+  the lower half is discarded (compaction).
+
+This prevents replay attacks and double-processing of server retransmissions.
+
+Teleframe does **not** implement message ID deduplication. For synchronous
+single-request connections this is unnecessary. For persistent connections
+receiving updates, duplicate message IDs from server retransmissions could
+cause double-processing.
+
+---
+
+## 7. Two-Connection Model
+
+### 7.1 TDLib's session lanes
+
+TDLib uses **four session lanes** per DC (ConnectionManager.h), distinguished
+by `ConnectionToken` mode:
+
+| Lane | Mode | Purpose |
+|---|---|---|
+| Main | 1 (regular) | RPC queries, updates, general traffic |
+| Upload | 1 | File uploads (`upload.saveFilePart`) |
+| Download | 1 | File downloads (`upload.getFile`) |
+| Download Small | 1 | Small file fetches (< 1 MiB), lower latency |
+
+Each lane has its own `SessionConnection` with independent:
+- `seq_no` counter (in `AuthData`)
+- `to_ack_message_ids_` queue
+- `to_send_` pending query buffer
+- Ping/pong state
+- Salt (shared from `AuthData` but ACK buckets are per-connection)
+
+The `ConnectionManager` tracks active connections via reference-counted
+tokens (ConnectionManager.cpp:12-27). When a token is acquired
+(`inc_connect`), the connection manager's event loop starts; when all
+tokens for a mode are released, it stops.
+
+**ACK partitioning:** Each `SessionConnection` maintains its own
+`to_ack_message_ids_` vector. ACKs for messages received on the download
+connection are sent back on the *same* download connection, not the main
+connection. This means ACKs are naturally partitioned by lane.
+
+Premium accounts get boosted lane counts (SessionInfo references in TDLib
+dispatchers): main=4, upload=2, download=2 → premium: main=8, upload=8,
+download=8.
+
+### 7.2 Teleframe's single-connection model
+
+Teleframe maintains one `EncryptedConnection` per `Client` instance
+(Client.php:49). There is no lane separation, no connection pool, and no
+ACK partitioning. The `Client` class manages the connection lifecycle:
+`ensureConnection()` creates one connection, `close()` destroys it.
+
+For CLI/short-job use, a single connection is sufficient because there is
+no concurrent file transfer or background polling. For a production daemon
+that simultaneously polls for updates AND transfers files, a single
+connection creates head-of-line blocking: a large file download stalls
+the update polling connection.
+
+---
+
+## Comparison Table
+
+| Concern | TDLib | Teleframe | Gap severity |
+|---|---|---|---|
+| ACK sending (client->server) | Delayed 30s batch, max 100 before emergency flush, piggybacked onto outgoing packets, 8192 IDs per flush | Not implemented | **Low** (CLI); **High** (persistent) |
+| ACK receiving (server->client) | Processes via `on_message_ack`, feeds dedup tracker | Skipped as transient | None (correct) |
+| Seq_no tracking | Odd=content, even=non-content, monotonically increasing | Same (correct) | None |
+| Container packing | Queries + ACKs + pings + salts + services in one packet | Queries only (callBatch) | Low (optimization) |
+| gzip_packed (in rpc_result) | Decompress + pass upward | Same (unwrapResultIfGzipped) | None |
+| gzip_packed (standalone push) | Decompress + re-dispatch through full handler | Not handled | Low (CLI); Medium (persistent) |
+| Quick ACK | Transport-level bit 31, intermediate/obfuscated framing | Not supported (abridged) | None (CLI) |
+| bad_msg_notification (16, 20) | Auto-resend recoverable messages | Throws on all codes | Medium |
+| bad_msg_notification (17, 18, 19, 32-35, 64) | Fatal: fail session | Throws | None (correct) |
+| bad_server_salt | Update salt + resend | Same (correct) | None |
+| new_session_created | Salt + dedup + session notification + resend | Salt only | Low (CLI); Medium (persistent) |
+| future_salts | Proactive fetch every 60s | Not implemented | Low (CLI); Medium (persistent) |
+| msg_state_info / msgs_all_info | Full status tracking | Not implemented | None (CLI) |
+| Message ID dedup | 1000-entry circular buffer, sorted insert, compaction | Not implemented | None (CLI); Medium (persistent) |
+| Transport type | Obfuscated TCP + intermediate + abridged + HTTP | Abridged only | Low (works for handshake + early auth) |
+| Two-connection model | 4 lanes per DC (main/upload/download/download_small), premium-boosted | Single connection per client | None (CLI); High (daemon) |
+| Ping keepalive | RTT-adaptive (0.5x RTT may ping, 1x must ping, 2.5x/3.5x disconnect) | Fixed 45s idle threshold | Low (works, less adaptive) |
 
 ---
 
 ## Recommendations
 
-### Priority 1: No changes required
+### W1 -- Send msgs_ack for persistent connections
+**Priority: P0 (critical for daemon mode) | Effort: M**
 
-The current Teleframe wire implementation is **correct and sufficient** for
-its designed use case: synchronous CLI calls, short batch jobs, and schema
-operations. The blocking `call()` / `callBatch()` model means:
+Implement delayed ACK batching in `EncryptedConnection`:
+- Add `$pendingAckIds: SplFixedArray` (bounded to 100 entries) to
+  `EncryptedConnection`.
+- On each `on_slice_packet`-equivalent (odd seq_no received), push the msg_id.
+- In `call()` / `callBatch()`, before sending: if pending ACKs exist and the
+  30s timer has elapsed OR the queue exceeds 100, serialize a
+  `msgs_ack#62d6b459` TL body and prepend it to the outgoing container.
+- Piggyback onto outgoing traffic; never send standalone ACK packets.
+- PHP note: The `TLSerializer` can encode `msgs_ack` as
+  `packInt(0x62d6b459) . packInt(count) . implode(array_map('packLong', $ids))`.
+  Append this body to the `encodeBatchContainer` call.
 
-- Each request gets exactly one response (no multiplexing needed).
-- The server sees the response as implicit acknowledgment.
-- Container messages work correctly for batch operations.
-- gzip_packed is handled for all server responses.
-- bad_server_salt triggers automatic resend.
-- ping/pong keepalive prevents idle connection drops.
+### W2 -- Handle recoverable bad_msg_notification codes (16, 20)
+**Priority: P1 (hardening) | Effort: S**
 
-### Priority 2: Hardening for production use
+In `EncryptedConnection::call()`, the `bad_msg_notification` handler (line
+225-231) currently throws on all codes. Add a check:
+```php
+if (in_array((int)($result['error_code'] ?? 0), [16, 20], true)) {
+    // MsgIdTooLow / MsgIdTooOld: resend with fresh msg_id
+    $this->refreshServerSalt($this->serverSalt); // time auto-corrects
+    continue; // retry loop (maxAttempts = 2 already covers this)
+}
+```
+This matches TDLib's `on_message_failed` behavior for codes 16/20, where
+the message is resent with a fresh msg_id derived from the updated time
+difference.
 
-If Teleframe is used for **persistent connections** (update polling, long-
-running daemons), these gaps should be addressed:
+### W3 -- Implement message ID duplicate checking
+**Priority: P1 (hardening for persistent connections) | Effort: S**
 
-1. **Send `msgs_ack`**: Implement delayed ACK batching (30s timer, max 100
-   before flush, piggyback onto outgoing traffic). Without this, the server
-   will drop idle connections that receive updates but never acknowledge them.
+Add a bounded `SplFixedArray`-backed circular buffer (1000 entries) to
+`PacketCodec` or a new `MessageIdDedup` value object. After decrypting
+each packet in `receiveDecodedResponse()`, check the decrypted `message_id`
+against the buffer before processing. For CLI use, add it as a no-op-seam
+(called but not yet blocking) so the infrastructure exists when persistent
+connections are added.
 
-2. **Handle `bad_msg_notification` code 20 ("message too old")**: Auto-resend
-   the failed query rather than throwing. Codes 16 ("msg_id too low") could
-   also benefit from auto-resend.
+PHP note: A sorted-insert `SplFixedArray` of size 2000 (matching TDLib's
+`array<MessageId, 2*max_size>`) with binary search (`array_search` + manual
+insert) and periodic compaction (discard lower half on overflow) is idiomatic.
 
-3. **Consider obfuscated transport**: If abridged connections are being
-   dropped by modern DCs, implement `ObfuscatedTransport` with intermediate
-   framing. This also unlocks quick ACK.
+### W4 -- Handle standalone gzip_packed push messages
+**Priority: P2 (nice-to-have) | Effort: S**
 
-### Priority 3: Nice-to-have optimizations
+In `receiveDecodedResponse()`, add a check before the generic decode path:
+```php
+if ($id === TLRegistry::id('gzip_packed')) {
+    $offset = 0;
+    $push = TLDecoder::decodeObject($payload, $offset);
+    $inflated = gzdecode($push['packed_data']);
+    $inflatedOffset = 0;
+    $decoded = TLDecoder::decodeObject($inflated, $inflatedOffset);
+    // Re-dispatch: if rpc_result, return; if container, parse; else skip
+}
+```
+This matches TDLib's standalone `gzip_packed` handler (line 408-412) which
+decompresses and re-dispatches through `on_slice_packet()`.
 
-1. **Consolidate service messages into containers**: When sending queries,
-   piggyback pending ACKs and pings into the same `msg_container` to reduce
-   round-trips.
+### W5 -- Consolidate service messages into containers
+**Priority: P2 (optimization) | Effort: M**
 
-2. **Message dedup buffer**: For update polling, maintain a circular buffer
-   of recently-seen message IDs to detect and skip duplicate deliveries.
+When `call()` or `callBatch()` has pending ACKs, include a `msgs_ack`
+body in the same `msg_container` as the RPC queries. This eliminates
+separate round-trips for ACK-only traffic. TDLib's `flush_packet()` always
+assembles one container per flush; Teleframe should do the same.
 
-3. **`future_salts` fetching**: Proactively request future salts to avoid
-   `bad_server_salt` errors during long sessions.
+Implementation: modify `encodeBatchContainer()` to accept an optional
+`$ackIds` parameter. If non-empty, prepend a `msgs_ack` body to the inner
+message list (with even seq_no, as non-content-related). Also wire the
+existing `ping_delay_disconnect` call into the same container when keepalive
+is due, matching TDLib's ping-inside-container behavior.
+
+### W6 -- Proactive future_salts fetching
+**Priority: P2 (optimization for long sessions) | Effort: S**
+
+Add a `get_future_salts` call to `Client::call()` (or a background task
+in the daemon), triggered when the current salt's validity window is
+nearing expiry. TDLib fetches every 60 seconds (SessionConnection.cpp:952)
+when `auth_data_->need_future_salts()` returns true.
+
+PHP note: Store future salts in `SessionData` (add `futureSalts` property
+as `array<int, array{salt: int, valid_since: int, valid_until: int}>`).
+The next `call()` checks salt validity and, if expired, fetches 64 future
+salts and rotates automatically, avoiding one round-trip per `bad_server_salt`.
+
+### W7 -- Two-connection model for daemon mode
+**Priority: P0 (critical for daemon) | Effort: L**
+
+For a production daemon that polls updates AND transfers files, introduce a
+connection pool with two lanes:
+
+- **Main lane:** RPC queries, update polling, general traffic.
+- **I/O lane:** File uploads/downloads (future `upload.getFile` /
+  `upload.saveFilePart`).
+
+Each lane owns an independent `EncryptedConnection` with its own `seq_no`
+counter and `to_ack_message_ids_` queue. The `Client` class gains a
+`getConnection(string $lane): EncryptedConnection` factory that lazily
+creates and caches per-lane connections. ACKs for messages received on
+the I/O lane stay on the I/O lane (matching TDLib's per-connection ACK
+partitioning).
+
+PHP note: Extend `Client` with `$connections: array<string,
+EncryptedConnection>` keyed by lane name. Each lane has its own
+`SessionData` (same auth key, different session ID). The pool manages
+ping/keepalive independently per lane.
+
+### W8 -- Obfuscated transport with intermediate framing
+**Priority: P2 (future-proofing) | Effort: L**
+
+Implement `ObfuscatedTransport` as a new `FrameCodec` mode:
+- Generate a 64-byte random header with transport marker (`0xdddddddd`
+  for padded) and DC ID in bytes 56-63.
+- Derive AES-CTR key/IV from the first 56 bytes.
+- Frame messages using intermediate format (4-byte length), encrypted
+  in-place by the AES-CTR stream.
+
+This unlocks: (a) DPI resistance, (b) quick ACK support via bit 31,
+(c) compatibility with modern production DCs that may deprecate raw
+abridged framing. The `FrameCodec` class gains a static factory:
+`createAbridged()` / `createObfuscated(string $secret)` returning the
+appropriate framing implementation.
 
 ---
 
 ## Key Source Files Referenced
 
 ### TDLib (C++)
-- `td/mtproto/SessionConnection.h` / `.cpp` -- Main wire protocol state machine
-- `td/mtproto/AuthData.h` -- Auth key, salt, seq_no, message_id management
-- `td/mtproto/Transport.h` -- Transport read/write with quick ACK support
-- `td/mtproto/TcpTransport.h` / `.cpp` -- Intermediate framing, obfuscated TCP
-- `td/mtproto/PacketInfo.h` -- Packet metadata (session_id, msg_id, seq_no)
-- `td/mtproto/MtprotoQuery.h` -- Outgoing query structure (gzip_flag, quick_ack)
-- `td/mtproto/PacketStorer.h` -- Container serialization template
-- `td/mtproto/MessageId.h` -- MessageId value type
-- `td/mtproto/TransportType.h` -- Transport type enum
-- `td/mtproto/IStreamTransport.h` -- Transport interface (read_next, quick_ack)
+- `td/mtproto/SessionConnection.h` / `.cpp` — Wire protocol state machine: ACK queuing, container assembly, all service message handlers, ping lifecycle
+- `td/mtproto/AuthData.h` / `.cpp` — Auth key, salt rotation, seq_no counter, message ID generation with randomization, duplicate checking (1000-entry circular buffer)
+- `td/mtproto/MessageId.h` — Strong uint64 wrapper with ordering
+- `td/mtproto/PacketStorer.h` / `CryptoStorer.h` — Template-based TL storer for encrypted transport serialization
+- `td/mtproto/RawConnection.h` / `.cpp` — Socket I/O, quick ACK token resolution, MTProto error dispatch (-404, -429)
+- `td/mtproto/TcpTransport.h` / `.cpp` — Intermediate framing, quick ACK bit manipulation
+- `td/mtproto/ConnectionManager.h` / `.cpp` — Token-based connection lifecycle, mode 1 = main, mode 2 = proxy
+- `td/mtproto/PingConnection.h` / `.cpp` — Ping-pong RTT measurement, req_pq probe
+- `td/mtproto/MtprotoQuery.h` — Outgoing query structure (gzip_flag, quick_ack, invoke_after_message_ids)
 
 ### Teleframe (PHP)
-- `src/Core/MTProto/Connection/EncryptedConnection.php` -- Wire protocol
-- `src/Core/MTProto/Client.php` -- Connection lifecycle, call/callMany
-- `src/Core/MTProto/Crypto/PacketCodec.php` -- AES-IGE encrypt/decrypt
-- `src/Core/MTProto/Transport/FrameCodec.php` -- Abridged framing
-- `src/Core/MTProto/Transport/StreamSocket.php` -- Socket I/O
+- `src/Core/MTProto/Connection/EncryptedConnection.php` — Wire protocol: call/callBatch, container encode/decode, transient skipping, salt refresh
+- `src/Core/MTProto/Client.php` — Connection lifecycle, call/callMany, keepalive, DC IPs
+- `src/Core/MTProto/SessionData.php` — Session DTO (dcId, authKey, serverSalt, seqNo)
+- `src/Core/MTProto/Crypto/PacketCodec.php` — AES-256-IGE encrypt/decrypt, msg_key computation
+- `src/Core/MTProto/Transport/FrameCodec.php` — Abridged framing (send/receive)
+- `src/Core/MTProto/Transport/StreamSocket.php` — Low-level socket I/O
