@@ -25,6 +25,7 @@ use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackfillCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\DaemonCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackupCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\IngestCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
@@ -245,6 +246,7 @@ class TeleframeServiceProvider extends ServiceProvider
                 IngestCommand::class,
                 BackfillCommand::class,
                 BackupCommand::class,
+                DaemonCommand::class,
             ]);
 
             $this->loadMigrationsFrom(dirname(__DIR__, 3) . '/migrations');
