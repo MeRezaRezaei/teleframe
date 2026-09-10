@@ -24,7 +24,7 @@ final class UpdateValueObjectsTest extends TestCase
 
     public function test_from_mirror_has_empty_constructor_and_carries_model_slot(): void
     {
-        $u = Update::fromMirror($this->createStub(\MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel::class), 9);
+        $u = Update::fromMirror($this->createStub(\MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel::class), 9);
 
         self::assertSame('', $u->constructor());
         self::assertSame('event', $u->source);
@@ -71,7 +71,7 @@ final class UpdateValueObjectsTest extends TestCase
     public function test_from_mirror_seeds_update_id_from_model_created_at(): void
     {
         $created = \Carbon\Carbon::createFromTimestamp(500);
-        $model = $this->createStub(\MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel::class);
+        $model = $this->createStub(\MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel::class);
         $model->method('getAttribute')->willReturn($created);
 
         $u = Update::fromMirror($model, 9);

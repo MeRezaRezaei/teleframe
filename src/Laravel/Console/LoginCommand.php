@@ -270,6 +270,13 @@ class LoginCommand extends Command
             if (str_contains($accountType, 'Bot') && $account->getAttribute('type') === TelegramAccount::TYPE_BOT) {
                 $account->setAttribute('bot_token', (string) (config('teleframe.bot_token') ?? $account->getAttribute('bot_token')));
             }
+
+            // Extract user_id from session string and store it
+            $imported = SessionData::importString($sessionString);
+            if ($imported->userId !== null && $imported->userId > 0) {
+                $account->setAttribute('user_id', $imported->userId);
+            }
+
             $account->save();
             $this->components->info("Session stored in vault account '{$label}' (encrypted).");
         } catch (\Throwable $e) {

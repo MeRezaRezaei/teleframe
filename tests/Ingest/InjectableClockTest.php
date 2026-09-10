@@ -31,7 +31,7 @@ final class InjectableClockTest extends IngestTestCase
         $frozen = new \DateTimeImmutable('2026-09-07 10:00:00', new \DateTimeZone('UTC'));
         $routes = new RouteIdempotency(now: static fn (): \DateTimeImmutable => $frozen);
 
-        $routes->mark('messages.getHistory', 'clock-test', 7, '01910000-0000-7000-8000-000000000001');
+        $routes->mark('messages.getHistory', 'clock-test', 7, 42);
 
         $mark = DB::table('tl_route_messages_get_history')->sole();
         self::assertSame('2026-09-07 10:00:00', substr((string) $mark->created_at, 0, 19));
@@ -43,7 +43,7 @@ final class InjectableClockTest extends IngestTestCase
         $ingestor = new UpdateIngestor(now: static fn (): \DateTimeImmutable => $frozen);
 
         $routes = new \ReflectionProperty(UpdateIngestor::class, 'routes');
-        $routes->getValue($ingestor)->mark('messages.getHistory', 'clock-thread', 7, '01910000-0000-7000-8000-000000000002');
+        $routes->getValue($ingestor)->mark('messages.getHistory', 'clock-thread', 7, 42);
 
         $mark = DB::table('tl_route_messages_get_history')->sole();
         self::assertSame('2026-09-07 11:00:00', substr((string) $mark->created_at, 0, 19));

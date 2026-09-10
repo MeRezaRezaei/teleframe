@@ -29,20 +29,22 @@ final class VaultListCommand extends Command
         $this->components->info('Apps:');
         $this->table(['Label', 'api_id'], $appRows);
 
-        /** @var array<array{string, string, string, string}> $accountRows */
+        /** @var array<array{string, string, string, string, string}> $accountRows */
         $accountRows = [];
-        foreach (TelegramAccount::query()->orderBy('label')->get(['label', 'type', 'app_id', 'dc_id']) as $a) {
+        foreach (TelegramAccount::query()->orderBy('label')->get(['label', 'type', 'user_id', 'app_id', 'dc_id']) as $a) {
             /** @var TelegramAccount $a */
             $appId = $a->getAttribute('app_id');
+            $userId = $a->getAttribute('user_id');
             $accountRows[] = [
                 (string) $a->getAttribute('label'),
                 (string) $a->getAttribute('type'),
+                $userId === null ? '—' : (string) $userId,
                 $appId === null ? '—' : (string) $appId,
                 (string) $a->getAttribute('dc_id'),
             ];
         }
         $this->components->info('Accounts:');
-        $this->table(['Label', 'Type', 'app_id', 'dc_id'], $accountRows);
+        $this->table(['Label', 'Type', 'Telegram ID', 'app_id', 'dc_id'], $accountRows);
 
         return self::SUCCESS;
     }

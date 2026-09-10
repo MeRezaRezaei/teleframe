@@ -14,11 +14,14 @@ use MeRezaRezaei\Teleframe\Identity\IdentityConfig;
 final class VaultConfig
 {
     /**
-     * Default vault account label: `teleframe.vault.default_account` /
-     * TELEFRAME_DEFAULT_ACCOUNT_ID, else the identity primary account id
-     * chain (same tenant default), else null (env TELEGRAM_* fallback).
+     * Default vault account id (Telegram user id, numeric) or legacy label:
+     * `teleframe.vault.default_account` / TELEFRAME_DEFAULT_ACCOUNT_ID,
+     * else the identity primary account id chain (same tenant default),
+     * else null (env TELEGRAM_* fallback).
+     *
+     * Vault::defaultAccount() handles the id-vs-label resolution.
      */
-    public static function defaultAccountLabel(): ?string
+    public static function defaultAccountId(): ?string
     {
         $value = self::configOrEnv('teleframe.vault.default_account', 'TELEFRAME_DEFAULT_ACCOUNT_ID');
         if ($value !== null) {
@@ -28,6 +31,14 @@ final class VaultConfig
         $primary = IdentityConfig::primaryAccountId();
 
         return $primary === null ? null : (string) $primary;
+    }
+
+    /**
+     * @deprecated Use defaultAccountId() — kept for backward compat.
+     */
+    public static function defaultAccountLabel(): ?string
+    {
+        return self::defaultAccountId();
     }
 
     private static function configOrEnv(string $configKey, string $envKey): ?string

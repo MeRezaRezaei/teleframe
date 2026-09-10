@@ -6,7 +6,7 @@ namespace MeRezaRezaei\Teleframe;
 
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
 
 /**
@@ -33,7 +33,7 @@ final class Teleclient
      *
      * @param array<string, mixed> $update
      */
-    public function ingest(array $update, int $accountId): TlInstanceModel
+    public function ingest(array $update, int $accountId): TlAnchorModel
     {
         return $this->ingestor->ingest($update, $accountId);
     }
@@ -47,7 +47,7 @@ final class Teleclient
      * @param array<string, mixed> $params
      * @param array<string, mixed> $response
      */
-    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TlInstanceModel
+    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TlAnchorModel
     {
         return $this->ingestor->ingestResponse($method, $params, $response, $accountId);
     }

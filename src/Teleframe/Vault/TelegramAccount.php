@@ -19,11 +19,18 @@ use InvalidArgumentException;
  *   (app_id nullable); Bot over MTProto additionally links app_id and
  *   carries an encrypted `session` (via auth.importBotAuthorization).
  *
+ * `user_id`: the Telegram account id (bigint, unique across the
+ * platform). Used by Vault::defaultAccount() to resolve the env
+ * TELEFRAME_DEFAULT_ACCOUNT_ID lookup (the env holds this id, not
+ * a label). Extracted from the session string at finalizeLogin time,
+ * or entered manually via --telegram-id.
+ *
  * Owner morph nullable (TlUserBinding pattern — no FK, rows outlive User
  * deletion). Deleting an account never touches its app (separate
  * integrity); deleting an app nulls app_id (nullOnDelete).
  *
  * @property int $id
+ * @property int|null $user_id
  * @property int|null $app_id
  * @property string $label
  * @property string $type
@@ -44,6 +51,7 @@ final class TelegramAccount extends Model
 
     /** @var list<string> */
     protected $fillable = [
+        'user_id',
         'app_id',
         'label',
         'type',
@@ -56,6 +64,7 @@ final class TelegramAccount extends Model
 
     /** @var array<string, string> */
     protected $casts = [
+        'user_id' => 'int',
         'app_id' => 'int',
         'owner_id' => 'int',
         'dc_id' => 'int',

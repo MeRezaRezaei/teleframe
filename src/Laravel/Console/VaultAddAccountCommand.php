@@ -20,6 +20,7 @@ final class VaultAddAccountCommand extends Command
         {label : Vault label for this account (e.g. main)}
         {--app= : App label in the vault (required for type=user)}
         {--type=user : Account kind: user|bot}
+        {--telegram-id= : Telegram user/account id (numeric, set after login or manually)}
         {--bot-token= : Bot token from @BotFather (type=bot)}
         {--dc=2 : Target Telegram Data Center ID (1-5)}';
 
@@ -68,9 +69,15 @@ final class VaultAddAccountCommand extends Command
             }
         }
 
+        $telegramId = (string) ($this->option('telegram-id') ?: '');
+        $telegramIdValue = ($telegramId !== '' && ctype_digit($telegramId) && (int) $telegramId > 0)
+            ? (int) $telegramId
+            : null;
+
         TelegramAccount::query()->updateOrCreate(
             ['label' => $label],
             [
+                'user_id' => $telegramIdValue,
                 'app_id' => $appId,
                 'type' => $type,
                 'bot_token' => $botToken,

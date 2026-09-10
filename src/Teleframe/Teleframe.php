@@ -15,7 +15,7 @@ use MeRezaRezaei\Teleframe\Handler\UpdateDispatcher;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackupCommand;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
 use Psr\Container\ContainerInterface;
@@ -39,7 +39,7 @@ final class Teleframe
     }
 
     /** @param array<string, mixed> $update */
-    public function ingest(array $update, int $accountId): TlInstanceModel
+    public function ingest(array $update, int $accountId): TlAnchorModel
     {
         return $this->container->get(UpdateIngestor::class)->ingest($update, $accountId);
     }
@@ -48,7 +48,7 @@ final class Teleframe
      * @param array<string, mixed> $params
      * @param array<string, mixed> $response
      */
-    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TlInstanceModel
+    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TlAnchorModel
     {
         return $this->container->get(UpdateIngestor::class)->ingestResponse($method, $params, $response, $accountId);
     }

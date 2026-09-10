@@ -7,11 +7,11 @@ namespace MeRezaRezaei\Teleframe\Vault;
 /**
  * Named credential resolver over the DB vault (Task 3).
  *
- * Exact-match only (TlUserBinding::bindingFor tenancy rule): explicit
- * label => that row or null, never a cross-tenant scan. Default chain:
- * `teleframe.vault.default_account` / TELEFRAME_DEFAULT_ACCOUNT_ID, then
- * the identity primary account id, then null (callers fall back to
- * TELEGRAM_* env through TeleframeClient defaults).
+ * Resolution strategy (defaultAccount):
+ * 1. TELEFRAME_DEFAULT_ACCOUNT_ID is a Telegram user id (numeric) —
+ *    looked up via `user_id` column (globally unique across accounts).
+ * 2. Legacy fallback: treat the value as a label (backward compat).
+ * 3. Null → callers fall back to TELEGRAM_* env via TeleframeClient.
  */
 final class Vault
 {
@@ -25,13 +25,27 @@ final class Vault
         return TelegramAccount::query()->where('label', $label)->first();
     }
 
+    public function accountByUserId(int $userId): ?TelegramAccount
+    {
+        return TelegramAccount::query()->where('user_id', $userId)->first();
+    }
+
     public function defaultAccount(): ?TelegramAccount
     {
-        $label = VaultConfig::defaultAccountLabel();
-        if ($label === null) {
+        $idOrLabel = VaultConfig::defaultAccountId();
+        if ($idOrLabel === null) {
             return null;
         }
 
-        return $this->account($label);
+        // Primary: numeric Telegram user id (the canonical identity)
+        if (ctype_digit($idOrLabel) && (int) $idOrLabel > 0) {
+            $account = $this->accountByUserId((int) $idOrLabel);
+            if ($account !== null) {
+                return $account;
+            }
+        }
+
+        // Legacy fallback: treat as label
+        return $this->account($idOrLabel);
     }
 }

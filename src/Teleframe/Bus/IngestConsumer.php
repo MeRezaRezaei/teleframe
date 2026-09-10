@@ -7,7 +7,7 @@ namespace MeRezaRezaei\Teleframe\Bus;
 use Closure;
 use InvalidArgumentException;
 use JsonException;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Teleclient;
 
 /**
@@ -48,7 +48,7 @@ final class IngestConsumer
     /** Hard ceiling on tracked strike counters (unbounded growth guard). */
     private const FAILURE_CAP = 1024;
 
-    /** @var ?Closure(TlInstanceModel, int): void */
+    /** @var ?Closure(TlAnchorModel, int): void */
     private readonly ?Closure $onStored;
 
     /** @var ?Closure(array<string, mixed>, int): void */

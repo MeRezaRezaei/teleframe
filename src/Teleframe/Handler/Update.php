@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Handler;
 
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /**
  * The uprate — one immutable value object both intake rows (Laravel
@@ -23,7 +23,7 @@ final class Update
         public readonly string $source = 'event',
         public readonly ?int $ts = null,
         public readonly bool $selfOriginated = false,
-        public readonly ?TlInstanceModel $model = null,
+        public readonly ?TlAnchorModel $model = null,
     ) {
     }
 
@@ -67,7 +67,7 @@ final class Update
      * Attach the mirrored root model once the handler asks for it (lazy
      * hydration — the two-stage second half).
      */
-    public function withModel(?TlInstanceModel $model): self
+    public function withModel(?TlAnchorModel $model): self
     {
         return new self(
             $this->array,
@@ -93,7 +93,7 @@ final class Update
      * (`onMessage`) and prefix `''` patterns. Precise constructor routing
      * belongs to the bus path where the raw array is in hand.
      */
-    public static function fromMirror(TlInstanceModel $model, int $accountId, ?int $ts = null): self
+    public static function fromMirror(TlAnchorModel $model, int $accountId, ?int $ts = null): self
     {
         if ($ts === null) {
             $created = $model->getAttribute('created_at');

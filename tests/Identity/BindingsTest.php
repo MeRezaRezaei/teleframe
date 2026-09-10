@@ -7,7 +7,7 @@ namespace MeRezaRezaei\Teleframe\Tests\Identity;
 use MeRezaRezaei\Teleframe\Identity\Bindings;
 use MeRezaRezaei\Teleframe\Identity\TlUserBinding;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Tests\Identity\Support\TestContactableUser;
 use MeRezaRezaei\Teleframe\Tests\Identity\Support\TestPlainUser;
 
@@ -123,11 +123,11 @@ class BindingsTest extends TestCase
 }
 
 /**
- * In-memory TlInstanceModel mirroring the generated `TlUserUser` shape
+ * In-memory TlAnchorModel mirroring the generated `TlUserUser` shape
  * (table `tl_user_user`, `tl_id` cast to int) — used as the UpdateStored
  * fixture without any database row.
  */
-final class TlUserRoot extends TlInstanceModel
+final class TlUserRoot extends TlAnchorModel
 {
     protected $table = 'tl_user_user';
 
@@ -138,9 +138,9 @@ final class TlUserRoot extends TlInstanceModel
 }
 
 /**
- * TlInstanceModel root WITHOUT any telegram-id marker column.
+ * TlAnchorModel root WITHOUT any telegram-id marker column.
  */
-final class TlUserRootWithoutId extends TlInstanceModel
+final class TlUserRootWithoutId extends TlAnchorModel
 {
     protected $table = 'tl_user_user';
 

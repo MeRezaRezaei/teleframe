@@ -41,7 +41,7 @@ final class TeleframeFacadeTest extends IngestTestCase
             'username' => 'RezaRezaei',
         ], self::ACCOUNT);
 
-        self::assertInstanceOf(\MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel::class, $root);
+        self::assertInstanceOf(\MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel::class, $root);
 
         $user = $this->teleframe->user(self::ACCOUNT, self::USER_ID);
         self::assertInstanceOf(TlUser::class, $user);

@@ -8,7 +8,7 @@ use MeRezaRezaei\Teleframe\Bus\IngestConsumer;
 use MeRezaRezaei\Teleframe\Bus\RedisStreamSink;
 use MeRezaRezaei\Teleframe\Bus\RouteTable;
 use MeRezaRezaei\Teleframe\Bus\StreamSchema;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUser;
 use MeRezaRezaei\Teleframe\Teleclient;
 use MeRezaRezaei\Teleframe\Tests\Ingest\IngestTestCase;
@@ -164,7 +164,7 @@ final class IngestConsumerTest extends IngestTestCase
         $consumer = new IngestConsumer(
             $this->redis,
             $this->app->make(Teleclient::class),
-            static function (TlInstanceModel $root, int $accountId) use (&$attempts, &$stored): void {
+            static function (TlAnchorModel $root, int $accountId) use (&$attempts, &$stored): void {
                 $attempts++;
                 if ($attempts < 3) {
                     throw new \RuntimeException('transient hiccup after the row committed');
@@ -203,7 +203,7 @@ final class IngestConsumerTest extends IngestTestCase
         $consumer = new IngestConsumer(
             $this->redis,
             $this->app->make(Teleclient::class),
-            static function (TlInstanceModel $root, int $accountId) use (&$seen): void {
+            static function (TlAnchorModel $root, int $accountId) use (&$seen): void {
                 $seen[] = [get_class($root), $accountId];
             },
         );

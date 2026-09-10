@@ -77,7 +77,7 @@ final class EntityAggregatorTest extends IngestTestCase
         $anchor = (new EntityAggregator())->user(self::ACCOUNT, self::USER_ID);
 
         self::assertInstanceOf(TlUser::class, $anchor);
-        self::assertSame((string) $written->id, (string) $anchor->id, 'resolves the anchor the ingestor wrote');
+        self::assertSame((int) $written->id, (int) $anchor->id, 'resolves the anchor the ingestor wrote');
         self::assertSame(self::ACCOUNT, (int) $anchor->account_id);
         self::assertSame(0x31774388, $anchor->constructor_id);
 
@@ -108,7 +108,7 @@ final class EntityAggregatorTest extends IngestTestCase
         $b = (new EntityAggregator())->user(self::OTHER_ACCOUNT, self::USER_ID);
         self::assertNotNull($a);
         self::assertNotNull($b);
-        self::assertNotSame((string) $a->id, (string) $b->id, 'one anchor per tenant');
+        self::assertNotSame((int) $a->id, (int) $b->id, 'one anchor per tenant');
         self::assertSame('Reza', $a->currentInstance->first_name);
         self::assertSame('Other Reza', $b->currentInstance->first_name);
     }
@@ -159,7 +159,7 @@ final class EntityAggregatorTest extends IngestTestCase
         // intent-revealing alias of chat().
         self::assertInstanceOf(TlChat::class, $chat);
         self::assertInstanceOf(TlChat::class, $channel);
-        self::assertSame((string) $chat->id, (string) $channel->id);
+        self::assertSame((int) $chat->id, (int) $channel->id);
         self::assertInstanceOf(TlChatChannel::class, $chat->currentInstance);
         self::assertSame('Teleframe Café', $chat->currentInstance->title);
         self::assertTrue((bool) $chat->currentInstance->verified);

@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * compliant object). This class only carries the binding identity layer.
  *
  * Ships because the module's traits are always analysed against a real in-repo
- * consumer (repo precedent: `Schema\Eloquent\HasTlChildren` -> `TlInstanceModel`),
+ * consumer (repo precedent: `Schema\Eloquent\HasTlChildren` -> `TlAnchorModel`),
  * so phpstan types their bodies on every gate run instead of skipping orphans.
  */
 abstract class TgUser extends Model

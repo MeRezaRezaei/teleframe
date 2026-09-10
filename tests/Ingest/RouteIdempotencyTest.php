@@ -44,13 +44,13 @@ final class RouteIdempotencyTest extends IngestTestCase
 
         self::assertFalse($routes->seen(self::METHOD, $key, self::ACCOUNT), 'unmarked route is unseen');
 
-        $tlId = '0192d3a1-0000-7000-8000-000000000001';
+        $tlId = 42;
         $routes->mark(self::METHOD, $key, self::ACCOUNT, $tlId);
 
         self::assertTrue($routes->seen(self::METHOD, $key, self::ACCOUNT));
 
         $row = DB::table('tl_route_messages_get_history')->sole();
-        self::assertSame($tlId, (string) $row->id, 'route row PK is the stored response instance id');
+        self::assertSame($tlId, (int) $row->id, 'route row PK is the stored response instance id');
         self::assertTrue(UuidV5::isValid((string) $row->route_id), 'route_id is the deterministic idempotency uuid');
     }
 
@@ -59,8 +59,8 @@ final class RouteIdempotencyTest extends IngestTestCase
         $routes = new RouteIdempotency();
         $key = RouteIdempotency::keyFor(self::METHOD, ['peer_id' => 1]);
 
-        $routes->mark(self::METHOD, $key, self::ACCOUNT, '0192d3a1-0000-7000-8000-000000000001');
-        $routes->mark(self::METHOD, $key, self::ACCOUNT, '0192d3a1-0000-7000-8000-000000000001');
+        $routes->mark(self::METHOD, $key, self::ACCOUNT, 42);
+        $routes->mark(self::METHOD, $key, self::ACCOUNT, 42);
 
         self::assertSame(1, DB::table('tl_route_messages_get_history')->count());
         self::assertTrue($routes->seen(self::METHOD, $key, self::ACCOUNT));
@@ -89,11 +89,11 @@ final class RouteIdempotencyTest extends IngestTestCase
         $routes = new RouteIdempotency();
         $key = RouteIdempotency::keyFor(self::METHOD, ['peer_id' => 1]);
 
-        $routes->mark(self::METHOD, $key, self::ACCOUNT, '0192d3a1-0000-7000-8000-000000000001');
+        $routes->mark(self::METHOD, $key, self::ACCOUNT, 42);
 
         self::assertFalse($routes->seen(self::METHOD, $key, self::OTHER_ACCOUNT), 'same route under another account is unseen');
 
-        $routes->mark(self::METHOD, $key, self::OTHER_ACCOUNT, '0192d3a1-0000-7000-8000-000000000002');
+        $routes->mark(self::METHOD, $key, self::OTHER_ACCOUNT, 43);
 
         self::assertTrue($routes->seen(self::METHOD, $key, self::OTHER_ACCOUNT));
         self::assertSame(2, DB::table('tl_route_messages_get_history')->count(), 'one row per account');

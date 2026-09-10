@@ -274,14 +274,17 @@ class TeleframeClient
 
     /**
      * Named user scope from the DB vault (Task 4: thin wrapper).
+     *
+     * @param string|int|null $labelOrUserId Telegram user id (int) or legacy label (string)
      */
-    public function userFromVault(?string $label = null, ...$overrides): UserAccountScope
+    public function userFromVault(string|int|null $labelOrUserId = null, ...$overrides): UserAccountScope
     {
-        $account = $this->resolveVaultAccount($label);
+        $account = $this->resolveVaultAccount($labelOrUserId);
         $creds = $account !== null ? $account->credentials() : [];
+        $resolvedUserId = $account !== null ? $account->getAttribute('user_id') : null;
 
         return $this->user(
-            accountId: $overrides['accountId'] ?? null,
+            accountId: $overrides['accountId'] ?? ($resolvedUserId !== null ? (int) $resolvedUserId : null),
             session: $overrides['session'] ?? $creds['session'] ?? null,
             dcId: $overrides['dcId'] ?? $creds['dc_id'] ?? null,
             apiId: $overrides['apiId'] ?? $creds['api_id'] ?? null,
@@ -293,11 +296,12 @@ class TeleframeClient
     /**
      * Named bot client from the DB vault (Task 4: thin wrapper).
      *
+     * @param string|int|null $labelOrUserId Telegram user id (int) or legacy label (string)
      * @param string $transport 'http' → bot(), 'mtproto' → botMtproto()
      */
-    public function botFromVault(?string $label = null, string $transport = 'http', ...$overrides): BotClient|BotAccountScope
+    public function botFromVault(string|int|null $labelOrUserId = null, string $transport = 'http', ...$overrides): BotClient|BotAccountScope
     {
-        $account = $this->resolveVaultAccount($label);
+        $account = $this->resolveVaultAccount($labelOrUserId);
         $creds = $account !== null ? $account->credentials() : [];
 
         if ($transport === 'mtproto') {
@@ -317,7 +321,11 @@ class TeleframeClient
         );
     }
 
-    private function resolveVaultAccount(?string $label): ?\MeRezaRezaei\Teleframe\Vault\TelegramAccount
+    /**
+     * Resolve a vault account by Telegram user id (int) or legacy label (string).
+     * Null falls back to the env default account.
+     */
+    private function resolveVaultAccount(string|int|null $labelOrUserId): ?\MeRezaRezaei\Teleframe\Vault\TelegramAccount
     {
         $vault = $this->vault;
         if ($vault === null && function_exists('app')) {
@@ -329,16 +337,26 @@ class TeleframeClient
         }
 
         if ($vault === null) {
-            if ($label === null) {
+            if ($labelOrUserId === null) {
                 return null;
             }
-            throw new RuntimeException("no vault bound: cannot resolve vault account '{$label}'.");
+            throw new RuntimeException("no vault bound: cannot resolve vault account '{$labelOrUserId}'.");
         }
 
-        if ($label !== null) {
-            $account = $vault->account($label);
+        if ($labelOrUserId !== null) {
+            // Numeric: look up by Telegram user id (canonical identity)
+            if (is_int($labelOrUserId) || ctype_digit((string) $labelOrUserId)) {
+                $userId = is_int($labelOrUserId) ? $labelOrUserId : (int) $labelOrUserId;
+                $account = $vault->accountByUserId($userId);
+                if ($account !== null) {
+                    return $account;
+                }
+            }
+
+            // Fallback: treat as label (legacy compat)
+            $account = $vault->account((string) $labelOrUserId);
             if ($account === null) {
-                throw new RuntimeException("unknown vault account '{$label}'.");
+                throw new RuntimeException("unknown vault account '{$labelOrUserId}'.");
             }
 
             return $account;
