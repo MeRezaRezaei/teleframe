@@ -96,10 +96,16 @@ final class EntityAggregator
                 continue;
             }
 
-            $anchor ??= $anchorClass::query()
-                ->where('account_id', $accountId)
-                ->whereIn('id', $ids)
-                ->first();
+            // Global-ID types (User, Chat — id:long → Telegram ID IS the
+            // PK) are shared across accounts. Scoped types (Message, etc.)
+            // are per-tenant: filter by account_id.
+            $table = (new $instanceClass())->getTable();
+            $isScoped = str_starts_with($table, 'tl_message_');
+            $q = $anchorClass::query()->whereIn('id', $ids);
+            if ($isScoped) {
+                $q->where('account_id', $accountId);
+            }
+            $anchor ??= $q->first();
         }
 
         if ($anchor === null) {

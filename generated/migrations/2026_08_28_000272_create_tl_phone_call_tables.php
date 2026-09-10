@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_phone_call_phone_call', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -49,7 +49,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_6d6f80c355b7295d754c643b');
         });
         Schema::create('tl_phone_call_phone_call_accepted', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -70,7 +70,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_ee666e6bbf3c36d512bdab16');
         });
         Schema::create('tl_phone_call_phone_call_discarded', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -87,7 +87,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_9267c6474fa8b0dda3eb6392');
         });
         Schema::create('tl_phone_call_phone_call_empty', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -97,7 +97,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_c8ec4a53f252d4ebf8b65981');
         });
         Schema::create('tl_phone_call_phone_call_requested', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -118,7 +118,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_7a09695f454a015b3898766b');
         });
         Schema::create('tl_phone_call_phone_call_waiting', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();

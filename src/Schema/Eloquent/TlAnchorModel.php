@@ -16,7 +16,7 @@ abstract class TlAnchorModel extends Model
     /** @var bool Eloquent auto-increment (Telegram IDs are integers) */
     public $incrementing = true;
 
-    /** @var string<int, int> PK type for Eloquent */
+    /** @var string PK type for Eloquent */
     protected $keyType = 'int';
 
     /** Discriminator: TL constructor crc32 of this instance. */

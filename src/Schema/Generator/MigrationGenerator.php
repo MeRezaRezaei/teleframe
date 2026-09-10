@@ -119,12 +119,7 @@ final class MigrationGenerator
         $idStrategy = $this->classifyId($ctor);
 
         match ($idStrategy) {
-            // Global-ID types (User, Chat, …): surrogate auto-increment PK;
-            // the Telegram ID lives in the reserved-word alias `tl_id`
-            // (identityColumn resolution + aggregator lookups query tl_id,
-            // scoped by account_id — per-tenant anchors for the same
-            // telegram id require a surrogate PK).
-            'global' => $up[] = "    \$table->bigIncrements('id');",
+            'global' => $up[] = "    \$table->bigInteger('id')->primary();",   // Telegram ID is PK
             'scoped' => $up[] = "    \$table->bigIncrements('id');",           // Surrogate PK
             default  => $up[] = "    \$table->bigIncrements('id');",           // Identity-less: surrogate
         };
@@ -165,8 +160,8 @@ final class MigrationGenerator
 
     /**
      * Classify a constructor's ID strategy:
-     * - 'global': has `id:long` param → surrogate PK, Telegram ID in tl_id
-     * - 'scoped': has `id:int` param → surrogate PK + composite unique
+     * - 'global': has `id:long` param → Telegram ID is PK
+     * - 'scoped': has `id:int` param → surrogate PK, no DB-level unique
      * - null: no ID param → auto-increment
      */
     private function classifyId(TlConstructor $ctor): ?string

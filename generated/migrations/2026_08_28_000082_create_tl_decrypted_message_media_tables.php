@@ -75,7 +75,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_35c87a313923adfbe60a2f9d');
         });
         Schema::create('tl_decrypted_message_media_decrypted_message__37e1a7328ec6', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();

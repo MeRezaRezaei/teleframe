@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_web_page_web_page', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -54,7 +54,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_1fdd0685693ad36cee13bb76');
         });
         Schema::create('tl_web_page_web_page_empty', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -77,7 +77,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_dd24607a400dba518a48798a');
         });
         Schema::create('tl_web_page_web_page_pending', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();

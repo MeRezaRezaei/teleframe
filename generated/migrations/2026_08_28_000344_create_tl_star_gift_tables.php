@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_star_gift_star_gift', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -53,7 +53,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_76285e06e8fd38e80e12e59e');
         });
         Schema::create('tl_star_gift_star_gift_unique', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();

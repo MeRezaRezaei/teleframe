@@ -402,9 +402,15 @@ final class UpdateIngestor
                     && Schema::hasColumn((new $anchorClass())->getTable(), $identity[0])) {
                     $anchorFill[$identity[0]] = $identity[1];
                 }
+                // Global-ID types (id:long) use the Telegram ID as the PK
+                // rather than auto-increment — the 'id' column holds the
+                // same value as 'tl_id' (dual reference).
+                if ($identity !== null && $identity[0] === 'tl_id') {
+                    $anchorFill['id'] = $identity[1];
+                }
                 $anchor = new $anchorClass();
                 $anchor->forceFill($anchorFill);
-                $anchor->save(); // Auto-increment PK assigned by Eloquent
+                $anchor->save();
 
                 $anchorId = (int) $anchor->getKey();
             } else {
@@ -508,13 +514,18 @@ final class UpdateIngestor
      */
     private function existingAnchorId(string $instanceClass, string $anchorClass, string $type, string $column, int|string $value, int $accountId): ?int
     {
-        // Scope by account_id so cross-tenant rows (same Telegram ID under a
-        // different tenant) are invisible — each tenant owns its anchor.
-        $ids = $instanceClass::query()
-            ->where($column, $value)
-            ->where('account_id', $accountId)
-            ->pluck('id')
-            ->all();
+        // Global-ID types (id:long → Telegram ID IS the PK) are shared
+        // across all accounts: one row per Telegram entity, no account_id
+        // filter.  Scoped types (Message, etc.) are per-tenant: filter by
+        // account_id so cross-tenant rows are invisible.
+        $isGlobalId = ($column === 'tl_id');
+
+        $query = $instanceClass::query()
+            ->where($column, $value);
+        if (!$isGlobalId) {
+            $query->where('account_id', $accountId);
+        }
+        $ids = $query->pluck('id')->all();
 
         if ($ids === []) {
             $ownTable = (new $instanceClass())->getTable();
@@ -522,11 +533,12 @@ final class UpdateIngestor
                 if ($table === $ownTable || !Schema::hasTable($table) || !Schema::hasColumn($table, $column)) {
                     continue;
                 }
-                $ids = DB::table($table)
-                    ->where($column, $value)
-                    ->where('account_id', $accountId)
-                    ->pluck('id')
-                    ->all();
+                $tblQ = DB::table($table)
+                    ->where($column, $value);
+                if (!$isGlobalId) {
+                    $tblQ->where('account_id', $accountId);
+                }
+                $ids = $tblQ->pluck('id')->all();
                 if ($ids !== []) {
                     break;
                 }
@@ -535,6 +547,16 @@ final class UpdateIngestor
 
         if ($ids === []) {
             return null;
+        }
+
+        // For global-ID types skip the account_id filter in anchorIdFor —
+        // the anchor row is shared, any account can reuse it.
+        if ($isGlobalId) {
+            /** @var TlAnchorModel|null $anchor */
+            $anchor = $anchorClass::query()
+                ->whereIn('id', $ids)
+                ->first();
+            return $anchor !== null ? (int) $anchor->getKey() : null;
         }
 
         return $this->anchorIdFor($anchorClass, $ids, $accountId);

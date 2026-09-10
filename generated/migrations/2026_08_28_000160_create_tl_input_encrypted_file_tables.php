@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_input_encrypted_file_input_encrypted_file', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_9d6af1d2003ffafe345d47db');
         });
         Schema::create('tl_input_encrypted_file_input_encrypted_file_big_uploaded', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -44,7 +44,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_002475f460526e0b32ad1f4d');
         });
         Schema::create('tl_input_encrypted_file_input_encrypted_file_uploaded', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();

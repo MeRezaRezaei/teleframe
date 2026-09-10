@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_chat_full_channel_full', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -134,7 +134,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_fde2ebda3d384288efd36b12');
         });
         Schema::create('tl_chat_full_chat_full', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();

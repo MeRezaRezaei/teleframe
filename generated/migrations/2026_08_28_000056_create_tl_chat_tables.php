@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_chat_channel', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -99,7 +99,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_c9aac6fbeddd477cef23dac1');
         });
         Schema::create('tl_chat_channel_forbidden', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -116,7 +116,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_d2b515d16ce4b2714257faf6');
         });
         Schema::create('tl_chat_chat', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -145,7 +145,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_a20319775f75cf33521285a3');
         });
         Schema::create('tl_chat_chat_empty', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -155,7 +155,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_fb343dee47fbd3f4b5b25266');
         });
         Schema::create('tl_chat_chat_forbidden', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigInteger('id')->primary();
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
