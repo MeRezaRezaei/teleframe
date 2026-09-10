@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Ingest;
 
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChannel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChannelForbidden;
@@ -34,7 +33,7 @@ use MeRezaRezaei\Teleframe\Schema\Generator\Naming;
 final class EntityAggregator
 {
     /**
-     * @var list<class-string<TlInstanceModel>>
+     * @var list<class-string<TlAnchorModel>>
      */
     private const USER_INSTANCES = [TlUserUser::class, TlUserUserEmpty::class];
 
@@ -43,7 +42,7 @@ final class EntityAggregator
      * channelForbidden construct Chat) — chat() and channel() resolve the
      * same truth, channel() only being the intent-revealing spelling.
      *
-     * @var list<class-string<TlInstanceModel>>
+     * @var list<class-string<TlAnchorModel>>
      */
     private const CHAT_INSTANCES = [
         TlChatChat::class,
@@ -83,7 +82,7 @@ final class EntityAggregator
      * @template TAnchor of TlAnchorModel
      *
      * @param class-string<TAnchor> $anchorClass
-     * @param list<class-string<TlInstanceModel>> $instanceClasses
+     * @param list<class-string<TlAnchorModel>> $instanceClasses
      *
      * @return TAnchor|null
      */
@@ -109,7 +108,7 @@ final class EntityAggregator
 
         $current = $this->currentInstance(
             $instanceClasses,
-            (string) $anchor->getKey(),
+            (int) $anchor->getKey(),
             (int) $anchor->getAttribute('constructor_id'),
         );
 
@@ -125,14 +124,14 @@ final class EntityAggregator
      * anchor's constructor discriminator (the latest constructor ingested)
      * when it is not deleted, else the latest non-deleted row by timestamp.
      *
-     * @param list<class-string<TlInstanceModel>> $instanceClasses
+     * @param list<class-string<TlAnchorModel>> $instanceClasses
      */
-    private function currentInstance(array $instanceClasses, string $anchorId, int $anchorConstructorId): ?TlInstanceModel
+    private function currentInstance(array $instanceClasses, string $anchorId, int $anchorConstructorId): ?TlAnchorModel
     {
         $best = null;
         $bestTs = null;
         foreach ($instanceClasses as $instanceClass) {
-            /** @var TlInstanceModel|null $candidate */
+            /** @var TlAnchorModel|null $candidate */
             $candidate = $instanceClass::query()->find($anchorId);
             if ($candidate === null) {
                 continue;
@@ -156,17 +155,17 @@ final class EntityAggregator
 
     /**
      * Constructor id behind an instance model, via the shared metamodel
-     * (instance tables are per-constructor; Naming::instanceTable is the
+     * (constructor tables are per-constructor; Naming::constructorTable is the
      * generator's own mapping, so this cannot drift).
      *
-     * @param class-string<TlInstanceModel> $instanceClass
+     * @param class-string<TlAnchorModel> $instanceClass
      */
     private static function constructorIdFor(string $instanceClass): ?int
     {
         if (self::$constructorIds === null) {
             $map = [];
             foreach (UpdateIngestor::constructors() as $name => $ctor) {
-                $map[Naming::instanceTable($ctor->resultType, $name)] = $ctor->id;
+                $map[Naming::constructorTable($ctor->resultType, $name)] = $ctor->id;
             }
             self::$constructorIds = $map;
         }

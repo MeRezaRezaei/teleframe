@@ -108,13 +108,13 @@ final class RouteIdempotency
      * the pointer to the stored response), or null when unseen — the
      * response-routing wiring resolves the stored model from it.
      */
-    public function storedId(string $method, string $routeKey, int $accountId): ?string
+    public function storedId(string $method, string $routeKey, int $accountId): ?int
     {
         $id = DB::table(self::tableFor($method))
             ->where('route_id', self::routeId($method, $routeKey, $accountId))
             ->value('id');
 
-        return $id === null ? null : (string) $id;
+        return $id === null ? null : (int) $id;
     }
 
     /**
@@ -122,7 +122,7 @@ final class RouteIdempotency
      * row PK doubles as the pointer to the stored response). Marking an
      * already-seen route is a no-op — that is the whole point.
      */
-    public function mark(string $method, string $routeKey, int $accountId, string $tlId): void
+    public function mark(string $method, string $routeKey, int $accountId, int $tlId): void
     {
         $table = self::tableFor($method);
         $routeId = self::routeId($method, $routeKey, $accountId);
