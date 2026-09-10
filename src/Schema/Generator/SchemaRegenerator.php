@@ -134,7 +134,7 @@ final class SchemaRegenerator
      * Updates, ...) and the cross-namespace route/FK monolith files stay
      * in the full generated/ set only.
      *
-     * @param array<string,string> $tableMap anchor/instance/child table => migration filename
+     * @param array<string,string> $tableMap constructor/child/route table => migration filename
      * @param array<string,string> $migFiles migration filename => content
      * @return array{namespaces:list<string>,count:int,dir:string}
      */
@@ -170,7 +170,10 @@ final class SchemaRegenerator
             if (!in_array($type->namespace(), $this->shipNamespaces ?? [], true)) {
                 continue;
             }
-            $file = $tableMap[Naming::anchorTable($type->name)] ?? null;
+            $ctors = $type->constructors();
+            ksort($ctors);
+            $firstCtor = reset($ctors);
+            $file = $tableMap[Naming::constructorTable($type->name, $firstCtor->name)] ?? null;
             if ($file !== null && isset($migFiles[$file])) {
                 $shipped[$file] = $migFiles[$file];
             }
