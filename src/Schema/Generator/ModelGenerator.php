@@ -120,7 +120,10 @@ final class ModelGenerator
     {
         $class = Naming::model($type->name);
         $classes[] = $class;
-        $table = Naming::anchorTable($type->name);
+        $ctors = $type->constructors();
+        ksort($ctors);
+        $firstCtor = reset($ctors);
+        $table = Naming::constructorTable($type->name, $firstCtor->name);
 
         // Task 2.3: scan all types for incoming object-ref params targeting this type.
         $referringTypes = [];
@@ -172,7 +175,7 @@ final class ModelGenerator
     {
         $class = Naming::ctorModel($type->name, $ctor->name);
         $classes[] = $class;
-        $table = Naming::instanceTable($type->name, $ctor->name);
+        $table = Naming::constructorTable($type->name, $ctor->name);
 
         $casts = [];
         $childMethods = [];
@@ -239,7 +242,7 @@ final class ModelGenerator
 
         $body = [
             '/** Constructor model for ' . $ctor->name . ' of ' . $type->name . ' (crc32 ' . sprintf('%08x', $ctor->id) . '). */',
-            'final class ' . $class . ' extends TlInstanceModel',
+            'final class ' . $class . ' extends TlAnchorModel',
             '{',
             '    use HasFactory, HasTlChildren;',
             '    use AccountScoped;',
@@ -259,7 +262,7 @@ final class ModelGenerator
         $imports = [
             'Illuminate\Database\Eloquent\Factories\HasFactory',
             'MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren',
-            'MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel',
+            'MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel',
             'MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped',
         ];
         if ($hasPeerRef) {
@@ -351,9 +354,9 @@ final class ModelGenerator
         return !in_array($baseType, self::NOT_FK_TARGETABLE, true);
     }
 
-    public static function childModelClass(string $instanceTable, string $param): string
+    public static function childModelClass(string $constructorTable, string $param): string
     {
-        $base = substr($instanceTable, 3); // strip tl_
+        $base = substr($constructorTable, 3); // strip tl_
         $words = array_filter(explode('_', $base));
         $pascal = implode('', array_map('ucfirst', $words));
         return 'Tl' . $pascal . ucfirst($param);
