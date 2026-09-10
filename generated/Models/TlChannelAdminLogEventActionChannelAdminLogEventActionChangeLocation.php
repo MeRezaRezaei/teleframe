@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelLocation;
 
 /** Constructor model for channelAdminLogEventActionChangeLocation of ChannelAdminLogEventAction (crc32 0e6b76ae). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeLocation extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeLocation extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

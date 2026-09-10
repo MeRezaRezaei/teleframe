@@ -14,7 +14,7 @@ final class TlTodoCompletion extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_todo_completion';
+    protected $table = 'tl_todo_completion_todo_completion';
 
     protected $guarded = [];
 }

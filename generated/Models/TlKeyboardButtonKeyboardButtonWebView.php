@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlKeyboardButtonStyle;
 
 /** Constructor model for keyboardButtonWebView of KeyboardButton (crc32 e846b1a0). */
-final class TlKeyboardButtonKeyboardButtonWebView extends TlInstanceModel
+final class TlKeyboardButtonKeyboardButtonWebView extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

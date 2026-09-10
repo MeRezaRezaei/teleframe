@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReplyMarkup;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebDocument;
 
 /** Constructor model for botInlineMessageMediaInvoice of BotInlineMessage (crc32 354a9b09). */
-final class TlBotInlineMessageBotInlineMessageMediaInvoice extends TlInstanceModel
+final class TlBotInlineMessageBotInlineMessageMediaInvoice extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

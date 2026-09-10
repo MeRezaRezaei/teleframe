@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateUserNameUsernames;
 
 /** Constructor model for updateUserName of Update (crc32 a7848924). */
-final class TlUpdateUpdateUserName extends TlInstanceModel
+final class TlUpdateUpdateUserName extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlLabeledPrice extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_labeled_price';
+    protected $table = 'tl_labeled_price_labeled_price';
 
     protected $guarded = [];
 }

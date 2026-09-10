@@ -19,7 +19,7 @@ final class TlRichMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_rich_message';
+    protected $table = 'tl_rich_message_rich_message';
 
     protected $guarded = [];
 

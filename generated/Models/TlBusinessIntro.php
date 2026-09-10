@@ -16,7 +16,7 @@ final class TlBusinessIntro extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_business_intro';
+    protected $table = 'tl_business_intro_business_intro';
 
     protected $guarded = [];
 

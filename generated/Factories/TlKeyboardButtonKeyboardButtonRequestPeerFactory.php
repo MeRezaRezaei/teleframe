@@ -19,10 +19,10 @@ final class TlKeyboardButtonKeyboardButtonRequestPeerFactory extends Factory
     {
         return [
             'flags' => 1,
-            'style' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'style' => 1002,
             'text' => 'text-3',
             'button_id' => 4,
-            'peer_type' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer_type' => 1005,
             'max_quantity' => 6,
         ];
     }

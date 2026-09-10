@@ -19,17 +19,17 @@ final class TlPeerNotifySettingsPeerNotifySettingsFactory extends Factory
     {
         return [
             'flags' => 1,
-            'show_previews' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'silent' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'show_previews' => 1002,
+            'silent' => 1003,
             'mute_until' => 4,
-            'ios_sound' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'android_sound' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'other_sound' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'stories_muted' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'stories_hide_sender' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'stories_ios_sound' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'stories_android_sound' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'stories_other_sound' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'ios_sound' => 1005,
+            'android_sound' => 1006,
+            'other_sound' => 1007,
+            'stories_muted' => 1008,
+            'stories_hide_sender' => 1009,
+            'stories_ios_sound' => 1010,
+            'stories_android_sound' => 1011,
+            'stories_other_sound' => 1012,
         ];
     }
 }

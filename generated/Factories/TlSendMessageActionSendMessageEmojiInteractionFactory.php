@@ -20,7 +20,7 @@ final class TlSendMessageActionSendMessageEmojiInteractionFactory extends Factor
         return [
             'emoticon' => 'emoticon-1',
             'msg_id' => 2,
-            'interaction' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'interaction' => 1003,
         ];
     }
 }

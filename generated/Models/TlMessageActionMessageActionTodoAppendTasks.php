@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageActionMessageActionTodoAppendTasksList;
 
 /** Constructor model for messageActionTodoAppendTasks of MessageAction (crc32 c7edbc83). */
-final class TlMessageActionMessageActionTodoAppendTasks extends TlInstanceModel
+final class TlMessageActionMessageActionTodoAppendTasks extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for sendMessageUploadAudioAction of SendMessageAction (crc32 f351d7ab). */
-final class TlSendMessageActionSendMessageUploadAudioAction extends TlInstanceModel
+final class TlSendMessageActionSendMessageUploadAudioAction extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

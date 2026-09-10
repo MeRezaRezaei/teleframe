@@ -20,7 +20,7 @@ final class TlSendAsPeerSendAsPeerFactory extends Factory
         return [
             'flags' => 1,
             'premium_required' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
         ];
     }
 }

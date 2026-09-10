@@ -19,7 +19,7 @@ final class TlSendMessageActionSendMessageRichMessageDraftActionFactory extends 
     {
         return [
             'random_id' => 1001,
-            'rich_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'rich_message' => 1002,
         ];
     }
 }

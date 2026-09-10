@@ -23,7 +23,7 @@ final class TlBotInlineMessageBotInlineMessageMediaContactFactory extends Factor
             'first_name' => 'first_name-3',
             'last_name' => 'last_name-4',
             'vcard' => 'vcard-5',
-            'reply_markup' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reply_markup' => 1006,
         ];
     }
 }

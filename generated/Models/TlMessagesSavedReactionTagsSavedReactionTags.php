@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesSavedReactionTagsSavedReactionTagsTags;
 
 /** Constructor model for messages.savedReactionTags of messages.SavedReactionTags (crc32 3259950a). */
-final class TlMessagesSavedReactionTagsSavedReactionTags extends TlInstanceModel
+final class TlMessagesSavedReactionTagsSavedReactionTags extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

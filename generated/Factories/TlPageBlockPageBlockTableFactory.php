@@ -21,7 +21,7 @@ final class TlPageBlockPageBlockTableFactory extends Factory
             'flags' => 1,
             'bordered' => true,
             'striped' => true,
-            'title' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'title' => 1004,
         ];
     }
 }

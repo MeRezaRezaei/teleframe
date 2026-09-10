@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageContainerMsgContainerMessages;
 
 /** Constructor model for msg_container of MessageContainer (crc32 73f1f8dc). */
-final class TlMessageContainerMsgContainer extends TlInstanceModel
+final class TlMessageContainerMsgContainer extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

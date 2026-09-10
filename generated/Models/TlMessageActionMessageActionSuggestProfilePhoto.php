@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 
 /** Constructor model for messageActionSuggestProfilePhoto of MessageAction (crc32 57de635e). */
-final class TlMessageActionMessageActionSuggestProfilePhoto extends TlInstanceModel
+final class TlMessageActionMessageActionSuggestProfilePhoto extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -33,7 +33,7 @@ final class TlKeyboardButtonStyle extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_keyboard_button_style';
+    protected $table = 'tl_keyboard_button_style_keyboard_button_style';
 
     protected $guarded = [];
 

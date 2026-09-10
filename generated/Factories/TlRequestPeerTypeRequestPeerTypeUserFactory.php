@@ -19,8 +19,8 @@ final class TlRequestPeerTypeRequestPeerTypeUserFactory extends Factory
     {
         return [
             'flags' => 1,
-            'bot' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'premium' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'bot' => 1002,
+            'premium' => 1003,
         ];
     }
 }

@@ -14,7 +14,7 @@ final class TlMessagesAffectedFoundMessages extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_affected_found_messages';
+    protected $table = 'tl_messages_affected_found_messages_affected__d0b5b58c5216';
 
     protected $guarded = [];
 }

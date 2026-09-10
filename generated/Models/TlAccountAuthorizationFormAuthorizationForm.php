@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountAuthorizationFormAuthorizationFormErrors;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountAuthorizationFormAuthorizationFormRequired_types;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountAuthorizationFormAuthorizationFormUsers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountAuthorizationFormAuthorizationFormValues;
 
 /** Constructor model for account.authorizationForm of account.AuthorizationForm (crc32 ad2e1cd8). */
-final class TlAccountAuthorizationFormAuthorizationForm extends TlInstanceModel
+final class TlAccountAuthorizationFormAuthorizationForm extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

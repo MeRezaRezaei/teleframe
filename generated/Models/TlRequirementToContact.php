@@ -14,7 +14,7 @@ final class TlRequirementToContact extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_requirement_to_contact';
+    protected $table = 'tl_requirement_to_contact_requirement_to_contact_empty';
 
     protected $guarded = [];
 }

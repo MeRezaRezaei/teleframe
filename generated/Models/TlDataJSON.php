@@ -33,7 +33,7 @@ final class TlDataJSON extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_data_j_s_o_n';
+    protected $table = 'tl_data_j_s_o_n_data_j_s_o_n';
 
     protected $guarded = [];
 

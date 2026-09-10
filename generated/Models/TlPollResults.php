@@ -17,7 +17,7 @@ final class TlPollResults extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_poll_results';
+    protected $table = 'tl_poll_results_poll_results';
 
     protected $guarded = [];
 

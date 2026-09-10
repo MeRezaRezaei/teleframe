@@ -21,7 +21,7 @@ final class TlInputStorePaymentPurposeInputStorePaymentPremiumGiveawayFactory ex
             'flags' => 1,
             'only_new_subscribers' => true,
             'winners_are_visible' => true,
-            'boost_peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'boost_peer' => 1004,
             'prize_description' => 'prize_description-5',
             'random_id' => 1006,
             'until_date' => 7,

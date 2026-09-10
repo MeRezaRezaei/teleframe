@@ -14,7 +14,7 @@ final class TlConnectedBot extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_connected_bot';
+    protected $table = 'tl_connected_bot_connected_bot';
 
     protected $guarded = [];
 }

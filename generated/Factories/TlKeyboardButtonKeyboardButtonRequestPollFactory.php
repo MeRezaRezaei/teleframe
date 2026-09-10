@@ -19,8 +19,8 @@ final class TlKeyboardButtonKeyboardButtonRequestPollFactory extends Factory
     {
         return [
             'flags' => 1,
-            'style' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'quiz' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'style' => 1002,
+            'quiz' => 1003,
             'text' => 'text-4',
         ];
     }

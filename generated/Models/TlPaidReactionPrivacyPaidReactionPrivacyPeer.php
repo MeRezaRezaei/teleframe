@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for paidReactionPrivacyPeer of PaidReactionPrivacy (crc32 dc6cfcf0). */
-final class TlPaidReactionPrivacyPaidReactionPrivacyPeer extends TlInstanceModel
+final class TlPaidReactionPrivacyPaidReactionPrivacyPeer extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

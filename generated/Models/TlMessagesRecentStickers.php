@@ -14,7 +14,7 @@ final class TlMessagesRecentStickers extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_recent_stickers';
+    protected $table = 'tl_messages_recent_stickers_recent_stickers';
 
     protected $guarded = [];
 }

@@ -16,7 +16,7 @@ final class TlThemeSettings extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_theme_settings';
+    protected $table = 'tl_theme_settings_theme_settings';
 
     protected $guarded = [];
 

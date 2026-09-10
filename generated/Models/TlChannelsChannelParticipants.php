@@ -14,7 +14,7 @@ final class TlChannelsChannelParticipants extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_channels_channel_participants';
+    protected $table = 'tl_channels_channel_participants_channel_participants';
 
     protected $guarded = [];
 }

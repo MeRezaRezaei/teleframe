@@ -14,7 +14,7 @@ final class TlNull extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_null';
+    protected $table = 'tl_null_null';
 
     protected $guarded = [];
 }

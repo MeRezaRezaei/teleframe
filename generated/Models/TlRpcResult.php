@@ -14,7 +14,7 @@ final class TlRpcResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_rpc_result';
+    protected $table = 'tl_rpc_result_rpc_result';
 
     protected $guarded = [];
 }

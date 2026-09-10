@@ -14,7 +14,7 @@ final class TlAccountResolvedBusinessChatLinks extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_resolved_business_chat_links';
+    protected $table = 'tl_account_resolved_business_chat_links_resol_c591db58a589';
 
     protected $guarded = [];
 }

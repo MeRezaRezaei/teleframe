@@ -18,7 +18,7 @@ final class TlJSONValueJsonBoolFactory extends Factory
     public function definition(): array
     {
         return [
-            'tl_value' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_value' => 1001,
         ];
     }
 }

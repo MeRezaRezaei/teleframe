@@ -18,7 +18,7 @@ final class TlInputMediaInputMediaGeoPointFactory extends Factory
     public function definition(): array
     {
         return [
-            'geo_point' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'geo_point' => 1001,
         ];
     }
 }

@@ -21,7 +21,7 @@ final class TlChannelAdminLogEventChannelAdminLogEventFactory extends Factory
             'tl_id' => 1001,
             'date' => 2,
             'user_id' => 1003,
-            'action' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'action' => 1004,
         ];
     }
 }

@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatTheme;
 
 /** Constructor model for messageActionSetChatTheme of MessageAction (crc32 b91bbd3a). */
-final class TlMessageActionMessageActionSetChatTheme extends TlInstanceModel
+final class TlMessageActionMessageActionSetChatTheme extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

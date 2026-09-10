@@ -20,8 +20,8 @@ final class TlInputBotInlineResultInputBotInlineResultPhotoFactory extends Facto
         return [
             'tl_id' => 'id-1',
             'tl_type' => 'type-2',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'send_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1003,
+            'send_message' => 1004,
         ];
     }
 }

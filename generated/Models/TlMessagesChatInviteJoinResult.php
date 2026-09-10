@@ -14,7 +14,7 @@ final class TlMessagesChatInviteJoinResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_chat_invite_join_result';
+    protected $table = 'tl_messages_chat_invite_join_result_chat_invi_71ed5b26df07';
 
     protected $guarded = [];
 }

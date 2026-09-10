@@ -19,7 +19,7 @@ final class TlInputRichFileInputRichFilePhotoFactory extends Factory
     {
         return [
             'tl_id' => 'id-1',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1002,
         ];
     }
 }

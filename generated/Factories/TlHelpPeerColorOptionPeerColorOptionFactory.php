@@ -21,8 +21,8 @@ final class TlHelpPeerColorOptionPeerColorOptionFactory extends Factory
             'flags' => 1,
             'hidden' => true,
             'color_id' => 3,
-            'colors' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'dark_colors' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'colors' => 1004,
+            'dark_colors' => 1005,
             'channel_min_level' => 6,
             'group_min_level' => 7,
         ];

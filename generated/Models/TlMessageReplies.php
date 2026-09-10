@@ -17,7 +17,7 @@ final class TlMessageReplies extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_replies';
+    protected $table = 'tl_message_replies_message_replies';
 
     protected $guarded = [];
 

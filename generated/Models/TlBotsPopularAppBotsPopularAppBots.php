@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotsPopularAppBotsPopularAppBotsUsers;
 
 /** Constructor model for bots.popularAppBots of bots.PopularAppBots (crc32 1991b13b). */
-final class TlBotsPopularAppBotsPopularAppBots extends TlInstanceModel
+final class TlBotsPopularAppBotsPopularAppBots extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

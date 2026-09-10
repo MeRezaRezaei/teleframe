@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesFoundStoriesFoundStoriesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesFoundStoriesFoundStoriesStories;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesFoundStoriesFoundStoriesUsers;
 
 /** Constructor model for stories.foundStories of stories.FoundStories (crc32 e2de7737). */
-final class TlStoriesFoundStoriesFoundStories extends TlInstanceModel
+final class TlStoriesFoundStoriesFoundStories extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlReceivedNotifyMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_received_notify_message';
+    protected $table = 'tl_received_notify_message_received_notify_message';
 
     protected $guarded = [];
 }

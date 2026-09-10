@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelsSponsoredMessageReportResultS90d28813b853Options;
 
 /** Constructor model for channels.sponsoredMessageReportResultChooseOption of channels.SponsoredMessageReportResult (crc32 846f9e42). */
-final class TlChannelsSponsoredMessageReportResultSponsoredMessageReportResultChooseOption extends TlInstanceModel
+final class TlChannelsSponsoredMessageReportResultSponsoredMessageReportResultChooseOption extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

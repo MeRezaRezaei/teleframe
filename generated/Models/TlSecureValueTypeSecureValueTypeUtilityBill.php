@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for secureValueTypeUtilityBill of SecureValueType (crc32 fc36954e). */
-final class TlSecureValueTypeSecureValueTypeUtilityBill extends TlInstanceModel
+final class TlSecureValueTypeSecureValueTypeUtilityBill extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

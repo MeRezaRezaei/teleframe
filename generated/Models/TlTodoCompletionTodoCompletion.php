@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for todoCompletion of TodoCompletion (crc32 221bb5e4). */
-final class TlTodoCompletionTodoCompletion extends TlInstanceModel
+final class TlTodoCompletionTodoCompletion extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

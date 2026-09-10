@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for bad_msg_notification of BadMsgNotification (crc32 a7eff811). */
-final class TlBadMsgNotificationBadMsgNotification extends TlInstanceModel
+final class TlBadMsgNotificationBadMsgNotification extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

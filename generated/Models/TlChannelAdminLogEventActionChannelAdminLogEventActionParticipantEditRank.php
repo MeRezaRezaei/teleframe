@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for channelAdminLogEventActionParticipantEditRank of ChannelAdminLogEventAction (crc32 5806b4ec). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantEditRank extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantEditRank extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

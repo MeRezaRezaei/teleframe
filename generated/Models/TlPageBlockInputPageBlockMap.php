@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGeoPoint;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPageCaption;
 
 /** Constructor model for inputPageBlockMap of PageBlock (crc32 574b617f). */
-final class TlPageBlockInputPageBlockMap extends TlInstanceModel
+final class TlPageBlockInputPageBlockMap extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

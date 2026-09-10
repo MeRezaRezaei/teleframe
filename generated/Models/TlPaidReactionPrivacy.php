@@ -16,7 +16,7 @@ final class TlPaidReactionPrivacy extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_paid_reaction_privacy';
+    protected $table = 'tl_paid_reaction_privacy_paid_reaction_privacy_anonymous';
 
     protected $guarded = [];
 

@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDataJSON;
 
 /** Constructor model for inputPasskeyResponseLogin of InputPasskeyResponse (crc32 c31fc14a). */
-final class TlInputPasskeyResponseInputPasskeyResponseLogin extends TlInstanceModel
+final class TlInputPasskeyResponseInputPasskeyResponseLogin extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

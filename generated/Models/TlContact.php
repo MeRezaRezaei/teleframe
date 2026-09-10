@@ -14,7 +14,7 @@ final class TlContact extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_contact';
+    protected $table = 'tl_contact_contact';
 
     protected $guarded = [];
 }

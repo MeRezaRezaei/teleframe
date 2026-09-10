@@ -17,7 +17,7 @@ final class TlPaymentCharge extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payment_charge';
+    protected $table = 'tl_payment_charge_payment_charge';
 
     protected $guarded = [];
 

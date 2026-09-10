@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDataJSON;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputMedia;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputWebDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInvoice;
 
 /** Constructor model for inputMediaInvoice of InputMedia (crc32 405fef0d). */
-final class TlInputMediaInputMediaInvoice extends TlInstanceModel
+final class TlInputMediaInputMediaInvoice extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

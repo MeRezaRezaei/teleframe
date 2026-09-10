@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageActionMessageActionConferenceCallOther_participants;
 
 /** Constructor model for messageActionConferenceCall of MessageAction (crc32 2ffe2f7a). */
-final class TlMessageActionMessageActionConferenceCall extends TlInstanceModel
+final class TlMessageActionMessageActionConferenceCall extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

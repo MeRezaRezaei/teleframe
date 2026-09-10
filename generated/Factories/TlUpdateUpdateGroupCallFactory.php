@@ -20,8 +20,8 @@ final class TlUpdateUpdateGroupCallFactory extends Factory
         return [
             'flags' => 1,
             'live_story' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'call' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
+            'call' => 1004,
         ];
     }
 }

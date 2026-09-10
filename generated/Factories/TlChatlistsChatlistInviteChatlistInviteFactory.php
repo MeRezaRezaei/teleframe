@@ -20,7 +20,7 @@ final class TlChatlistsChatlistInviteChatlistInviteFactory extends Factory
         return [
             'flags' => 1,
             'title_noanimate' => true,
-            'title' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'title' => 1003,
             'emoticon' => 'emoticon-4',
         ];
     }

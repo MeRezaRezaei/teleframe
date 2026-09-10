@@ -16,7 +16,7 @@ final class TlShippingOption extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_shipping_option';
+    protected $table = 'tl_shipping_option_shipping_option';
 
     protected $guarded = [];
 

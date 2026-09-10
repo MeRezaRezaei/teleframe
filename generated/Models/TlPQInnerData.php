@@ -14,7 +14,7 @@ final class TlPQInnerData extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_p__q_inner_data';
+    protected $table = 'tl_p__q_inner_data_p_q_inner_data_dc';
 
     protected $guarded = [];
 }

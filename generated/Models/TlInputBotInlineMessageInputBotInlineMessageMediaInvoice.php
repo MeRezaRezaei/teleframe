@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDataJSON;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputWebDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInvoice;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReplyMarkup;
 
 /** Constructor model for inputBotInlineMessageMediaInvoice of InputBotInlineMessage (crc32 d7e78225). */
-final class TlInputBotInlineMessageInputBotInlineMessageMediaInvoice extends TlInstanceModel
+final class TlInputBotInlineMessageInputBotInlineMessageMediaInvoice extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

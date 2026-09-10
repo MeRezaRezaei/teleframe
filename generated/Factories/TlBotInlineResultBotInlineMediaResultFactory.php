@@ -21,11 +21,11 @@ final class TlBotInlineResultBotInlineMediaResultFactory extends Factory
             'flags' => 1,
             'tl_id' => 'id-2',
             'tl_type' => 'type-3',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1004,
+            'document' => 1005,
             'title' => 'title-6',
             'description' => 'description-7',
-            'send_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'send_message' => 1008,
         ];
     }
 }

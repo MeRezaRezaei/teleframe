@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for webViewResultUrl of WebViewResult (crc32 4d22ff98). */
-final class TlWebViewResultWebViewResultUrl extends TlInstanceModel
+final class TlWebViewResultWebViewResultUrl extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

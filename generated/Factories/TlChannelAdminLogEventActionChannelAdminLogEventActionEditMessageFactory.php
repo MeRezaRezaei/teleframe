@@ -18,8 +18,8 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionEditMessageFac
     public function definition(): array
     {
         return [
-            'prev_message' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'prev_message' => 1001,
+            'new_message' => 1002,
         ];
     }
 }

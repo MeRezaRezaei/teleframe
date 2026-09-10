@@ -14,7 +14,7 @@ final class TlMessagesQuickReplies extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_quick_replies';
+    protected $table = 'tl_messages_quick_replies_quick_replies';
 
     protected $guarded = [];
 }

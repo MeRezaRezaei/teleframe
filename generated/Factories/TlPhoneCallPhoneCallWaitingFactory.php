@@ -25,7 +25,7 @@ final class TlPhoneCallPhoneCallWaitingFactory extends Factory
             'date' => 5,
             'admin_id' => 1006,
             'participant_id' => 1007,
-            'protocol' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'protocol' => 1008,
             'receive_date' => 9,
         ];
     }

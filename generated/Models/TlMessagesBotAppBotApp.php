@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotApp;
 
 /** Constructor model for messages.botApp of messages.BotApp (crc32 eb50adf5). */
-final class TlMessagesBotAppBotApp extends TlInstanceModel
+final class TlMessagesBotAppBotApp extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

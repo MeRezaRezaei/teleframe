@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDataJSON;
 
 /** Constructor model for inputPaymentCredentialsApplePay of InputPaymentCredentials (crc32 0aa1c39f). */
-final class TlInputPaymentCredentialsInputPaymentCredentialsApplePay extends TlInstanceModel
+final class TlInputPaymentCredentialsInputPaymentCredentialsApplePay extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

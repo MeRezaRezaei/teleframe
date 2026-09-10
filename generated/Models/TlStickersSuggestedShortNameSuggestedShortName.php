@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for stickers.suggestedShortName of stickers.SuggestedShortName (crc32 85fea03f). */
-final class TlStickersSuggestedShortNameSuggestedShortName extends TlInstanceModel
+final class TlStickersSuggestedShortNameSuggestedShortName extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

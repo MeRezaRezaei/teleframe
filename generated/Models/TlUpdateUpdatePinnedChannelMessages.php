@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdatePinnedChannelMessagesMessages;
 
 /** Constructor model for updatePinnedChannelMessages of Update (crc32 5bb98608). */
-final class TlUpdateUpdatePinnedChannelMessages extends TlInstanceModel
+final class TlUpdateUpdatePinnedChannelMessages extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

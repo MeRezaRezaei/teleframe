@@ -17,7 +17,7 @@ final class TlRequestPeerType extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_request_peer_type';
+    protected $table = 'tl_request_peer_type_request_peer_type_broadcast';
 
     protected $guarded = [];
 

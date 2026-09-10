@@ -18,7 +18,7 @@ final class TlInputWebDocument extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_web_document';
+    protected $table = 'tl_input_web_document_input_web_document';
 
     protected $guarded = [];
 

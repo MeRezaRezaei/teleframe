@@ -14,7 +14,7 @@ final class TlInputMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_message';
+    protected $table = 'tl_input_message_input_message_callback_query';
 
     protected $guarded = [];
 }

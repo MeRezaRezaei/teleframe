@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageActionMessageActionSecureValuesSentMeValues;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureCredentialsEncrypted;
 
 /** Constructor model for messageActionSecureValuesSentMe of MessageAction (crc32 1b287353). */
-final class TlMessageActionMessageActionSecureValuesSentMe extends TlInstanceModel
+final class TlMessageActionMessageActionSecureValuesSentMe extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

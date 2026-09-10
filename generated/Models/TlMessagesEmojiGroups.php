@@ -14,7 +14,7 @@ final class TlMessagesEmojiGroups extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_emoji_groups';
+    protected $table = 'tl_messages_emoji_groups_emoji_groups';
 
     protected $guarded = [];
 }

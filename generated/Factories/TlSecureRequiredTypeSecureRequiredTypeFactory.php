@@ -22,7 +22,7 @@ final class TlSecureRequiredTypeSecureRequiredTypeFactory extends Factory
             'native_names' => true,
             'selfie_required' => true,
             'translation_required' => true,
-            'tl_type' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_type' => 1005,
         ];
     }
 }

@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBaseTheme;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputThemeSettingsInputThemeSettingsMessage_colors;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputWallPaper;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWallPaperSettings;
 
 /** Constructor model for inputThemeSettings of InputThemeSettings (crc32 8fde504f). */
-final class TlInputThemeSettingsInputThemeSettings extends TlInstanceModel
+final class TlInputThemeSettingsInputThemeSettings extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

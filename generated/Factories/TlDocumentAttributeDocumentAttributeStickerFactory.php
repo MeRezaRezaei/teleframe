@@ -21,8 +21,8 @@ final class TlDocumentAttributeDocumentAttributeStickerFactory extends Factory
             'flags' => 1,
             'mask' => true,
             'alt' => 'alt-3',
-            'stickerset' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'mask_coords' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'stickerset' => 1004,
+            'mask_coords' => 1005,
         ];
     }
 }

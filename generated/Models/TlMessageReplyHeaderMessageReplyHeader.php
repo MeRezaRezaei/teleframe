@@ -12,13 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageFwdHeader;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMedia;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageReplyHeaderMessageReplyHeaderQuote_entities;
 
 /** Constructor model for messageReplyHeader of MessageReplyHeader (crc32 1b97dd66). */
-final class TlMessageReplyHeaderMessageReplyHeader extends TlInstanceModel
+final class TlMessageReplyHeaderMessageReplyHeader extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

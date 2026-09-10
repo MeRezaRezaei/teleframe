@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for help.userInfoEmpty of help.UserInfo (crc32 f3ae2eed). */
-final class TlHelpUserInfoUserInfoEmpty extends TlInstanceModel
+final class TlHelpUserInfoUserInfoEmpty extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

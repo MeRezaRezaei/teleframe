@@ -19,10 +19,10 @@ final class TlInputMediaInputMediaPollFactory extends Factory
     {
         return [
             'flags' => 1,
-            'poll' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'attached_media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'poll' => 1002,
+            'attached_media' => 1003,
             'solution' => 'solution-4',
-            'solution_media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'solution_media' => 1005,
         ];
     }
 }

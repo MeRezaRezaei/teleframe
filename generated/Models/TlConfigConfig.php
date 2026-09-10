@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBool;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlConfigConfigDc_options;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReaction;
 
 /** Constructor model for config of Config (crc32 cc1a241e). */
-final class TlConfigConfig extends TlInstanceModel
+final class TlConfigConfig extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

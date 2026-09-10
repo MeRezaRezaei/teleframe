@@ -14,7 +14,7 @@ final class TlPremiumSubscriptionOption extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_premium_subscription_option';
+    protected $table = 'tl_premium_subscription_option_premium_subscription_option';
 
     protected $guarded = [];
 }

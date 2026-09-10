@@ -19,7 +19,7 @@ final class TlStatsGraphStatsGraphFactory extends Factory
     {
         return [
             'flags' => 1,
-            'json' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'json' => 1002,
             'zoom_token' => 'zoom_token-3',
         ];
     }

@@ -19,7 +19,7 @@ final class TlUpdateUpdateStarGiftAuctionStateFactory extends Factory
     {
         return [
             'gift_id' => 1001,
-            'state' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'state' => 1002,
         ];
     }
 }

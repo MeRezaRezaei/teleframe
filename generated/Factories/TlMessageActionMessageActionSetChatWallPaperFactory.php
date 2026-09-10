@@ -21,7 +21,7 @@ final class TlMessageActionMessageActionSetChatWallPaperFactory extends Factory
             'flags' => 1,
             'same' => true,
             'for_both' => true,
-            'wallpaper' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'wallpaper' => 1004,
         ];
     }
 }

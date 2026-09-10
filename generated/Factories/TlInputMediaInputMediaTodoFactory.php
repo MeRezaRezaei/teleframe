@@ -18,7 +18,7 @@ final class TlInputMediaInputMediaTodoFactory extends Factory
     public function definition(): array
     {
         return [
-            'todo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'todo' => 1001,
         ];
     }
 }

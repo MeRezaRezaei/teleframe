@@ -14,7 +14,7 @@ final class TlMessagesComposedMessageWithAI extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_composed_message_with_a_i';
+    protected $table = 'tl_messages_composed_message_with_a_i_compose_55280cfdf5bd';
 
     protected $guarded = [];
 }

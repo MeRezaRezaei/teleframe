@@ -14,7 +14,7 @@ final class TlMessagePeerVote extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_peer_vote';
+    protected $table = 'tl_message_peer_vote_message_peer_vote';
 
     protected $guarded = [];
 }

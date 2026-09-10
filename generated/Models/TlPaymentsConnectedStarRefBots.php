@@ -14,7 +14,7 @@ final class TlPaymentsConnectedStarRefBots extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_connected_star_ref_bots';
+    protected $table = 'tl_payments_connected_star_ref_bots_connected_73bca7385b9a';
 
     protected $guarded = [];
 }

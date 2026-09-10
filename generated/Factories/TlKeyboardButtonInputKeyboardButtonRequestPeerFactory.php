@@ -22,10 +22,10 @@ final class TlKeyboardButtonInputKeyboardButtonRequestPeerFactory extends Factor
             'name_requested' => true,
             'username_requested' => true,
             'photo_requested' => true,
-            'style' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'style' => 1005,
             'text' => 'text-6',
             'button_id' => 7,
-            'peer_type' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer_type' => 1008,
             'max_quantity' => 9,
         ];
     }

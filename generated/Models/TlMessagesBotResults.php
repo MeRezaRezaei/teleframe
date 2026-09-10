@@ -14,7 +14,7 @@ final class TlMessagesBotResults extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_bot_results';
+    protected $table = 'tl_messages_bot_results_bot_results';
 
     protected $guarded = [];
 }

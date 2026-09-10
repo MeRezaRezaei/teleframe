@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpCountryCodeCountryCodePatterns;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpCountryCodeCountryCodePrefixes;
 
 /** Constructor model for help.countryCode of help.CountryCode (crc32 4203c5ef). */
-final class TlHelpCountryCodeCountryCode extends TlInstanceModel
+final class TlHelpCountryCodeCountryCode extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

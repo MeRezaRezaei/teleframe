@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for recentMeUrlUnknown of RecentMeUrl (crc32 46e1d13d). */
-final class TlRecentMeUrlRecentMeUrlUnknown extends TlInstanceModel
+final class TlRecentMeUrlRecentMeUrlUnknown extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

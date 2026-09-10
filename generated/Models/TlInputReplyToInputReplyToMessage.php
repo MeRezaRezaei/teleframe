@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputReplyToInputReplyToMessageQuote_entities;
 
 /** Constructor model for inputReplyToMessage of InputReplyTo (crc32 3bd4b7c2). */
-final class TlInputReplyToInputReplyToMessage extends TlInstanceModel
+final class TlInputReplyToInputReplyToMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

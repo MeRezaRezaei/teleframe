@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsResaleStarGiftsResaleStarGiftsAttributes;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsResaleStarGiftsResaleStarGiftsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsResaleStarGiftsResaleStarGiftsCounters;
@@ -18,7 +18,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsResaleStarGiftsResa
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsResaleStarGiftsResaleStarGiftsUsers;
 
 /** Constructor model for payments.resaleStarGifts of payments.ResaleStarGifts (crc32 947a12df). */
-final class TlPaymentsResaleStarGiftsResaleStarGifts extends TlInstanceModel
+final class TlPaymentsResaleStarGiftsResaleStarGifts extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

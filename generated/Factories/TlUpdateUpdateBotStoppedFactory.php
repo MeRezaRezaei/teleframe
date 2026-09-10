@@ -20,7 +20,7 @@ final class TlUpdateUpdateBotStoppedFactory extends Factory
         return [
             'user_id' => 1001,
             'date' => 2,
-            'stopped' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'stopped' => 1003,
             'qts' => 4,
         ];
     }

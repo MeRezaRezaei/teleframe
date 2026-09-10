@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for joinChatBotResultWebView of JoinChatBotResult (crc32 d6e3b813). */
-final class TlJoinChatBotResultJoinChatBotResultWebView extends TlInstanceModel
+final class TlJoinChatBotResultJoinChatBotResultWebView extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

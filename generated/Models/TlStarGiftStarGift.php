@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGiftBackground;
 
 /** Constructor model for starGift of StarGift (crc32 313a9547). */
-final class TlStarGiftStarGift extends TlInstanceModel
+final class TlStarGiftStarGift extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

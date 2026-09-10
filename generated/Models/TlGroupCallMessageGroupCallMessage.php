@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for groupCallMessage of GroupCallMessage (crc32 1a8afc7e). */
-final class TlGroupCallMessageGroupCallMessage extends TlInstanceModel
+final class TlGroupCallMessageGroupCallMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

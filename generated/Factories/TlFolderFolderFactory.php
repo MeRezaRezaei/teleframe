@@ -24,7 +24,7 @@ final class TlFolderFolderFactory extends Factory
             'autofill_new_correspondents' => true,
             'tl_id' => 5,
             'title' => 'title-6',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1007,
         ];
     }
 }

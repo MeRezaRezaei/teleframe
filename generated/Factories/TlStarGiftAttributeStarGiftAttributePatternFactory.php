@@ -19,8 +19,8 @@ final class TlStarGiftAttributeStarGiftAttributePatternFactory extends Factory
     {
         return [
             'name' => 'name-1',
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'rarity' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1002,
+            'rarity' => 1003,
         ];
     }
 }

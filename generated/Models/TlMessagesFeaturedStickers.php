@@ -14,7 +14,7 @@ final class TlMessagesFeaturedStickers extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_featured_stickers';
+    protected $table = 'tl_messages_featured_stickers_featured_stickers';
 
     protected $guarded = [];
 }

@@ -21,7 +21,7 @@ final class TlUpdateUpdatePeerBlockedFactory extends Factory
             'flags' => 1,
             'blocked' => true,
             'blocked_my_stories_from' => true,
-            'peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer_id' => 1004,
         ];
     }
 }

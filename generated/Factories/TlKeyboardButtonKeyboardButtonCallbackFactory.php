@@ -20,7 +20,7 @@ final class TlKeyboardButtonKeyboardButtonCallbackFactory extends Factory
         return [
             'flags' => 1,
             'requires_password' => true,
-            'style' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'style' => 1003,
             'text' => 'text-4',
             'data' => 'Ynl0ZXMtNQ==',
         ];

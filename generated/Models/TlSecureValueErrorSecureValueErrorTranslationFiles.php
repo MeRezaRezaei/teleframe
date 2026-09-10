@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureValueErrorSecureValueErrorTranslationFilesFile_hash;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureValueType;
 
 /** Constructor model for secureValueErrorTranslationFiles of SecureValueError (crc32 34636dd8). */
-final class TlSecureValueErrorSecureValueErrorTranslationFiles extends TlInstanceModel
+final class TlSecureValueErrorSecureValueErrorTranslationFiles extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

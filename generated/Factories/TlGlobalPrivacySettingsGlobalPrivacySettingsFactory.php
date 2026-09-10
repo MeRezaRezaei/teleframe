@@ -26,7 +26,7 @@ final class TlGlobalPrivacySettingsGlobalPrivacySettingsFactory extends Factory
             'new_noncontact_peers_require_premium' => true,
             'display_gifts_button' => true,
             'noncontact_peers_paid_stars' => 1008,
-            'disallowed_gifts' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'disallowed_gifts' => 1009,
         ];
     }
 }

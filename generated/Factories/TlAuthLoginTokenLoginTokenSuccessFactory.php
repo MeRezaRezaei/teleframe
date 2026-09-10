@@ -18,7 +18,7 @@ final class TlAuthLoginTokenLoginTokenSuccessFactory extends Factory
     public function definition(): array
     {
         return [
-            'tl_authorization' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_authorization' => 1001,
         ];
     }
 }

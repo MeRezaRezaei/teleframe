@@ -14,7 +14,7 @@ final class TlUpdatesChannelDifference extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_updates_channel_difference';
+    protected $table = 'tl_updates_channel_difference_channel_difference';
 
     protected $guarded = [];
 }

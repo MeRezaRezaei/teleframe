@@ -14,7 +14,7 @@ final class TlPong extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_pong';
+    protected $table = 'tl_pong_pong';
 
     protected $guarded = [];
 }

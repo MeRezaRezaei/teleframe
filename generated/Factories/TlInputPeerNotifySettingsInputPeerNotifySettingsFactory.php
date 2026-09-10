@@ -19,13 +19,13 @@ final class TlInputPeerNotifySettingsInputPeerNotifySettingsFactory extends Fact
     {
         return [
             'flags' => 1,
-            'show_previews' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'silent' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'show_previews' => 1002,
+            'silent' => 1003,
             'mute_until' => 4,
-            'sound' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'stories_muted' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'stories_hide_sender' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'stories_sound' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'sound' => 1005,
+            'stories_muted' => 1006,
+            'stories_hide_sender' => 1007,
+            'stories_sound' => 1008,
         ];
     }
 }

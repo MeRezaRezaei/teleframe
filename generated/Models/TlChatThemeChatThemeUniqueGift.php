@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatThemeChatThemeUniqueGiftTheme_settings;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGift;
 
 /** Constructor model for chatThemeUniqueGift of ChatTheme (crc32 3458f9c8). */
-final class TlChatThemeChatThemeUniqueGift extends TlInstanceModel
+final class TlChatThemeChatThemeUniqueGift extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

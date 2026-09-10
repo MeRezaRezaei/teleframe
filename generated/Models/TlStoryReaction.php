@@ -14,7 +14,7 @@ final class TlStoryReaction extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_story_reaction';
+    protected $table = 'tl_story_reaction_story_reaction';
 
     protected $guarded = [];
 }

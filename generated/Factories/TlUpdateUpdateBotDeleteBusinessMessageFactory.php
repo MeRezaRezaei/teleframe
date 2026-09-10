@@ -19,7 +19,7 @@ final class TlUpdateUpdateBotDeleteBusinessMessageFactory extends Factory
     {
         return [
             'connection_id' => 'connection_id-1',
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1002,
             'qts' => 3,
         ];
     }

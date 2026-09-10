@@ -14,7 +14,7 @@ final class TlStatsGroupTopAdmin extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stats_group_top_admin';
+    protected $table = 'tl_stats_group_top_admin_stats_group_top_admin';
 
     protected $guarded = [];
 }

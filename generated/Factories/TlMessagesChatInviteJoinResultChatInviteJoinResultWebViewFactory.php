@@ -19,7 +19,7 @@ final class TlMessagesChatInviteJoinResultChatInviteJoinResultWebViewFactory ext
     {
         return [
             'bot_id' => 1001,
-            'webview' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'webview' => 1002,
         ];
     }
 }

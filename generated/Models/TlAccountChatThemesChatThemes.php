@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountChatThemesChatThemesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountChatThemesChatThemesThemes;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountChatThemesChatThemesUsers;
 
 /** Constructor model for account.chatThemes of account.ChatThemes (crc32 be098173). */
-final class TlAccountChatThemesChatThemes extends TlInstanceModel
+final class TlAccountChatThemesChatThemes extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

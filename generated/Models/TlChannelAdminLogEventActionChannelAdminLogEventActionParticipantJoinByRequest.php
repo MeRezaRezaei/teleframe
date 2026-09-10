@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlExportedChatInvite;
 
 /** Constructor model for channelAdminLogEventActionParticipantJoinByRequest of ChannelAdminLogEventAction (crc32 afb6144a). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantJoinByRequest extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantJoinByRequest extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

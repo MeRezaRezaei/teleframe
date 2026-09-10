@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDraftMessage;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerNotifySettings;
 
 /** Constructor model for dialog of Dialog (crc32 fc89f7f3). */
-final class TlDialogDialog extends TlInstanceModel
+final class TlDialogDialog extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

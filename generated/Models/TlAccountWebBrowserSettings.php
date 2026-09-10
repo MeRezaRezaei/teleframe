@@ -14,7 +14,7 @@ final class TlAccountWebBrowserSettings extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_web_browser_settings';
+    protected $table = 'tl_account_web_browser_settings_web_browser_settings';
 
     protected $guarded = [];
 }

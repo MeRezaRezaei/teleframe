@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBoost;
 
 /** Constructor model for updateBotChatBoost of Update (crc32 904dd49c). */
-final class TlUpdateUpdateBotChatBoost extends TlInstanceModel
+final class TlUpdateUpdateBotChatBoost extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

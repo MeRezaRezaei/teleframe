@@ -14,7 +14,7 @@ final class TlInputWebFileLocation extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_web_file_location';
+    protected $table = 'tl_input_web_file_location_input_web_file_aud_36d962fc9d91';
 
     protected $guarded = [];
 }

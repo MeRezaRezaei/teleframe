@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsGraph;
 
 /** Constructor model for stats.messageStats of stats.MessageStats (crc32 7fe91c14). */
-final class TlStatsMessageStatsMessageStats extends TlInstanceModel
+final class TlStatsMessageStatsMessageStats extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

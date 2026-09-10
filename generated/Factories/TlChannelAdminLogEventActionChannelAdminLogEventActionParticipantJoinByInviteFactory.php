@@ -20,7 +20,7 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantJoi
         return [
             'flags' => 1,
             'via_chatlist' => true,
-            'invite' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'invite' => 1003,
         ];
     }
 }

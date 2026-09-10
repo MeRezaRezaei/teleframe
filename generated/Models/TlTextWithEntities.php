@@ -42,7 +42,7 @@ final class TlTextWithEntities extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_text_with_entities';
+    protected $table = 'tl_text_with_entities_text_with_entities';
 
     protected $guarded = [];
 

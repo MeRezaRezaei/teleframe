@@ -14,7 +14,7 @@ final class TlWebViewMessageSent extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_web_view_message_sent';
+    protected $table = 'tl_web_view_message_sent_web_view_message_sent';
 
     protected $guarded = [];
 }

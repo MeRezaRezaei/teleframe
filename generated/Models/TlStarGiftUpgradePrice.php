@@ -14,7 +14,7 @@ final class TlStarGiftUpgradePrice extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_star_gift_upgrade_price';
+    protected $table = 'tl_star_gift_upgrade_price_star_gift_upgrade_price';
 
     protected $guarded = [];
 }

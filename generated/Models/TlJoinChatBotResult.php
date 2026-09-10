@@ -16,7 +16,7 @@ final class TlJoinChatBotResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_join_chat_bot_result';
+    protected $table = 'tl_join_chat_bot_result_join_chat_bot_result_approved';
 
     protected $guarded = [];
 

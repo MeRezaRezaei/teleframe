@@ -19,7 +19,7 @@ final class TlContactBirthdayContactBirthdayFactory extends Factory
     {
         return [
             'contact_id' => 1001,
-            'birthday' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'birthday' => 1002,
         ];
     }
 }

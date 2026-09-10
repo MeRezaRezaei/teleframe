@@ -83,11 +83,19 @@ final class UpdateIngestor
         );
         $tables = is_array($manifest) ? ($manifest['tables'] ?? []) : [];
 
+        // Find any table belonging to each required type's migration file.
+        // The anchor table name depends on the first constructor (ksort),
+        // so we match by type prefix rather than hardcoding a specific table.
+        $seen = [];
         $paths = [];
-        foreach (['tl_user', 'tl_chat', 'tl_chat_photo', 'tl_message', 'tl_message_entity', 'tl_message_media', 'tl_peer', 'tl_update'] as $table) {
-            $file = (string) ($tables[$table] ?? '');
-            if ($file !== '') {
-                $paths[] = $root . '/generated/migrations/' . $file;
+        foreach (['User', 'Chat', 'ChatPhoto', 'Message', 'MessageEntity', 'MessageMedia', 'Peer', 'Update'] as $type) {
+            $prefix = 'tl_' . Naming::snake($type) . '_';
+            foreach ($tables as $table => $file) {
+                if (str_starts_with($table, $prefix) && !isset($seen[$file])) {
+                    $seen[$file] = true;
+                    $paths[] = $root . '/generated/migrations/' . $file;
+                    break;
+                }
             }
         }
 
@@ -379,12 +387,23 @@ final class UpdateIngestor
                 : $this->contentAnchorId($instanceClass, $anchorClass, $columns, $accountId);
 
             if ($anchorId === null) {
-                $anchor = new $anchorClass();
-                $anchor->forceFill([
+                $anchorFill = [
                     'constructor_id' => $ctor->id,
                     'constructor_name' => $name,
                     'account_id' => $accountId,
-                ]);
+                ];
+                // For global-ID types the anchor and instance share the same
+                // table — the anchor row must carry the identity column (tl_id)
+                // to satisfy the NOT NULL constraint before the instance fills
+                // the remaining columns.  For non-merged types (e.g. Peer)
+                // the identity column lives on the instance table only; only
+                // include it on the anchor if the anchor table has it.
+                if ($identity !== null
+                    && Schema::hasColumn((new $anchorClass())->getTable(), $identity[0])) {
+                    $anchorFill[$identity[0]] = $identity[1];
+                }
+                $anchor = new $anchorClass();
+                $anchor->forceFill($anchorFill);
                 $anchor->save(); // Auto-increment PK assigned by Eloquent
 
                 $anchorId = (int) $anchor->getKey();
@@ -403,6 +422,8 @@ final class UpdateIngestor
 
             $instance = $instanceClass::query()->withoutGlobalScopes()->find($anchorId) ?? new $instanceClass();
             $instance->setAttribute('id', $anchorId); // shared PK with the anchor (spec §4.2)
+            $instance->setAttribute('constructor_id', $ctor->id);
+            $instance->setAttribute('constructor_name', $name);
             $instance->setAttribute('account_id', $accountId);
             $instance->fill($columns);
             $instance->save();
@@ -443,6 +464,18 @@ final class UpdateIngestor
      */
     private static function identityColumn(TlConstructor $ctor, array $columns): ?array
     {
+        // Global-ID constructors (id:long): the Telegram ID lives in the
+        // reserved-word alias 'tl_id' (Naming::column('id')), separate from
+        // the auto-increment PK — enabling multi-tenant anchor reuse.
+        foreach ($ctor->params() as $p) {
+            if ($p->kind() === 'scalar' && $p->name === 'id' && $p->baseType() === 'long') {
+                $tlId = $columns['tl_id'] ?? null;
+                if (is_int($tlId) || is_string($tlId)) {
+                    return ['tl_id', $tlId];
+                }
+            }
+        }
+
         $tlId = $columns['tl_id'] ?? null;
         if (is_int($tlId) || is_string($tlId)) {
             return ['tl_id', $tlId];
@@ -475,7 +508,13 @@ final class UpdateIngestor
      */
     private function existingAnchorId(string $instanceClass, string $anchorClass, string $type, string $column, int|string $value, int $accountId): ?int
     {
-        $ids = $instanceClass::query()->where($column, $value)->pluck('id')->all();
+        // Scope by account_id so cross-tenant rows (same Telegram ID under a
+        // different tenant) are invisible — each tenant owns its anchor.
+        $ids = $instanceClass::query()
+            ->where($column, $value)
+            ->where('account_id', $accountId)
+            ->pluck('id')
+            ->all();
 
         if ($ids === []) {
             $ownTable = (new $instanceClass())->getTable();
@@ -483,7 +522,11 @@ final class UpdateIngestor
                 if ($table === $ownTable || !Schema::hasTable($table) || !Schema::hasColumn($table, $column)) {
                     continue;
                 }
-                $ids = DB::table($table)->where($column, $value)->pluck('id')->all();
+                $ids = DB::table($table)
+                    ->where($column, $value)
+                    ->where('account_id', $accountId)
+                    ->pluck('id')
+                    ->all();
                 if ($ids !== []) {
                     break;
                 }

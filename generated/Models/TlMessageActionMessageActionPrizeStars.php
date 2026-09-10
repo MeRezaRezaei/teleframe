@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for messageActionPrizeStars of MessageAction (crc32 b00c47a2). */
-final class TlMessageActionMessageActionPrizeStars extends TlInstanceModel
+final class TlMessageActionMessageActionPrizeStars extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

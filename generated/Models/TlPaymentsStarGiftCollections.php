@@ -14,7 +14,7 @@ final class TlPaymentsStarGiftCollections extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_star_gift_collections';
+    protected $table = 'tl_payments_star_gift_collections_star_gift_collections';
 
     protected $guarded = [];
 }

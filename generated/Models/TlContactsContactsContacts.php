@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsContactsContactsContacts;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsContactsContactsUsers;
 
 /** Constructor model for contacts.contacts of contacts.Contacts (crc32 eae87e42). */
-final class TlContactsContactsContacts extends TlInstanceModel
+final class TlContactsContactsContacts extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

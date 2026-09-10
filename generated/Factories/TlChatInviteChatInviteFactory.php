@@ -30,12 +30,12 @@ final class TlChatInviteChatInviteFactory extends Factory
             'can_refulfill_subscription' => true,
             'title' => 'title-11',
             'about' => 'about-12',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1013,
             'participants_count' => 14,
             'color' => 15,
-            'subscription_pricing' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'subscription_pricing' => 1016,
             'subscription_form_id' => 1017,
-            'bot_verification' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'bot_verification' => 1018,
         ];
     }
 }

@@ -8,7 +8,6 @@ use MeRezaRezaei\Teleframe\Ingest\IdentityLock;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUser;
-use Symfony\Component\Uid\UuidV7;
 
 /**
  * Plan Task 1: flat-constructor ingest of user#31774388 (v227) —
@@ -68,7 +67,8 @@ final class UpdateIngestorTest extends IngestTestCase
         self::assertInstanceOf(TlUserUser::class, $instance);
 
         $anchor = TlUser::query()->sole();
-        self::assertTrue(UuidV7::isValid((string) $anchor->id), 'anchor PK must be the generated UUIDv7');
+        self::assertIsInt($anchor->id);
+        self::assertGreaterThan(0, $anchor->id, 'anchor PK must be a positive integer id');
         self::assertSame(0x31774388, $anchor->constructor_id);
         self::assertSame('user', $anchor->constructor_name);
         self::assertSame(self::ACCOUNT, (int) $anchor->account_id);
@@ -98,11 +98,11 @@ final class UpdateIngestorTest extends IngestTestCase
     {
         $ingestor = new UpdateIngestor();
         $first = $ingestor->ingest(self::userPayload(), self::ACCOUNT);
-        $anchorId = (string) $first->id;
+        $anchorId = (int) $first->id;
 
         $second = $ingestor->ingest(self::userPayload(), self::ACCOUNT);
 
-        self::assertSame($anchorId, (string) $second->id, 'same anchor uuid reused');
+        self::assertSame($anchorId, (int) $second->id, 'same anchor id reused');
         self::assertSame(1, TlUser::query()->count());
         self::assertSame(1, TlUserUser::query()->count());
         self::assertSame($first->tl_id, $second->tl_id);
@@ -130,7 +130,8 @@ final class UpdateIngestorTest extends IngestTestCase
         $ingestor->ingest(self::userPayload(), self::ACCOUNT);
         $ingestor->ingest(self::userPayload(), self::ACCOUNT);
 
-        self::assertSame(0, IdentityLock::depth('tl_anchor:' . self::ACCOUNT . ':tl_id:501558149'));
+        // Merged schema: identity column is 'id' (not 'tl_id').
+        self::assertSame(0, IdentityLock::depth('tl_anchor:' . self::ACCOUNT . ':id:501558149'));
         self::assertSame(1, TlUser::query()->count(), 'guard: idempotent ingest still holds');
     }
 

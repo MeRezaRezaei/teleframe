@@ -20,8 +20,8 @@ final class TlMessageActionMessageActionNoForwardsRequestFactory extends Factory
         return [
             'flags' => 1,
             'expired' => true,
-            'prev_value' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_value' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'prev_value' => 1003,
+            'new_value' => 1004,
         ];
     }
 }

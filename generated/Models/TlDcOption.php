@@ -14,7 +14,7 @@ final class TlDcOption extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_dc_option';
+    protected $table = 'tl_dc_option_dc_option';
 
     protected $guarded = [];
 }

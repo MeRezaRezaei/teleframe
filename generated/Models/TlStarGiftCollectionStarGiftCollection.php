@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 
 /** Constructor model for starGiftCollection of StarGiftCollection (crc32 9d6b13b0). */
-final class TlStarGiftCollectionStarGiftCollection extends TlInstanceModel
+final class TlStarGiftCollectionStarGiftCollection extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

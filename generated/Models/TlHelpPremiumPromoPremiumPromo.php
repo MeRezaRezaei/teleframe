@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumPromoPeriod_options;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumPromoStatus_entities;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumPromoUsers;
@@ -18,7 +18,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumProm
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPremiumPromoPremiumPromoVideos;
 
 /** Constructor model for help.premiumPromo of help.PremiumPromo (crc32 5334759c). */
-final class TlHelpPremiumPromoPremiumPromo extends TlInstanceModel
+final class TlHelpPremiumPromoPremiumPromo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

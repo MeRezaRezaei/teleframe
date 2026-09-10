@@ -18,7 +18,7 @@ final class TlStoriesStealthMode extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stories_stealth_mode';
+    protected $table = 'tl_stories_stealth_mode_stories_stealth_mode';
 
     protected $guarded = [];
 

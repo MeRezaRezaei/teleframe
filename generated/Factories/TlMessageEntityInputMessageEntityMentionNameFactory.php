@@ -20,7 +20,7 @@ final class TlMessageEntityInputMessageEntityMentionNameFactory extends Factory
         return [
             'tl_offset' => 1,
             'length' => 2,
-            'user_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'user_id' => 1003,
         ];
     }
 }

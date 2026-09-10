@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGroupCallParticipant;
 
 /** Constructor model for channelAdminLogEventActionParticipantMute of ChannelAdminLogEventAction (crc32 f92424d2). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantMute extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantMute extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlMessageCopy extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_copy';
+    protected $table = 'tl_message_copy_msg_copy';
 
     protected $guarded = [];
 }

@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPage;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebPageWebPageAttributes;
 
 /** Constructor model for webPage of WebPage (crc32 e89c45b2). */
-final class TlWebPageWebPage extends TlInstanceModel
+final class TlWebPageWebPage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

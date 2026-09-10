@@ -14,7 +14,7 @@ final class TlOutboxReadDate extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_outbox_read_date';
+    protected $table = 'tl_outbox_read_date_outbox_read_date';
 
     protected $guarded = [];
 }

@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateBotMessageReactionNew_reactions;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateBotMessageReactionOld_reactions;
 
 /** Constructor model for updateBotMessageReaction of Update (crc32 ac21d3ce). */
-final class TlUpdateUpdateBotMessageReaction extends TlInstanceModel
+final class TlUpdateUpdateBotMessageReaction extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

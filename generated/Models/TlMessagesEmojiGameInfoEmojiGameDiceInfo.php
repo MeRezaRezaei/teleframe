@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesEmojiGameInfoEmojiGameDiceInfoParams;
 
 /** Constructor model for messages.emojiGameDiceInfo of messages.EmojiGameInfo (crc32 44e56023). */
-final class TlMessagesEmojiGameInfoEmojiGameDiceInfo extends TlInstanceModel
+final class TlMessagesEmojiGameInfoEmojiGameDiceInfo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

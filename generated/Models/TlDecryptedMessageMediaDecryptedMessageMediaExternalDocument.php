@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDecryptedMessageMediaDecryptedMessage37e1a7328ec6Attributes;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhotoSize;
 
 /** Constructor model for decryptedMessageMediaExternalDocument of DecryptedMessageMedia (crc32 fa95b0dd). */
-final class TlDecryptedMessageMediaDecryptedMessageMediaExternalDocument extends TlInstanceModel
+final class TlDecryptedMessageMediaDecryptedMessageMediaExternalDocument extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

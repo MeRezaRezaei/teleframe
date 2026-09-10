@@ -18,7 +18,7 @@ final class TlNotificationSound extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_notification_sound';
+    protected $table = 'tl_notification_sound_notification_sound_default';
 
     protected $guarded = [];
 

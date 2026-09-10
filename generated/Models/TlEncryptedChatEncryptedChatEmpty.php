@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for encryptedChatEmpty of EncryptedChat (crc32 ab7ec0a0). */
-final class TlEncryptedChatEncryptedChatEmpty extends TlInstanceModel
+final class TlEncryptedChatEncryptedChatEmpty extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -27,7 +27,7 @@ final class TlStarGiftStarGiftFactory extends Factory
             'peer_color_available' => true,
             'auction' => true,
             'tl_id' => 1009,
-            'sticker' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'sticker' => 1010,
             'stars' => 1011,
             'availability_remains' => 12,
             'availability_total' => 13,
@@ -38,7 +38,7 @@ final class TlStarGiftStarGiftFactory extends Factory
             'upgrade_stars' => 1018,
             'resell_min_stars' => 1019,
             'title' => 'title-20',
-            'released_by' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'released_by' => 1021,
             'per_user_total' => 22,
             'per_user_remains' => 23,
             'locked_until_date' => 24,
@@ -46,7 +46,7 @@ final class TlStarGiftStarGiftFactory extends Factory
             'gifts_per_round' => 26,
             'auction_start_date' => 27,
             'upgrade_variants' => 28,
-            'background' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'background' => 1029,
         ];
     }
 }

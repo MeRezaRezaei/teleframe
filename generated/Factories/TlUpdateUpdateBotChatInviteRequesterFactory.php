@@ -19,11 +19,11 @@ final class TlUpdateUpdateBotChatInviteRequesterFactory extends Factory
     {
         return [
             'flags' => 1,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1002,
             'date' => 3,
             'user_id' => 1004,
             'about' => 'about-5',
-            'invite' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'invite' => 1006,
             'qts' => 7,
             'query_id' => 1008,
         ];

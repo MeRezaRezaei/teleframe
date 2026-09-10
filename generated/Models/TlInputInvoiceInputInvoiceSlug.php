@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputInvoiceSlug of InputInvoice (crc32 c326caef). */
-final class TlInputInvoiceInputInvoiceSlug extends TlInstanceModel
+final class TlInputInvoiceInputInvoiceSlug extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

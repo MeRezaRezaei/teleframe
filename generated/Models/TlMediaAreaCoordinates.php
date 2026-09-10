@@ -24,7 +24,7 @@ final class TlMediaAreaCoordinates extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_media_area_coordinates';
+    protected $table = 'tl_media_area_coordinates_media_area_coordinates';
 
     protected $guarded = [];
 

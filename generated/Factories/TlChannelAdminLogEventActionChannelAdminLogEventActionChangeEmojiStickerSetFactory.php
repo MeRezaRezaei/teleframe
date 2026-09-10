@@ -18,8 +18,8 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeEmojiSti
     public function definition(): array
     {
         return [
-            'prev_stickerset' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_stickerset' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'prev_stickerset' => 1001,
+            'new_stickerset' => 1002,
         ];
     }
 }

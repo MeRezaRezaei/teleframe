@@ -22,9 +22,9 @@ final class TlMessagePeerReactionMessagePeerReactionFactory extends Factory
             'big' => true,
             'unread' => true,
             'my' => true,
-            'peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer_id' => 1005,
             'date' => 6,
-            'reaction' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reaction' => 1007,
         ];
     }
 }

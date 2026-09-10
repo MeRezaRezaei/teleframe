@@ -20,7 +20,7 @@ final class TlInputPasskeyCredentialInputPasskeyCredentialPublicKeyFactory exten
         return [
             'tl_id' => 'id-1',
             'raw_id' => 'raw_id-2',
-            'response' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'response' => 1003,
         ];
     }
 }

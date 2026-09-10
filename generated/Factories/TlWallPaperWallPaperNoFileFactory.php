@@ -22,7 +22,7 @@ final class TlWallPaperWallPaperNoFileFactory extends Factory
             'flags' => 2,
             'tl_default' => true,
             'dark' => true,
-            'settings' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'settings' => 1005,
         ];
     }
 }

@@ -14,7 +14,7 @@ final class TlInputStickeredMedia extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_stickered_media';
+    protected $table = 'tl_input_stickered_media_input_stickered_media_document';
 
     protected $guarded = [];
 }

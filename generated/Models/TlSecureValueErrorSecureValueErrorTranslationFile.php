@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureValueType;
 
 /** Constructor model for secureValueErrorTranslationFile of SecureValueError (crc32 a1144770). */
-final class TlSecureValueErrorSecureValueErrorTranslationFile extends TlInstanceModel
+final class TlSecureValueErrorSecureValueErrorTranslationFile extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

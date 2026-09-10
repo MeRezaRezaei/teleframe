@@ -14,7 +14,7 @@ final class TlPhotosPhotos extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_photos_photos';
+    protected $table = 'tl_photos_photos_photos';
 
     protected $guarded = [];
 }

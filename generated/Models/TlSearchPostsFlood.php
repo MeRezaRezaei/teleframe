@@ -16,7 +16,7 @@ final class TlSearchPostsFlood extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_search_posts_flood';
+    protected $table = 'tl_search_posts_flood_search_posts_flood';
 
     protected $guarded = [];
 

@@ -18,7 +18,7 @@ final class TlInputBotAppInputBotAppShortNameFactory extends Factory
     public function definition(): array
     {
         return [
-            'bot_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'bot_id' => 1001,
             'short_name' => 'short_name-2',
         ];
     }

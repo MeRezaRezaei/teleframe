@@ -14,7 +14,7 @@ final class TlAccountSavedRingtone extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_saved_ringtone';
+    protected $table = 'tl_account_saved_ringtone_saved_ringtone';
 
     protected $guarded = [];
 }

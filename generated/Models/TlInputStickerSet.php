@@ -21,7 +21,7 @@ final class TlInputStickerSet extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_sticker_set';
+    protected $table = 'tl_input_sticker_set_input_sticker_set_animated_emoji';
 
     protected $guarded = [];
 

@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for dh_gen_retry of Set_client_DH_params_answer (crc32 46dc1fb9). */
-final class TlSetClientDHParamsAnswerDhGenRetry extends TlInstanceModel
+final class TlSetClientDHParamsAnswerDhGenRetry extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

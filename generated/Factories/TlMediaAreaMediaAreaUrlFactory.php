@@ -18,7 +18,7 @@ final class TlMediaAreaMediaAreaUrlFactory extends Factory
     public function definition(): array
     {
         return [
-            'coordinates' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'coordinates' => 1001,
             'url' => 'url-2',
         ];
     }

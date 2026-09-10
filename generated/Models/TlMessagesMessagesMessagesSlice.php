@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessagesMessagesSliceChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessagesMessagesSliceMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessagesMessagesSliceTopics;
@@ -19,7 +19,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesMessagesMessagesSli
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSearchPostsFlood;
 
 /** Constructor model for messages.messagesSlice of messages.Messages (crc32 5f206716). */
-final class TlMessagesMessagesMessagesSlice extends TlInstanceModel
+final class TlMessagesMessagesMessagesSlice extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

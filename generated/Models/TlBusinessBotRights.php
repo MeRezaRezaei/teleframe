@@ -17,7 +17,7 @@ final class TlBusinessBotRights extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_business_bot_rights';
+    protected $table = 'tl_business_bot_rights_business_bot_rights';
 
     protected $guarded = [];
 

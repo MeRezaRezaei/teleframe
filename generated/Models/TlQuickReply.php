@@ -16,7 +16,7 @@ final class TlQuickReply extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_quick_reply';
+    protected $table = 'tl_quick_reply_quick_reply';
 
     protected $guarded = [];
 

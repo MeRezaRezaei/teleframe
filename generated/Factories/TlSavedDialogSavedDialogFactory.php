@@ -20,7 +20,7 @@ final class TlSavedDialogSavedDialogFactory extends Factory
         return [
             'flags' => 1,
             'pinned' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
             'top_message' => 4,
         ];
     }

@@ -18,7 +18,7 @@ final class TlInputMediaInputMediaVenueFactory extends Factory
     public function definition(): array
     {
         return [
-            'geo_point' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'geo_point' => 1001,
             'title' => 'title-2',
             'address' => 'address-3',
             'provider' => 'provider-4',

@@ -14,7 +14,7 @@ final class TlAuthPasskeyLoginOptions extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_auth_passkey_login_options';
+    protected $table = 'tl_auth_passkey_login_options_passkey_login_options';
 
     protected $guarded = [];
 }

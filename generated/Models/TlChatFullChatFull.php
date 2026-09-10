@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatFullChatFullBot_info;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatFullChatFullRecent_requesters;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatParticipants;
@@ -23,7 +23,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerNotifySettings;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 
 /** Constructor model for chatFull of ChatFull (crc32 2633421b). */
-final class TlChatFullChatFull extends TlInstanceModel
+final class TlChatFullChatFull extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

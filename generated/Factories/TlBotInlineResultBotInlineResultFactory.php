@@ -24,9 +24,9 @@ final class TlBotInlineResultBotInlineResultFactory extends Factory
             'title' => 'title-4',
             'description' => 'description-5',
             'url' => 'url-6',
-            'thumb' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'content' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'send_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'thumb' => 1007,
+            'content' => 1008,
+            'send_message' => 1009,
         ];
     }
 }

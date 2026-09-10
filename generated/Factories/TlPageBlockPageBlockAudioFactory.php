@@ -19,7 +19,7 @@ final class TlPageBlockPageBlockAudioFactory extends Factory
     {
         return [
             'audio_id' => 1001,
-            'caption' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'caption' => 1002,
         ];
     }
 }

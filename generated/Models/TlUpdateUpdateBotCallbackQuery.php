@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for updateBotCallbackQuery of Update (crc32 b9cfc48d). */
-final class TlUpdateUpdateBotCallbackQuery extends TlInstanceModel
+final class TlUpdateUpdateBotCallbackQuery extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

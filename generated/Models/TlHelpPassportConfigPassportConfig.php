@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDataJSON;
 
 /** Constructor model for help.passportConfig of help.PassportConfig (crc32 a098d6af). */
-final class TlHelpPassportConfigPassportConfig extends TlInstanceModel
+final class TlHelpPassportConfigPassportConfig extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

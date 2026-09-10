@@ -20,7 +20,7 @@ final class TlInputBotInlineResultInputBotInlineResultGameFactory extends Factor
         return [
             'tl_id' => 'id-1',
             'short_name' => 'short_name-2',
-            'send_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'send_message' => 1003,
         ];
     }
 }

@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUrlAuthResultUrlAuthResultRequestMatch_codes;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
 
 /** Constructor model for urlAuthResultRequest of UrlAuthResult (crc32 3cd623ec). */
-final class TlUrlAuthResultUrlAuthResultRequest extends TlInstanceModel
+final class TlUrlAuthResultUrlAuthResultRequest extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

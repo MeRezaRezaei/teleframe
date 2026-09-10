@@ -16,7 +16,7 @@ final class TlDecryptedMessageMedia extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_decrypted_message_media';
+    protected $table = 'tl_decrypted_message_media_decrypted_message_media_audio';
 
     protected $guarded = [];
 

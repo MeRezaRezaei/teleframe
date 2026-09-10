@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for storage.filePdf of storage.FileType (crc32 ae1e508d). */
-final class TlStorageFileTypeFilePdf extends TlInstanceModel
+final class TlStorageFileTypeFilePdf extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

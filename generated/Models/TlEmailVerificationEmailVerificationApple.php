@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for emailVerificationApple of EmailVerification (crc32 96d074fd). */
-final class TlEmailVerificationEmailVerificationApple extends TlInstanceModel
+final class TlEmailVerificationEmailVerificationApple extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

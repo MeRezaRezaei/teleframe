@@ -18,7 +18,7 @@ final class TlPageBlockPageBlockRelatedArticlesFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'title' => 1001,
         ];
     }
 }

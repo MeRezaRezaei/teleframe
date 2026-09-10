@@ -14,7 +14,7 @@ final class TlMyBoost extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_my_boost';
+    protected $table = 'tl_my_boost_my_boost';
 
     protected $guarded = [];
 }

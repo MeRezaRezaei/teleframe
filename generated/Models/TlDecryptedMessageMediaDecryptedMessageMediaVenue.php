@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for decryptedMessageMediaVenue of DecryptedMessageMedia (crc32 8a0df56f). */
-final class TlDecryptedMessageMediaDecryptedMessageMediaVenue extends TlInstanceModel
+final class TlDecryptedMessageMediaDecryptedMessageMediaVenue extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

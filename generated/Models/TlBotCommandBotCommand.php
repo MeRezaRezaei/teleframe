@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for botCommand of BotCommand (crc32 c27ac8c7). */
-final class TlBotCommandBotCommand extends TlInstanceModel
+final class TlBotCommandBotCommand extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

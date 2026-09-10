@@ -19,12 +19,12 @@ final class TlInputSecureValueInputSecureValueFactory extends Factory
     {
         return [
             'flags' => 1,
-            'tl_type' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'data' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'front_side' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'reverse_side' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'selfie' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'plain_data' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_type' => 1002,
+            'data' => 1003,
+            'front_side' => 1004,
+            'reverse_side' => 1005,
+            'selfie' => 1006,
+            'plain_data' => 1007,
         ];
     }
 }

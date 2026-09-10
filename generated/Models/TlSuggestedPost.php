@@ -17,7 +17,7 @@ final class TlSuggestedPost extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_suggested_post';
+    protected $table = 'tl_suggested_post_suggested_post';
 
     protected $guarded = [];
 

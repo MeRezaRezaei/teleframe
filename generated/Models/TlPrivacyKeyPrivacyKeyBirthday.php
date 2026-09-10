@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for privacyKeyBirthday of PrivacyKey (crc32 2000a518). */
-final class TlPrivacyKeyPrivacyKeyBirthday extends TlInstanceModel
+final class TlPrivacyKeyPrivacyKeyBirthday extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

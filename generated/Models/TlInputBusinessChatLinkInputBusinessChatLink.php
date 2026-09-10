@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputBusinessChatLinkInputBusinessChatLinkEntities;
 
 /** Constructor model for inputBusinessChatLink of InputBusinessChatLink (crc32 11679fa7). */
-final class TlInputBusinessChatLinkInputBusinessChatLink extends TlInstanceModel
+final class TlInputBusinessChatLinkInputBusinessChatLink extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

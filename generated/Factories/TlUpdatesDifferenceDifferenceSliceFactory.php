@@ -18,7 +18,7 @@ final class TlUpdatesDifferenceDifferenceSliceFactory extends Factory
     public function definition(): array
     {
         return [
-            'intermediate_state' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'intermediate_state' => 1001,
         ];
     }
 }

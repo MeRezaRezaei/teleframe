@@ -22,8 +22,8 @@ final class TlUpdateUpdateBusinessBotCallbackQueryFactory extends Factory
             'query_id' => 1002,
             'user_id' => 1003,
             'connection_id' => 'connection_id-4',
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'reply_to_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1005,
+            'reply_to_message' => 1006,
             'chat_instance' => 1007,
             'data' => 'Ynl0ZXMtOA==',
         ];

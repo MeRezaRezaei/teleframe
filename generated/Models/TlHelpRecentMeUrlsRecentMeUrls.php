@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpRecentMeUrlsRecentMeUrlsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpRecentMeUrlsRecentMeUrlsUrls;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpRecentMeUrlsRecentMeUrlsUsers;
 
 /** Constructor model for help.recentMeUrls of help.RecentMeUrls (crc32 0e0310d7). */
-final class TlHelpRecentMeUrlsRecentMeUrls extends TlInstanceModel
+final class TlHelpRecentMeUrlsRecentMeUrls extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

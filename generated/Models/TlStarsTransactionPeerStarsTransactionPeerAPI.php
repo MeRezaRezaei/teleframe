@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for starsTransactionPeerAPI of StarsTransactionPeer (crc32 f9677aad). */
-final class TlStarsTransactionPeerStarsTransactionPeerAPI extends TlInstanceModel
+final class TlStarsTransactionPeerStarsTransactionPeerAPI extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

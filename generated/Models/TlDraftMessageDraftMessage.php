@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDraftMessageDraftMessageEntities;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputMedia;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputReplyTo;
@@ -19,7 +19,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichMessage;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSuggestedPost;
 
 /** Constructor model for draftMessage of DraftMessage (crc32 60fe3294). */
-final class TlDraftMessageDraftMessage extends TlInstanceModel
+final class TlDraftMessageDraftMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

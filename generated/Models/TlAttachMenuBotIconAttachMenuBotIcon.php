@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAttachMenuBotIconAttachMenuBotIconColors;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 
 /** Constructor model for attachMenuBotIcon of AttachMenuBotIcon (crc32 b2a7386b). */
-final class TlAttachMenuBotIconAttachMenuBotIcon extends TlInstanceModel
+final class TlAttachMenuBotIconAttachMenuBotIcon extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

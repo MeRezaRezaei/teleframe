@@ -14,7 +14,7 @@ final class TlBankCardOpenUrl extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bank_card_open_url';
+    protected $table = 'tl_bank_card_open_url_bank_card_open_url';
 
     protected $guarded = [];
 }

@@ -19,7 +19,7 @@ final class TlHelpPassportConfigPassportConfigFactory extends Factory
     {
         return [
             'hash' => 1,
-            'countries_langs' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'countries_langs' => 1002,
         ];
     }
 }

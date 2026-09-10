@@ -33,7 +33,7 @@ final class TlReplyMarkup extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_reply_markup';
+    protected $table = 'tl_reply_markup_reply_inline_markup';
 
     protected $guarded = [];
 

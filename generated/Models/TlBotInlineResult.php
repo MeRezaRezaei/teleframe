@@ -16,7 +16,7 @@ final class TlBotInlineResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bot_inline_result';
+    protected $table = 'tl_bot_inline_result_bot_inline_media_result';
 
     protected $guarded = [];
 

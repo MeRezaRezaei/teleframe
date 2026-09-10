@@ -21,7 +21,7 @@ final class TlPageListItemPageListItemTextFactory extends Factory
             'flags' => 1,
             'checkbox' => true,
             'checked' => true,
-            'text' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'text' => 1004,
         ];
     }
 }

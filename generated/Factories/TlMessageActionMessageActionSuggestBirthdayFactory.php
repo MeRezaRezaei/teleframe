@@ -18,7 +18,7 @@ final class TlMessageActionMessageActionSuggestBirthdayFactory extends Factory
     public function definition(): array
     {
         return [
-            'birthday' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'birthday' => 1001,
         ];
     }
 }

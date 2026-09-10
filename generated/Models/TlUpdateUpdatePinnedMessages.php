@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdatePinnedMessagesMessages;
 
 /** Constructor model for updatePinnedMessages of Update (crc32 ed85eab5). */
-final class TlUpdateUpdatePinnedMessages extends TlInstanceModel
+final class TlUpdateUpdatePinnedMessages extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

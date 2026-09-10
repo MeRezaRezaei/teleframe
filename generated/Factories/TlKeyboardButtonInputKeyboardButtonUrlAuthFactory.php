@@ -20,11 +20,11 @@ final class TlKeyboardButtonInputKeyboardButtonUrlAuthFactory extends Factory
         return [
             'flags' => 1,
             'request_write_access' => true,
-            'style' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'style' => 1003,
             'text' => 'text-4',
             'fwd_text' => 'fwd_text-5',
             'url' => 'url-6',
-            'bot' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'bot' => 1007,
         ];
     }
 }

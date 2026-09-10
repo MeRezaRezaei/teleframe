@@ -20,7 +20,7 @@ final class TlMyBoostMyBoostFactory extends Factory
         return [
             'flags' => 1,
             'slot' => 2,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
             'date' => 4,
             'expires' => 5,
             'cooldown_until_date' => 6,

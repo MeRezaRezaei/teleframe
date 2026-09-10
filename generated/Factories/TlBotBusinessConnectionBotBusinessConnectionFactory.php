@@ -24,7 +24,7 @@ final class TlBotBusinessConnectionBotBusinessConnectionFactory extends Factory
             'user_id' => 1004,
             'dc_id' => 5,
             'date' => 6,
-            'rights' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'rights' => 1007,
         ];
     }
 }

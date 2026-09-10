@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlKeyboardButtonStyle;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRequestPeerType;
 
 /** Constructor model for keyboardButtonRequestPeer of KeyboardButton (crc32 5b0f15f5). */
-final class TlKeyboardButtonKeyboardButtonRequestPeer extends TlInstanceModel
+final class TlKeyboardButtonKeyboardButtonRequestPeer extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

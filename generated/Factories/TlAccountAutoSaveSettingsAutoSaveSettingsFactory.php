@@ -18,9 +18,9 @@ final class TlAccountAutoSaveSettingsAutoSaveSettingsFactory extends Factory
     public function definition(): array
     {
         return [
-            'users_settings' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'chats_settings' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'broadcasts_settings' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'users_settings' => 1001,
+            'chats_settings' => 1002,
+            'broadcasts_settings' => 1003,
         ];
     }
 }

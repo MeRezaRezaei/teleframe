@@ -21,7 +21,7 @@ final class TlUpdateUpdateBotCallbackQueryFactory extends Factory
             'flags' => 1,
             'query_id' => 1002,
             'user_id' => 1003,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1004,
             'msg_id' => 5,
             'chat_instance' => 1006,
             'data' => 'Ynl0ZXMtNw==',

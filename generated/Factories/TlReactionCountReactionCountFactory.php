@@ -20,7 +20,7 @@ final class TlReactionCountReactionCountFactory extends Factory
         return [
             'flags' => 1,
             'chosen_order' => 2,
-            'reaction' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reaction' => 1003,
             'count' => 4,
         ];
     }

@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for updateMoveStickerSetToTop of Update (crc32 86fccf85). */
-final class TlUpdateUpdateMoveStickerSetToTop extends TlInstanceModel
+final class TlUpdateUpdateMoveStickerSetToTop extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

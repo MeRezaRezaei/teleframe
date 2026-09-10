@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlJSONValue;
 
 /** Constructor model for help.appConfig of help.AppConfig (crc32 dd18782e). */
-final class TlHelpAppConfigAppConfig extends TlInstanceModel
+final class TlHelpAppConfigAppConfig extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

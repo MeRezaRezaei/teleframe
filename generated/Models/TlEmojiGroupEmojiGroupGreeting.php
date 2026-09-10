@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlEmojiGroupEmojiGroupGreetingEmoticons;
 
 /** Constructor model for emojiGroupGreeting of EmojiGroup (crc32 80d26cc7). */
-final class TlEmojiGroupEmojiGroupGreeting extends TlInstanceModel
+final class TlEmojiGroupEmojiGroupGreeting extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

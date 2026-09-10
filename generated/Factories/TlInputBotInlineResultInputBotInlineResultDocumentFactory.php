@@ -23,8 +23,8 @@ final class TlInputBotInlineResultInputBotInlineResultDocumentFactory extends Fa
             'tl_type' => 'type-3',
             'title' => 'title-4',
             'description' => 'description-5',
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'send_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1006,
+            'send_message' => 1007,
         ];
     }
 }

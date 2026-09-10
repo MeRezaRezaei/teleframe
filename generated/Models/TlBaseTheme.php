@@ -17,7 +17,7 @@ final class TlBaseTheme extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_base_theme';
+    protected $table = 'tl_base_theme_base_theme_arctic';
 
     protected $guarded = [];
 

@@ -14,7 +14,7 @@ final class TlAuctionBidLevel extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_auction_bid_level';
+    protected $table = 'tl_auction_bid_level_auction_bid_level';
 
     protected $guarded = [];
 }

@@ -14,7 +14,7 @@ final class TlStatsPublicForwards extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stats_public_forwards';
+    protected $table = 'tl_stats_public_forwards_public_forwards';
 
     protected $guarded = [];
 }

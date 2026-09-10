@@ -24,7 +24,7 @@ final class TlPollResultsPollResultsFactory extends Factory
             'can_view_stats' => true,
             'total_voters' => 5,
             'solution' => 'solution-6',
-            'solution_media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'solution_media' => 1007,
         ];
     }
 }

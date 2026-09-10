@@ -14,7 +14,7 @@ final class TlPaymentsStarsRevenueWithdrawalUrl extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_stars_revenue_withdrawal_url';
+    protected $table = 'tl_payments_stars_revenue_withdrawal_url_star_0843bfeba80c';
 
     protected $guarded = [];
 }

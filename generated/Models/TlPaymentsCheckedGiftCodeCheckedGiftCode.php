@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsCheckedGiftCodeCheckedGiftCodeChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsCheckedGiftCodeCheckedGiftCodeUsers;
 
 /** Constructor model for payments.checkedGiftCode of payments.CheckedGiftCode (crc32 eb983f8f). */
-final class TlPaymentsCheckedGiftCodeCheckedGiftCode extends TlInstanceModel
+final class TlPaymentsCheckedGiftCodeCheckedGiftCode extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

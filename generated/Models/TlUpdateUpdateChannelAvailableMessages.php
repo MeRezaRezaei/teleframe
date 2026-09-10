@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for updateChannelAvailableMessages of Update (crc32 b23fc698). */
-final class TlUpdateUpdateChannelAvailableMessages extends TlInstanceModel
+final class TlUpdateUpdateChannelAvailableMessages extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

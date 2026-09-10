@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBirthday;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotInfo;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotVerification;
@@ -34,7 +34,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWallPaper;
 
 /** Constructor model for userFull of UserFull (crc32 06cbe645). */
-final class TlUserFullUserFull extends TlInstanceModel
+final class TlUserFullUserFull extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

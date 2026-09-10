@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for peerBlocked of PeerBlocked (crc32 e8fd8014). */
-final class TlPeerBlockedPeerBlocked extends TlInstanceModel
+final class TlPeerBlockedPeerBlocked extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

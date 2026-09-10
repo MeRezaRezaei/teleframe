@@ -18,8 +18,8 @@ final class TlStoryReactionStoryReactionPublicRepostFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'story' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer_id' => 1001,
+            'story' => 1002,
         ];
     }
 }

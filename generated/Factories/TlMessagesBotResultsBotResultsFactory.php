@@ -22,8 +22,8 @@ final class TlMessagesBotResultsBotResultsFactory extends Factory
             'gallery' => true,
             'query_id' => 1003,
             'next_offset' => 'next_offset-4',
-            'switch_pm' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'switch_webview' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'switch_pm' => 1005,
+            'switch_webview' => 1006,
             'cache_time' => 7,
         ];
     }

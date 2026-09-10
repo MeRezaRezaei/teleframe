@@ -14,7 +14,7 @@ final class TlPopularContact extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_popular_contact';
+    protected $table = 'tl_popular_contact_popular_contact';
 
     protected $guarded = [];
 }

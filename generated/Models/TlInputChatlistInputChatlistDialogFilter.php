@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputChatlistDialogFilter of InputChatlist (crc32 f3e0da33). */
-final class TlInputChatlistInputChatlistDialogFilter extends TlInstanceModel
+final class TlInputChatlistInputChatlistDialogFilter extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

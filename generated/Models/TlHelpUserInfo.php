@@ -14,7 +14,7 @@ final class TlHelpUserInfo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_help_user_info';
+    protected $table = 'tl_help_user_info_user_info';
 
     protected $guarded = [];
 }

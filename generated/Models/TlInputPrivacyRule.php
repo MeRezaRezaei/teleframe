@@ -14,7 +14,7 @@ final class TlInputPrivacyRule extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_privacy_rule';
+    protected $table = 'tl_input_privacy_rule_input_privacy_value_allow_all';
 
     protected $guarded = [];
 }

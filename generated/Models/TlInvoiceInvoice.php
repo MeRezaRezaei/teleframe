@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInvoiceInvoicePrices;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInvoiceInvoiceSuggested_tip_amounts;
 
 /** Constructor model for invoice of Invoice (crc32 049ee584). */
-final class TlInvoiceInvoice extends TlInstanceModel
+final class TlInvoiceInvoice extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -21,8 +21,8 @@ final class TlBusinessAwayMessageBusinessAwayMessageFactory extends Factory
             'flags' => 1,
             'offline_only' => true,
             'shortcut_id' => 3,
-            'schedule' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'recipients' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'schedule' => 1004,
+            'recipients' => 1005,
         ];
     }
 }

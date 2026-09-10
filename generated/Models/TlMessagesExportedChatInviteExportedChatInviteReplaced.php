@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlExportedChatInvite;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesExportedChatInviteExportedChaD180f3d61600Users;
 
 /** Constructor model for messages.exportedChatInviteReplaced of messages.ExportedChatInvite (crc32 222600ef). */
-final class TlMessagesExportedChatInviteExportedChatInviteReplaced extends TlInstanceModel
+final class TlMessagesExportedChatInviteExportedChatInviteReplaced extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

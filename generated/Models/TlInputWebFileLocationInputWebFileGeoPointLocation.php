@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGeoPoint;
 
 /** Constructor model for inputWebFileGeoPointLocation of InputWebFileLocation (crc32 9f2221c9). */
-final class TlInputWebFileLocationInputWebFileGeoPointLocation extends TlInstanceModel
+final class TlInputWebFileLocationInputWebFileGeoPointLocation extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

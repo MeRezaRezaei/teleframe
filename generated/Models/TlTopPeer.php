@@ -14,7 +14,7 @@ final class TlTopPeer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_top_peer';
+    protected $table = 'tl_top_peer_top_peer';
 
     protected $guarded = [];
 }

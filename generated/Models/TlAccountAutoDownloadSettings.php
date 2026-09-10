@@ -14,7 +14,7 @@ final class TlAccountAutoDownloadSettings extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_auto_download_settings';
+    protected $table = 'tl_account_auto_download_settings_auto_download_settings';
 
     protected $guarded = [];
 }

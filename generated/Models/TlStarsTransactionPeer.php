@@ -16,7 +16,7 @@ final class TlStarsTransactionPeer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stars_transaction_peer';
+    protected $table = 'tl_stars_transaction_peer_stars_transaction_peer';
 
     protected $guarded = [];
 

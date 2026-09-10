@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInvoice;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsPaymentFormPaymentFormStarsUsers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebDocument;
 
 /** Constructor model for payments.paymentFormStars of payments.PaymentForm (crc32 7bf6b15c). */
-final class TlPaymentsPaymentFormPaymentFormStars extends TlInstanceModel
+final class TlPaymentsPaymentFormPaymentFormStars extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

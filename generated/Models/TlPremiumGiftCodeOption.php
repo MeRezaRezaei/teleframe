@@ -16,7 +16,7 @@ final class TlPremiumGiftCodeOption extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_premium_gift_code_option';
+    protected $table = 'tl_premium_gift_code_option_premium_gift_code_option';
 
     protected $guarded = [];
 

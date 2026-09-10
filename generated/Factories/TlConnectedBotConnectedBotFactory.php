@@ -20,8 +20,8 @@ final class TlConnectedBotConnectedBotFactory extends Factory
         return [
             'flags' => 1,
             'bot_id' => 1002,
-            'recipients' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'rights' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'recipients' => 1003,
+            'rights' => 1004,
             'device' => 'device-5',
             'date' => 6,
             'location' => 'location-7',

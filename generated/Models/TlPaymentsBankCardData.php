@@ -14,7 +14,7 @@ final class TlPaymentsBankCardData extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_bank_card_data';
+    protected $table = 'tl_payments_bank_card_data_bank_card_data';
 
     protected $guarded = [];
 }

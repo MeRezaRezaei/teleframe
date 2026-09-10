@@ -16,7 +16,7 @@ final class TlStarGiftBackground extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_star_gift_background';
+    protected $table = 'tl_star_gift_background_star_gift_background';
 
     protected $guarded = [];
 

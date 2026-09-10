@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPasswordKdfAlgo;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureSecretSettings;
 
 /** Constructor model for account.passwordInputSettings of account.PasswordInputSettings (crc32 c23727c9). */
-final class TlAccountPasswordInputSettingsPasswordInputSettings extends TlInstanceModel
+final class TlAccountPasswordInputSettingsPasswordInputSettings extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

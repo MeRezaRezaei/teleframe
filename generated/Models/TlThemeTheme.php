@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlThemeThemeSettings;
 
 /** Constructor model for theme of Theme (crc32 a00e67d6). */
-final class TlThemeTheme extends TlInstanceModel
+final class TlThemeTheme extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlAccountSentEmailCode extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_sent_email_code';
+    protected $table = 'tl_account_sent_email_code_sent_email_code';
 
     protected $guarded = [];
 }

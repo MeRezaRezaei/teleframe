@@ -14,7 +14,7 @@ final class TlPostInteractionCounters extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_post_interaction_counters';
+    protected $table = 'tl_post_interaction_counters_post_interaction_a4ecb5ab43c9';
 
     protected $guarded = [];
 }

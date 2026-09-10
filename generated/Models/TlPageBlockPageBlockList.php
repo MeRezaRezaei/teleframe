@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPageBlockPageBlockListItems;
 
 /** Constructor model for pageBlockList of PageBlock (crc32 e4e88011). */
-final class TlPageBlockPageBlockList extends TlInstanceModel
+final class TlPageBlockPageBlockList extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

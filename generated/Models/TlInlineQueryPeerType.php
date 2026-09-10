@@ -16,7 +16,7 @@ final class TlInlineQueryPeerType extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_inline_query_peer_type';
+    protected $table = 'tl_inline_query_peer_type_inline_query_peer_type_bot_p_m';
 
     protected $guarded = [];
 

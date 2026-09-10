@@ -21,13 +21,13 @@ final class TlDraftMessageDraftMessageFactory extends Factory
             'flags' => 1,
             'no_webpage' => true,
             'invert_media' => true,
-            'reply_to' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reply_to' => 1004,
             'message' => 'message-5',
-            'media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'media' => 1006,
             'date' => 7,
             'effect' => 1008,
-            'suggested_post' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'rich_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'suggested_post' => 1009,
+            'rich_message' => 1010,
         ];
     }
 }

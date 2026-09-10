@@ -16,7 +16,7 @@ final class TlPrivacyKey extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_privacy_key';
+    protected $table = 'tl_privacy_key_privacy_key_about';
 
     protected $guarded = [];
 

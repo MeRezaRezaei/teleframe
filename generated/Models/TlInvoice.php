@@ -22,7 +22,7 @@ final class TlInvoice extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_invoice';
+    protected $table = 'tl_invoice_invoice';
 
     protected $guarded = [];
 

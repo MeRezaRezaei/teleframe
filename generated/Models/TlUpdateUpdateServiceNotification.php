@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMedia;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateServiceNotificationEntities;
 
 /** Constructor model for updateServiceNotification of Update (crc32 ebe46819). */
-final class TlUpdateUpdateServiceNotification extends TlInstanceModel
+final class TlUpdateUpdateServiceNotification extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

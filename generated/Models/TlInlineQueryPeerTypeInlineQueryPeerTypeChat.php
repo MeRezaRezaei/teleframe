@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inlineQueryPeerTypeChat of InlineQueryPeerType (crc32 d766c50a). */
-final class TlInlineQueryPeerTypeInlineQueryPeerTypeChat extends TlInstanceModel
+final class TlInlineQueryPeerTypeInlineQueryPeerTypeChat extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

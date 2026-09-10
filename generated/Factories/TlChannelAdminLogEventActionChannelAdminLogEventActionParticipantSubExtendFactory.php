@@ -18,8 +18,8 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantSub
     public function definition(): array
     {
         return [
-            'prev_participant' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_participant' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'prev_participant' => 1001,
+            'new_participant' => 1002,
         ];
     }
 }

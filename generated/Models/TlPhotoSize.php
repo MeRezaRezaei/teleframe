@@ -17,7 +17,7 @@ final class TlPhotoSize extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_photo_size';
+    protected $table = 'tl_photo_size_photo_cached_size';
 
     protected $guarded = [];
 

@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for exportedStoryLink of ExportedStoryLink (crc32 3fc9053b). */
-final class TlExportedStoryLinkExportedStoryLink extends TlInstanceModel
+final class TlExportedStoryLinkExportedStoryLink extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

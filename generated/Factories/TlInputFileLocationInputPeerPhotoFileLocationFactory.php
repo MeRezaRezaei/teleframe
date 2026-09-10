@@ -20,7 +20,7 @@ final class TlInputFileLocationInputPeerPhotoFileLocationFactory extends Factory
         return [
             'flags' => 1,
             'big' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
             'photo_id' => 1004,
         ];
     }

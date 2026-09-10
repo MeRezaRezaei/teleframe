@@ -19,7 +19,7 @@ final class TlUpdateUpdateMessagePollVoteFactory extends Factory
     {
         return [
             'poll_id' => 1001,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1002,
             'qts' => 3,
         ];
     }

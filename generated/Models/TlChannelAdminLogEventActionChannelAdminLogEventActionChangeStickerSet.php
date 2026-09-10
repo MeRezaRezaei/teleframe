@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStickerSet;
 
 /** Constructor model for channelAdminLogEventActionChangeStickerSet of ChannelAdminLogEventAction (crc32 b1c3caa7). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeStickerSet extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeStickerSet extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

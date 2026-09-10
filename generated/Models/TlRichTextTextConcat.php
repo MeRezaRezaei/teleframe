@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichTextTextConcatTexts;
 
 /** Constructor model for textConcat of RichText (crc32 7e6260d7). */
-final class TlRichTextTextConcat extends TlInstanceModel
+final class TlRichTextTextConcat extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

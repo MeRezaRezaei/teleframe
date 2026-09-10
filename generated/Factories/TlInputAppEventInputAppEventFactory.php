@@ -21,7 +21,7 @@ final class TlInputAppEventInputAppEventFactory extends Factory
             'time' => 0.1,
             'tl_type' => 'type-2',
             'peer' => 1003,
-            'data' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'data' => 1004,
         ];
     }
 }

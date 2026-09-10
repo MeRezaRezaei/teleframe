@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMsgsAllInfoMsgsAllInfoMsg_ids;
 
 /** Constructor model for msgs_all_info of MsgsAllInfo (crc32 8cc0d131). */
-final class TlMsgsAllInfoMsgsAllInfo extends TlInstanceModel
+final class TlMsgsAllInfoMsgsAllInfo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

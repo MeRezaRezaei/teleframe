@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputBusinessBotRecipientsInputBusine36d9b3380d51Exclude_users;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputBusinessBotRecipientsInputBusine36d9b3380d51Users;
 
 /** Constructor model for inputBusinessBotRecipients of InputBusinessBotRecipients (crc32 c4e5921e). */
-final class TlInputBusinessBotRecipientsInputBusinessBotRecipients extends TlInstanceModel
+final class TlInputBusinessBotRecipientsInputBusinessBotRecipients extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

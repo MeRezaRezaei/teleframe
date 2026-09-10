@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelsAdminLogResultsAdminLogResultsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelsAdminLogResultsAdminLogResultsEvents;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelsAdminLogResultsAdminLogResultsUsers;
 
 /** Constructor model for channels.adminLogResults of channels.AdminLogResults (crc32 ed8af74d). */
-final class TlChannelsAdminLogResultsAdminLogResults extends TlInstanceModel
+final class TlChannelsAdminLogResultsAdminLogResults extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

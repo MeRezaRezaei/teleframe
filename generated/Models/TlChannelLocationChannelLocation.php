@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGeoPoint;
 
 /** Constructor model for channelLocation of ChannelLocation (crc32 209b82db). */
-final class TlChannelLocationChannelLocation extends TlInstanceModel
+final class TlChannelLocationChannelLocation extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

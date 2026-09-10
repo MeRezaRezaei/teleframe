@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBool;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlCodeSettingsCodeSettingsLogout_tokens;
 
 /** Constructor model for codeSettings of CodeSettings (crc32 ad253d78). */
-final class TlCodeSettingsCodeSettings extends TlInstanceModel
+final class TlCodeSettingsCodeSettings extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

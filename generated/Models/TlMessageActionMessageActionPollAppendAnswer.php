@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollAnswer;
 
 /** Constructor model for messageActionPollAppendAnswer of MessageAction (crc32 9da1cd6c). */
-final class TlMessageActionMessageActionPollAppendAnswer extends TlInstanceModel
+final class TlMessageActionMessageActionPollAppendAnswer extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

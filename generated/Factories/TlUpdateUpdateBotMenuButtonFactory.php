@@ -19,7 +19,7 @@ final class TlUpdateUpdateBotMenuButtonFactory extends Factory
     {
         return [
             'bot_id' => 1001,
-            'button' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'button' => 1002,
         ];
     }
 }

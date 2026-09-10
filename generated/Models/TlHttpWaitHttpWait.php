@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for http_wait of HttpWait (crc32 9299359f). */
-final class TlHttpWaitHttpWait extends TlInstanceModel
+final class TlHttpWaitHttpWait extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

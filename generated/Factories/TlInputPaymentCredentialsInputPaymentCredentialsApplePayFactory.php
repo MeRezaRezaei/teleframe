@@ -18,7 +18,7 @@ final class TlInputPaymentCredentialsInputPaymentCredentialsApplePayFactory exte
     public function definition(): array
     {
         return [
-            'payment_data' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'payment_data' => 1001,
         ];
     }
 }

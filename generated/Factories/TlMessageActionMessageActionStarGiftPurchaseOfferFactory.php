@@ -21,8 +21,8 @@ final class TlMessageActionMessageActionStarGiftPurchaseOfferFactory extends Fac
             'flags' => 1,
             'accepted' => true,
             'declined' => true,
-            'gift' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'price' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'gift' => 1004,
+            'price' => 1005,
             'expires_at' => 6,
         ];
     }

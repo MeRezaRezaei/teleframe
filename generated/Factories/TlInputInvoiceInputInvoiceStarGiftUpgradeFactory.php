@@ -20,7 +20,7 @@ final class TlInputInvoiceInputInvoiceStarGiftUpgradeFactory extends Factory
         return [
             'flags' => 1,
             'keep_original_details' => true,
-            'stargift' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'stargift' => 1003,
         ];
     }
 }

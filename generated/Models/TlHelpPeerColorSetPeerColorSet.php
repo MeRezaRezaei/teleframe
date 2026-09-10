@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPeerColorSetPeerColorSetColors;
 
 /** Constructor model for help.peerColorSet of help.PeerColorSet (crc32 26219a58). */
-final class TlHelpPeerColorSetPeerColorSet extends TlInstanceModel
+final class TlHelpPeerColorSetPeerColorSet extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

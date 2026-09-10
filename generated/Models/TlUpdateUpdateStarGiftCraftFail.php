@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for updateStarGiftCraftFail of Update (crc32 ac072444). */
-final class TlUpdateUpdateStarGiftCraftFail extends TlInstanceModel
+final class TlUpdateUpdateStarGiftCraftFail extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

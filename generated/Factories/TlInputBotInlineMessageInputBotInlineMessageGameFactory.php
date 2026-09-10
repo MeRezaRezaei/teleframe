@@ -19,7 +19,7 @@ final class TlInputBotInlineMessageInputBotInlineMessageGameFactory extends Fact
     {
         return [
             'flags' => 1,
-            'reply_markup' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reply_markup' => 1002,
         ];
     }
 }

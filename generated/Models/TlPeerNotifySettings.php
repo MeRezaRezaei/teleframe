@@ -21,7 +21,7 @@ final class TlPeerNotifySettings extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_peer_notify_settings';
+    protected $table = 'tl_peer_notify_settings_peer_notify_settings';
 
     protected $guarded = [];
 

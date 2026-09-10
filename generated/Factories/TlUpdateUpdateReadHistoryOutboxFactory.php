@@ -18,7 +18,7 @@ final class TlUpdateUpdateReadHistoryOutboxFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1001,
             'max_id' => 2,
             'pts' => 3,
             'pts_count' => 4,

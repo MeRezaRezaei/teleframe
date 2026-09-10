@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsSubscriptionPricing;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebDocument;
 
 /** Constructor model for starsSubscription of StarsSubscription (crc32 2e6eab1a). */
-final class TlStarsSubscriptionStarsSubscription extends TlInstanceModel
+final class TlStarsSubscriptionStarsSubscription extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

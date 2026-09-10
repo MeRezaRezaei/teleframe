@@ -21,7 +21,7 @@ final class TlUpdateUpdateDialogPinnedFactory extends Factory
             'flags' => 1,
             'pinned' => true,
             'folder_id' => 3,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1004,
         ];
     }
 }

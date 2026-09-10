@@ -19,7 +19,7 @@ final class TlWebPageAttributeWebPageAttributeThemeFactory extends Factory
     {
         return [
             'flags' => 1,
-            'settings' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'settings' => 1002,
         ];
     }
 }

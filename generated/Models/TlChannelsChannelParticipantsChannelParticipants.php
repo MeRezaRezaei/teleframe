@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelsChannelParticipantsChannelParticipantsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelsChannelParticipantsChannelParticipantsParticipants;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelsChannelParticipantsChannelParticipantsUsers;
 
 /** Constructor model for channels.channelParticipants of channels.ChannelParticipants (crc32 9ab0feaf). */
-final class TlChannelsChannelParticipantsChannelParticipants extends TlInstanceModel
+final class TlChannelsChannelParticipantsChannelParticipants extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichText;
 
 /** Constructor model for pageBlockSubtitle of PageBlock (crc32 8ffa9a1f). */
-final class TlPageBlockPageBlockSubtitle extends TlInstanceModel
+final class TlPageBlockPageBlockSubtitle extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

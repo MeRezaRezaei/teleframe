@@ -17,7 +17,7 @@ final class TlAuthAuthorization extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_auth_authorization';
+    protected $table = 'tl_auth_authorization_authorization';
 
     protected $guarded = [];
 

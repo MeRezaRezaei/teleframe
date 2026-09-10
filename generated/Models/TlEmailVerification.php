@@ -14,7 +14,7 @@ final class TlEmailVerification extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_email_verification';
+    protected $table = 'tl_email_verification_email_verification_apple';
 
     protected $guarded = [];
 }

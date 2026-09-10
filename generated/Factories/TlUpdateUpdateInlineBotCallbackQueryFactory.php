@@ -21,7 +21,7 @@ final class TlUpdateUpdateInlineBotCallbackQueryFactory extends Factory
             'flags' => 1,
             'query_id' => 1002,
             'user_id' => 1003,
-            'msg_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'msg_id' => 1004,
             'chat_instance' => 1005,
             'data' => 'Ynl0ZXMtNg==',
             'game_short_name' => 'game_short_name-7',

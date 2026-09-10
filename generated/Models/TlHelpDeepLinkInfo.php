@@ -14,7 +14,7 @@ final class TlHelpDeepLinkInfo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_help_deep_link_info';
+    protected $table = 'tl_help_deep_link_info_deep_link_info';
 
     protected $guarded = [];
 }

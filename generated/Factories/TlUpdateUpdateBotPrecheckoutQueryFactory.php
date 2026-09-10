@@ -22,7 +22,7 @@ final class TlUpdateUpdateBotPrecheckoutQueryFactory extends Factory
             'query_id' => 1002,
             'user_id' => 1003,
             'payload' => 'Ynl0ZXMtNA==',
-            'info' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'info' => 1005,
             'shipping_option_id' => 'shipping_option_id-6',
             'currency' => 'currency-7',
             'total_amount' => 1008,

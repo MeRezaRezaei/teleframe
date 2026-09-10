@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesRecentStickersRecentStickersDates;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesRecentStickersRecentStickersPacks;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesRecentStickersRecentStickersStickers;
 
 /** Constructor model for messages.recentStickers of messages.RecentStickers (crc32 88d37c56). */
-final class TlMessagesRecentStickersRecentStickers extends TlInstanceModel
+final class TlMessagesRecentStickersRecentStickers extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

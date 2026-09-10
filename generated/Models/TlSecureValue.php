@@ -14,7 +14,7 @@ final class TlSecureValue extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_secure_value';
+    protected $table = 'tl_secure_value_secure_value';
 
     protected $guarded = [];
 }

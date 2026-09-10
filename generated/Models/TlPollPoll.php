@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollPollAnswers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollPollCountries_iso2;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for poll of Poll (crc32 966e2dbf). */
-final class TlPollPoll extends TlInstanceModel
+final class TlPollPoll extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

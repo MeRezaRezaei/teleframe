@@ -20,7 +20,7 @@ final class TlUpdateUpdateGroupCallConnectionFactory extends Factory
         return [
             'flags' => 1,
             'presentation' => true,
-            'params' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'params' => 1003,
         ];
     }
 }

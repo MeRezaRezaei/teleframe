@@ -16,7 +16,7 @@ final class TlUpdate extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_update';
+    protected $table = 'tl_update_update_ai_compose_tones';
 
     protected $guarded = [];
 

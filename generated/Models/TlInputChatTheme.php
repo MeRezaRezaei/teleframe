@@ -14,7 +14,7 @@ final class TlInputChatTheme extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_chat_theme';
+    protected $table = 'tl_input_chat_theme_input_chat_theme';
 
     protected $guarded = [];
 }

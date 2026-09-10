@@ -18,7 +18,7 @@ final class TlAccountSavedRingtoneSavedRingtoneConvertedFactory extends Factory
     public function definition(): array
     {
         return [
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1001,
         ];
     }
 }

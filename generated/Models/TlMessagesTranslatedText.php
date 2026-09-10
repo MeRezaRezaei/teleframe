@@ -14,7 +14,7 @@ final class TlMessagesTranslatedText extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_translated_text';
+    protected $table = 'tl_messages_translated_text_translate_result';
 
     protected $guarded = [];
 }

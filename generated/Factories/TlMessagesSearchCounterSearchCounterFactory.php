@@ -20,7 +20,7 @@ final class TlMessagesSearchCounterSearchCounterFactory extends Factory
         return [
             'flags' => 1,
             'inexact' => true,
-            'filter' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'filter' => 1003,
             'count' => 4,
         ];
     }

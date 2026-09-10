@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotVerification;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatInviteChatInviteParticipants;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsSubscriptionPricing;
 
 /** Constructor model for chatInvite of ChatInvite (crc32 5c9d3702). */
-final class TlChatInviteChatInvite extends TlInstanceModel
+final class TlChatInviteChatInvite extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

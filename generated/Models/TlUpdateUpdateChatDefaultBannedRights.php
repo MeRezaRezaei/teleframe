@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatBannedRights;
 
 /** Constructor model for updateChatDefaultBannedRights of Update (crc32 54c01850). */
-final class TlUpdateUpdateChatDefaultBannedRights extends TlInstanceModel
+final class TlUpdateUpdateChatDefaultBannedRights extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

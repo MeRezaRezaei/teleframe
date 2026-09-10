@@ -16,7 +16,7 @@ final class TlReactionNotificationsFrom extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_reaction_notifications_from';
+    protected $table = 'tl_reaction_notifications_from_reaction_notif_70e6503a48b0';
 
     protected $guarded = [];
 

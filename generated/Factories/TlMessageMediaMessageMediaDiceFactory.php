@@ -21,7 +21,7 @@ final class TlMessageMediaMessageMediaDiceFactory extends Factory
             'flags' => 1,
             'tl_value' => 2,
             'emoticon' => 'emoticon-3',
-            'game_outcome' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'game_outcome' => 1004,
         ];
     }
 }

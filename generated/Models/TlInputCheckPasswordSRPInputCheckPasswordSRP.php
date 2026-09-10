@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputCheckPasswordSRP of InputCheckPasswordSRP (crc32 d27ff082). */
-final class TlInputCheckPasswordSRPInputCheckPasswordSRP extends TlInstanceModel
+final class TlInputCheckPasswordSRPInputCheckPasswordSRP extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

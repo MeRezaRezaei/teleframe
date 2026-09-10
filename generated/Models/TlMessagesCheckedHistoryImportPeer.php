@@ -14,7 +14,7 @@ final class TlMessagesCheckedHistoryImportPeer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_checked_history_import_peer';
+    protected $table = 'tl_messages_checked_history_import_peer_check_abbf04f3a8aa';
 
     protected $guarded = [];
 }

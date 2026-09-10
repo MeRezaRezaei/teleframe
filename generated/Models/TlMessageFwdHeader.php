@@ -19,7 +19,7 @@ final class TlMessageFwdHeader extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_fwd_header';
+    protected $table = 'tl_message_fwd_header_message_fwd_header';
 
     protected $guarded = [];
 

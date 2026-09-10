@@ -18,7 +18,7 @@ final class TlMessagesWebPageWebPageFactory extends Factory
     public function definition(): array
     {
         return [
-            'webpage' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'webpage' => 1001,
         ];
     }
 }

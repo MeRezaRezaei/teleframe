@@ -1,7 +1,7 @@
 {
     "name": "merezarezaei/teleframe",
     "description": "Unified Telegram engine and framework: MTProto 2.0 (user + bot), Bot HTTP API, Mini App auth, Passport KYC, consumer layer (ingest, bus, daemon, backfill, backup) and a one-class handler facade (Teleframe)",
-    "type": "library",
+    "type": "project",
     "license": "MIT",
     "keywords": [
         "telegram",
@@ -36,33 +36,29 @@
         "ext-pdo": "*",
         "ext-sodium": "*",
         "ext-zlib": "*",
+        "laravel/framework": "^13.0",
         "phpseclib/phpseclib": "^3.0",
         "psr/log": "^3.0",
         "vlucas/phpdotenv": "^5.6",
-        "illuminate/contracts": "^10.0 || ^11.0 || ^12.0",
-        "illuminate/support": "^10.0 || ^11.0 || ^12.0",
-        "illuminate/console": "^10.0 || ^11.0 || ^12.0",
-        "illuminate/database": "^10.0 || ^11.0 || ^12.0",
-        "illuminate/http": "^10.0 || ^11.0 || ^12.0",
-        "illuminate/events": "^10.0 || ^11.0 || ^12.0",
-        "illuminate/filesystem": "^10.0 || ^11.0 || ^12.0",
-        "illuminate/redis": "^10.0 || ^11.0 || ^12.0",
-        "illuminate/routing": "^10.0 || ^11.0 || ^12.0",
-        "laravel/prompts": "^0.3",
         "predis/predis": "^3.6",
-        "spatie/laravel-data": "^4.0",
-        "symfony/console": "^6.0 || ^7.0",
-        "symfony/uid": "^6.0 || ^7.0"
+        "spatie/laravel-data": "^4.0"
     },
     "require-dev": {
-        "orchestra/testbench": "^9.0 || ^10.0",
+        "fakerphp/faker": "^1.23",
+        "laravel/pint": "^1.13",
+        "laravel/sail": "^1.26",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.0",
         "phpstan/phpstan": "^1.10 || ^2.0",
-        "phpunit/phpunit": "^11.0",
+        "phpunit/phpunit": "^12.0",
         "spaze/phpstan-disallowed-calls": "^4.14",
+        "spatie/laravel-ignition": "^2.4",
+        "orchestra/testbench": "^10.0 || ^11.0",
         "chillerlan/php-qrcode": "^6.0"
     },
     "autoload": {
         "psr-4": {
+            "App\\": "app/",
             "MeRezaRezaei\\Teleframe\\Core\\": "src/Core/",
             "MeRezaRezaei\\Teleframe\\Bot\\": "src/Bot/",
             "MeRezaRezaei\\Teleframe\\Laravel\\": "src/Laravel/",
@@ -73,6 +69,7 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "Tests\\": "tests/",
             "MeRezaRezaei\\Teleframe\\Tests\\": "tests/",
             "MeRezaRezaei\\Teleframe\\Core\\Tests\\": "tests/Core/",
             "MeRezaRezaei\\Teleframe\\Bot\\Tests\\": "tests/Bot/",
@@ -84,6 +81,21 @@
         "bin/teleframe"
     ],
     "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --graceful --ansi"
+        ],
         "test": "phpunit",
         "stan": "phpstan analyse -c phpstan.neon.dist",
         "verify": [
@@ -94,6 +106,7 @@
     "extra": {
         "telegram-layer": 229,
         "laravel": {
+            "dont-discover": [],
             "providers": [
                 "MeRezaRezaei\\Teleframe\\Laravel\\Providers\\TeleframeServiceProvider"
             ],
@@ -104,6 +117,8 @@
         }
     },
     "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true
@@ -113,5 +128,7 @@
                 "block": false
             }
         }
-    }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }

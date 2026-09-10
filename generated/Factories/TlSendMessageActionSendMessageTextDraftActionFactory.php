@@ -19,7 +19,7 @@ final class TlSendMessageActionSendMessageTextDraftActionFactory extends Factory
     {
         return [
             'random_id' => 1001,
-            'text' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'text' => 1002,
         ];
     }
 }

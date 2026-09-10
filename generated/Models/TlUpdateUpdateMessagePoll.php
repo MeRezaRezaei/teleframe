@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPoll;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollResults;
 
 /** Constructor model for updateMessagePoll of Update (crc32 d64c522b). */
-final class TlUpdateUpdateMessagePoll extends TlInstanceModel
+final class TlUpdateUpdateMessagePoll extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

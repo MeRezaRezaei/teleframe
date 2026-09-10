@@ -16,7 +16,7 @@ final class TlMessageAction extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_action';
+    protected $table = 'tl_message_action_message_action_boost_apply';
 
     protected $guarded = [];
 

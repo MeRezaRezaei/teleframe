@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for groupCall of GroupCall (crc32 efb2b617). */
-final class TlGroupCallGroupCall extends TlInstanceModel
+final class TlGroupCallGroupCall extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

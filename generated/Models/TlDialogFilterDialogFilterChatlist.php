@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialogFilterDialogFilterChatlistInclude_peers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialogFilterDialogFilterChatlistPinned_peers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for dialogFilterChatlist of DialogFilter (crc32 96537bd7). */
-final class TlDialogFilterDialogFilterChatlist extends TlInstanceModel
+final class TlDialogFilterDialogFilterChatlist extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

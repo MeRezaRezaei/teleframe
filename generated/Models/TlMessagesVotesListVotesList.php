@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesVotesListVotesListChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesVotesListVotesListUsers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesVotesListVotesListVotes;
 
 /** Constructor model for messages.votesList of messages.VotesList (crc32 4899484e). */
-final class TlMessagesVotesListVotesList extends TlInstanceModel
+final class TlMessagesVotesListVotesList extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

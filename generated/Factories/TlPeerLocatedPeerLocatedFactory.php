@@ -18,7 +18,7 @@ final class TlPeerLocatedPeerLocatedFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1001,
             'expires' => 2,
             'distance' => 3,
         ];

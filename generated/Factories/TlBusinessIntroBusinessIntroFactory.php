@@ -21,7 +21,7 @@ final class TlBusinessIntroBusinessIntroFactory extends Factory
             'flags' => 1,
             'title' => 'title-2',
             'description' => 'description-3',
-            'sticker' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'sticker' => 1004,
         ];
     }
 }

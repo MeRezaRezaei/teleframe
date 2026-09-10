@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessage;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateBotGuestChatQueryReference_messages;
 
 /** Constructor model for updateBotGuestChatQuery of Update (crc32 cdd4093d). */
-final class TlUpdateUpdateBotGuestChatQuery extends TlInstanceModel
+final class TlUpdateUpdateBotGuestChatQuery extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

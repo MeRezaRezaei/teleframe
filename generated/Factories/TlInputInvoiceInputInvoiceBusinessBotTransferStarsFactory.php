@@ -18,7 +18,7 @@ final class TlInputInvoiceInputInvoiceBusinessBotTransferStarsFactory extends Fa
     public function definition(): array
     {
         return [
-            'bot' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'bot' => 1001,
             'stars' => 1002,
         ];
     }

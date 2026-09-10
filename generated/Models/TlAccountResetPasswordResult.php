@@ -14,7 +14,7 @@ final class TlAccountResetPasswordResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_reset_password_result';
+    protected $table = 'tl_account_reset_password_result_reset_passwo_b06ef6c44b97';
 
     protected $guarded = [];
 }

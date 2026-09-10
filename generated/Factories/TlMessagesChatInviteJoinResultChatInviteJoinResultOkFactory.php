@@ -18,7 +18,7 @@ final class TlMessagesChatInviteJoinResultChatInviteJoinResultOkFactory extends 
     public function definition(): array
     {
         return [
-            'updates' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'updates' => 1001,
         ];
     }
 }

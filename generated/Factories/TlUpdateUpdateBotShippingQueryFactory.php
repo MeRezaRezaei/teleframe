@@ -21,7 +21,7 @@ final class TlUpdateUpdateBotShippingQueryFactory extends Factory
             'query_id' => 1001,
             'user_id' => 1002,
             'payload' => 'Ynl0ZXMtMw==',
-            'shipping_address' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'shipping_address' => 1004,
         ];
     }
 }

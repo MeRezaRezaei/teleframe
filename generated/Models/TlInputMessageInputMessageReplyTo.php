@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputMessageReplyTo of InputMessage (crc32 bad88395). */
-final class TlInputMessageInputMessageReplyTo extends TlInstanceModel
+final class TlInputMessageInputMessageReplyTo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

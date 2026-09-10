@@ -30,7 +30,7 @@ final class TlPollPollFactory extends Factory
             'hide_results_until_close' => true,
             'creator' => true,
             'subscribers_only' => true,
-            'question' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'question' => 1013,
             'close_period' => 14,
             'close_date' => 15,
             'hash' => 1016,

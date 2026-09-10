@@ -19,9 +19,9 @@ final class TlInputInvoiceInputInvoicePremiumGiftStarsFactory extends Factory
     {
         return [
             'flags' => 1,
-            'user_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'user_id' => 1002,
             'months' => 3,
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1004,
         ];
     }
 }

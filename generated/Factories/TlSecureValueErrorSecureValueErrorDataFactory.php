@@ -18,7 +18,7 @@ final class TlSecureValueErrorSecureValueErrorDataFactory extends Factory
     public function definition(): array
     {
         return [
-            'tl_type' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_type' => 1001,
             'data_hash' => 'Ynl0ZXMtMg==',
             'field' => 'field-3',
             'text' => 'text-4',

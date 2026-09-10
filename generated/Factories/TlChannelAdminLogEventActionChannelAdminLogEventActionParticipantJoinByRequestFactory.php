@@ -18,7 +18,7 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantJoi
     public function definition(): array
     {
         return [
-            'invite' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'invite' => 1001,
             'approved_by' => 1002,
         ];
     }

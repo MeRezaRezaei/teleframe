@@ -19,7 +19,7 @@ final class TlWebViewMessageSentWebViewMessageSentFactory extends Factory
     {
         return [
             'flags' => 1,
-            'msg_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'msg_id' => 1002,
         ];
     }
 }

@@ -14,7 +14,7 @@ final class TlPageListOrderedItem extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_page_list_ordered_item';
+    protected $table = 'tl_page_list_ordered_item_page_list_ordered_item_blocks';
 
     protected $guarded = [];
 }

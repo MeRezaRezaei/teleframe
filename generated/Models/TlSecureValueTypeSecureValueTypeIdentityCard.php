@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for secureValueTypeIdentityCard of SecureValueType (crc32 a0d0744b). */
-final class TlSecureValueTypeSecureValueTypeIdentityCard extends TlInstanceModel
+final class TlSecureValueTypeSecureValueTypeIdentityCard extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

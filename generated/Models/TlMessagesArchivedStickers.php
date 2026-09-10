@@ -14,7 +14,7 @@ final class TlMessagesArchivedStickers extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_archived_stickers';
+    protected $table = 'tl_messages_archived_stickers_archived_stickers';
 
     protected $guarded = [];
 }

@@ -20,7 +20,7 @@ final class TlInputMedia extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_media';
+    protected $table = 'tl_input_media_input_media_contact';
 
     protected $guarded = [];
 

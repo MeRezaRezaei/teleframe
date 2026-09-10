@@ -14,7 +14,7 @@ final class TlHelpRecentMeUrls extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_help_recent_me_urls';
+    protected $table = 'tl_help_recent_me_urls_recent_me_urls';
 
     protected $guarded = [];
 }

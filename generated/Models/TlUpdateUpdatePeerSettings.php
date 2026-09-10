@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerSettings;
 
 /** Constructor model for updatePeerSettings of Update (crc32 6a7e7366). */
-final class TlUpdateUpdatePeerSettings extends TlInstanceModel
+final class TlUpdateUpdatePeerSettings extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

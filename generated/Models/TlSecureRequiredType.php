@@ -14,7 +14,7 @@ final class TlSecureRequiredType extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_secure_required_type';
+    protected $table = 'tl_secure_required_type_secure_required_type';
 
     protected $guarded = [];
 }

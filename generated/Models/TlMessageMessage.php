@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlFactCheck;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageFwdHeader;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMedia;
@@ -26,7 +26,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichMessage;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSuggestedPost;
 
 /** Constructor model for message of Message (crc32 7600b9d3). */
-final class TlMessageMessage extends TlInstanceModel
+final class TlMessageMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

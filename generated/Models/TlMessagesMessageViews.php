@@ -14,7 +14,7 @@ final class TlMessagesMessageViews extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_message_views';
+    protected $table = 'tl_messages_message_views_message_views';
 
     protected $guarded = [];
 }

@@ -18,7 +18,7 @@ final class TlInputWebFileLocationInputWebFileGeoPointLocationFactory extends Fa
     public function definition(): array
     {
         return [
-            'geo_point' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'geo_point' => 1001,
             'access_hash' => 1002,
             'w' => 3,
             'h' => 4,

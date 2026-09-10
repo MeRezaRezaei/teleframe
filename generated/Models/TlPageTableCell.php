@@ -14,7 +14,7 @@ final class TlPageTableCell extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_page_table_cell';
+    protected $table = 'tl_page_table_cell_page_table_cell';
 
     protected $guarded = [];
 }

@@ -14,7 +14,7 @@ final class TlSearchResultsPosition extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_search_results_position';
+    protected $table = 'tl_search_results_position_search_result_position';
 
     protected $guarded = [];
 }

@@ -21,9 +21,9 @@ final class TlInputInvoiceInputInvoiceStarGiftFactory extends Factory
             'flags' => 1,
             'hide_name' => true,
             'include_upgrade' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1004,
             'gift_id' => 1005,
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1006,
         ];
     }
 }

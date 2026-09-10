@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReaction;
 
 /** Constructor model for messagePeerReaction of MessagePeerReaction (crc32 8c79b63c). */
-final class TlMessagePeerReactionMessagePeerReaction extends TlInstanceModel
+final class TlMessagePeerReactionMessagePeerReaction extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

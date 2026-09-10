@@ -14,7 +14,7 @@ final class TlAvailableEffect extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_available_effect';
+    protected $table = 'tl_available_effect_available_effect';
 
     protected $guarded = [];
 }

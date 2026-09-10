@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountWebBrowserSettingsWebBrowserSettingsExternal_exceptions;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountWebBrowserSettingsWebBrowserSettingsInapp_exceptions;
 
 /** Constructor model for account.webBrowserSettings of account.WebBrowserSettings (crc32 79eb8cb3). */
-final class TlAccountWebBrowserSettingsWebBrowserSettings extends TlInstanceModel
+final class TlAccountWebBrowserSettingsWebBrowserSettings extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

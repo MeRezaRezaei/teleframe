@@ -14,7 +14,7 @@ final class TlSmsJob extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_sms_job';
+    protected $table = 'tl_sms_job_sms_job';
 
     protected $guarded = [];
 }

@@ -14,7 +14,7 @@ final class TlPrivacyRule extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_privacy_rule';
+    protected $table = 'tl_privacy_rule_privacy_value_allow_all';
 
     protected $guarded = [];
 }

@@ -16,7 +16,7 @@ final class TlObject extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_object';
+    protected $table = 'tl_object_gzip_packed';
 
     protected $guarded = [];
 

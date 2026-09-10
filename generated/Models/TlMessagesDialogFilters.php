@@ -14,7 +14,7 @@ final class TlMessagesDialogFilters extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_dialog_filters';
+    protected $table = 'tl_messages_dialog_filters_dialog_filters';
 
     protected $guarded = [];
 }

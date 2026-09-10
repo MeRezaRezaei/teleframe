@@ -26,7 +26,7 @@ final class TlThemeThemeFactory extends Factory
             'access_hash' => 1006,
             'slug' => 'slug-7',
             'title' => 'title-8',
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1009,
             'emoticon' => 'emoticon-10',
             'installs_count' => 11,
         ];

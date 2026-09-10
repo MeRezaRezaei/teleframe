@@ -17,7 +17,7 @@ final class TlStorageFileType extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_storage_file_type';
+    protected $table = 'tl_storage_file_type_file_gif';
 
     protected $guarded = [];
 

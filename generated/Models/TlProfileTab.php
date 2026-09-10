@@ -17,7 +17,7 @@ final class TlProfileTab extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_profile_tab';
+    protected $table = 'tl_profile_tab_profile_tab_files';
 
     protected $guarded = [];
 

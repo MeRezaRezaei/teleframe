@@ -16,7 +16,7 @@ final class TlStarRefProgram extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_star_ref_program';
+    protected $table = 'tl_star_ref_program_star_ref_program';
 
     protected $guarded = [];
 

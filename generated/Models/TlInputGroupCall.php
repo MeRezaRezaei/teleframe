@@ -29,7 +29,7 @@ final class TlInputGroupCall extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_group_call';
+    protected $table = 'tl_input_group_call_input_group_call';
 
     protected $guarded = [];
 

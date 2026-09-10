@@ -14,7 +14,7 @@ final class TlResPQ extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_res_p_q';
+    protected $table = 'tl_res_p_q_res_p_q';
 
     protected $guarded = [];
 }

@@ -22,7 +22,7 @@ final class TlChatAdminRights extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_chat_admin_rights';
+    protected $table = 'tl_chat_admin_rights_chat_admin_rights';
 
     protected $guarded = [];
 

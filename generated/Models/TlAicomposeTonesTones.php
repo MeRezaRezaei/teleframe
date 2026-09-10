@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAicomposeTonesTonesTones;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAicomposeTonesTonesUsers;
 
 /** Constructor model for aicompose.tones of aicompose.Tones (crc32 6c9d0efe). */
-final class TlAicomposeTonesTones extends TlInstanceModel
+final class TlAicomposeTonesTones extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

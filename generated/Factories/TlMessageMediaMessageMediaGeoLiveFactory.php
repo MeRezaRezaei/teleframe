@@ -19,7 +19,7 @@ final class TlMessageMediaMessageMediaGeoLiveFactory extends Factory
     {
         return [
             'flags' => 1,
-            'geo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'geo' => 1002,
             'heading' => 3,
             'period' => 4,
             'proximity_notification_radius' => 5,

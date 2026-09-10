@@ -14,7 +14,7 @@ final class TlInputStickerSetItem extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_sticker_set_item';
+    protected $table = 'tl_input_sticker_set_item_input_sticker_set_item';
 
     protected $guarded = [];
 }

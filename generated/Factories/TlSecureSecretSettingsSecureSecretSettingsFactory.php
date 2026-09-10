@@ -18,7 +18,7 @@ final class TlSecureSecretSettingsSecureSecretSettingsFactory extends Factory
     public function definition(): array
     {
         return [
-            'secure_algo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'secure_algo' => 1001,
             'secure_secret' => 'Ynl0ZXMtMg==',
             'secure_secret_id' => 1003,
         ];

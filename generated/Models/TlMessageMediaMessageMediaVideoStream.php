@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGroupCall;
 
 /** Constructor model for messageMediaVideoStream of MessageMedia (crc32 ca5cab89). */
-final class TlMessageMediaMessageMediaVideoStream extends TlInstanceModel
+final class TlMessageMediaMessageMediaVideoStream extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

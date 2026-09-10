@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUploadFileFileCdnRedirectFile_hashes;
 
 /** Constructor model for upload.fileCdnRedirect of upload.File (crc32 f18cda44). */
-final class TlUploadFileFileCdnRedirect extends TlInstanceModel
+final class TlUploadFileFileCdnRedirect extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

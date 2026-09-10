@@ -23,7 +23,7 @@ final class TlMessagesMessagesMessagesSliceFactory extends Factory
             'count' => 3,
             'next_rate' => 4,
             'offset_id_offset' => 5,
-            'search_flood' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'search_flood' => 1006,
         ];
     }
 }

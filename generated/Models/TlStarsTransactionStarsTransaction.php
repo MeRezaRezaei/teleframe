@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGift;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsAmount;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsTransactionPeer;
@@ -20,7 +20,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsTransactionStarsTransa
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebDocument;
 
 /** Constructor model for starsTransaction of StarsTransaction (crc32 13659eb0). */
-final class TlStarsTransactionStarsTransaction extends TlInstanceModel
+final class TlStarsTransactionStarsTransaction extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

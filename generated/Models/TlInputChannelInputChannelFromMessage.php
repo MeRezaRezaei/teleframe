@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputChannelFromMessage of InputChannel (crc32 5b934f9d). */
-final class TlInputChannelInputChannelFromMessage extends TlInstanceModel
+final class TlInputChannelInputChannelFromMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

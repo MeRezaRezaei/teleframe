@@ -14,7 +14,7 @@ final class TlNearestDc extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_nearest_dc';
+    protected $table = 'tl_nearest_dc_nearest_dc';
 
     protected $guarded = [];
 }

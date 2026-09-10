@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for messages.foundStickersNotModified of messages.FoundStickers (crc32 6010c534). */
-final class TlMessagesFoundStickersFoundStickersNotModified extends TlInstanceModel
+final class TlMessagesFoundStickersFoundStickersNotModified extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

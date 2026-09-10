@@ -22,7 +22,7 @@ final class TlRequestedPeerRequestedPeerChannelFactory extends Factory
             'channel_id' => 1002,
             'title' => 'title-3',
             'username' => 'username-4',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1005,
         ];
     }
 }

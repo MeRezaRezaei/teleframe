@@ -18,8 +18,8 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangePhotoFac
     public function definition(): array
     {
         return [
-            'prev_photo' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'prev_photo' => 1001,
+            'new_photo' => 1002,
         ];
     }
 }

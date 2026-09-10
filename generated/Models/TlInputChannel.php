@@ -17,7 +17,7 @@ final class TlInputChannel extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_channel';
+    protected $table = 'tl_input_channel_input_channel';
 
     protected $guarded = [];
 

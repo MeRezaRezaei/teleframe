@@ -18,7 +18,7 @@ final class TlPaymentsCheckCanSendGiftResultCheckCanSendGiftResultFailFactory ex
     public function definition(): array
     {
         return [
-            'reason' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reason' => 1001,
         ];
     }
 }

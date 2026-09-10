@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputPhoto;
 
 /** Constructor model for inputMediaDocument of InputMedia (crc32 a8763ab5). */
-final class TlInputMediaInputMediaDocument extends TlInstanceModel
+final class TlInputMediaInputMediaDocument extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

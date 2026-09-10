@@ -18,7 +18,7 @@ final class TlUpdateUpdateSentPhoneCodeFactory extends Factory
     public function definition(): array
     {
         return [
-            'sent_code' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'sent_code' => 1001,
         ];
     }
 }

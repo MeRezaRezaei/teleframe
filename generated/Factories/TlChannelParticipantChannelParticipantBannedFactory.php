@@ -20,10 +20,10 @@ final class TlChannelParticipantChannelParticipantBannedFactory extends Factory
         return [
             'flags' => 1,
             'left' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
             'kicked_by' => 1004,
             'date' => 5,
-            'banned_rights' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'banned_rights' => 1006,
             'rank' => 'rank-7',
         ];
     }

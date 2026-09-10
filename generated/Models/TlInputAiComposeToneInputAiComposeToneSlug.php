@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputAiComposeToneSlug of InputAiComposeTone (crc32 1fa01357). */
-final class TlInputAiComposeToneInputAiComposeToneSlug extends TlInstanceModel
+final class TlInputAiComposeToneInputAiComposeToneSlug extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

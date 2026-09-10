@@ -19,7 +19,7 @@ final class TlInputSingleMediaInputSingleMediaFactory extends Factory
     {
         return [
             'flags' => 1,
-            'media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'media' => 1002,
             'random_id' => 1003,
             'message' => 'message-4',
         ];

@@ -18,8 +18,8 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionDefaultBannedR
     public function definition(): array
     {
         return [
-            'prev_banned_rights' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_banned_rights' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'prev_banned_rights' => 1001,
+            'new_banned_rights' => 1002,
         ];
     }
 }

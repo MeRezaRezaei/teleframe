@@ -19,9 +19,9 @@ final class TlKeyboardButtonInputKeyboardButtonUserProfileFactory extends Factor
     {
         return [
             'flags' => 1,
-            'style' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'style' => 1002,
             'text' => 'text-3',
-            'user_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'user_id' => 1004,
         ];
     }
 }

@@ -14,7 +14,7 @@ final class TlBotPreviewMedia extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bot_preview_media';
+    protected $table = 'tl_bot_preview_media_bot_preview_media';
 
     protected $guarded = [];
 }

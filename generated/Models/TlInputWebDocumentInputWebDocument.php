@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputWebDocumentInputWebDocumentAttributes;
 
 /** Constructor model for inputWebDocument of InputWebDocument (crc32 9bed434d). */
-final class TlInputWebDocumentInputWebDocument extends TlInstanceModel
+final class TlInputWebDocumentInputWebDocument extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

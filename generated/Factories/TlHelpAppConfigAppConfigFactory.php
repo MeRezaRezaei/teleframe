@@ -19,7 +19,7 @@ final class TlHelpAppConfigAppConfigFactory extends Factory
     {
         return [
             'hash' => 1,
-            'config' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'config' => 1002,
         ];
     }
 }

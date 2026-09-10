@@ -18,8 +18,8 @@ final class TlMessagesExportedChatInviteExportedChatInviteReplacedFactory extend
     public function definition(): array
     {
         return [
-            'invite' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_invite' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'invite' => 1001,
+            'new_invite' => 1002,
         ];
     }
 }

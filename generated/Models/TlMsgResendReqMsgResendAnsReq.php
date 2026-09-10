@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMsgResendReqMsgResendAnsReqMsg_ids;
 
 /** Constructor model for msg_resend_ans_req of MsgResendReq (crc32 8610baeb). */
-final class TlMsgResendReqMsgResendAnsReq extends TlInstanceModel
+final class TlMsgResendReqMsgResendAnsReq extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

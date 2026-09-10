@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for updateAttachMenuBots of Update (crc32 17b7a20b). */
-final class TlUpdateUpdateAttachMenuBots extends TlInstanceModel
+final class TlUpdateUpdateAttachMenuBots extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

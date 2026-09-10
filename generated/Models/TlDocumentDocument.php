@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocumentDocumentAttributes;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocumentDocumentThumbs;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocumentDocumentVideo_thumbs;
 
 /** Constructor model for document of Document (crc32 8fd4c4d8). */
-final class TlDocumentDocument extends TlInstanceModel
+final class TlDocumentDocument extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsSuggestedStarRefBotsSuggested2b419606faf4Suggested_bots;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsSuggestedStarRefBotsSuggested2b419606faf4Users;
 
 /** Constructor model for payments.suggestedStarRefBots of payments.SuggestedStarRefBots (crc32 b4d5d859). */
-final class TlPaymentsSuggestedStarRefBotsSuggestedStarRefBots extends TlInstanceModel
+final class TlPaymentsSuggestedStarRefBotsSuggestedStarRefBots extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

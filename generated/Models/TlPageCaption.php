@@ -24,7 +24,7 @@ final class TlPageCaption extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_page_caption';
+    protected $table = 'tl_page_caption_page_caption';
 
     protected $guarded = [];
 

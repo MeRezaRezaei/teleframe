@@ -21,8 +21,8 @@ final class TlMediaAreaMediaAreaSuggestedReactionFactory extends Factory
             'flags' => 1,
             'dark' => true,
             'flipped' => true,
-            'coordinates' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'reaction' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'coordinates' => 1004,
+            'reaction' => 1005,
         ];
     }
 }

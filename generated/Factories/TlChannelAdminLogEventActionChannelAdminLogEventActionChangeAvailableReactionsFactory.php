@@ -18,8 +18,8 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeAvailabl
     public function definition(): array
     {
         return [
-            'prev_value' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_value' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'prev_value' => 1001,
+            'new_value' => 1002,
         ];
     }
 }

@@ -14,7 +14,7 @@ final class TlPaymentsStarGiftUpgradeAttributes extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_star_gift_upgrade_attributes';
+    protected $table = 'tl_payments_star_gift_upgrade_attributes_star_b00cb34f5cf4';
 
     protected $guarded = [];
 }

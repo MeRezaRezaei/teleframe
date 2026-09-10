@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryItem;
 
 /** Constructor model for webPageAttributeStory of WebPageAttribute (crc32 2e94c3e7). */
-final class TlWebPageAttributeWebPageAttributeStory extends TlInstanceModel
+final class TlWebPageAttributeWebPageAttributeStory extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

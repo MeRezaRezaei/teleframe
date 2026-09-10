@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGeoPoint;
 
 /** Constructor model for businessLocation of BusinessLocation (crc32 ac5c1af7). */
-final class TlBusinessLocationBusinessLocation extends TlInstanceModel
+final class TlBusinessLocationBusinessLocation extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

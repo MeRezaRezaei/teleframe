@@ -14,7 +14,7 @@ final class TlBotsExportedBotToken extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bots_exported_bot_token';
+    protected $table = 'tl_bots_exported_bot_token_exported_bot_token';
 
     protected $guarded = [];
 }

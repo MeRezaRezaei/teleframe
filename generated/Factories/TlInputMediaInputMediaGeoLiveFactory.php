@@ -20,7 +20,7 @@ final class TlInputMediaInputMediaGeoLiveFactory extends Factory
         return [
             'flags' => 1,
             'stopped' => true,
-            'geo_point' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'geo_point' => 1003,
             'heading' => 4,
             'period' => 5,
             'proximity_notification_radius' => 6,

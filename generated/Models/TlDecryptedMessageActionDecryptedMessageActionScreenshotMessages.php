@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDecryptedMessageActionDecryptedMessage503f68851191Random_ids;
 
 /** Constructor model for decryptedMessageActionScreenshotMessages of DecryptedMessageAction (crc32 8ac1f475). */
-final class TlDecryptedMessageActionDecryptedMessageActionScreenshotMessages extends TlInstanceModel
+final class TlDecryptedMessageActionDecryptedMessageActionScreenshotMessages extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlExportedStoryLink extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_exported_story_link';
+    protected $table = 'tl_exported_story_link_exported_story_link';
 
     protected $guarded = [];
 }

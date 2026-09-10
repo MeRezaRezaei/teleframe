@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesForumTopicsForumTopicsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesForumTopicsForumTopicsMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesForumTopicsForumTopicsTopics;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesForumTopicsForumTopicsUsers;
 
 /** Constructor model for messages.forumTopics of messages.ForumTopics (crc32 367617d3). */
-final class TlMessagesForumTopicsForumTopics extends TlInstanceModel
+final class TlMessagesForumTopicsForumTopics extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

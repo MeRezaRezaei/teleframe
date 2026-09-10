@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsTopPeersTopPeersCategories;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsTopPeersTopPeersChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsTopPeersTopPeersUsers;
 
 /** Constructor model for contacts.topPeers of contacts.TopPeers (crc32 70b772a8). */
-final class TlContactsTopPeersTopPeers extends TlInstanceModel
+final class TlContactsTopPeersTopPeers extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

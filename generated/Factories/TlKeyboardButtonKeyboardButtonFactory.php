@@ -19,7 +19,7 @@ final class TlKeyboardButtonKeyboardButtonFactory extends Factory
     {
         return [
             'flags' => 1,
-            'style' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'style' => 1002,
             'text' => 'text-3',
         ];
     }

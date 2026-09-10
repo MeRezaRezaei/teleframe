@@ -16,7 +16,7 @@ final class TlHelpPeerColorSet extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_help_peer_color_set';
+    protected $table = 'tl_help_peer_color_set_peer_color_profile_set';
 
     protected $guarded = [];
 

@@ -14,7 +14,7 @@ final class TlReadParticipantDate extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_read_participant_date';
+    protected $table = 'tl_read_participant_date_read_participant_date';
 
     protected $guarded = [];
 }

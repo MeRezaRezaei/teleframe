@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlFutureSaltsFutureSaltsSalts;
 
 /** Constructor model for future_salts of FutureSalts (crc32 ae500895). */
-final class TlFutureSaltsFutureSalts extends TlInstanceModel
+final class TlFutureSaltsFutureSalts extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

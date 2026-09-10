@@ -14,7 +14,7 @@ final class TlClientDHInnerData extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_client__d_h__inner__data';
+    protected $table = 'tl_client__d_h__inner__data_client__d_h_inner_data';
 
     protected $guarded = [];
 }

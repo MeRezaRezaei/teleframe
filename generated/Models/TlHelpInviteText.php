@@ -14,7 +14,7 @@ final class TlHelpInviteText extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_help_invite_text';
+    protected $table = 'tl_help_invite_text_invite_text';
 
     protected $guarded = [];
 }

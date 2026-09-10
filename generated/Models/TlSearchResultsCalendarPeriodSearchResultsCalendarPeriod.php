@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for searchResultsCalendarPeriod of SearchResultsCalendarPeriod (crc32 c9b0539f). */
-final class TlSearchResultsCalendarPeriodSearchResultsCalendarPeriod extends TlInstanceModel
+final class TlSearchResultsCalendarPeriodSearchResultsCalendarPeriod extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

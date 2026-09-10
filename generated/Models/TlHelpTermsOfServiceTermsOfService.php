@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDataJSON;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpTermsOfServiceTermsOfServiceEntities;
 
 /** Constructor model for help.termsOfService of help.TermsOfService (crc32 780a0310). */
-final class TlHelpTermsOfServiceTermsOfService extends TlInstanceModel
+final class TlHelpTermsOfServiceTermsOfService extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

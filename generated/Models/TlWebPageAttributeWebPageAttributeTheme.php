@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlThemeSettings;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebPageAttributeWebPageAttributeThemeDocuments;
 
 /** Constructor model for webPageAttributeTheme of WebPageAttribute (crc32 54b56617). */
-final class TlWebPageAttributeWebPageAttributeTheme extends TlInstanceModel
+final class TlWebPageAttributeWebPageAttributeTheme extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

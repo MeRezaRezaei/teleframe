@@ -20,7 +20,7 @@ final class TlInputPaymentCredentialsInputPaymentCredentialsFactory extends Fact
         return [
             'flags' => 1,
             'save' => true,
-            'data' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'data' => 1003,
         ];
     }
 }

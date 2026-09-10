@@ -14,7 +14,7 @@ final class TlMessageEntity extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_entity';
+    protected $table = 'tl_message_entity_input_message_entity_mention_name';
 
     protected $guarded = [];
 }

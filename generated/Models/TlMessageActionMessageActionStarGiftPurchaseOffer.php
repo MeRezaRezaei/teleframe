@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGift;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsAmount;
 
 /** Constructor model for messageActionStarGiftPurchaseOffer of MessageAction (crc32 774278d4). */
-final class TlMessageActionMessageActionStarGiftPurchaseOffer extends TlInstanceModel
+final class TlMessageActionMessageActionStarGiftPurchaseOffer extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

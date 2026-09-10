@@ -17,7 +17,7 @@ final class TlInputBusinessRecipients extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_business_recipients';
+    protected $table = 'tl_input_business_recipients_input_business_recipients';
 
     protected $guarded = [];
 

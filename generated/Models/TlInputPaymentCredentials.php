@@ -14,7 +14,7 @@ final class TlInputPaymentCredentials extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_payment_credentials';
+    protected $table = 'tl_input_payment_credentials_input_payment_credentials';
 
     protected $guarded = [];
 }

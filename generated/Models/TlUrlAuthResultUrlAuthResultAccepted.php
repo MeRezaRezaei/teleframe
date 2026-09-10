@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for urlAuthResultAccepted of UrlAuthResult (crc32 623a8fa0). */
-final class TlUrlAuthResultUrlAuthResultAccepted extends TlInstanceModel
+final class TlUrlAuthResultUrlAuthResultAccepted extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

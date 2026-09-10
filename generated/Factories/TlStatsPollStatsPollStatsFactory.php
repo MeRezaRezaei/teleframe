@@ -18,7 +18,7 @@ final class TlStatsPollStatsPollStatsFactory extends Factory
     public function definition(): array
     {
         return [
-            'votes_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'votes_graph' => 1001,
         ];
     }
 }

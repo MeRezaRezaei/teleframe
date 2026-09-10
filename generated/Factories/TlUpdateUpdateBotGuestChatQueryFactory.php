@@ -20,7 +20,7 @@ final class TlUpdateUpdateBotGuestChatQueryFactory extends Factory
         return [
             'flags' => 1,
             'query_id' => 1002,
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1003,
             'qts' => 4,
         ];
     }

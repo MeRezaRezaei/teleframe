@@ -20,8 +20,8 @@ final class TlUpdateUpdatePeerWallpaperFactory extends Factory
         return [
             'flags' => 1,
             'wallpaper_overridden' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'wallpaper' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
+            'wallpaper' => 1004,
         ];
     }
 }

@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for payments.starGiftsNotModified of payments.StarGifts (crc32 a388a368). */
-final class TlPaymentsStarGiftsStarGiftsNotModified extends TlInstanceModel
+final class TlPaymentsStarGiftsStarGiftsNotModified extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

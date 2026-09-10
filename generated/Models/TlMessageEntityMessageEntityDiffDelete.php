@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for messageEntityDiffDelete of MessageEntity (crc32 0652c1c5). */
-final class TlMessageEntityMessageEntityDiffDelete extends TlInstanceModel
+final class TlMessageEntityMessageEntityDiffDelete extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

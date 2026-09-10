@@ -18,7 +18,7 @@ final class TlChatPhoto extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_chat_photo';
+    protected $table = 'tl_chat_photo_chat_photo';
 
     protected $guarded = [];
 

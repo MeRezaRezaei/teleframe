@@ -16,7 +16,7 @@ final class TlFactCheck extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_fact_check';
+    protected $table = 'tl_fact_check_fact_check';
 
     protected $guarded = [];
 

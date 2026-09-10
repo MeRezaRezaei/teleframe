@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesStickerSetInstallResultSticke41df7d9fd353Sets;
 
 /** Constructor model for messages.stickerSetInstallResultArchive of messages.StickerSetInstallResult (crc32 35e410a8). */
-final class TlMessagesStickerSetInstallResultStickerSetInstallResultArchive extends TlInstanceModel
+final class TlMessagesStickerSetInstallResultStickerSetInstallResultArchive extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

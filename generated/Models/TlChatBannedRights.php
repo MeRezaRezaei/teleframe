@@ -20,7 +20,7 @@ final class TlChatBannedRights extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_chat_banned_rights';
+    protected $table = 'tl_chat_banned_rights_chat_banned_rights';
 
     protected $guarded = [];
 

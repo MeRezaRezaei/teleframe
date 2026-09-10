@@ -18,7 +18,7 @@ final class TlPageBlockPageBlockAuthorDateFactory extends Factory
     public function definition(): array
     {
         return [
-            'author' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'author' => 1001,
             'published_date' => 2,
         ];
     }

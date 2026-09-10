@@ -18,7 +18,7 @@ final class TlUpdateUpdateNewChannelMessageFactory extends Factory
     public function definition(): array
     {
         return [
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1001,
             'pts' => 2,
             'pts_count' => 3,
         ];

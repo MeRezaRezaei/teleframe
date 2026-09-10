@@ -21,7 +21,7 @@ final class TlMessageViewsMessageViewsFactory extends Factory
             'flags' => 1,
             'views' => 2,
             'forwards' => 3,
-            'replies' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'replies' => 1004,
         ];
     }
 }

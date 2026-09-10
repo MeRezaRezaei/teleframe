@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTopPeerCategory;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTopPeerCategoryPeersTopPeerCategoryPeersPeers;
 
 /** Constructor model for topPeerCategoryPeers of TopPeerCategoryPeers (crc32 fb834291). */
-final class TlTopPeerCategoryPeersTopPeerCategoryPeers extends TlInstanceModel
+final class TlTopPeerCategoryPeersTopPeerCategoryPeers extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

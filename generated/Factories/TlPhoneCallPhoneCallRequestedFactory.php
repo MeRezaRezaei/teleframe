@@ -26,7 +26,7 @@ final class TlPhoneCallPhoneCallRequestedFactory extends Factory
             'admin_id' => 1006,
             'participant_id' => 1007,
             'g_a_hash' => 'Ynl0ZXMtOA==',
-            'protocol' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'protocol' => 1009,
         ];
     }
 }

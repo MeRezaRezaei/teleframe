@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for chatPhoto of ChatPhoto (crc32 1c6e1c11). */
-final class TlChatPhotoChatPhoto extends TlInstanceModel
+final class TlChatPhotoChatPhoto extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

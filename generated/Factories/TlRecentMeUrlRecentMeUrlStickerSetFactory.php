@@ -19,7 +19,7 @@ final class TlRecentMeUrlRecentMeUrlStickerSetFactory extends Factory
     {
         return [
             'url' => 'url-1',
-            'set' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'set' => 1002,
         ];
     }
 }

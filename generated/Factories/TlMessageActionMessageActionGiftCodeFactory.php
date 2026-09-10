@@ -21,14 +21,14 @@ final class TlMessageActionMessageActionGiftCodeFactory extends Factory
             'flags' => 1,
             'via_giveaway' => true,
             'unclaimed' => true,
-            'boost_peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'boost_peer' => 1004,
             'days' => 5,
             'slug' => 'slug-6',
             'currency' => 'currency-7',
             'amount' => 1008,
             'crypto_currency' => 'crypto_currency-9',
             'crypto_amount' => 1010,
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1011,
         ];
     }
 }

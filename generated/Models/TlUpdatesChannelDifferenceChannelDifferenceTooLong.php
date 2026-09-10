@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialog;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesChannelDifferenceChannelDifferenceTooLongChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesChannelDifferenceChannelDifferenceTooLongMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesChannelDifferenceChannelDifferenceTooLongUsers;
 
 /** Constructor model for updates.channelDifferenceTooLong of updates.ChannelDifference (crc32 a4bcc6fe). */
-final class TlUpdatesChannelDifferenceChannelDifferenceTooLong extends TlInstanceModel
+final class TlUpdatesChannelDifferenceChannelDifferenceTooLong extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

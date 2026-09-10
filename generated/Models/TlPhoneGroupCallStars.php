@@ -14,7 +14,7 @@ final class TlPhoneGroupCallStars extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_phone_group_call_stars';
+    protected $table = 'tl_phone_group_call_stars_group_call_stars';
 
     protected $guarded = [];
 }

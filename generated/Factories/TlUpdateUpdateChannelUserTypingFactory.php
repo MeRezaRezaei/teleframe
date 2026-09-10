@@ -21,8 +21,8 @@ final class TlUpdateUpdateChannelUserTypingFactory extends Factory
             'flags' => 1,
             'channel_id' => 1002,
             'top_msg_id' => 3,
-            'from_id' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'action' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'from_id' => 1004,
+            'action' => 1005,
         ];
     }
 }

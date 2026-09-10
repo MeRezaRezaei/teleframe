@@ -16,7 +16,7 @@ final class TlExportedChatlistInvite extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_exported_chatlist_invite';
+    protected $table = 'tl_exported_chatlist_invite_exported_chatlist_invite';
 
     protected $guarded = [];
 

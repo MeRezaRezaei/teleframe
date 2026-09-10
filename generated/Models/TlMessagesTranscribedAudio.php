@@ -14,7 +14,7 @@ final class TlMessagesTranscribedAudio extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_transcribed_audio';
+    protected $table = 'tl_messages_transcribed_audio_transcribed_audio';
 
     protected $guarded = [];
 }

@@ -14,7 +14,7 @@ final class TlPaymentsStarGiftWithdrawalUrl extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_star_gift_withdrawal_url';
+    protected $table = 'tl_payments_star_gift_withdrawal_url_star_gif_98844d3a363c';
 
     protected $guarded = [];
 }

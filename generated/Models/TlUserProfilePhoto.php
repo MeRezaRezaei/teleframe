@@ -16,7 +16,7 @@ final class TlUserProfilePhoto extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_user_profile_photo';
+    protected $table = 'tl_user_profile_photo_user_profile_photo';
 
     protected $guarded = [];
 

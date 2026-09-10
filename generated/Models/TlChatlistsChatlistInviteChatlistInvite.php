@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatlistsChatlistInviteChatlistInviteChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatlistsChatlistInviteChatlistInvitePeers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatlistsChatlistInviteChatlistInviteUsers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for chatlists.chatlistInvite of chatlists.ChatlistInvite (crc32 f10ece2f). */
-final class TlChatlistsChatlistInviteChatlistInvite extends TlInstanceModel
+final class TlChatlistsChatlistInviteChatlistInvite extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

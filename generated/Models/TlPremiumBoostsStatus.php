@@ -14,7 +14,7 @@ final class TlPremiumBoostsStatus extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_premium_boosts_status';
+    protected $table = 'tl_premium_boosts_status_boosts_status';
 
     protected $guarded = [];
 }

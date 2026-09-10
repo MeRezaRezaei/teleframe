@@ -16,7 +16,7 @@ final class TlBusinessGreetingMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_business_greeting_message';
+    protected $table = 'tl_business_greeting_message_business_greeting_message';
 
     protected $guarded = [];
 

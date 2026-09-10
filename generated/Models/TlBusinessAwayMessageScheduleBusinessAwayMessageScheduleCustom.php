@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for businessAwayMessageScheduleCustom of BusinessAwayMessageSchedule (crc32 cc4d9ecc). */
-final class TlBusinessAwayMessageScheduleBusinessAwayMessageScheduleCustom extends TlInstanceModel
+final class TlBusinessAwayMessageScheduleBusinessAwayMessageScheduleCustom extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

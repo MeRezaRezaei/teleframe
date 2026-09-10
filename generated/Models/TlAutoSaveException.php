@@ -14,7 +14,7 @@ final class TlAutoSaveException extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_auto_save_exception';
+    protected $table = 'tl_auto_save_exception_auto_save_exception';
 
     protected $guarded = [];
 }

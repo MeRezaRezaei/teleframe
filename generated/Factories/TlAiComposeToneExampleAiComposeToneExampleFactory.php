@@ -18,8 +18,8 @@ final class TlAiComposeToneExampleAiComposeToneExampleFactory extends Factory
     public function definition(): array
     {
         return [
-            'tl_from' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'tl_to' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_from' => 1001,
+            'tl_to' => 1002,
         ];
     }
 }

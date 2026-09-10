@@ -29,9 +29,9 @@ final class TlPhoneCallPhoneCallFactory extends Factory
             'participant_id' => 1009,
             'g_a_or_b' => 'Ynl0ZXMtMTA=',
             'key_fingerprint' => 1011,
-            'protocol' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'protocol' => 1012,
             'start_date' => 13,
-            'custom_parameters' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'custom_parameters' => 1014,
         ];
     }
 }

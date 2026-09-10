@@ -18,7 +18,7 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionToggleForumFac
     public function definition(): array
     {
         return [
-            'new_value' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'new_value' => 1001,
         ];
     }
 }

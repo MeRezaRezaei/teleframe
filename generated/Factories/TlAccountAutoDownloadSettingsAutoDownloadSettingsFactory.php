@@ -18,9 +18,9 @@ final class TlAccountAutoDownloadSettingsAutoDownloadSettingsFactory extends Fac
     public function definition(): array
     {
         return [
-            'low' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'medium' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'high' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'low' => 1001,
+            'medium' => 1002,
+            'high' => 1003,
         ];
     }
 }

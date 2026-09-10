@@ -20,7 +20,7 @@ final class TlAttachMenuBotIconAttachMenuBotIconFactory extends Factory
         return [
             'flags' => 1,
             'name' => 'name-2',
-            'icon' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'icon' => 1003,
         ];
     }
 }

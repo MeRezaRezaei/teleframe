@@ -25,7 +25,7 @@ final class TlPremiumBoostsStatusBoostsStatusFactory extends Factory
             'boosts' => 5,
             'gift_boosts' => 6,
             'next_level_boosts' => 7,
-            'premium_audience' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'premium_audience' => 1008,
             'boost_url' => 'boost_url-9',
         ];
     }

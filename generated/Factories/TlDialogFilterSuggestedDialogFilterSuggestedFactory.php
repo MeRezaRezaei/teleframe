@@ -18,7 +18,7 @@ final class TlDialogFilterSuggestedDialogFilterSuggestedFactory extends Factory
     public function definition(): array
     {
         return [
-            'filter' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'filter' => 1001,
             'description' => 'description-2',
         ];
     }

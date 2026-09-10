@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputSavedStarGift;
 
 /** Constructor model for inputInvoiceStarGiftDropOriginalDetails of InputInvoice (crc32 0923d8d1). */
-final class TlInputInvoiceInputInvoiceStarGiftDropOriginalDetails extends TlInstanceModel
+final class TlInputInvoiceInputInvoiceStarGiftDropOriginalDetails extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

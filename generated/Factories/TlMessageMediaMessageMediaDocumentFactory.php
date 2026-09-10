@@ -24,8 +24,8 @@ final class TlMessageMediaMessageMediaDocumentFactory extends Factory
             'video' => true,
             'round' => true,
             'voice' => true,
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'video_cover' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1007,
+            'video_cover' => 1008,
             'video_timestamp' => 9,
             'ttl_seconds' => 10,
         ];

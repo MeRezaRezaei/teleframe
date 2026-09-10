@@ -23,7 +23,7 @@ final class TlRequestedPeerRequestedPeerUserFactory extends Factory
             'first_name' => 'first_name-3',
             'last_name' => 'last_name-4',
             'username' => 'username-5',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1006,
         ];
     }
 }

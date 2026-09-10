@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStickerSet;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlVideoSizeVideoSizeStickerMarkupBackground_colors;
 
 /** Constructor model for videoSizeStickerMarkup of VideoSize (crc32 0da082fe). */
-final class TlVideoSizeVideoSizeStickerMarkup extends TlInstanceModel
+final class TlVideoSizeVideoSizeStickerMarkup extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

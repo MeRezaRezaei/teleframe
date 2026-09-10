@@ -18,7 +18,7 @@ final class TlPhoneGroupCallGroupCallFactory extends Factory
     public function definition(): array
     {
         return [
-            'call' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'call' => 1001,
             'participants_next_offset' => 'participants_next_offset-2',
         ];
     }

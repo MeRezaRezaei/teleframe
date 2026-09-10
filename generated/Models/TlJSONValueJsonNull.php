@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for jsonNull of JSONValue (crc32 3f6d7b68). */
-final class TlJSONValueJsonNull extends TlInstanceModel
+final class TlJSONValueJsonNull extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

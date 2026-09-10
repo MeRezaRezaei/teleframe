@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlVideoSizeVideoSizeEmojiMarkupBackground_colors;
 
 /** Constructor model for videoSizeEmojiMarkup of VideoSize (crc32 f85c413c). */
-final class TlVideoSizeVideoSizeEmojiMarkup extends TlInstanceModel
+final class TlVideoSizeVideoSizeEmojiMarkup extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

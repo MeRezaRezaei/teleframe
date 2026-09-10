@@ -29,15 +29,15 @@ final class TlWebPageWebPageFactory extends Factory
             'site_name' => 'site_name-9',
             'title' => 'title-10',
             'description' => 'description-11',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1012,
             'embed_url' => 'embed_url-13',
             'embed_type' => 'embed_type-14',
             'embed_width' => 15,
             'embed_height' => 16,
             'duration' => 17,
             'author' => 'author-18',
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'cached_page' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1019,
+            'cached_page' => 1020,
         ];
     }
 }

@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for updateReadFeaturedStickers of Update (crc32 571d2742). */
-final class TlUpdateUpdateReadFeaturedStickers extends TlInstanceModel
+final class TlUpdateUpdateReadFeaturedStickers extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

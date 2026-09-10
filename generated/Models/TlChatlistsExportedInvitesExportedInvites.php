@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatlistsExportedInvitesExportedInvitesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatlistsExportedInvitesExportedInvitesInvites;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatlistsExportedInvitesExportedInvitesUsers;
 
 /** Constructor model for chatlists.exportedInvites of chatlists.ExportedInvites (crc32 10ab6dc7). */
-final class TlChatlistsExportedInvitesExportedInvites extends TlInstanceModel
+final class TlChatlistsExportedInvitesExportedInvites extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

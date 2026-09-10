@@ -19,11 +19,11 @@ final class TlReactionsNotifySettingsReactionsNotifySettingsFactory extends Fact
     {
         return [
             'flags' => 1,
-            'messages_notify_from' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'stories_notify_from' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'poll_votes_notify_from' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'sound' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'show_previews' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'messages_notify_from' => 1002,
+            'stories_notify_from' => 1003,
+            'poll_votes_notify_from' => 1004,
+            'sound' => 1005,
+            'show_previews' => 1006,
         ];
     }
 }

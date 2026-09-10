@@ -14,7 +14,7 @@ final class TlPageListItem extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_page_list_item';
+    protected $table = 'tl_page_list_item_page_list_item_blocks';
 
     protected $guarded = [];
 }

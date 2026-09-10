@@ -12,13 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSavedStarGiftSavedStarGiftCollection_id;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGift;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for savedStarGift of SavedStarGift (crc32 41df43fc). */
-final class TlSavedStarGiftSavedStarGift extends TlInstanceModel
+final class TlSavedStarGiftSavedStarGift extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

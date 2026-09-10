@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for account.emojiStatusesNotModified of account.EmojiStatuses (crc32 d08ce645). */
-final class TlAccountEmojiStatusesEmojiStatusesNotModified extends TlInstanceModel
+final class TlAccountEmojiStatusesEmojiStatusesNotModified extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

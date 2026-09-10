@@ -19,9 +19,9 @@ final class TlMediaAreaMediaAreaGeoPointFactory extends Factory
     {
         return [
             'flags' => 1,
-            'coordinates' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'geo' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'address' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'coordinates' => 1002,
+            'geo' => 1003,
+            'address' => 1004,
         ];
     }
 }

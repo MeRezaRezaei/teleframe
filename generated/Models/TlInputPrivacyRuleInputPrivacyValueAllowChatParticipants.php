@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputPrivacyRuleInputPrivacyValueAllB839cc5564e5Chats;
 
 /** Constructor model for inputPrivacyValueAllowChatParticipants of InputPrivacyRule (crc32 840649cf). */
-final class TlInputPrivacyRuleInputPrivacyValueAllowChatParticipants extends TlInstanceModel
+final class TlInputPrivacyRuleInputPrivacyValueAllowChatParticipants extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

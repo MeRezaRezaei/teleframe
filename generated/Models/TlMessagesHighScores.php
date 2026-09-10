@@ -14,7 +14,7 @@ final class TlMessagesHighScores extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_high_scores';
+    protected $table = 'tl_messages_high_scores_high_scores';
 
     protected $guarded = [];
 }

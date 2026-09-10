@@ -22,7 +22,7 @@ final class TlDialogFilterDialogFilterChatlistFactory extends Factory
             'has_my_invites' => true,
             'title_noanimate' => true,
             'tl_id' => 4,
-            'title' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'title' => 1005,
             'emoticon' => 'emoticon-6',
             'color' => 7,
         ];

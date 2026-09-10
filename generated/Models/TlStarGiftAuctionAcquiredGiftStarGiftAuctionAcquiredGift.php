@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for starGiftAuctionAcquiredGift of StarGiftAuctionAcquiredGift (crc32 42b00348). */
-final class TlStarGiftAuctionAcquiredGiftStarGiftAuctionAcquiredGift extends TlInstanceModel
+final class TlStarGiftAuctionAcquiredGiftStarGiftAuctionAcquiredGift extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

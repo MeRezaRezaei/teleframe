@@ -14,7 +14,7 @@ final class TlCodeSettings extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_code_settings';
+    protected $table = 'tl_code_settings_code_settings';
 
     protected $guarded = [];
 }

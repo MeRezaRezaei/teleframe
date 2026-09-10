@@ -25,7 +25,7 @@ final class TlReaction extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_reaction';
+    protected $table = 'tl_reaction_reaction_custom_emoji';
 
     protected $guarded = [];
 

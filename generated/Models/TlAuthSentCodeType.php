@@ -16,7 +16,7 @@ final class TlAuthSentCodeType extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_auth_sent_code_type';
+    protected $table = 'tl_auth_sent_code_type_sent_code_type_app';
 
     protected $guarded = [];
 

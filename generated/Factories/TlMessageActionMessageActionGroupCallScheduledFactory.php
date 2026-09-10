@@ -18,7 +18,7 @@ final class TlMessageActionMessageActionGroupCallScheduledFactory extends Factor
     public function definition(): array
     {
         return [
-            'call' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'call' => 1001,
             'schedule_date' => 2,
         ];
     }

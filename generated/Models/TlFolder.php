@@ -16,7 +16,7 @@ final class TlFolder extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_folder';
+    protected $table = 'tl_folder_folder';
 
     protected $guarded = [];
 

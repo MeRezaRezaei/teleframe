@@ -19,7 +19,7 @@ final class TlPhoneCallProtocol extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_phone_call_protocol';
+    protected $table = 'tl_phone_call_protocol_phone_call_protocol';
 
     protected $guarded = [];
 

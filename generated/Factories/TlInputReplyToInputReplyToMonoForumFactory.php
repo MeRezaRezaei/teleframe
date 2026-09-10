@@ -18,7 +18,7 @@ final class TlInputReplyToInputReplyToMonoForumFactory extends Factory
     public function definition(): array
     {
         return [
-            'monoforum_peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'monoforum_peer_id' => 1001,
         ];
     }
 }

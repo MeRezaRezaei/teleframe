@@ -16,7 +16,7 @@ final class TlBusinessAwayMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_business_away_message';
+    protected $table = 'tl_business_away_message_business_away_message';
 
     protected $guarded = [];
 

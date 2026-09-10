@@ -14,7 +14,7 @@ final class TlFileHash extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_file_hash';
+    protected $table = 'tl_file_hash_file_hash';
 
     protected $guarded = [];
 }

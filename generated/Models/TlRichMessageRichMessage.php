@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichMessageRichMessageBlocks;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichMessageRichMessageDocuments;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichMessageRichMessagePhotos;
 
 /** Constructor model for richMessage of RichMessage (crc32 baf39d8b). */
-final class TlRichMessageRichMessage extends TlInstanceModel
+final class TlRichMessageRichMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

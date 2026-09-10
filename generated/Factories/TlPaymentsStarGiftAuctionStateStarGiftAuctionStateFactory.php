@@ -18,9 +18,9 @@ final class TlPaymentsStarGiftAuctionStateStarGiftAuctionStateFactory extends Fa
     public function definition(): array
     {
         return [
-            'gift' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'state' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'user_state' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'gift' => 1001,
+            'state' => 1002,
+            'user_state' => 1003,
             'timeout' => 4,
         ];
     }

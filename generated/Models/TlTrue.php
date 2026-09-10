@@ -14,7 +14,7 @@ final class TlTrue extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_true';
+    protected $table = 'tl_true_true';
 
     protected $guarded = [];
 }

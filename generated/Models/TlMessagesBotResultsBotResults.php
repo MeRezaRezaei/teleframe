@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInlineBotSwitchPM;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInlineBotWebView;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesBotResultsBotResultsResults;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesBotResultsBotResultsUsers;
 
 /** Constructor model for messages.botResults of messages.BotResults (crc32 e021f2f6). */
-final class TlMessagesBotResultsBotResults extends TlInstanceModel
+final class TlMessagesBotResultsBotResults extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

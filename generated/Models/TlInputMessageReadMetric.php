@@ -14,7 +14,7 @@ final class TlInputMessageReadMetric extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_message_read_metric';
+    protected $table = 'tl_input_message_read_metric_input_message_read_metric';
 
     protected $guarded = [];
 }

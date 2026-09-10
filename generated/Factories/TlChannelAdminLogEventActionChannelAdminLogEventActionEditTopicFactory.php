@@ -18,8 +18,8 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionEditTopicFacto
     public function definition(): array
     {
         return [
-            'prev_topic' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_topic' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'prev_topic' => 1001,
+            'new_topic' => 1002,
         ];
     }
 }

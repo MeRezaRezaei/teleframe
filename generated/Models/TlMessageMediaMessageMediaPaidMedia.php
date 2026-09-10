@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMediaMessageMediaPaidMediaExtended_media;
 
 /** Constructor model for messageMediaPaidMedia of MessageMedia (crc32 a8852491). */
-final class TlMessageMediaMessageMediaPaidMedia extends TlInstanceModel
+final class TlMessageMediaMessageMediaPaidMedia extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

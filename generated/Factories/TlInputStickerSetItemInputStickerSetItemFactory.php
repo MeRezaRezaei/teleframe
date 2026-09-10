@@ -19,9 +19,9 @@ final class TlInputStickerSetItemInputStickerSetItemFactory extends Factory
     {
         return [
             'flags' => 1,
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1002,
             'emoji' => 'emoji-3',
-            'mask_coords' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'mask_coords' => 1004,
             'keywords' => 'keywords-5',
         ];
     }

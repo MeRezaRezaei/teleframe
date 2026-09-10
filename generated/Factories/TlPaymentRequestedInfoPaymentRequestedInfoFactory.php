@@ -22,7 +22,7 @@ final class TlPaymentRequestedInfoPaymentRequestedInfoFactory extends Factory
             'name' => 'name-2',
             'phone' => 'phone-3',
             'email' => 'email-4',
-            'shipping_address' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'shipping_address' => 1005,
         ];
     }
 }

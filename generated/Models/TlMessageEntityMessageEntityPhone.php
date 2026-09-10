@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for messageEntityPhone of MessageEntity (crc32 9b69e34b). */
-final class TlMessageEntityMessageEntityPhone extends TlInstanceModel
+final class TlMessageEntityMessageEntityPhone extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

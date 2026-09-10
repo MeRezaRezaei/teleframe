@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPageBlockPageBlockOrderedListItems;
 
 /** Constructor model for pageBlockOrderedList of PageBlock (crc32 1fd6f6c1). */
-final class TlPageBlockPageBlockOrderedList extends TlInstanceModel
+final class TlPageBlockPageBlockOrderedList extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

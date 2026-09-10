@@ -14,7 +14,7 @@ final class TlStoriesAllStories extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stories_all_stories';
+    protected $table = 'tl_stories_all_stories_all_stories';
 
     protected $guarded = [];
 }

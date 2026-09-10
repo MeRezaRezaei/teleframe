@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureData;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureFile;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecurePlainData;
@@ -20,7 +20,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureValueSecureValueTrans
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureValueType;
 
 /** Constructor model for secureValue of SecureValue (crc32 187fa0ca). */
-final class TlSecureValueSecureValue extends TlInstanceModel
+final class TlSecureValueSecureValue extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -20,8 +20,8 @@ final class TlDialogDialogFolderFactory extends Factory
         return [
             'flags' => 1,
             'pinned' => true,
-            'folder' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'folder' => 1003,
+            'peer' => 1004,
             'top_message' => 5,
             'unread_muted_peers_count' => 6,
             'unread_unmuted_peers_count' => 7,

@@ -14,7 +14,7 @@ final class TlError extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_error';
+    protected $table = 'tl_error_error';
 
     protected $guarded = [];
 }

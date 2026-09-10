@@ -18,7 +18,7 @@ final class TlChat extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_chat';
+    protected $table = 'tl_chat_channel';
 
     protected $guarded = [];
 

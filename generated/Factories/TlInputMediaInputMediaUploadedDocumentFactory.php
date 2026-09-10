@@ -22,10 +22,10 @@ final class TlInputMediaInputMediaUploadedDocumentFactory extends Factory
             'nosound_video' => true,
             'force_file' => true,
             'spoiler' => true,
-            'file' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'thumb' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'file' => 1005,
+            'thumb' => 1006,
             'mime_type' => 'mime_type-7',
-            'video_cover' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'video_cover' => 1008,
             'video_timestamp' => 9,
             'ttl_seconds' => 10,
         ];

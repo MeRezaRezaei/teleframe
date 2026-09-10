@@ -22,7 +22,7 @@ final class TlStoryItem extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_story_item';
+    protected $table = 'tl_story_item_story_item';
 
     protected $guarded = [];
 

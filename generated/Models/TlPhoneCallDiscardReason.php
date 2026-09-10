@@ -17,7 +17,7 @@ final class TlPhoneCallDiscardReason extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_phone_call_discard_reason';
+    protected $table = 'tl_phone_call_discard_reason_phone_call_disca_f54184aa04dd';
 
     protected $guarded = [];
 

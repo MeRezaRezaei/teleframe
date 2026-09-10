@@ -18,7 +18,7 @@ final class TlMessagesChatFullChatFullFactory extends Factory
     public function definition(): array
     {
         return [
-            'full_chat' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'full_chat' => 1001,
         ];
     }
 }

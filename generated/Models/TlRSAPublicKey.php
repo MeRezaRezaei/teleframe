@@ -14,7 +14,7 @@ final class TlRSAPublicKey extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_r_s_a_public_key';
+    protected $table = 'tl_r_s_a_public_key_rsa_public_key';
 
     protected $guarded = [];
 }

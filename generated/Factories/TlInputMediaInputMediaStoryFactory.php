@@ -18,7 +18,7 @@ final class TlInputMediaInputMediaStoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1001,
             'tl_id' => 2,
         ];
     }

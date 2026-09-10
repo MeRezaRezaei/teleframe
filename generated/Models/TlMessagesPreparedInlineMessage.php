@@ -14,7 +14,7 @@ final class TlMessagesPreparedInlineMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_prepared_inline_message';
+    protected $table = 'tl_messages_prepared_inline_message_prepared__abbe0eee55f7';
 
     protected $guarded = [];
 }

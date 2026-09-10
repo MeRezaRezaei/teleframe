@@ -23,9 +23,9 @@ final class TlUpdateUpdateChatParticipantFactory extends Factory
             'date' => 3,
             'actor_id' => 1004,
             'user_id' => 1005,
-            'prev_participant' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_participant' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'invite' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'prev_participant' => 1006,
+            'new_participant' => 1007,
+            'invite' => 1008,
             'qts' => 9,
         ];
     }

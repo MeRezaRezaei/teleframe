@@ -18,7 +18,7 @@ final class TlDecryptedMessageActionDecryptedMessageActionTypingFactory extends 
     public function definition(): array
     {
         return [
-            'action' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'action' => 1001,
         ];
     }
 }

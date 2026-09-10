@@ -14,7 +14,7 @@ final class TlRpcError extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_rpc_error';
+    protected $table = 'tl_rpc_error_rpc_error';
 
     protected $guarded = [];
 }

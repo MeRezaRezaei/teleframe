@@ -18,7 +18,7 @@ final class TlUpdateUpdateNewEncryptedMessageFactory extends Factory
     public function definition(): array
     {
         return [
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1001,
             'qts' => 2,
         ];
     }

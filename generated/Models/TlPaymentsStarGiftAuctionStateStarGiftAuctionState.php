@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarGiftAuctionStateStarGiftBa2a6a814fffChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarGiftAuctionStateStarGiftBa2a6a814fffUsers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGift;
@@ -19,7 +19,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGiftAuctionState;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGiftAuctionUserState;
 
 /** Constructor model for payments.starGiftAuctionState of payments.StarGiftAuctionState (crc32 6b39f4ec). */
-final class TlPaymentsStarGiftAuctionStateStarGiftAuctionState extends TlInstanceModel
+final class TlPaymentsStarGiftAuctionStateStarGiftAuctionState extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

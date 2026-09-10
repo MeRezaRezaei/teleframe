@@ -21,8 +21,8 @@ final class TlStoryAlbumStoryAlbumFactory extends Factory
             'flags' => 1,
             'album_id' => 2,
             'title' => 'title-3',
-            'icon_photo' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'icon_video' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'icon_photo' => 1004,
+            'icon_video' => 1005,
         ];
     }
 }

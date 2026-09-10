@@ -17,7 +17,7 @@ final class TlPostAddress extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_post_address';
+    protected $table = 'tl_post_address_post_address';
 
     protected $guarded = [];
 

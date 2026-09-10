@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlEncryptedChat;
 
 /** Constructor model for updateEncryption of Update (crc32 b4a2e88d). */
-final class TlUpdateUpdateEncryption extends TlInstanceModel
+final class TlUpdateUpdateEncryption extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

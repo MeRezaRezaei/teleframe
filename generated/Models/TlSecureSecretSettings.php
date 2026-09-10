@@ -17,7 +17,7 @@ final class TlSecureSecretSettings extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_secure_secret_settings';
+    protected $table = 'tl_secure_secret_settings_secure_secret_settings';
 
     protected $guarded = [];
 

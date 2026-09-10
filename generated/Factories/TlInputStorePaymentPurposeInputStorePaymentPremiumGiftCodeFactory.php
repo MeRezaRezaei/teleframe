@@ -19,10 +19,10 @@ final class TlInputStorePaymentPurposeInputStorePaymentPremiumGiftCodeFactory ex
     {
         return [
             'flags' => 1,
-            'boost_peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'boost_peer' => 1002,
             'currency' => 'currency-3',
             'amount' => 1004,
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1005,
         ];
     }
 }

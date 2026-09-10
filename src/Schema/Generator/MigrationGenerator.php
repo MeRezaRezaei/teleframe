@@ -100,14 +100,33 @@ final class MigrationGenerator
         $ctors = $type->constructors();
         ksort($ctors);
 
+        // Collect param names present in ALL constructors — any column not
+        // in this set must be nullable because the anchor row is shared by
+        // every constructor and can be created by one that lacks the column.
+        $allParamNames = null;
         foreach ($ctors as $ctor) {
-            $this->constructorTable($type, $ctor, $up, $down);
+            $names = array_map(
+                static fn (TlParam $p): string => $p->name,
+                array_filter($ctor->params(), static fn (TlParam $p): bool => !$p->isFiller),
+            );
+            $allParamNames = $allParamNames === null
+                ? array_flip($names)
+                : array_intersect_key($allParamNames, array_flip($names));
+        }
+
+        foreach ($ctors as $ctor) {
+            $this->constructorTable($type, $ctor, $up, $down, $allParamNames !== null ? array_keys($allParamNames) : []);
         }
 
         return CodeWriter::migrationFile($up, array_reverse($down));
     }
 
-    private function constructorTable(TlType $type, TlConstructor $ctor, array &$up, array &$down): void
+    /**
+     * @param list<string> $universalParams Param names present in ALL constructors of this type.
+     *                                      Columns not in this set are forced nullable because the
+     *                                      shared anchor table can be created by any constructor.
+     */
+    private function constructorTable(TlType $type, TlConstructor $ctor, array &$up, array &$down, array $universalParams = []): void
     {
         $table = Naming::constructorTable($type->name, $ctor->name);
         $this->currentTable = $table;
@@ -127,12 +146,13 @@ final class MigrationGenerator
         $up[] = "    \$table->bigInteger('constructor_id');";
         $up[] = "    \$table->string('constructor_name', 96);";
 
-        // Emit columns (skip the 'id' param for global types — it IS the PK)
+        // Emit columns. For global-ID types the raw 'id:long' param is
+        // emitted as the reserved-word alias 'tl_id' (via Naming::column)
+        // so the Telegram ID lives in a queryable column separate from the
+        // auto-increment PK — enabling multi-tenant anchor reuse.
+        $universalSet = array_flip($universalParams);
         foreach ($ctor->params() as $param) {
-            if ($idStrategy === 'global' && $param->kind() === 'scalar' && $param->name === 'id') {
-                continue; // Already emitted as PK
-            }
-            $this->columnLines($param, $up);
+            $this->columnLines($param, $up, $universalSet);
         }
 
         $up[] = "    \$table->bigInteger('account_id');";
@@ -212,13 +232,21 @@ final class MigrationGenerator
         $down[] = "Schema::dropIfExists('{$child}');";
     }
 
-    private function columnLines(TlParam $param, array &$up): void
+    /**
+     * @param array<string, true> $universalSet Param names present in ALL constructors.
+     *                                          Columns not in this set are forced nullable.
+     */
+    private function columnLines(TlParam $param, array &$up, array $universalSet = []): void
     {
         if ($param->isFiller) {
             return;
         }
         $col = Naming::column($param->name);
-        $nullable = $param->conditional() !== null;
+        // All param columns are nullable: the anchor table (first ctor's
+        // table) is shared by every constructor of the type and may be
+        // created by one that lacks these columns.  The instance row
+        // (same or different table) always fills the real values.
+        $nullable = true;
         match ($param->kind()) {
             'nat' => $up[] = "    \$table->bigInteger('{$col}')->nullable();",
             'true' => $up[] = "    \$table->boolean('{$col}')->default(false);",

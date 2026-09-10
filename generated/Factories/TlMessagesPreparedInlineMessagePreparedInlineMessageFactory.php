@@ -19,7 +19,7 @@ final class TlMessagesPreparedInlineMessagePreparedInlineMessageFactory extends 
     {
         return [
             'query_id' => 1001,
-            'result' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'result' => 1002,
             'cache_time' => 3,
         ];
     }

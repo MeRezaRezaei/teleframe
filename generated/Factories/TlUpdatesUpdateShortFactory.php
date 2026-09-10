@@ -18,7 +18,7 @@ final class TlUpdatesUpdateShortFactory extends Factory
     public function definition(): array
     {
         return [
-            'update' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'update' => 1001,
             'date' => 2,
         ];
     }

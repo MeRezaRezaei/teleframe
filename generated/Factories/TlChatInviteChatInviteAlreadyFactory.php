@@ -18,7 +18,7 @@ final class TlChatInviteChatInviteAlreadyFactory extends Factory
     public function definition(): array
     {
         return [
-            'chat' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'chat' => 1001,
         ];
     }
 }

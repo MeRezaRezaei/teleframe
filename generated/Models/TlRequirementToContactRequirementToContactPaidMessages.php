@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for requirementToContactPaidMessages of RequirementToContact (crc32 b4f67e93). */
-final class TlRequirementToContactRequirementToContactPaidMessages extends TlInstanceModel
+final class TlRequirementToContactRequirementToContactPaidMessages extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

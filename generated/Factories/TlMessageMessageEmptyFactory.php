@@ -20,7 +20,7 @@ final class TlMessageMessageEmptyFactory extends Factory
         return [
             'flags' => 1,
             'tl_id' => 2,
-            'peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer_id' => 1003,
         ];
     }
 }

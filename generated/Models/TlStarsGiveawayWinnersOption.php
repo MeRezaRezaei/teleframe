@@ -14,7 +14,7 @@ final class TlStarsGiveawayWinnersOption extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stars_giveaway_winners_option';
+    protected $table = 'tl_stars_giveaway_winners_option_stars_giveaw_0f7ecce3eb88';
 
     protected $guarded = [];
 }

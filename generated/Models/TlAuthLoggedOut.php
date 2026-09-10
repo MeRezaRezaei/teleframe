@@ -14,7 +14,7 @@ final class TlAuthLoggedOut extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_auth_logged_out';
+    protected $table = 'tl_auth_logged_out_logged_out';
 
     protected $guarded = [];
 }

@@ -20,7 +20,7 @@ final class TlHelpTermsOfServiceTermsOfServiceFactory extends Factory
         return [
             'flags' => 1,
             'popup' => true,
-            'tl_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_id' => 1003,
             'text' => 'text-4',
             'min_age_confirm' => 5,
         ];

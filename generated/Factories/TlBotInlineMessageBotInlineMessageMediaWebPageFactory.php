@@ -26,7 +26,7 @@ final class TlBotInlineMessageBotInlineMessageMediaWebPageFactory extends Factor
             'safe' => true,
             'message' => 'message-7',
             'url' => 'url-8',
-            'reply_markup' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reply_markup' => 1009,
         ];
     }
 }

@@ -23,13 +23,13 @@ final class TlAvailableReactionAvailableReactionFactory extends Factory
             'premium' => true,
             'reaction' => 'reaction-4',
             'title' => 'title-5',
-            'static_icon' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'appear_animation' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'select_animation' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'activate_animation' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'effect_animation' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'around_animation' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'center_icon' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'static_icon' => 1006,
+            'appear_animation' => 1007,
+            'select_animation' => 1008,
+            'activate_animation' => 1009,
+            'effect_animation' => 1010,
+            'around_animation' => 1011,
+            'center_icon' => 1012,
         ];
     }
 }

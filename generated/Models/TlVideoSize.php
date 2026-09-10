@@ -16,7 +16,7 @@ final class TlVideoSize extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_video_size';
+    protected $table = 'tl_video_size_video_size';
 
     protected $guarded = [];
 

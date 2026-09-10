@@ -14,7 +14,7 @@ final class TlMediaArea extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_media_area';
+    protected $table = 'tl_media_area_input_media_area_channel_post';
 
     protected $guarded = [];
 }

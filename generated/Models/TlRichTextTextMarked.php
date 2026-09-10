@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichText;
 
 /** Constructor model for textMarked of RichText (crc32 034b8621). */
-final class TlRichTextTextMarked extends TlInstanceModel
+final class TlRichTextTextMarked extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

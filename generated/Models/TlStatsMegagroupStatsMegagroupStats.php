@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsAbsValueAndPrev;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsDateRangeDays;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsGraph;
@@ -21,7 +21,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsMegagroupStatsMegagrou
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsMegagroupStatsMegagroupStatsUsers;
 
 /** Constructor model for stats.megagroupStats of stats.MegagroupStats (crc32 ef7ff916). */
-final class TlStatsMegagroupStatsMegagroupStats extends TlInstanceModel
+final class TlStatsMegagroupStatsMegagroupStats extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

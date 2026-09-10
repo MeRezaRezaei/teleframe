@@ -23,7 +23,7 @@ final class TlMessageActionMessageActionSuggestedPostApprovalFactory extends Fac
             'balance_too_low' => true,
             'reject_comment' => 'reject_comment-4',
             'schedule_date' => 5,
-            'price' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'price' => 1006,
         ];
     }
 }

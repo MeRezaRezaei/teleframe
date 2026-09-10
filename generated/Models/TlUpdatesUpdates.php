@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesUpdatesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesUpdatesUpdates;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesUpdatesUsers;
 
 /** Constructor model for updates of Updates (crc32 74ae4240). */
-final class TlUpdatesUpdates extends TlInstanceModel
+final class TlUpdatesUpdates extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

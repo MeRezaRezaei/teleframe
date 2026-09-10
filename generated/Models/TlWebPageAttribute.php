@@ -14,7 +14,7 @@ final class TlWebPageAttribute extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_web_page_attribute';
+    protected $table = 'tl_web_page_attribute_web_page_attribute_ai_compose_tone';
 
     protected $guarded = [];
 }

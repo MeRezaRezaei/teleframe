@@ -14,7 +14,7 @@ final class TlPhoneJoinAsPeers extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_phone_join_as_peers';
+    protected $table = 'tl_phone_join_as_peers_join_as_peers';
 
     protected $guarded = [];
 }

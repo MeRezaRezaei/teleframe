@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebPageAttributeWebPageAttributeStar0f76dd30baafIcons;
 
 /** Constructor model for webPageAttributeStarGiftCollection of WebPageAttribute (crc32 31cad303). */
-final class TlWebPageAttributeWebPageAttributeStarGiftCollection extends TlInstanceModel
+final class TlWebPageAttributeWebPageAttributeStarGiftCollection extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

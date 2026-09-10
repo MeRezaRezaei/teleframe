@@ -19,9 +19,9 @@ final class TlAuthSentCodeSentCodeFactory extends Factory
     {
         return [
             'flags' => 1,
-            'tl_type' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_type' => 1002,
             'phone_code_hash' => 'phone_code_hash-3',
-            'next_type' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'next_type' => 1004,
             'timeout' => 5,
         ];
     }

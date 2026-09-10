@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesDialogsDialogsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesDialogsDialogsDialogs;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesDialogsDialogsMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesDialogsDialogsUsers;
 
 /** Constructor model for messages.dialogs of messages.Dialogs (crc32 15ba6c40). */
-final class TlMessagesDialogsDialogs extends TlInstanceModel
+final class TlMessagesDialogsDialogs extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserFull;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUsersUserFullUserFullChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUsersUserFullUserFullUsers;
 
 /** Constructor model for users.userFull of users.UserFull (crc32 3b6d152e). */
-final class TlUsersUserFullUserFull extends TlInstanceModel
+final class TlUsersUserFullUserFull extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

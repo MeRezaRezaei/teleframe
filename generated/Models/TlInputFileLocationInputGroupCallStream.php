@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGroupCall;
 
 /** Constructor model for inputGroupCallStream of InputFileLocation (crc32 0598a92a). */
-final class TlInputFileLocationInputGroupCallStream extends TlInstanceModel
+final class TlInputFileLocationInputGroupCallStream extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

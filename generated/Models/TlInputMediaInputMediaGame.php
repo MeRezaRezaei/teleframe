@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGame;
 
 /** Constructor model for inputMediaGame of InputMedia (crc32 d33f43f3). */
-final class TlInputMediaInputMediaGame extends TlInstanceModel
+final class TlInputMediaInputMediaGame extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

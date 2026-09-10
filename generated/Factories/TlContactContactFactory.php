@@ -19,7 +19,7 @@ final class TlContactContactFactory extends Factory
     {
         return [
             'user_id' => 1001,
-            'mutual' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'mutual' => 1002,
         ];
     }
 }

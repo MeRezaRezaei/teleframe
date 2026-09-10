@@ -16,7 +16,7 @@ final class TlMessageExtendedMedia extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_extended_media';
+    protected $table = 'tl_message_extended_media_message_extended_media';
 
     protected $guarded = [];
 

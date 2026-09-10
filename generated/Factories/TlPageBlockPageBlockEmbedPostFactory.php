@@ -23,7 +23,7 @@ final class TlPageBlockPageBlockEmbedPostFactory extends Factory
             'author_photo_id' => 1003,
             'author' => 'author-4',
             'date' => 5,
-            'caption' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'caption' => 1006,
         ];
     }
 }

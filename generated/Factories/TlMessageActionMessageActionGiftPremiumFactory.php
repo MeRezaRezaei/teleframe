@@ -24,7 +24,7 @@ final class TlMessageActionMessageActionGiftPremiumFactory extends Factory
             'days' => 4,
             'crypto_currency' => 'crypto_currency-5',
             'crypto_amount' => 1006,
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1007,
         ];
     }
 }

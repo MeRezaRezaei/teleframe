@@ -14,7 +14,7 @@ final class TlMessagesStickerSetInstallResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_sticker_set_install_result';
+    protected $table = 'tl_messages_sticker_set_install_result_sticke_41df7d9fd353';
 
     protected $guarded = [];
 }

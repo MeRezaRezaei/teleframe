@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBool;
 
 /** Constructor model for channelAdminLogEventActionToggleForum of ChannelAdminLogEventAction (crc32 02cc6383). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionToggleForum extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionToggleForum extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -16,7 +16,7 @@ final class TlMessagesEmojiGameOutcome extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_emoji_game_outcome';
+    protected $table = 'tl_messages_emoji_game_outcome_emoji_game_outcome';
 
     protected $guarded = [];
 

@@ -18,7 +18,7 @@ final class TlStarGiftAttributeCounterStarGiftAttributeCounterFactory extends Fa
     public function definition(): array
     {
         return [
-            'attribute' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'attribute' => 1001,
             'count' => 2,
         ];
     }

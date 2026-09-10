@@ -14,7 +14,7 @@ final class TlEmojiKeyword extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_emoji_keyword';
+    protected $table = 'tl_emoji_keyword_emoji_keyword';
 
     protected $guarded = [];
 }

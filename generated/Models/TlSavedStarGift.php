@@ -14,7 +14,7 @@ final class TlSavedStarGift extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_saved_star_gift';
+    protected $table = 'tl_saved_star_gift_saved_star_gift';
 
     protected $guarded = [];
 }

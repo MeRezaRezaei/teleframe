@@ -14,7 +14,7 @@ final class TlAccountSavedRingtones extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_saved_ringtones';
+    protected $table = 'tl_account_saved_ringtones_saved_ringtones';
 
     protected $guarded = [];
 }

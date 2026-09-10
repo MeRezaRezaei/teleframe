@@ -17,7 +17,7 @@ final class TlInputRichMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_rich_message';
+    protected $table = 'tl_input_rich_message_input_rich_message';
 
     protected $guarded = [];
 

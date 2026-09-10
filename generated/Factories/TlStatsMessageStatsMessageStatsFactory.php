@@ -18,8 +18,8 @@ final class TlStatsMessageStatsMessageStatsFactory extends Factory
     public function definition(): array
     {
         return [
-            'views_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'reactions_by_emotion_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'views_graph' => 1001,
+            'reactions_by_emotion_graph' => 1002,
         ];
     }
 }

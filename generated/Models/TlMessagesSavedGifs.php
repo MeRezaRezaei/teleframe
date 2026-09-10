@@ -14,7 +14,7 @@ final class TlMessagesSavedGifs extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_saved_gifs';
+    protected $table = 'tl_messages_saved_gifs_saved_gifs';
 
     protected $guarded = [];
 }

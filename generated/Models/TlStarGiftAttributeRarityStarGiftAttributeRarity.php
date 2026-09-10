@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for starGiftAttributeRarity of StarGiftAttributeRarity (crc32 36437737). */
-final class TlStarGiftAttributeRarityStarGiftAttributeRarity extends TlInstanceModel
+final class TlStarGiftAttributeRarityStarGiftAttributeRarity extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

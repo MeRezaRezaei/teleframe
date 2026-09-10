@@ -16,7 +16,7 @@ final class TlInputWallPaper extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_wall_paper';
+    protected $table = 'tl_input_wall_paper_input_wall_paper';
 
     protected $guarded = [];
 

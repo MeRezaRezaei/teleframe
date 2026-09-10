@@ -14,7 +14,7 @@ final class TlMessagesWebPage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_web_page';
+    protected $table = 'tl_messages_web_page_web_page';
 
     protected $guarded = [];
 }

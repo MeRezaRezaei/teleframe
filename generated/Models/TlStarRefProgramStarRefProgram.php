@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsAmount;
 
 /** Constructor model for starRefProgram of StarRefProgram (crc32 dd0c66f2). */
-final class TlStarRefProgramStarRefProgram extends TlInstanceModel
+final class TlStarRefProgramStarRefProgram extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

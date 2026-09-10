@@ -18,7 +18,7 @@ final class TlUserStatus extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_user_status';
+    protected $table = 'tl_user_status_user_status_empty';
 
     protected $guarded = [];
 

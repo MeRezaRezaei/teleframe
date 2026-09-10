@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputGroupCallInviteMessage of InputGroupCall (crc32 8c10603f). */
-final class TlInputGroupCallInputGroupCallInviteMessage extends TlInstanceModel
+final class TlInputGroupCallInputGroupCallInviteMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

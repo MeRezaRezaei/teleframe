@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSecureRequiredTypeSecureRequiredTypeOneOfTypes;
 
 /** Constructor model for secureRequiredTypeOneOf of SecureRequiredType (crc32 027477b4). */
-final class TlSecureRequiredTypeSecureRequiredTypeOneOf extends TlInstanceModel
+final class TlSecureRequiredTypeSecureRequiredTypeOneOf extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

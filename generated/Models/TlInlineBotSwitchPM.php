@@ -16,7 +16,7 @@ final class TlInlineBotSwitchPM extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_inline_bot_switch_p_m';
+    protected $table = 'tl_inline_bot_switch_p_m_inline_bot_switch_p_m';
 
     protected $guarded = [];
 

@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentCharge;
 
 /** Constructor model for messageActionPaymentRefunded of MessageAction (crc32 41b3e202). */
-final class TlMessageActionMessageActionPaymentRefunded extends TlInstanceModel
+final class TlMessageActionMessageActionPaymentRefunded extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

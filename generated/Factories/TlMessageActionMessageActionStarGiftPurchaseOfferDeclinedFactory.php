@@ -20,8 +20,8 @@ final class TlMessageActionMessageActionStarGiftPurchaseOfferDeclinedFactory ext
         return [
             'flags' => 1,
             'expired' => true,
-            'gift' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'price' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'gift' => 1003,
+            'price' => 1004,
         ];
     }
 }

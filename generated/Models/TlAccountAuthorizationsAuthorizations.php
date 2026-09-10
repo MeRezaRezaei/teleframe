@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountAuthorizationsAuthorizationsAuthorizations;
 
 /** Constructor model for account.authorizations of account.Authorizations (crc32 4bff8ea0). */
-final class TlAccountAuthorizationsAuthorizations extends TlInstanceModel
+final class TlAccountAuthorizationsAuthorizations extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotAppSettings;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotInfoBotInfoCommands;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotMenuButton;
@@ -20,7 +20,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 
 /** Constructor model for botInfo of BotInfo (crc32 4d8a0299). */
-final class TlBotInfoBotInfo extends TlInstanceModel
+final class TlBotInfoBotInfo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

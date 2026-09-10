@@ -20,7 +20,7 @@ final class TlKeyboardButtonKeyboardButtonSwitchInlineFactory extends Factory
         return [
             'flags' => 1,
             'same_peer' => true,
-            'style' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'style' => 1003,
             'text' => 'text-4',
             'query' => 'query-5',
         ];

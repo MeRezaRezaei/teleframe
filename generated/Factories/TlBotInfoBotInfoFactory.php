@@ -22,12 +22,12 @@ final class TlBotInfoBotInfoFactory extends Factory
             'has_preview_medias' => true,
             'user_id' => 1003,
             'description' => 'description-4',
-            'description_photo' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'description_document' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'menu_button' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'description_photo' => 1005,
+            'description_document' => 1006,
+            'menu_button' => 1007,
             'privacy_policy_url' => 'privacy_policy_url-8',
-            'app_settings' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'verifier_settings' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'app_settings' => 1009,
+            'verifier_settings' => 1010,
         ];
     }
 }

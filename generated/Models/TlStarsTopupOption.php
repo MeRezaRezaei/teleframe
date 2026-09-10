@@ -14,7 +14,7 @@ final class TlStarsTopupOption extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stars_topup_option';
+    protected $table = 'tl_stars_topup_option_stars_topup_option';
 
     protected $guarded = [];
 }

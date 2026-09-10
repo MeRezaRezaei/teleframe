@@ -14,7 +14,7 @@ final class TlBotsPreviewInfo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bots_preview_info';
+    protected $table = 'tl_bots_preview_info_preview_info';
 
     protected $guarded = [];
 }

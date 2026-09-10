@@ -18,7 +18,7 @@ final class TlInputFile extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_file';
+    protected $table = 'tl_input_file_input_file';
 
     protected $guarded = [];
 

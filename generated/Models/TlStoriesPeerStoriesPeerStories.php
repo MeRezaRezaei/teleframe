@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerStories;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesPeerStoriesPeerStoriesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesPeerStoriesPeerStoriesUsers;
 
 /** Constructor model for stories.peerStories of stories.PeerStories (crc32 cae68768). */
-final class TlStoriesPeerStoriesPeerStories extends TlInstanceModel
+final class TlStoriesPeerStoriesPeerStories extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

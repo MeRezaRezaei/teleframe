@@ -18,7 +18,7 @@ final class TlInputInvoiceInputInvoiceStarGiftDropOriginalDetailsFactory extends
     public function definition(): array
     {
         return [
-            'stargift' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'stargift' => 1001,
         ];
     }
 }

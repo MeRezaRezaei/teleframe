@@ -18,7 +18,7 @@ final class TlMessagePeerVoteMessagePeerVoteFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1001,
             'option' => 'Ynl0ZXMtMg==',
             'date' => 3,
         ];

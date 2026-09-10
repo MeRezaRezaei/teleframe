@@ -18,7 +18,7 @@ final class TlMessageActionMessageActionPollDeleteAnswerFactory extends Factory
     public function definition(): array
     {
         return [
-            'answer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'answer' => 1001,
         ];
     }
 }

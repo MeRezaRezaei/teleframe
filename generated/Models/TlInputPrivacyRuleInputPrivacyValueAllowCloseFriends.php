@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputPrivacyValueAllowCloseFriends of InputPrivacyRule (crc32 2f453e49). */
-final class TlInputPrivacyRuleInputPrivacyValueAllowCloseFriends extends TlInstanceModel
+final class TlInputPrivacyRuleInputPrivacyValueAllowCloseFriends extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

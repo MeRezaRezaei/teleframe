@@ -14,7 +14,7 @@ final class TlConnectedBotStarRef extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_connected_bot_star_ref';
+    protected $table = 'tl_connected_bot_star_ref_connected_bot_star_ref';
 
     protected $guarded = [];
 }

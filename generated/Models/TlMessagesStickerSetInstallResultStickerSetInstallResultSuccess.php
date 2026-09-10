@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for messages.stickerSetInstallResultSuccess of messages.StickerSetInstallResult (crc32 38641628). */
-final class TlMessagesStickerSetInstallResultStickerSetInstallResultSuccess extends TlInstanceModel
+final class TlMessagesStickerSetInstallResultStickerSetInstallResultSuccess extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

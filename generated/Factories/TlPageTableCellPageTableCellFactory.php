@@ -24,7 +24,7 @@ final class TlPageTableCellPageTableCellFactory extends Factory
             'align_right' => true,
             'valign_middle' => true,
             'valign_bottom' => true,
-            'text' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'text' => 1007,
             'colspan' => 8,
             'rowspan' => 9,
         ];

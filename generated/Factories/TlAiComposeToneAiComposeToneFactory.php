@@ -28,7 +28,7 @@ final class TlAiComposeToneAiComposeToneFactory extends Factory
             'prompt' => 'prompt-8',
             'installs_count' => 9,
             'author_id' => 1010,
-            'example_english' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'example_english' => 1011,
         ];
     }
 }

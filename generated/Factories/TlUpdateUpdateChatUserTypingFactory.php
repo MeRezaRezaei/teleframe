@@ -19,8 +19,8 @@ final class TlUpdateUpdateChatUserTypingFactory extends Factory
     {
         return [
             'chat_id' => 1001,
-            'from_id' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'action' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'from_id' => 1002,
+            'action' => 1003,
         ];
     }
 }

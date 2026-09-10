@@ -21,7 +21,7 @@ final class TlStarGiftCollectionStarGiftCollectionFactory extends Factory
             'flags' => 1,
             'collection_id' => 2,
             'title' => 'title-3',
-            'icon' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'icon' => 1004,
             'gifts_count' => 5,
             'hash' => 1006,
         ];

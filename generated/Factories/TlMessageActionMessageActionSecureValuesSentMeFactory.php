@@ -18,7 +18,7 @@ final class TlMessageActionMessageActionSecureValuesSentMeFactory extends Factor
     public function definition(): array
     {
         return [
-            'credentials' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'credentials' => 1001,
         ];
     }
 }

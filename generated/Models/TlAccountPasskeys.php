@@ -14,7 +14,7 @@ final class TlAccountPasskeys extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_passkeys';
+    protected $table = 'tl_account_passkeys_passkeys';
 
     protected $guarded = [];
 }

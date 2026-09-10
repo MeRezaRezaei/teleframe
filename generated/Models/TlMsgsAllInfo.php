@@ -14,7 +14,7 @@ final class TlMsgsAllInfo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_msgs_all_info';
+    protected $table = 'tl_msgs_all_info_msgs_all_info';
 
     protected $guarded = [];
 }

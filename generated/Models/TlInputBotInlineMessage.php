@@ -19,7 +19,7 @@ final class TlInputBotInlineMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_bot_inline_message';
+    protected $table = 'tl_input_bot_inline_message_input_bot_inline_message_game';
 
     protected $guarded = [];
 

@@ -14,7 +14,7 @@ final class TlInputFolderPeer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_folder_peer';
+    protected $table = 'tl_input_folder_peer_input_folder_peer';
 
     protected $guarded = [];
 }

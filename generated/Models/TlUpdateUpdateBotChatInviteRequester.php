@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlExportedChatInvite;
 
 /** Constructor model for updateBotChatInviteRequester of Update (crc32 7cb34d79). */
-final class TlUpdateUpdateBotChatInviteRequester extends TlInstanceModel
+final class TlUpdateUpdateBotChatInviteRequester extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

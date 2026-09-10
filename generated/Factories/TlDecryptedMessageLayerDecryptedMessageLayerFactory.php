@@ -22,7 +22,7 @@ final class TlDecryptedMessageLayerDecryptedMessageLayerFactory extends Factory
             'layer' => 2,
             'in_seq_no' => 3,
             'out_seq_no' => 4,
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1005,
         ];
     }
 }

@@ -20,7 +20,7 @@ final class TlPageBlockPageBlockDetailsFactory extends Factory
         return [
             'flags' => 1,
             'open' => true,
-            'title' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'title' => 1003,
         ];
     }
 }

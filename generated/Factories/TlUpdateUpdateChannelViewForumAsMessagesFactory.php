@@ -19,7 +19,7 @@ final class TlUpdateUpdateChannelViewForumAsMessagesFactory extends Factory
     {
         return [
             'channel_id' => 1001,
-            'enabled' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'enabled' => 1002,
         ];
     }
 }

@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateDeleteScheduledMessagesMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateDeleteScheduledMessagesSent_messages;
 
 /** Constructor model for updateDeleteScheduledMessages of Update (crc32 f2a71983). */
-final class TlUpdateUpdateDeleteScheduledMessages extends TlInstanceModel
+final class TlUpdateUpdateDeleteScheduledMessages extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

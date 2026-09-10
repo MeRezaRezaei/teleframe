@@ -18,7 +18,7 @@ final class TlUpdateUpdateStarsBalanceFactory extends Factory
     public function definition(): array
     {
         return [
-            'balance' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'balance' => 1001,
         ];
     }
 }

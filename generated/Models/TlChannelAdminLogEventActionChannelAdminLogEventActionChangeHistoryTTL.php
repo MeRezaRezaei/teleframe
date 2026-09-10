@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for channelAdminLogEventActionChangeHistoryTTL of ChannelAdminLogEventAction (crc32 6e941a38). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeHistoryTTL extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeHistoryTTL extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

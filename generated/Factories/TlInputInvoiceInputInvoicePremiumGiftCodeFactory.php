@@ -18,8 +18,8 @@ final class TlInputInvoiceInputInvoicePremiumGiftCodeFactory extends Factory
     public function definition(): array
     {
         return [
-            'purpose' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'option' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'purpose' => 1001,
+            'option' => 1002,
         ];
     }
 }

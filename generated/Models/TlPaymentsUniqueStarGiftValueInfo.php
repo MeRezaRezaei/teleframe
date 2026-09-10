@@ -14,7 +14,7 @@ final class TlPaymentsUniqueStarGiftValueInfo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_unique_star_gift_value_info';
+    protected $table = 'tl_payments_unique_star_gift_value_info_uniqu_435563956ba2';
 
     protected $guarded = [];
 }

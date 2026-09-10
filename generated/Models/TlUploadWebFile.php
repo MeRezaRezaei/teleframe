@@ -14,7 +14,7 @@ final class TlUploadWebFile extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_upload_web_file';
+    protected $table = 'tl_upload_web_file_web_file';
 
     protected $guarded = [];
 }

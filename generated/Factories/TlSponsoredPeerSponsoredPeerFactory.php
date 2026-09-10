@@ -20,7 +20,7 @@ final class TlSponsoredPeerSponsoredPeerFactory extends Factory
         return [
             'flags' => 1,
             'random_id' => 'Ynl0ZXMtMg==',
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
             'sponsor_info' => 'sponsor_info-4',
             'additional_info' => 'additional_info-5',
         ];

@@ -16,7 +16,7 @@ final class TlEncryptedChat extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_encrypted_chat';
+    protected $table = 'tl_encrypted_chat_encrypted_chat';
 
     protected $guarded = [];
 

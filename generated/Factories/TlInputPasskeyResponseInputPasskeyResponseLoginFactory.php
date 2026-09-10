@@ -18,7 +18,7 @@ final class TlInputPasskeyResponseInputPasskeyResponseLoginFactory extends Facto
     public function definition(): array
     {
         return [
-            'client_data' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'client_data' => 1001,
             'authenticator_data' => 'Ynl0ZXMtMg==',
             'signature' => 'Ynl0ZXMtMw==',
             'user_handle' => 'user_handle-4',

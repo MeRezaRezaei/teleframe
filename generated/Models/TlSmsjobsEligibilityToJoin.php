@@ -14,7 +14,7 @@ final class TlSmsjobsEligibilityToJoin extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_smsjobs_eligibility_to_join';
+    protected $table = 'tl_smsjobs_eligibility_to_join_eligible_to_join';
 
     protected $guarded = [];
 }

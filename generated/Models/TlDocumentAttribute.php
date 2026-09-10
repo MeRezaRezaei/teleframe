@@ -14,7 +14,7 @@ final class TlDocumentAttribute extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_document_attribute';
+    protected $table = 'tl_document_attribute_document_attribute_animated';
 
     protected $guarded = [];
 }

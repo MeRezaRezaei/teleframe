@@ -18,7 +18,7 @@ final class TlMediaAreaMediaAreaWeatherFactory extends Factory
     public function definition(): array
     {
         return [
-            'coordinates' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'coordinates' => 1001,
             'emoji' => 'emoji-2',
             'temperature_c' => 0.3,
             'color' => 4,

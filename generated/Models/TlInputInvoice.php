@@ -14,7 +14,7 @@ final class TlInputInvoice extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_invoice';
+    protected $table = 'tl_input_invoice_input_invoice_business_bot_transfer_stars';
 
     protected $guarded = [];
 }

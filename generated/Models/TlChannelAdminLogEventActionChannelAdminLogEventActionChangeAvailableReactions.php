@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatReactions;
 
 /** Constructor model for channelAdminLogEventActionChangeAvailableReactions of ChannelAdminLogEventAction (crc32 be4e0ef8). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeAvailableReactions extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeAvailableReactions extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

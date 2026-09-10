@@ -18,7 +18,7 @@ final class TlInputPasskeyResponseInputPasskeyResponseRegisterFactory extends Fa
     public function definition(): array
     {
         return [
-            'client_data' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'client_data' => 1001,
             'attestation_data' => 'Ynl0ZXMtMg==',
         ];
     }

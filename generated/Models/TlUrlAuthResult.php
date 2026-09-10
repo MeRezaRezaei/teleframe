@@ -14,7 +14,7 @@ final class TlUrlAuthResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_url_auth_result';
+    protected $table = 'tl_url_auth_result_url_auth_result_accepted';
 
     protected $guarded = [];
 }

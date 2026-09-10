@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlEmojiStatus;
 
 /** Constructor model for updateUserEmojiStatus of Update (crc32 28373599). */
-final class TlUpdateUpdateUserEmojiStatus extends TlInstanceModel
+final class TlUpdateUpdateUserEmojiStatus extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

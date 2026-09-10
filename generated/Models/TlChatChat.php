@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatAdminRights;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatBannedRights;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatPhoto;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputChannel;
 
 /** Constructor model for chat of Chat (crc32 41cbf256). */
-final class TlChatChat extends TlInstanceModel
+final class TlChatChat extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

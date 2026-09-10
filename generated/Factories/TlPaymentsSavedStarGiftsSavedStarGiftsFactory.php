@@ -20,7 +20,7 @@ final class TlPaymentsSavedStarGiftsSavedStarGiftsFactory extends Factory
         return [
             'flags' => 1,
             'count' => 2,
-            'chat_notifications_enabled' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'chat_notifications_enabled' => 1003,
             'next_offset' => 'next_offset-4',
         ];
     }

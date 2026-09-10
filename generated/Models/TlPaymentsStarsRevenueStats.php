@@ -14,7 +14,7 @@ final class TlPaymentsStarsRevenueStats extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_stars_revenue_stats';
+    protected $table = 'tl_payments_stars_revenue_stats_stars_revenue_stats';
 
     protected $guarded = [];
 }

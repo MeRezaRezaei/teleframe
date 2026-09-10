@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for decryptedMessageActionSetMessageTTL of DecryptedMessageAction (crc32 a1733aec). */
-final class TlDecryptedMessageActionDecryptedMessageActionSetMessageTTL extends TlInstanceModel
+final class TlDecryptedMessageActionDecryptedMessageActionSetMessageTTL extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

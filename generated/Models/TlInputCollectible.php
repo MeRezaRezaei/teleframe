@@ -14,7 +14,7 @@ final class TlInputCollectible extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_collectible';
+    protected $table = 'tl_input_collectible_input_collectible_phone';
 
     protected $guarded = [];
 }

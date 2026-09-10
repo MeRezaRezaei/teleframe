@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupParticipantsGroupParticipantsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupParticipantsGroupParticipantsParticipants;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupParticipantsGroupParticipantsUsers;
 
 /** Constructor model for phone.groupParticipants of phone.GroupParticipants (crc32 f47751b6). */
-final class TlPhoneGroupParticipantsGroupParticipants extends TlInstanceModel
+final class TlPhoneGroupParticipantsGroupParticipants extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

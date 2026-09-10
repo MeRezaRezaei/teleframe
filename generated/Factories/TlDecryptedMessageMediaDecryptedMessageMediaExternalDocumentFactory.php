@@ -23,7 +23,7 @@ final class TlDecryptedMessageMediaDecryptedMessageMediaExternalDocumentFactory 
             'date' => 3,
             'mime_type' => 'mime_type-4',
             'tl_size' => 5,
-            'thumb' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'thumb' => 1006,
             'dc_id' => 7,
         ];
     }

@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for bind_auth_key_inner of BindAuthKeyInner (crc32 75a3f765). */
-final class TlBindAuthKeyInnerBindAuthKeyInner extends TlInstanceModel
+final class TlBindAuthKeyInnerBindAuthKeyInner extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

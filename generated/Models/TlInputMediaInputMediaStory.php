@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputMediaStory of InputMedia (crc32 89fdd778). */
-final class TlInputMediaInputMediaStory extends TlInstanceModel
+final class TlInputMediaInputMediaStory extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

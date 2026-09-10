@@ -24,12 +24,12 @@ final class TlStarsSubscriptionStarsSubscriptionFactory extends Factory
             'missing_balance' => true,
             'bot_canceled' => true,
             'tl_id' => 'id-6',
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1007,
             'until_date' => 8,
-            'pricing' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'pricing' => 1009,
             'chat_invite_hash' => 'chat_invite_hash-10',
             'title' => 'title-11',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1012,
             'invoice_slug' => 'invoice_slug-13',
         ];
     }

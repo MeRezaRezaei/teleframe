@@ -14,7 +14,7 @@ final class TlPaymentsCheckCanSendGiftResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_check_can_send_gift_result';
+    protected $table = 'tl_payments_check_can_send_gift_result_check__b2fde8ccbce4';
 
     protected $guarded = [];
 }

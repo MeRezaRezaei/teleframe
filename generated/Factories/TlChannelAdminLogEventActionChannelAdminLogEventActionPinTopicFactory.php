@@ -19,8 +19,8 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionPinTopicFactor
     {
         return [
             'flags' => 1,
-            'prev_topic' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_topic' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'prev_topic' => 1002,
+            'new_topic' => 1003,
         ];
     }
 }

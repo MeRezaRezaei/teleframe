@@ -14,7 +14,7 @@ final class TlAttachMenuBotIcon extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_attach_menu_bot_icon';
+    protected $table = 'tl_attach_menu_bot_icon_attach_menu_bot_icon';
 
     protected $guarded = [];
 }

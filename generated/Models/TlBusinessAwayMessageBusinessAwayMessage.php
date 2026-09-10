@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBusinessAwayMessageSchedule;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBusinessRecipients;
 
 /** Constructor model for businessAwayMessage of BusinessAwayMessage (crc32 ef156a5c). */
-final class TlBusinessAwayMessageBusinessAwayMessage extends TlInstanceModel
+final class TlBusinessAwayMessageBusinessAwayMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

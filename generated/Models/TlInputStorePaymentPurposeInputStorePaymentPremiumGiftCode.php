@@ -12,12 +12,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStorePaymentPurposeInputStorePaDd29b020fdd6Users;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for inputStorePaymentPremiumGiftCode of InputStorePaymentPurpose (crc32 fb790393). */
-final class TlInputStorePaymentPurposeInputStorePaymentPremiumGiftCode extends TlInstanceModel
+final class TlInputStorePaymentPurposeInputStorePaymentPremiumGiftCode extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

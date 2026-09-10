@@ -16,7 +16,7 @@ final class TlAuthCodeType extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_auth_code_type';
+    protected $table = 'tl_auth_code_type_code_type_call';
 
     protected $guarded = [];
 

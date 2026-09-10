@@ -19,8 +19,8 @@ final class TlMessagesComposedMessageWithAIComposedMessageWithAIFactory extends 
     {
         return [
             'flags' => 1,
-            'result_text' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'diff_text' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'result_text' => 1002,
+            'diff_text' => 1003,
         ];
     }
 }

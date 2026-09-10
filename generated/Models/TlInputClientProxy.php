@@ -14,7 +14,7 @@ final class TlInputClientProxy extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_client_proxy';
+    protected $table = 'tl_input_client_proxy_input_client_proxy';
 
     protected $guarded = [];
 }

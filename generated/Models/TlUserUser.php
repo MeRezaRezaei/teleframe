@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlEmojiStatus;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerColor;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRecentStory;
@@ -21,7 +21,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUserRestriction_reason;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUserUsernames;
 
 /** Constructor model for user of User (crc32 31774388). */
-final class TlUserUser extends TlInstanceModel
+final class TlUserUser extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

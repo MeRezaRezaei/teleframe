@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputInvoiceStarGiftPrepaidUpgrade of InputInvoice (crc32 9a0b48b8). */
-final class TlInputInvoiceInputInvoiceStarGiftPrepaidUpgrade extends TlInstanceModel
+final class TlInputInvoiceInputInvoiceStarGiftPrepaidUpgrade extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

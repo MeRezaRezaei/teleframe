@@ -14,7 +14,7 @@ final class TlAccountTakeout extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_takeout';
+    protected $table = 'tl_account_takeout_takeout';
 
     protected $guarded = [];
 }

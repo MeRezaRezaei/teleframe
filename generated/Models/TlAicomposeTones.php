@@ -14,7 +14,7 @@ final class TlAicomposeTones extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_aicompose_tones';
+    protected $table = 'tl_aicompose_tones_tones';
 
     protected $guarded = [];
 }

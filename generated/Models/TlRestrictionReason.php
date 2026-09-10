@@ -14,7 +14,7 @@ final class TlRestrictionReason extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_restriction_reason';
+    protected $table = 'tl_restriction_reason_restriction_reason';
 
     protected $guarded = [];
 }

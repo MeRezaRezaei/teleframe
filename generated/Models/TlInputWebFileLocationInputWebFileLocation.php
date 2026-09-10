@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputWebFileLocation of InputWebFileLocation (crc32 c239d686). */
-final class TlInputWebFileLocationInputWebFileLocation extends TlInstanceModel
+final class TlInputWebFileLocationInputWebFileLocation extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

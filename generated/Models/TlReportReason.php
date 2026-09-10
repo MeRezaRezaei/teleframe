@@ -14,7 +14,7 @@ final class TlReportReason extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_report_reason';
+    protected $table = 'tl_report_reason_input_report_reason_child_abuse';
 
     protected $guarded = [];
 }

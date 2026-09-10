@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateFolderPeersFolder_peers;
 
 /** Constructor model for updateFolderPeers of Update (crc32 19360dc0). */
-final class TlUpdateUpdateFolderPeers extends TlInstanceModel
+final class TlUpdateUpdateFolderPeers extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

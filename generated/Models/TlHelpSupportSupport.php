@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
 
 /** Constructor model for help.support of help.Support (crc32 17c6b5f6). */
-final class TlHelpSupportSupport extends TlInstanceModel
+final class TlHelpSupportSupport extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

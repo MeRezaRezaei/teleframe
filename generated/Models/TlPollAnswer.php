@@ -17,7 +17,7 @@ final class TlPollAnswer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_poll_answer';
+    protected $table = 'tl_poll_answer_input_poll_answer';
 
     protected $guarded = [];
 

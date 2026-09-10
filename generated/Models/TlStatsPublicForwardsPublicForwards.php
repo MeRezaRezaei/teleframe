@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsPublicForwardsPublicForwardsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsPublicForwardsPublicForwardsForwards;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsPublicForwardsPublicForwardsUsers;
 
 /** Constructor model for stats.publicForwards of stats.PublicForwards (crc32 93037e20). */
-final class TlStatsPublicForwardsPublicForwards extends TlInstanceModel
+final class TlStatsPublicForwardsPublicForwards extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

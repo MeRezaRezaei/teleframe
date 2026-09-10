@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesDiscussionMessageDiscussionMessageChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesDiscussionMessageDiscussionMessageMessages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesDiscussionMessageDiscussionMessageUsers;
 
 /** Constructor model for messages.discussionMessage of messages.DiscussionMessage (crc32 a6341782). */
-final class TlMessagesDiscussionMessageDiscussionMessage extends TlInstanceModel
+final class TlMessagesDiscussionMessageDiscussionMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -21,7 +21,7 @@ final class TlSuggestedPostSuggestedPostFactory extends Factory
             'flags' => 1,
             'accepted' => true,
             'rejected' => true,
-            'price' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'price' => 1004,
             'schedule_date' => 5,
         ];
     }

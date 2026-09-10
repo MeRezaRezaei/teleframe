@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerStoriesPeerStoriesStories;
 
 /** Constructor model for peerStories of PeerStories (crc32 9a35e999). */
-final class TlPeerStoriesPeerStories extends TlInstanceModel
+final class TlPeerStoriesPeerStories extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

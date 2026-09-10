@@ -14,7 +14,7 @@ final class TlKeyboardButtonRow extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_keyboard_button_row';
+    protected $table = 'tl_keyboard_button_row_keyboard_button_row';
 
     protected $guarded = [];
 }

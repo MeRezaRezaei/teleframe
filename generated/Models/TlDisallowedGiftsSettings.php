@@ -17,7 +17,7 @@ final class TlDisallowedGiftsSettings extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_disallowed_gifts_settings';
+    protected $table = 'tl_disallowed_gifts_settings_disallowed_gifts_settings';
 
     protected $guarded = [];
 

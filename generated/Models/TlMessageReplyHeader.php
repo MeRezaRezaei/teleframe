@@ -19,7 +19,7 @@ final class TlMessageReplyHeader extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_reply_header';
+    protected $table = 'tl_message_reply_header_message_reply_header';
 
     protected $guarded = [];
 

@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBool;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlNotificationSound;
 
 /** Constructor model for peerNotifySettings of PeerNotifySettings (crc32 99622c0c). */
-final class TlPeerNotifySettingsPeerNotifySettings extends TlInstanceModel
+final class TlPeerNotifySettingsPeerNotifySettings extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

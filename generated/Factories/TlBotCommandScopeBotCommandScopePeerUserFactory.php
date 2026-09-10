@@ -18,8 +18,8 @@ final class TlBotCommandScopeBotCommandScopePeerUserFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'user_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1001,
+            'user_id' => 1002,
         ];
     }
 }

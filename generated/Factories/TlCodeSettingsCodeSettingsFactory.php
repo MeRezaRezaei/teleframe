@@ -26,7 +26,7 @@ final class TlCodeSettingsCodeSettingsFactory extends Factory
             'allow_firebase' => true,
             'unknown_number' => true,
             'token' => 'token-8',
-            'app_sandbox' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'app_sandbox' => 1009,
         ];
     }
 }

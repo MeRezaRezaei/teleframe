@@ -14,7 +14,7 @@ final class TlMessagesPeerDialogs extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_peer_dialogs';
+    protected $table = 'tl_messages_peer_dialogs_peer_dialogs';
 
     protected $guarded = [];
 }

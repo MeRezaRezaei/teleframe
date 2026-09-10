@@ -14,7 +14,7 @@ final class TlContactsResolvedPeer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_contacts_resolved_peer';
+    protected $table = 'tl_contacts_resolved_peer_resolved_peer';
 
     protected $guarded = [];
 }

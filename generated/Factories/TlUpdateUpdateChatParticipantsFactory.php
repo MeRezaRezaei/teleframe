@@ -18,7 +18,7 @@ final class TlUpdateUpdateChatParticipantsFactory extends Factory
     public function definition(): array
     {
         return [
-            'participants' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'participants' => 1001,
         ];
     }
 }

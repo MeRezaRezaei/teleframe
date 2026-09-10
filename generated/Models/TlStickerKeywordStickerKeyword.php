@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStickerKeywordStickerKeywordKeyword;
 
 /** Constructor model for stickerKeyword of StickerKeyword (crc32 fcfeb29c). */
-final class TlStickerKeywordStickerKeyword extends TlInstanceModel
+final class TlStickerKeywordStickerKeyword extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

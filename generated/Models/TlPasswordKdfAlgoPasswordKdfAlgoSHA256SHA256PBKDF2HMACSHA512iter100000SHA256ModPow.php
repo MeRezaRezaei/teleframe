@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for passwordKdfAlgoSHA256SHA256PBKDF2HMACSHA512iter100000SHA256ModPow of PasswordKdfAlgo (crc32 3a912d4a). */
-final class TlPasswordKdfAlgoPasswordKdfAlgoSHA256SHA256PBKDF2HMACSHA512iter100000SHA256ModPow extends TlInstanceModel
+final class TlPasswordKdfAlgoPasswordKdfAlgoSHA256SHA256PBKDF2HMACSHA512iter100000SHA256ModPow extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

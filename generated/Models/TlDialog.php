@@ -16,7 +16,7 @@ final class TlDialog extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_dialog';
+    protected $table = 'tl_dialog_dialog';
 
     protected $guarded = [];
 

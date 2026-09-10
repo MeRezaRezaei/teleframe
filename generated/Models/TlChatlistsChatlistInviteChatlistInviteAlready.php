@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatlistsChatlistInviteChatlistInviteAlreadyAlready_peers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatlistsChatlistInviteChatlistInviteAlreadyChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatlistsChatlistInviteChatlistInviteAlreadyMissing_peers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatlistsChatlistInviteChatlistInviteAlreadyUsers;
 
 /** Constructor model for chatlists.chatlistInviteAlready of chatlists.ChatlistInvite (crc32 fa87f659). */
-final class TlChatlistsChatlistInviteChatlistInviteAlready extends TlInstanceModel
+final class TlChatlistsChatlistInviteChatlistInviteAlready extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

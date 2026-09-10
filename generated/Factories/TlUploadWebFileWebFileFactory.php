@@ -20,7 +20,7 @@ final class TlUploadWebFileWebFileFactory extends Factory
         return [
             'tl_size' => 1,
             'mime_type' => 'mime_type-2',
-            'file_type' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'file_type' => 1003,
             'mtime' => 4,
             'bytes' => 'Ynl0ZXMtNQ==',
         ];

@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountAutoSaveSettingsAutoSaveSettingsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountAutoSaveSettingsAutoSaveSettingsExceptions;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountAutoSaveSettingsAutoSaveSettingsUsers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAutoSaveSettings;
 
 /** Constructor model for account.autoSaveSettings of account.AutoSaveSettings (crc32 4c3e069d). */
-final class TlAccountAutoSaveSettingsAutoSaveSettings extends TlInstanceModel
+final class TlAccountAutoSaveSettingsAutoSaveSettings extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesAvailableReactionsAvailableReactionsReactions;
 
 /** Constructor model for messages.availableReactions of messages.AvailableReactions (crc32 768e3aad). */
-final class TlMessagesAvailableReactionsAvailableReactions extends TlInstanceModel
+final class TlMessagesAvailableReactionsAvailableReactions extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

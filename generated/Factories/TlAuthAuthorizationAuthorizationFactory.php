@@ -23,7 +23,7 @@ final class TlAuthAuthorizationAuthorizationFactory extends Factory
             'otherwise_relogin_days' => 3,
             'tmp_sessions' => 4,
             'future_auth_token' => 'Ynl0ZXMtNQ==',
-            'tl_user' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_user' => 1006,
         ];
     }
 }

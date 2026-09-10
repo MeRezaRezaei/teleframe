@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for statsDateRangeDays of StatsDateRangeDays (crc32 b637edaf). */
-final class TlStatsDateRangeDaysStatsDateRangeDays extends TlInstanceModel
+final class TlStatsDateRangeDaysStatsDateRangeDays extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

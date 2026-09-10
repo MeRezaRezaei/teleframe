@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for keyboardButtonStyle of KeyboardButtonStyle (crc32 4fdd3430). */
-final class TlKeyboardButtonStyleKeyboardButtonStyle extends TlInstanceModel
+final class TlKeyboardButtonStyleKeyboardButtonStyle extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

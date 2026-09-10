@@ -21,10 +21,10 @@ final class TlRequestPeerTypeRequestPeerTypeChatFactory extends Factory
             'flags' => 1,
             'creator' => true,
             'bot_participant' => true,
-            'has_username' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'forum' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'user_admin_rights' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'bot_admin_rights' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'has_username' => 1004,
+            'forum' => 1005,
+            'user_admin_rights' => 1006,
+            'bot_admin_rights' => 1007,
         ];
     }
 }

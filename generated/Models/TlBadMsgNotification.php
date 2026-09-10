@@ -14,7 +14,7 @@ final class TlBadMsgNotification extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bad_msg_notification';
+    protected $table = 'tl_bad_msg_notification_bad_msg_notification';
 
     protected $guarded = [];
 }

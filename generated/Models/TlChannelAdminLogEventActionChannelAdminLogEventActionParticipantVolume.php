@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGroupCallParticipant;
 
 /** Constructor model for channelAdminLogEventActionParticipantVolume of ChannelAdminLogEventAction (crc32 3e7f6847). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantVolume extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionParticipantVolume extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

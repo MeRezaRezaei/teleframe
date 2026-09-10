@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWallPaperSettings;
 
 /** Constructor model for wallPaperNoFile of WallPaper (crc32 e0804116). */
-final class TlWallPaperWallPaperNoFile extends TlInstanceModel
+final class TlWallPaperWallPaperNoFile extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

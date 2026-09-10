@@ -21,7 +21,7 @@ final class TlMessageActionMessageActionPhoneCallFactory extends Factory
             'flags' => 1,
             'video' => true,
             'call_id' => 1003,
-            'reason' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reason' => 1004,
             'duration' => 5,
         ];
     }

@@ -18,8 +18,8 @@ final class TlUpdateUpdateGroupCallMessageFactory extends Factory
     public function definition(): array
     {
         return [
-            'call' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'call' => 1001,
+            'message' => 1002,
         ];
     }
 }

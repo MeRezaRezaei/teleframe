@@ -14,7 +14,7 @@ final class TlServerDHParams extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_server__d_h__params';
+    protected $table = 'tl_server__d_h__params_server__d_h_params_fail';
 
     protected $guarded = [];
 }

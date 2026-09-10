@@ -16,7 +16,7 @@ final class TlInlineBotWebView extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_inline_bot_web_view';
+    protected $table = 'tl_inline_bot_web_view_inline_bot_web_view';
 
     protected $guarded = [];
 

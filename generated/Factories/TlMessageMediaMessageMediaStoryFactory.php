@@ -20,9 +20,9 @@ final class TlMessageMediaMessageMediaStoryFactory extends Factory
         return [
             'flags' => 1,
             'via_mention' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
             'tl_id' => 4,
-            'story' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'story' => 1005,
         ];
     }
 }

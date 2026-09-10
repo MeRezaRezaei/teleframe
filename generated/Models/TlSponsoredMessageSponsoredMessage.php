@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMedia;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerColor;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSponsoredMessageSponsoredMessageEntities;
 
 /** Constructor model for sponsoredMessage of SponsoredMessage (crc32 7dbf8673). */
-final class TlSponsoredMessageSponsoredMessage extends TlInstanceModel
+final class TlSponsoredMessageSponsoredMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

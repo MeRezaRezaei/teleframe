@@ -14,7 +14,7 @@ final class TlMessagesDhConfig extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_dh_config';
+    protected $table = 'tl_messages_dh_config_dh_config';
 
     protected $guarded = [];
 }

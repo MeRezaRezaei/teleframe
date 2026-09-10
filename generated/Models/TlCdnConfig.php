@@ -14,7 +14,7 @@ final class TlCdnConfig extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_cdn_config';
+    protected $table = 'tl_cdn_config_cdn_config';
 
     protected $guarded = [];
 }

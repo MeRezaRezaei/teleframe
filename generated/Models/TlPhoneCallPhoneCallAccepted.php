@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneCallProtocol;
 
 /** Constructor model for phoneCallAccepted of PhoneCall (crc32 3660c311). */
-final class TlPhoneCallPhoneCallAccepted extends TlInstanceModel
+final class TlPhoneCallPhoneCallAccepted extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

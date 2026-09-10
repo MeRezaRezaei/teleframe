@@ -23,7 +23,7 @@ final class TlStarGiftAuctionUserStateStarGiftAuctionUserStateFactory extends Fa
             'bid_amount' => 1003,
             'bid_date' => 4,
             'min_bid_amount' => 1005,
-            'bid_peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'bid_peer' => 1006,
             'acquired_count' => 7,
         ];
     }

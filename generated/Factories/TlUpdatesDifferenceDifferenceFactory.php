@@ -18,7 +18,7 @@ final class TlUpdatesDifferenceDifferenceFactory extends Factory
     public function definition(): array
     {
         return [
-            'state' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'state' => 1001,
         ];
     }
 }

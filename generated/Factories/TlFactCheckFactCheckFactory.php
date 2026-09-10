@@ -21,7 +21,7 @@ final class TlFactCheckFactCheckFactory extends Factory
             'flags' => 1,
             'need_check' => true,
             'country' => 'country-3',
-            'text' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'text' => 1004,
             'hash' => 1005,
         ];
     }

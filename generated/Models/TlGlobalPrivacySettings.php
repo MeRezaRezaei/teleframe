@@ -14,7 +14,7 @@ final class TlGlobalPrivacySettings extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_global_privacy_settings';
+    protected $table = 'tl_global_privacy_settings_global_privacy_settings';
 
     protected $guarded = [];
 }

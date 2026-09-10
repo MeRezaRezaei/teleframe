@@ -16,7 +16,7 @@ final class TlMessagesEmojiGameInfo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_emoji_game_info';
+    protected $table = 'tl_messages_emoji_game_info_emoji_game_dice_info';
 
     protected $guarded = [];
 

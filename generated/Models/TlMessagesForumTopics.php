@@ -14,7 +14,7 @@ final class TlMessagesForumTopics extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_forum_topics';
+    protected $table = 'tl_messages_forum_topics_forum_topics';
 
     protected $guarded = [];
 }

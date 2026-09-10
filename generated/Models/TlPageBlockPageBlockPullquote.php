@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichText;
 
 /** Constructor model for pageBlockPullquote of PageBlock (crc32 4f4456d3). */
-final class TlPageBlockPageBlockPullquote extends TlInstanceModel
+final class TlPageBlockPageBlockPullquote extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

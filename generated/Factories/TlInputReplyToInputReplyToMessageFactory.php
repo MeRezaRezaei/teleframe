@@ -21,10 +21,10 @@ final class TlInputReplyToInputReplyToMessageFactory extends Factory
             'flags' => 1,
             'reply_to_msg_id' => 2,
             'top_msg_id' => 3,
-            'reply_to_peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reply_to_peer_id' => 1004,
             'quote_text' => 'quote_text-5',
             'quote_offset' => 6,
-            'monoforum_peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'monoforum_peer_id' => 1007,
             'todo_item_id' => 8,
             'poll_option' => 'Ynl0ZXMtOQ==',
         ];

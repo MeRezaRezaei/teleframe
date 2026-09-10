@@ -17,7 +17,7 @@ final class TlStatsDateRangeDays extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stats_date_range_days';
+    protected $table = 'tl_stats_date_range_days_stats_date_range_days';
 
     protected $guarded = [];
 

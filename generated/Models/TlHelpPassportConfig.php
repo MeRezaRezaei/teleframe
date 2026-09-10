@@ -14,7 +14,7 @@ final class TlHelpPassportConfig extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_help_passport_config';
+    protected $table = 'tl_help_passport_config_passport_config';
 
     protected $guarded = [];
 }

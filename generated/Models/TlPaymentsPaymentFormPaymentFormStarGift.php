@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInvoice;
 
 /** Constructor model for payments.paymentFormStarGift of payments.PaymentForm (crc32 b425cfe1). */
-final class TlPaymentsPaymentFormPaymentFormStarGift extends TlInstanceModel
+final class TlPaymentsPaymentFormPaymentFormStarGift extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

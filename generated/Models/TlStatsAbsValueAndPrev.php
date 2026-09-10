@@ -17,7 +17,7 @@ final class TlStatsAbsValueAndPrev extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stats_abs_value_and_prev';
+    protected $table = 'tl_stats_abs_value_and_prev_stats_abs_value_and_prev';
 
     protected $guarded = [];
 

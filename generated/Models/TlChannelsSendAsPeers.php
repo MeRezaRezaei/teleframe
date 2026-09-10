@@ -14,7 +14,7 @@ final class TlChannelsSendAsPeers extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_channels_send_as_peers';
+    protected $table = 'tl_channels_send_as_peers_send_as_peers';
 
     protected $guarded = [];
 }

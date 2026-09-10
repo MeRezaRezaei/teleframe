@@ -22,7 +22,7 @@ final class TlStoriesAllStoriesAllStoriesFactory extends Factory
             'has_more' => true,
             'count' => 3,
             'state' => 'state-4',
-            'stealth_mode' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'stealth_mode' => 1005,
         ];
     }
 }

@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for messageActionChatDeleteUser of MessageAction (crc32 a43f30cc). */
-final class TlMessageActionMessageActionChatDeleteUser extends TlInstanceModel
+final class TlMessageActionMessageActionChatDeleteUser extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

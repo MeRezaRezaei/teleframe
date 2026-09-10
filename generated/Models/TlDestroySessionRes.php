@@ -14,7 +14,7 @@ final class TlDestroySessionRes extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_destroy_session_res';
+    protected $table = 'tl_destroy_session_res_destroy_session_none';
 
     protected $guarded = [];
 }

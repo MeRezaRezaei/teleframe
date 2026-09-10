@@ -18,19 +18,19 @@ final class TlStatsMegagroupStatsMegagroupStatsFactory extends Factory
     public function definition(): array
     {
         return [
-            'period' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'members' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'messages' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'viewers' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'posters' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'growth_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'members_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'new_members_by_source_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'languages_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'messages_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'actions_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'top_hours_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'weekdays_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'period' => 1001,
+            'members' => 1002,
+            'messages' => 1003,
+            'viewers' => 1004,
+            'posters' => 1005,
+            'growth_graph' => 1006,
+            'members_graph' => 1007,
+            'new_members_by_source_graph' => 1008,
+            'languages_graph' => 1009,
+            'messages_graph' => 1010,
+            'actions_graph' => 1011,
+            'top_hours_graph' => 1012,
+            'weekdays_graph' => 1013,
         ];
     }
 }

@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputBusinessRecipientsInputBusinessRecipientsUsers;
 
 /** Constructor model for inputBusinessRecipients of InputBusinessRecipients (crc32 6f8b32aa). */
-final class TlInputBusinessRecipientsInputBusinessRecipients extends TlInstanceModel
+final class TlInputBusinessRecipientsInputBusinessRecipients extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

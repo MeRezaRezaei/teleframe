@@ -14,7 +14,7 @@ final class TlInputTheme extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_theme';
+    protected $table = 'tl_input_theme_input_theme';
 
     protected $guarded = [];
 }

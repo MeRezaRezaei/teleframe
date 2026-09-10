@@ -18,7 +18,7 @@ final class TlUpdateUpdateNewStickerSetFactory extends Factory
     public function definition(): array
     {
         return [
-            'stickerset' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'stickerset' => 1001,
         ];
     }
 }

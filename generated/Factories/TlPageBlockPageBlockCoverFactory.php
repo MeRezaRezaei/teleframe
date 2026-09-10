@@ -18,7 +18,7 @@ final class TlPageBlockPageBlockCoverFactory extends Factory
     public function definition(): array
     {
         return [
-            'cover' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'cover' => 1001,
         ];
     }
 }

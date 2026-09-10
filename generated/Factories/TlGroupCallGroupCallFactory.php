@@ -44,7 +44,7 @@ final class TlGroupCallGroupCallFactory extends Factory
             'version' => 24,
             'invite_link' => 'invite_link-25',
             'send_paid_messages_stars' => 1026,
-            'default_send_as' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'default_send_as' => 1027,
         ];
     }
 }

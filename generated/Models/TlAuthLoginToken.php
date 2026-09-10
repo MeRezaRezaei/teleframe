@@ -14,7 +14,7 @@ final class TlAuthLoginToken extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_auth_login_token';
+    protected $table = 'tl_auth_login_token_login_token';
 
     protected $guarded = [];
 }

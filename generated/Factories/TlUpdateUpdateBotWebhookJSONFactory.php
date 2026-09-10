@@ -18,7 +18,7 @@ final class TlUpdateUpdateBotWebhookJSONFactory extends Factory
     public function definition(): array
     {
         return [
-            'data' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'data' => 1001,
         ];
     }
 }

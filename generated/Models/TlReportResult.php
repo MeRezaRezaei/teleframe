@@ -14,7 +14,7 @@ final class TlReportResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_report_result';
+    protected $table = 'tl_report_result_report_result_add_comment';
 
     protected $guarded = [];
 }

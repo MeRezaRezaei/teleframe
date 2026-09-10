@@ -14,7 +14,7 @@ final class TlPhoneGroupCallStreamChannels extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_phone_group_call_stream_channels';
+    protected $table = 'tl_phone_group_call_stream_channels_group_cal_7df01b0705a4';
 
     protected $guarded = [];
 }

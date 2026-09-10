@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesAvailableEffectsAvailableEffectsDocuments;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesAvailableEffectsAvailableEffectsEffects;
 
 /** Constructor model for messages.availableEffects of messages.AvailableEffects (crc32 bddb616e). */
-final class TlMessagesAvailableEffectsAvailableEffects extends TlInstanceModel
+final class TlMessagesAvailableEffectsAvailableEffects extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

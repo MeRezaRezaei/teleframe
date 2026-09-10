@@ -19,8 +19,8 @@ final class TlUpdateUpdateNewStoryReactionFactory extends Factory
     {
         return [
             'story_id' => 1,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'reaction' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1002,
+            'reaction' => 1003,
         ];
     }
 }

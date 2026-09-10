@@ -18,7 +18,7 @@ final class TlTopPeerCategoryPeersTopPeerCategoryPeersFactory extends Factory
     public function definition(): array
     {
         return [
-            'category' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'category' => 1001,
             'count' => 2,
         ];
     }

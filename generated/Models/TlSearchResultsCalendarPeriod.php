@@ -14,7 +14,7 @@ final class TlSearchResultsCalendarPeriod extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_search_results_calendar_period';
+    protected $table = 'tl_search_results_calendar_period_search_resu_9116af4a75f6';
 
     protected $guarded = [];
 }

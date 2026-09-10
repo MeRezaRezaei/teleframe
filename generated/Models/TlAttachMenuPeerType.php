@@ -14,7 +14,7 @@ final class TlAttachMenuPeerType extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_attach_menu_peer_type';
+    protected $table = 'tl_attach_menu_peer_type_attach_menu_peer_type_bot_p_m';
 
     protected $guarded = [];
 }

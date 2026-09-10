@@ -18,7 +18,7 @@ final class TlUpdateUpdatePaidReactionPrivacyFactory extends Factory
     public function definition(): array
     {
         return [
-            'private' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'private' => 1001,
         ];
     }
 }

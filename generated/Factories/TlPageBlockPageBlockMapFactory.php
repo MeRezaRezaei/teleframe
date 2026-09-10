@@ -18,11 +18,11 @@ final class TlPageBlockPageBlockMapFactory extends Factory
     public function definition(): array
     {
         return [
-            'geo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'geo' => 1001,
             'zoom' => 2,
             'w' => 3,
             'h' => 4,
-            'caption' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'caption' => 1005,
         ];
     }
 }

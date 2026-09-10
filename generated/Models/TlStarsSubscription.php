@@ -14,7 +14,7 @@ final class TlStarsSubscription extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stars_subscription';
+    protected $table = 'tl_stars_subscription_stars_subscription';
 
     protected $guarded = [];
 }

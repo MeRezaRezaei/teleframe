@@ -21,7 +21,7 @@ final class TlUpdatesChannelDifferenceChannelDifferenceTooLongFactory extends Fa
             'flags' => 1,
             'final' => true,
             'timeout' => 3,
-            'dialog' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'dialog' => 1004,
         ];
     }
 }

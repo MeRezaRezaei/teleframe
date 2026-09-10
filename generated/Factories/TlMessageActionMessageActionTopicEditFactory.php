@@ -21,8 +21,8 @@ final class TlMessageActionMessageActionTopicEditFactory extends Factory
             'flags' => 1,
             'title' => 'title-2',
             'icon_emoji_id' => 1003,
-            'closed' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'hidden' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'closed' => 1004,
+            'hidden' => 1005,
         ];
     }
 }

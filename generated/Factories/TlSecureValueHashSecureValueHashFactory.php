@@ -18,7 +18,7 @@ final class TlSecureValueHashSecureValueHashFactory extends Factory
     public function definition(): array
     {
         return [
-            'tl_type' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_type' => 1001,
             'hash' => 'Ynl0ZXMtMg==',
         ];
     }

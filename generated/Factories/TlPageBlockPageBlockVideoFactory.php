@@ -23,7 +23,7 @@ final class TlPageBlockPageBlockVideoFactory extends Factory
             'loop' => true,
             'spoiler' => true,
             'video_id' => 1005,
-            'caption' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'caption' => 1006,
         ];
     }
 }

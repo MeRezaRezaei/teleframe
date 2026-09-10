@@ -14,7 +14,7 @@ final class TlInputRichFile extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_rich_file';
+    protected $table = 'tl_input_rich_file_input_rich_file_document';
 
     protected $guarded = [];
 }

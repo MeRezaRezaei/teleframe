@@ -20,7 +20,7 @@ final class TlChannelParticipantChannelParticipantCreatorFactory extends Factory
         return [
             'flags' => 1,
             'user_id' => 1002,
-            'admin_rights' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'admin_rights' => 1003,
             'rank' => 'rank-4',
         ];
     }

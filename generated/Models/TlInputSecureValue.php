@@ -14,7 +14,7 @@ final class TlInputSecureValue extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_secure_value';
+    protected $table = 'tl_input_secure_value_input_secure_value';
 
     protected $guarded = [];
 }

@@ -14,7 +14,7 @@ final class TlMsgResendReq extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_msg_resend_req';
+    protected $table = 'tl_msg_resend_req_msg_resend_ans_req';
 
     protected $guarded = [];
 }

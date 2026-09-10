@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsResolvedPeerResolvedPeerChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsResolvedPeerResolvedPeerUsers;
 
 /** Constructor model for contacts.resolvedPeer of contacts.ResolvedPeer (crc32 7f077ad9). */
-final class TlContactsResolvedPeerResolvedPeer extends TlInstanceModel
+final class TlContactsResolvedPeerResolvedPeer extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

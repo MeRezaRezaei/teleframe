@@ -16,7 +16,7 @@ final class TlWebViewResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_web_view_result';
+    protected $table = 'tl_web_view_result_web_view_result_url';
 
     protected $guarded = [];
 

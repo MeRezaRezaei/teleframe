@@ -18,8 +18,8 @@ final class TlUpdateUpdateChatDefaultBannedRightsFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'default_banned_rights' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1001,
+            'default_banned_rights' => 1002,
             'version' => 3,
         ];
     }

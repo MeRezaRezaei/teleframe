@@ -21,7 +21,7 @@ final class TlTodoListTodoListFactory extends Factory
             'flags' => 1,
             'others_can_append' => true,
             'others_can_complete' => true,
-            'title' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'title' => 1004,
         ];
     }
 }

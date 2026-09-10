@@ -22,7 +22,7 @@ final class TlInputStorePaymentPurposeInputStorePaymentStarsTopupFactory extends
             'stars' => 1002,
             'currency' => 'currency-3',
             'amount' => 1004,
-            'spend_purpose_peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'spend_purpose_peer' => 1005,
         ];
     }
 }

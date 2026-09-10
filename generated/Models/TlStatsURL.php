@@ -14,7 +14,7 @@ final class TlStatsURL extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stats_u_r_l';
+    protected $table = 'tl_stats_u_r_l_stats_u_r_l';
 
     protected $guarded = [];
 }

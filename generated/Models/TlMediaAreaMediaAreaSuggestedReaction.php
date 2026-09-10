@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMediaAreaCoordinates;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReaction;
 
 /** Constructor model for mediaAreaSuggestedReaction of MediaArea (crc32 14455871). */
-final class TlMediaAreaMediaAreaSuggestedReaction extends TlInstanceModel
+final class TlMediaAreaMediaAreaSuggestedReaction extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

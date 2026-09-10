@@ -17,7 +17,7 @@ final class TlTodoList extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_todo_list';
+    protected $table = 'tl_todo_list_todo_list';
 
     protected $guarded = [];
 

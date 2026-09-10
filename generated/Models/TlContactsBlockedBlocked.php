@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsBlockedBlockedBlocked;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsBlockedBlockedChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsBlockedBlockedUsers;
 
 /** Constructor model for contacts.blocked of contacts.Blocked (crc32 0ade1591). */
-final class TlContactsBlockedBlocked extends TlInstanceModel
+final class TlContactsBlockedBlocked extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

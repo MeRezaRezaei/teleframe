@@ -14,7 +14,7 @@ final class TlPaymentsSuggestedStarRefBots extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_suggested_star_ref_bots';
+    protected $table = 'tl_payments_suggested_star_ref_bots_suggested_2b419606faf4';
 
     protected $guarded = [];
 }

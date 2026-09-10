@@ -14,7 +14,7 @@ final class TlAccountContentSettings extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_content_settings';
+    protected $table = 'tl_account_content_settings_content_settings';
 
     protected $guarded = [];
 }

@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for notificationSoundLocal of NotificationSound (crc32 830b9ae4). */
-final class TlNotificationSoundNotificationSoundLocal extends TlInstanceModel
+final class TlNotificationSoundNotificationSoundLocal extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

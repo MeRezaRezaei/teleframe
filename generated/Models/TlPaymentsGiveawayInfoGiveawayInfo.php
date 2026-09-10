@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for payments.giveawayInfo of payments.GiveawayInfo (crc32 4367daa0). */
-final class TlPaymentsGiveawayInfoGiveawayInfo extends TlInstanceModel
+final class TlPaymentsGiveawayInfoGiveawayInfo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

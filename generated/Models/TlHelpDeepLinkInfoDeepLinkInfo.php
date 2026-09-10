@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpDeepLinkInfoDeepLinkInfoEntities;
 
 /** Constructor model for help.deepLinkInfo of help.DeepLinkInfo (crc32 6a4ee832). */
-final class TlHelpDeepLinkInfoDeepLinkInfo extends TlInstanceModel
+final class TlHelpDeepLinkInfoDeepLinkInfo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

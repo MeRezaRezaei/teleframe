@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for channelParticipantsKicked of ChannelParticipantsFilter (crc32 a3b54985). */
-final class TlChannelParticipantsFilterChannelParticipantsKicked extends TlInstanceModel
+final class TlChannelParticipantsFilterChannelParticipantsKicked extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

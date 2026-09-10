@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDraftMessage;
 
 /** Constructor model for monoForumDialog of SavedDialog (crc32 64407ea7). */
-final class TlSavedDialogMonoForumDialog extends TlInstanceModel
+final class TlSavedDialogMonoForumDialog extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

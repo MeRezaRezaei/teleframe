@@ -16,7 +16,7 @@ final class TlUserFull extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_user_full';
+    protected $table = 'tl_user_full_user_full';
 
     protected $guarded = [];
 

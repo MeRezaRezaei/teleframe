@@ -18,7 +18,7 @@ final class TlUpdateUpdateLangPackFactory extends Factory
     public function definition(): array
     {
         return [
-            'difference' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'difference' => 1001,
         ];
     }
 }

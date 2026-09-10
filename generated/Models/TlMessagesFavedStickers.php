@@ -14,7 +14,7 @@ final class TlMessagesFavedStickers extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_faved_stickers';
+    protected $table = 'tl_messages_faved_stickers_faved_stickers';
 
     protected $guarded = [];
 }

@@ -19,7 +19,7 @@ final class TlRpcResultRpcResultFactory extends Factory
     {
         return [
             'req_msg_id' => 1001,
-            'result' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'result' => 1002,
         ];
     }
 }

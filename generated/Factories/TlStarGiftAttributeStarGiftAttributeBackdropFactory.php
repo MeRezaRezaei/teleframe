@@ -24,7 +24,7 @@ final class TlStarGiftAttributeStarGiftAttributeBackdropFactory extends Factory
             'edge_color' => 4,
             'pattern_color' => 5,
             'text_color' => 6,
-            'rarity' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'rarity' => 1007,
         ];
     }
 }

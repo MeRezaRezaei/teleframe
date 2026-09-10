@@ -25,13 +25,13 @@ final class TlPaymentsPaymentFormPaymentFormFactory extends Factory
             'bot_id' => 1005,
             'title' => 'title-6',
             'description' => 'description-7',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'invoice' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1008,
+            'invoice' => 1009,
             'provider_id' => 1010,
             'url' => 'url-11',
             'native_provider' => 'native_provider-12',
-            'native_params' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'saved_info' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'native_params' => 1013,
+            'saved_info' => 1014,
         ];
     }
 }

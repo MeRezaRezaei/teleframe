@@ -18,7 +18,7 @@ final class TlMessageActionMessageActionSetChatThemeFactory extends Factory
     public function definition(): array
     {
         return [
-            'theme' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'theme' => 1001,
         ];
     }
 }

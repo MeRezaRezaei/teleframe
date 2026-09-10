@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMaskCoords;
 
 /** Constructor model for inputStickerSetItem of InputStickerSetItem (crc32 32da9e9c). */
-final class TlInputStickerSetItemInputStickerSetItem extends TlInstanceModel
+final class TlInputStickerSetItemInputStickerSetItem extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -27,7 +27,7 @@ final class TlForumTopicForumTopicFactory extends Factory
             'title_missing' => true,
             'tl_id' => 8,
             'date' => 9,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1010,
             'title' => 'title-11',
             'icon_color' => 12,
             'icon_emoji_id' => 1013,
@@ -38,9 +38,9 @@ final class TlForumTopicForumTopicFactory extends Factory
             'unread_mentions_count' => 18,
             'unread_reactions_count' => 19,
             'unread_poll_votes_count' => 20,
-            'from_id' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'notify_settings' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'draft' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'from_id' => 1021,
+            'notify_settings' => 1022,
+            'draft' => 1023,
         ];
     }
 }

@@ -18,7 +18,7 @@ final class TlPeerBlockedPeerBlockedFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer_id' => 1001,
             'date' => 2,
         ];
     }

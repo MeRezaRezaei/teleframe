@@ -20,7 +20,7 @@ final class TlMessageMediaMessageMediaVideoStreamFactory extends Factory
         return [
             'flags' => 1,
             'rtmp_stream' => true,
-            'call' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'call' => 1003,
         ];
     }
 }

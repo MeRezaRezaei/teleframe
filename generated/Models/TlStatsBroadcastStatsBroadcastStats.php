@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsAbsValueAndPrev;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsBroadcastStatsBroadcastStatsRecent_posts_interactions;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsDateRangeDays;
@@ -19,7 +19,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsGraph;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsPercentValue;
 
 /** Constructor model for stats.broadcastStats of stats.BroadcastStats (crc32 396ca5fc). */
-final class TlStatsBroadcastStatsBroadcastStats extends TlInstanceModel
+final class TlStatsBroadcastStatsBroadcastStats extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

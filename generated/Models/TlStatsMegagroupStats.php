@@ -14,7 +14,7 @@ final class TlStatsMegagroupStats extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stats_megagroup_stats';
+    protected $table = 'tl_stats_megagroup_stats_megagroup_stats';
 
     protected $guarded = [];
 }

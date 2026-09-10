@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelAdminLogEventActionChannelAdm38f150219e2eNew_value;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelAdminLogEventActionChannelAdm38f150219e2ePrev_value;
 
 /** Constructor model for channelAdminLogEventActionChangeUsernames of ChannelAdminLogEventAction (crc32 f04fb3a9). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeUsernames extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeUsernames extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

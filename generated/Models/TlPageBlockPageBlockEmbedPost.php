@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPageBlockPageBlockEmbedPostBlocks;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPageCaption;
 
 /** Constructor model for pageBlockEmbedPost of PageBlock (crc32 f259a80b). */
-final class TlPageBlockPageBlockEmbedPost extends TlInstanceModel
+final class TlPageBlockPageBlockEmbedPost extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

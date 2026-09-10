@@ -19,7 +19,7 @@ final class TlAccountEmailVerifiedEmailVerifiedLoginFactory extends Factory
     {
         return [
             'email' => 'email-1',
-            'sent_code' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'sent_code' => 1002,
         ];
     }
 }

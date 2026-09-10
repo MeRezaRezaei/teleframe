@@ -19,8 +19,8 @@ final class TlInputBotInlineMessageInputBotInlineMessageRichMessageFactory exten
     {
         return [
             'flags' => 1,
-            'reply_markup' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'rich_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reply_markup' => 1002,
+            'rich_message' => 1003,
         ];
     }
 }

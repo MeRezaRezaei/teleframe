@@ -19,7 +19,7 @@ final class TlSendMessageAction extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_send_message_action';
+    protected $table = 'tl_send_message_action_input_send_message_ric_e3acb0a879b4';
 
     protected $guarded = [];
 

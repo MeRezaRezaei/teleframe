@@ -18,7 +18,7 @@ final class TlInputInvoiceInputInvoiceStarGiftPrepaidUpgradeFactory extends Fact
     public function definition(): array
     {
         return [
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1001,
             'hash' => 'hash-2',
         ];
     }

@@ -14,7 +14,7 @@ final class TlInputStarGiftAuction extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_star_gift_auction';
+    protected $table = 'tl_input_star_gift_auction_input_star_gift_auction';
 
     protected $guarded = [];
 }

@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for webDomainException of WebDomainException (crc32 933ca597). */
-final class TlWebDomainExceptionWebDomainException extends TlInstanceModel
+final class TlWebDomainExceptionWebDomainException extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

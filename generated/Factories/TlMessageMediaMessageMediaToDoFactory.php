@@ -19,7 +19,7 @@ final class TlMessageMediaMessageMediaToDoFactory extends Factory
     {
         return [
             'flags' => 1,
-            'todo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'todo' => 1002,
         ];
     }
 }

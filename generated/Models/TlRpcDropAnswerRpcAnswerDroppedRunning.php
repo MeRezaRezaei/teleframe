@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for rpc_answer_dropped_running of RpcDropAnswer (crc32 cd78e586). */
-final class TlRpcDropAnswerRpcAnswerDroppedRunning extends TlInstanceModel
+final class TlRpcDropAnswerRpcAnswerDroppedRunning extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

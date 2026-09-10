@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPageTableRowPageTableRowCells;
 
 /** Constructor model for pageTableRow of PageTableRow (crc32 e0c0c5e5). */
-final class TlPageTableRowPageTableRow extends TlInstanceModel
+final class TlPageTableRowPageTableRow extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

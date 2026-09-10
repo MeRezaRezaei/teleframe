@@ -27,7 +27,7 @@ final class TlMessageMedia extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_media';
+    protected $table = 'tl_message_media_message_media_contact';
 
     protected $guarded = [];
 

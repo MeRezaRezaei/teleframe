@@ -18,7 +18,7 @@ final class TlUpdateUpdateGroupCallChainBlocksFactory extends Factory
     public function definition(): array
     {
         return [
-            'call' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'call' => 1001,
             'sub_chain_id' => 2,
             'next_offset' => 3,
         ];

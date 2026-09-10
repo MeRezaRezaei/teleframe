@@ -18,7 +18,7 @@ final class TlAuthPasskeyLoginOptionsPasskeyLoginOptionsFactory extends Factory
     public function definition(): array
     {
         return [
-            'options' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'options' => 1001,
         ];
     }
 }

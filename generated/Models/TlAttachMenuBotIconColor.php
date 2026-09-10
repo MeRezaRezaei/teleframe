@@ -14,7 +14,7 @@ final class TlAttachMenuBotIconColor extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_attach_menu_bot_icon_color';
+    protected $table = 'tl_attach_menu_bot_icon_color_attach_menu_bot_icon_color';
 
     protected $guarded = [];
 }

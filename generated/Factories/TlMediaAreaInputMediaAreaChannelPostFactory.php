@@ -18,8 +18,8 @@ final class TlMediaAreaInputMediaAreaChannelPostFactory extends Factory
     public function definition(): array
     {
         return [
-            'coordinates' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'channel' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'coordinates' => 1001,
+            'channel' => 1002,
             'msg_id' => 3,
         ];
     }

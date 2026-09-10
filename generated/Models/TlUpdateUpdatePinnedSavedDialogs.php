@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdatePinnedSavedDialogsOrder;
 
 /** Constructor model for updatePinnedSavedDialogs of Update (crc32 686c85a6). */
-final class TlUpdateUpdatePinnedSavedDialogs extends TlInstanceModel
+final class TlUpdateUpdatePinnedSavedDialogs extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

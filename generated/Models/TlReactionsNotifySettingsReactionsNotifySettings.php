@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBool;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlNotificationSound;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReactionNotificationsFrom;
 
 /** Constructor model for reactionsNotifySettings of ReactionsNotifySettings (crc32 71e4ea58). */
-final class TlReactionsNotifySettingsReactionsNotifySettings extends TlInstanceModel
+final class TlReactionsNotifySettingsReactionsNotifySettings extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

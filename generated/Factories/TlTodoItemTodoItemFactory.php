@@ -19,7 +19,7 @@ final class TlTodoItemTodoItemFactory extends Factory
     {
         return [
             'tl_id' => 1,
-            'title' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'title' => 1002,
         ];
     }
 }

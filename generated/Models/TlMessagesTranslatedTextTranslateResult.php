@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesTranslatedTextTranslateResultResult;
 
 /** Constructor model for messages.translateResult of messages.TranslatedText (crc32 33db32f8). */
-final class TlMessagesTranslatedTextTranslateResult extends TlInstanceModel
+final class TlMessagesTranslatedTextTranslateResult extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

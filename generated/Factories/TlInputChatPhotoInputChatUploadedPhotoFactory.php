@@ -19,10 +19,10 @@ final class TlInputChatPhotoInputChatUploadedPhotoFactory extends Factory
     {
         return [
             'flags' => 1,
-            'file' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'video' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'file' => 1002,
+            'video' => 1003,
             'video_start_ts' => 0.4,
-            'video_emoji_markup' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'video_emoji_markup' => 1005,
         ];
     }
 }

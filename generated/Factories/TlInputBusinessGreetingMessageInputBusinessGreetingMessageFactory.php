@@ -19,7 +19,7 @@ final class TlInputBusinessGreetingMessageInputBusinessGreetingMessageFactory ex
     {
         return [
             'shortcut_id' => 1,
-            'recipients' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'recipients' => 1002,
             'no_activity_days' => 3,
         ];
     }

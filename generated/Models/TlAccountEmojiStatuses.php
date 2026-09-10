@@ -14,7 +14,7 @@ final class TlAccountEmojiStatuses extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_emoji_statuses';
+    protected $table = 'tl_account_emoji_statuses_emoji_statuses';
 
     protected $guarded = [];
 }

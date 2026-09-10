@@ -14,7 +14,7 @@ final class TlStoriesCanSendStoryCount extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stories_can_send_story_count';
+    protected $table = 'tl_stories_can_send_story_count_can_send_story_count';
 
     protected $guarded = [];
 }

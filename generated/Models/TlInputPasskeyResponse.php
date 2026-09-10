@@ -16,7 +16,7 @@ final class TlInputPasskeyResponse extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_passkey_response';
+    protected $table = 'tl_input_passkey_response_input_passkey_response_login';
 
     protected $guarded = [];
 

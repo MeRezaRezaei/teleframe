@@ -14,7 +14,7 @@ final class TlAccountAutoSaveSettings extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_auto_save_settings';
+    protected $table = 'tl_account_auto_save_settings_auto_save_settings';
 
     protected $guarded = [];
 }

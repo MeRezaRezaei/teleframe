@@ -14,7 +14,7 @@ final class TlStarGiftAttributeCounter extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_star_gift_attribute_counter';
+    protected $table = 'tl_star_gift_attribute_counter_star_gift_attribute_counter';
 
     protected $guarded = [];
 }

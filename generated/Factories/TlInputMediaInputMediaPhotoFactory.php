@@ -21,9 +21,9 @@ final class TlInputMediaInputMediaPhotoFactory extends Factory
             'flags' => 1,
             'spoiler' => true,
             'live_photo' => true,
-            'tl_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_id' => 1004,
             'ttl_seconds' => 5,
-            'video' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'video' => 1006,
         ];
     }
 }

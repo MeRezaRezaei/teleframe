@@ -14,7 +14,7 @@ final class TlChannelsSponsoredMessageReportResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_channels_sponsored_message_report_result';
+    protected $table = 'tl_channels_sponsored_message_report_result_s_a8bb878b93c6';
 
     protected $guarded = [];
 }

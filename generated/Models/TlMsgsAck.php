@@ -14,7 +14,7 @@ final class TlMsgsAck extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_msgs_ack';
+    protected $table = 'tl_msgs_ack_msgs_ack';
 
     protected $guarded = [];
 }

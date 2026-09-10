@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlNotifyPeer;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerNotifySettings;
 
 /** Constructor model for updateNotifySettings of Update (crc32 bec268ef). */
-final class TlUpdateUpdateNotifySettings extends TlInstanceModel
+final class TlUpdateUpdateNotifySettings extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

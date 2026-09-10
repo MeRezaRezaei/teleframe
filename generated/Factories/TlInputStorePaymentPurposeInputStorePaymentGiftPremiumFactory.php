@@ -18,7 +18,7 @@ final class TlInputStorePaymentPurposeInputStorePaymentGiftPremiumFactory extend
     public function definition(): array
     {
         return [
-            'user_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'user_id' => 1001,
             'currency' => 'currency-2',
             'amount' => 1003,
         ];

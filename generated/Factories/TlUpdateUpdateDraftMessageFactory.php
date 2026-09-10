@@ -19,10 +19,10 @@ final class TlUpdateUpdateDraftMessageFactory extends Factory
     {
         return [
             'flags' => 1,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1002,
             'top_msg_id' => 3,
-            'saved_peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'draft' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'saved_peer_id' => 1004,
+            'draft' => 1005,
         ];
     }
 }

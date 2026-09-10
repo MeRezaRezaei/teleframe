@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for help.supportName of help.SupportName (crc32 8c05f1c9). */
-final class TlHelpSupportNameSupportName extends TlInstanceModel
+final class TlHelpSupportNameSupportName extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

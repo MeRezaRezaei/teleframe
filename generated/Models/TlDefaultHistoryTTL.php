@@ -14,7 +14,7 @@ final class TlDefaultHistoryTTL extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_default_history_t_t_l';
+    protected $table = 'tl_default_history_t_t_l_default_history_t_t_l';
 
     protected $guarded = [];
 }

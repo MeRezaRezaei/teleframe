@@ -23,7 +23,7 @@ final class TlPhoneCallPhoneCallDiscardedFactory extends Factory
             'need_debug' => true,
             'video' => true,
             'tl_id' => 1005,
-            'reason' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reason' => 1006,
             'duration' => 7,
         ];
     }

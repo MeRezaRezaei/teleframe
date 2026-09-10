@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for photoCachedSize of PhotoSize (crc32 021e1ad6). */
-final class TlPhotoSizePhotoCachedSize extends TlInstanceModel
+final class TlPhotoSizePhotoCachedSize extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

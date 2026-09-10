@@ -20,7 +20,7 @@ final class TlUpdateUpdateChatParticipantAdminFactory extends Factory
         return [
             'chat_id' => 1001,
             'user_id' => 1002,
-            'is_admin' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'is_admin' => 1003,
             'version' => 4,
         ];
     }

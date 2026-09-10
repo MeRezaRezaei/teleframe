@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountResolvedBusinessChatLinksResolC591db58a589Chats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountResolvedBusinessChatLinksResolC591db58a589Entities;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountResolvedBusinessChatLinksResolC591db58a589Users;
 
 /** Constructor model for account.resolvedBusinessChatLinks of account.ResolvedBusinessChatLinks (crc32 9a23af21). */
-final class TlAccountResolvedBusinessChatLinksResolvedBusinessChatLinks extends TlInstanceModel
+final class TlAccountResolvedBusinessChatLinksResolvedBusinessChatLinks extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

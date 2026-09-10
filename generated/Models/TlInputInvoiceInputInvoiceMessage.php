@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputInvoiceMessage of InputInvoice (crc32 c5b56859). */
-final class TlInputInvoiceInputInvoiceMessage extends TlInstanceModel
+final class TlInputInvoiceInputInvoiceMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

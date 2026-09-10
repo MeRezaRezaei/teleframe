@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotMenuButton;
 
 /** Constructor model for updateBotMenuButton of Update (crc32 14b85813). */
-final class TlUpdateUpdateBotMenuButton extends TlInstanceModel
+final class TlUpdateUpdateBotMenuButton extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

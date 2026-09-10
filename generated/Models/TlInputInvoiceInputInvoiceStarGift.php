@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlTextWithEntities;
 
 /** Constructor model for inputInvoiceStarGift of InputInvoice (crc32 e8625e92). */
-final class TlInputInvoiceInputInvoiceStarGift extends TlInstanceModel
+final class TlInputInvoiceInputInvoiceStarGift extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

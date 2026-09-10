@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for stories.canSendStoryCount of stories.CanSendStoryCount (crc32 c387c04e). */
-final class TlStoriesCanSendStoryCountCanSendStoryCount extends TlInstanceModel
+final class TlStoriesCanSendStoryCountCanSendStoryCount extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

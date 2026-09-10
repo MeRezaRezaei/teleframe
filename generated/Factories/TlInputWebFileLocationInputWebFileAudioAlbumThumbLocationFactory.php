@@ -20,7 +20,7 @@ final class TlInputWebFileLocationInputWebFileAudioAlbumThumbLocationFactory ext
         return [
             'flags' => 1,
             'small' => true,
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1003,
             'title' => 'title-4',
             'performer' => 'performer-5',
         ];

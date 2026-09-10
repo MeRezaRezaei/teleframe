@@ -14,7 +14,7 @@ final class TlFragmentCollectibleInfo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_fragment_collectible_info';
+    protected $table = 'tl_fragment_collectible_info_collectible_info';
 
     protected $guarded = [];
 }

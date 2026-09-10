@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for p_q_inner_data_temp_dc of P_Q_inner_data (crc32 56fddf88). */
-final class TlPQInnerDataPQInnerDataTempDc extends TlInstanceModel
+final class TlPQInnerDataPQInnerDataTempDc extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

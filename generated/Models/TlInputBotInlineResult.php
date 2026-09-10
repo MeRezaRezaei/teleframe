@@ -14,7 +14,7 @@ final class TlInputBotInlineResult extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_bot_inline_result';
+    protected $table = 'tl_input_bot_inline_result_input_bot_inline_result';
 
     protected $guarded = [];
 }

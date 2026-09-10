@@ -26,7 +26,7 @@ final class TlConfigConfigFactory extends Factory
             'force_try_ipv6' => true,
             'date' => 7,
             'expires' => 8,
-            'test_mode' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'test_mode' => 1009,
             'this_dc' => 10,
             'dc_txt_domain_name' => 'dc_txt_domain_name-11',
             'chat_size_max' => 12,
@@ -63,7 +63,7 @@ final class TlConfigConfigFactory extends Factory
             'suggested_lang_code' => 'suggested_lang_code-43',
             'lang_pack_version' => 44,
             'base_lang_pack_version' => 45,
-            'reactions_default' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reactions_default' => 1046,
             'autologin_token' => 'autologin_token-47',
         ];
     }

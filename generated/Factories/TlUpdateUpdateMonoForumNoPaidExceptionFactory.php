@@ -21,7 +21,7 @@ final class TlUpdateUpdateMonoForumNoPaidExceptionFactory extends Factory
             'flags' => 1,
             'exception' => true,
             'channel_id' => 1003,
-            'saved_peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'saved_peer_id' => 1004,
         ];
     }
 }

@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupCallStarsGroupCallStarsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupCallStarsGroupCallStarsTop_donors;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupCallStarsGroupCallStarsUsers;
 
 /** Constructor model for phone.groupCallStars of phone.GroupCallStars (crc32 9d1dbd26). */
-final class TlPhoneGroupCallStarsGroupCallStars extends TlInstanceModel
+final class TlPhoneGroupCallStarsGroupCallStars extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

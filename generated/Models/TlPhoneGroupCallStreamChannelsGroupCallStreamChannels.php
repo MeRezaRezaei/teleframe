@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoneGroupCallStreamChannelsGroupCal7df01b0705a4Channels;
 
 /** Constructor model for phone.groupCallStreamChannels of phone.GroupCallStreamChannels (crc32 d0e482b2). */
-final class TlPhoneGroupCallStreamChannelsGroupCallStreamChannels extends TlInstanceModel
+final class TlPhoneGroupCallStreamChannelsGroupCallStreamChannels extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

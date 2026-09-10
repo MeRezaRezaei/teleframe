@@ -23,9 +23,9 @@ final class TlHelpAppUpdateAppUpdateFactory extends Factory
             'tl_id' => 3,
             'version' => 'version-4',
             'text' => 'text-5',
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1006,
             'url' => 'url-7',
-            'sticker' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'sticker' => 1008,
         ];
     }
 }

@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelParticipant;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlExportedChatInvite;
 
 /** Constructor model for updateChannelParticipant of Update (crc32 985d3abb). */
-final class TlUpdateUpdateChannelParticipant extends TlInstanceModel
+final class TlUpdateUpdateChannelParticipant extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

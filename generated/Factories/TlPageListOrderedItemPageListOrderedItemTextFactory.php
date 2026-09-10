@@ -22,7 +22,7 @@ final class TlPageListOrderedItemPageListOrderedItemTextFactory extends Factory
             'checkbox' => true,
             'checked' => true,
             'num' => 'num-4',
-            'text' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'text' => 1005,
             'tl_value' => 6,
             'tl_type' => 'type-7',
         ];

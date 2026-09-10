@@ -14,7 +14,7 @@ final class TlInputSingleMedia extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_single_media';
+    protected $table = 'tl_input_single_media_input_single_media';
 
     protected $guarded = [];
 }

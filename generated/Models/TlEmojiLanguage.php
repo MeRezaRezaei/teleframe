@@ -14,7 +14,7 @@ final class TlEmojiLanguage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_emoji_language';
+    protected $table = 'tl_emoji_language_emoji_language';
 
     protected $guarded = [];
 }

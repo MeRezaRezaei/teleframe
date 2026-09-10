@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGeoPoint;
 
 /** Constructor model for inputMediaGeoLive of InputMedia (crc32 971fa843). */
-final class TlInputMediaInputMediaGeoLive extends TlInstanceModel
+final class TlInputMediaInputMediaGeoLive extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

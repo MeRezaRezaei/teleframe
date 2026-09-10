@@ -14,7 +14,7 @@ final class TlPhoneGroupCallStreamRtmpUrl extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_phone_group_call_stream_rtmp_url';
+    protected $table = 'tl_phone_group_call_stream_rtmp_url_group_cal_d42377333fcd';
 
     protected $guarded = [];
 }

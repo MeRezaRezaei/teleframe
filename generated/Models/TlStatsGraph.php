@@ -21,7 +21,7 @@ final class TlStatsGraph extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stats_graph';
+    protected $table = 'tl_stats_graph_stats_graph';
 
     protected $guarded = [];
 

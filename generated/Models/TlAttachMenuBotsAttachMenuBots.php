@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAttachMenuBotsAttachMenuBotsBots;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAttachMenuBotsAttachMenuBotsUsers;
 
 /** Constructor model for attachMenuBots of AttachMenuBots (crc32 3c4301c0). */
-final class TlAttachMenuBotsAttachMenuBots extends TlInstanceModel
+final class TlAttachMenuBotsAttachMenuBots extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

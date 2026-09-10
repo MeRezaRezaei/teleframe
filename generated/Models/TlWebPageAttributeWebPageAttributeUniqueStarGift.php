@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGift;
 
 /** Constructor model for webPageAttributeUniqueStarGift of WebPageAttribute (crc32 cf6f6db8). */
-final class TlWebPageAttributeWebPageAttributeUniqueStarGift extends TlInstanceModel
+final class TlWebPageAttributeWebPageAttributeUniqueStarGift extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

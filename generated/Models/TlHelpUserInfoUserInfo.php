@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpUserInfoUserInfoEntities;
 
 /** Constructor model for help.userInfo of help.UserInfo (crc32 01eb3758). */
-final class TlHelpUserInfoUserInfo extends TlInstanceModel
+final class TlHelpUserInfoUserInfo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

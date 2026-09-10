@@ -14,7 +14,7 @@ final class TlAccountPaidMessagesRevenue extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_paid_messages_revenue';
+    protected $table = 'tl_account_paid_messages_revenue_paid_messages_revenue';
 
     protected $guarded = [];
 }

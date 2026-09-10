@@ -21,8 +21,8 @@ final class TlStarGiftAttributeStarGiftAttributeModelFactory extends Factory
             'flags' => 1,
             'crafted' => true,
             'name' => 'name-3',
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'rarity' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1004,
+            'rarity' => 1005,
         ];
     }
 }

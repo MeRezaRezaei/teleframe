@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStorePaymentPurposeInputStorePaA2df1d4d4d93Additional_peers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStorePaymentPurposeInputStorePaA2df1d4d4d93Countries_iso2;
 
 /** Constructor model for inputStorePaymentPremiumGiveaway of InputStorePaymentPurpose (crc32 160544ca). */
-final class TlInputStorePaymentPurposeInputStorePaymentPremiumGiveaway extends TlInstanceModel
+final class TlInputStorePaymentPurposeInputStorePaymentPremiumGiveaway extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

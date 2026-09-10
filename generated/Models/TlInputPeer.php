@@ -14,7 +14,7 @@ final class TlInputPeer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_peer';
+    protected $table = 'tl_input_peer_input_peer_channel';
 
     protected $guarded = [];
 }

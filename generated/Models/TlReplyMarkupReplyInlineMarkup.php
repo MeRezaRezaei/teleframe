@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReplyMarkupReplyInlineMarkupRows;
 
 /** Constructor model for replyInlineMarkup of ReplyMarkup (crc32 48a30254). */
-final class TlReplyMarkupReplyInlineMarkup extends TlInstanceModel
+final class TlReplyMarkupReplyInlineMarkup extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

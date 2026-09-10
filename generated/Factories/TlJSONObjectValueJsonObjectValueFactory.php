@@ -19,7 +19,7 @@ final class TlJSONObjectValueJsonObjectValueFactory extends Factory
     {
         return [
             'tl_key' => 'key-1',
-            'tl_value' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_value' => 1002,
         ];
     }
 }

@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputRichMessageInputRichMessageBlocks;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputRichMessageInputRichMessageDocuments;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputRichMessageInputRichMessagePhotos;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputRichMessageInputRichMessageUsers;
 
 /** Constructor model for inputRichMessage of InputRichMessage (crc32 e4c449fc). */
-final class TlInputRichMessageInputRichMessage extends TlInstanceModel
+final class TlInputRichMessageInputRichMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

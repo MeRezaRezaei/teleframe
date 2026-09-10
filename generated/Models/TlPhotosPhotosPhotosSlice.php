@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhotosPhotosPhotosSlicePhotos;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhotosPhotosPhotosSliceUsers;
 
 /** Constructor model for photos.photosSlice of photos.Photos (crc32 15051f54). */
-final class TlPhotosPhotosPhotosSlice extends TlInstanceModel
+final class TlPhotosPhotosPhotosSlice extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

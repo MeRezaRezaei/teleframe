@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageFwdHeader;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageReplyHeader;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesUpdateShortChatMessageEntities;
 
 /** Constructor model for updateShortChatMessage of Updates (crc32 4d6deea5). */
-final class TlUpdatesUpdateShortChatMessage extends TlInstanceModel
+final class TlUpdatesUpdateShortChatMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

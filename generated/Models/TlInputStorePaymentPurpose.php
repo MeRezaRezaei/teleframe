@@ -18,7 +18,7 @@ final class TlInputStorePaymentPurpose extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_store_payment_purpose';
+    protected $table = 'tl_input_store_payment_purpose_input_store_pa_fcc6e9ee0964';
 
     protected $guarded = [];
 

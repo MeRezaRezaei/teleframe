@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMediaMessageMediaDocumentAlt_documents;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 
 /** Constructor model for messageMediaDocument of MessageMedia (crc32 52d8ccd9). */
-final class TlMessageMediaMessageMediaDocument extends TlInstanceModel
+final class TlMessageMediaMessageMediaDocument extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

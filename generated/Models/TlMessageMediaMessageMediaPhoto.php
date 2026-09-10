@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 
 /** Constructor model for messageMediaPhoto of MessageMedia (crc32 e216eb63). */
-final class TlMessageMediaMessageMediaPhoto extends TlInstanceModel
+final class TlMessageMediaMessageMediaPhoto extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

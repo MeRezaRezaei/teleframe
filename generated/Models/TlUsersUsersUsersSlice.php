@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUsersUsersUsersSliceUsers;
 
 /** Constructor model for users.usersSlice of users.Users (crc32 315a4974). */
-final class TlUsersUsersUsersSlice extends TlInstanceModel
+final class TlUsersUsersUsersSlice extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

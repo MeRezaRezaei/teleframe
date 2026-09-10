@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountPrivacyRulesPrivacyRulesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountPrivacyRulesPrivacyRulesRules;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountPrivacyRulesPrivacyRulesUsers;
 
 /** Constructor model for account.privacyRules of account.PrivacyRules (crc32 50a04e45). */
-final class TlAccountPrivacyRulesPrivacyRules extends TlInstanceModel
+final class TlAccountPrivacyRulesPrivacyRules extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

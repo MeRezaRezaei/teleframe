@@ -18,7 +18,7 @@ final class TlMediaAreaInputMediaAreaVenueFactory extends Factory
     public function definition(): array
     {
         return [
-            'coordinates' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'coordinates' => 1001,
             'query_id' => 1002,
             'result_id' => 'result_id-3',
         ];

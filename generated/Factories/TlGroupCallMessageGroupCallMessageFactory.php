@@ -21,9 +21,9 @@ final class TlGroupCallMessageGroupCallMessageFactory extends Factory
             'flags' => 1,
             'from_admin' => true,
             'tl_id' => 3,
-            'from_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'from_id' => 1004,
             'date' => 5,
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1006,
             'paid_message_stars' => 1007,
         ];
     }

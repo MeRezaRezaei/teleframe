@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for profileTabPosts of ProfileTab (crc32 b98cd696). */
-final class TlProfileTabProfileTabPosts extends TlInstanceModel
+final class TlProfileTabProfileTabPosts extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

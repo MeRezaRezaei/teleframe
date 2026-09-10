@@ -23,10 +23,10 @@ final class TlBotInlineMessageBotInlineMessageMediaInvoiceFactory extends Factor
             'test' => true,
             'title' => 'title-4',
             'description' => 'description-5',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1006,
             'currency' => 'currency-7',
             'total_amount' => 1008,
-            'reply_markup' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reply_markup' => 1009,
         ];
     }
 }

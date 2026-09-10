@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for sendMessageTypingAction of SendMessageAction (crc32 16bf744e). */
-final class TlSendMessageActionSendMessageTypingAction extends TlInstanceModel
+final class TlSendMessageActionSendMessageTypingAction extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

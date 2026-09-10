@@ -17,7 +17,7 @@ final class TlRecentStory extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_recent_story';
+    protected $table = 'tl_recent_story_recent_story';
 
     protected $guarded = [];
 

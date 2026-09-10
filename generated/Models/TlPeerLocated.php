@@ -14,7 +14,7 @@ final class TlPeerLocated extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_peer_located';
+    protected $table = 'tl_peer_located_peer_located';
 
     protected $guarded = [];
 }

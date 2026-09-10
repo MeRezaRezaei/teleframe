@@ -19,10 +19,10 @@ final class TlPollAnswerPollAnswerFactory extends Factory
     {
         return [
             'flags' => 1,
-            'text' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'text' => 1002,
             'option' => 'Ynl0ZXMtMw==',
-            'media' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'added_by' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'media' => 1004,
+            'added_by' => 1005,
             'date' => 6,
         ];
     }

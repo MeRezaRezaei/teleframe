@@ -23,7 +23,7 @@ final class TlStarRefProgramStarRefProgramFactory extends Factory
             'commission_permille' => 3,
             'duration_months' => 4,
             'end_date' => 5,
-            'daily_revenue_per_user' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'daily_revenue_per_user' => 1006,
         ];
     }
 }

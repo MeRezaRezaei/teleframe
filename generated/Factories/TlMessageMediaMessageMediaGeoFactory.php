@@ -18,7 +18,7 @@ final class TlMessageMediaMessageMediaGeoFactory extends Factory
     public function definition(): array
     {
         return [
-            'geo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'geo' => 1001,
         ];
     }
 }

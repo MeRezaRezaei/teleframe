@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesChatAdminsWithInvitesChatAdmF8ed6a6ff14eAdmins;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesChatAdminsWithInvitesChatAdmF8ed6a6ff14eUsers;
 
 /** Constructor model for messages.chatAdminsWithInvites of messages.ChatAdminsWithInvites (crc32 b69b72d7). */
-final class TlMessagesChatAdminsWithInvitesChatAdminsWithInvites extends TlInstanceModel
+final class TlMessagesChatAdminsWithInvitesChatAdminsWithInvites extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -20,7 +20,7 @@ final class TlPaymentRequestedInfo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payment_requested_info';
+    protected $table = 'tl_payment_requested_info_payment_requested_info';
 
     protected $guarded = [];
 

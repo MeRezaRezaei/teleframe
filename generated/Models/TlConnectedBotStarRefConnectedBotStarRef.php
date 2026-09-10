@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for connectedBotStarRef of ConnectedBotStarRef (crc32 19a13f71). */
-final class TlConnectedBotStarRefConnectedBotStarRef extends TlInstanceModel
+final class TlConnectedBotStarRefConnectedBotStarRef extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

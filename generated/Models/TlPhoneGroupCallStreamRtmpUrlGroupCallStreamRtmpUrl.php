@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for phone.groupCallStreamRtmpUrl of phone.GroupCallStreamRtmpUrl (crc32 2dbf3432). */
-final class TlPhoneGroupCallStreamRtmpUrlGroupCallStreamRtmpUrl extends TlInstanceModel
+final class TlPhoneGroupCallStreamRtmpUrlGroupCallStreamRtmpUrl extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

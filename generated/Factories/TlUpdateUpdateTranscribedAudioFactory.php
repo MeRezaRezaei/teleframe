@@ -20,7 +20,7 @@ final class TlUpdateUpdateTranscribedAudioFactory extends Factory
         return [
             'flags' => 1,
             'pending' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
             'msg_id' => 4,
             'transcription_id' => 1005,
             'text' => 'text-6',

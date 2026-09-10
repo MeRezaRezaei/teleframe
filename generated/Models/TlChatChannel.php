@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatAdminRights;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatBannedRights;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChannelRestriction_reason;
@@ -22,7 +22,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerColor;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRecentStory;
 
 /** Constructor model for channel of Chat (crc32 1c32b11c). */
-final class TlChatChannel extends TlInstanceModel
+final class TlChatChannel extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

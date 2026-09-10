@@ -14,7 +14,7 @@ final class TlBusinessWeeklyOpen extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_business_weekly_open';
+    protected $table = 'tl_business_weekly_open_business_weekly_open';
 
     protected $guarded = [];
 }

@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsValidatedRequestedInfoValidate9668a5a19280Shipping_options;
 
 /** Constructor model for payments.validatedRequestedInfo of payments.ValidatedRequestedInfo (crc32 d1451883). */
-final class TlPaymentsValidatedRequestedInfoValidatedRequestedInfo extends TlInstanceModel
+final class TlPaymentsValidatedRequestedInfoValidatedRequestedInfo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

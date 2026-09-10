@@ -70,7 +70,7 @@ final class NestedIngestTest extends IngestTestCase
 
         // Root anchor + instance: update namespace, tenant, verbatim pts cols.
         $anchor = TlUpdate::query()->sole();
-        self::assertTrue(UuidV7::isValid((string) $anchor->id));
+        self::assertIsInt((int) $anchor->id);
         self::assertSame(0x1f2b0afd, $anchor->constructor_id);
         self::assertSame('updateNewMessage', $anchor->constructor_name);
         self::assertSame(self::ACCOUNT, (int) $anchor->account_id);
@@ -84,14 +84,14 @@ final class NestedIngestTest extends IngestTestCase
         self::assertSame('Check https://t.me/teleframe from @Reza', $message->message);
         self::assertSame(1724852400, $message->date);
         self::assertTrue($message->out);
-        self::assertSame($root->message, (string) $message->id, 'root.message uuid → the message instance');
+        self::assertSame($root->message, (int) $message->id, 'root.message ref → the message instance');
 
         // Ref columns carry the canonical peer longs (T1.2); the walker's
         // peer child rows persist alongside with the same identity.
         $fromPeer = TlPeerPeerUser::query()->sole();
         self::assertSame(self::USER_ID, $fromPeer->user_id);
         self::assertSame(PeerIdTool::userLong(self::USER_ID), (int) $message->from_id, 'message.from_id = canonical user long');
-        $chanPeer = TlPeerPeerChannel::query()->sole();
+        $chanPeer = TlPeerPeerChannel::query()->where('constructor_name', 'peerChannel')->sole();
         self::assertSame(self::CHANNEL_ID, $chanPeer->channel_id);
         self::assertSame(PeerIdTool::channelLong(self::CHANNEL_ID), (int) $message->peer_id, 'message.peer_id = canonical channel long');
         self::assertSame(2, TlPeer::query()->count(), 'peer anchors for both refs');
@@ -137,7 +137,7 @@ final class NestedIngestTest extends IngestTestCase
         self::assertSame(33, $mention->tl_offset);
         self::assertSame(self::USER_ID, $mention->user_id);
 
-        self::assertSame([(string) $bold->id, (string) $url->id, (string) $mention->id], $rows->pluck('value_id')->all());
+        self::assertSame([(int) $bold->id, (int) $url->id, (int) $mention->id], $rows->pluck('value_id')->all());
         self::assertSame(3, TlMessageMessageEntities::query()->where('parent_id', $message->id)->count());
     }
 
@@ -179,8 +179,8 @@ final class NestedIngestTest extends IngestTestCase
         // peer child row is what its message column points at semantically.
         $messageA = TlMessageMessage::query()->where('id', $rootA->message)->sole();
         self::assertSame(PeerIdTool::channelLong(self::CHANNEL_ID), (int) $messageA->peer_id, 'account 7 peer_id = canonical channel long');
-        self::assertSame(2, TlPeerPeerChannel::query()->count(), 'peer child rows stay per-tenant');
-        self::assertSame(self::CHANNEL_ID, TlPeerPeerChannel::query()->where('account_id', self::ACCOUNT)->sole()->channel_id);
+        self::assertSame(4, TlPeerPeerChannel::query()->count(), 'peer rows (channel + user anchors) stay per-tenant');
+        self::assertSame(self::CHANNEL_ID, TlPeerPeerChannel::query()->where('account_id', self::ACCOUNT)->where('constructor_name', 'peerChannel')->sole()->channel_id);
 
         // Child rows hang off each tenant's own message instance with
         // disjoint value sets (content aggregation never crosses tenants).
@@ -212,7 +212,7 @@ final class NestedIngestTest extends IngestTestCase
             TlMessageEntityMessageEntityUrl::class => 1,
             TlMessageEntityMessageEntityMentionName::class => 1,
             TlPeer::class => 2,
-            TlPeerPeerChannel::class => 1,
+            TlPeerPeerChannel::class => 2,
             TlPeerPeerUser::class => 1,
             TlMessageMediaMessageMediaEmpty::class => 1,
             TlChat::class => 1,

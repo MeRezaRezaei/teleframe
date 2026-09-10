@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarGiftUpgradeAttributesStarB00cb34f5cf4Attributes;
 
 /** Constructor model for payments.starGiftUpgradeAttributes of payments.StarGiftUpgradeAttributes (crc32 46c6e36f). */
-final class TlPaymentsStarGiftUpgradeAttributesStarGiftUpgradeAttributes extends TlInstanceModel
+final class TlPaymentsStarGiftUpgradeAttributesStarGiftUpgradeAttributes extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

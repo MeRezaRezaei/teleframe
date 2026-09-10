@@ -14,7 +14,7 @@ final class TlMessagesSearchCounter extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_search_counter';
+    protected $table = 'tl_messages_search_counter_search_counter';
 
     protected $guarded = [];
 }

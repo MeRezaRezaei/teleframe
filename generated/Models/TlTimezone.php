@@ -14,7 +14,7 @@ final class TlTimezone extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_timezone';
+    protected $table = 'tl_timezone_timezone';
 
     protected $guarded = [];
 }

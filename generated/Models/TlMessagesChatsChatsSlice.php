@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesChatsChatsSliceChats;
 
 /** Constructor model for messages.chatsSlice of messages.Chats (crc32 9cd81144). */
-final class TlMessagesChatsChatsSlice extends TlInstanceModel
+final class TlMessagesChatsChatsSlice extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlStickerKeyword extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_sticker_keyword';
+    protected $table = 'tl_sticker_keyword_sticker_keyword';
 
     protected $guarded = [];
 }

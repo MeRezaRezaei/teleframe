@@ -21,7 +21,7 @@ final class TlMessageExtendedMediaMessageExtendedMediaPreviewFactory extends Fac
             'flags' => 1,
             'w' => 2,
             'h' => 3,
-            'thumb' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'thumb' => 1004,
             'video_duration' => 5,
         ];
     }

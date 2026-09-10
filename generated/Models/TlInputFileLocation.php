@@ -14,7 +14,7 @@ final class TlInputFileLocation extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_file_location';
+    protected $table = 'tl_input_file_location_input_document_file_location';
 
     protected $guarded = [];
 }

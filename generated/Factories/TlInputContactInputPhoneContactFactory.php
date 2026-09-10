@@ -23,7 +23,7 @@ final class TlInputContactInputPhoneContactFactory extends Factory
             'phone' => 'phone-3',
             'first_name' => 'first_name-4',
             'last_name' => 'last_name-5',
-            'note' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'note' => 1006,
         ];
     }
 }

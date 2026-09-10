@@ -19,7 +19,7 @@ final class TlForumTopic extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_forum_topic';
+    protected $table = 'tl_forum_topic_forum_topic';
 
     protected $guarded = [];
 

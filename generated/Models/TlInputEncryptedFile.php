@@ -14,7 +14,7 @@ final class TlInputEncryptedFile extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_encrypted_file';
+    protected $table = 'tl_input_encrypted_file_input_encrypted_file';
 
     protected $guarded = [];
 }

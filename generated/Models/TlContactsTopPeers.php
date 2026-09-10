@@ -14,7 +14,7 @@ final class TlContactsTopPeers extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_contacts_top_peers';
+    protected $table = 'tl_contacts_top_peers_top_peers';
 
     protected $guarded = [];
 }

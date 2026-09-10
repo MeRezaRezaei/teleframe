@@ -18,7 +18,7 @@ final class TlPageBlockPageBlockThinkingFactory extends Factory
     public function definition(): array
     {
         return [
-            'text' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'text' => 1001,
         ];
     }
 }

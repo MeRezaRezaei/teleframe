@@ -19,7 +19,7 @@ final class TlMessageActionMessageActionGroupCallFactory extends Factory
     {
         return [
             'flags' => 1,
-            'call' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'call' => 1002,
             'duration' => 3,
         ];
     }

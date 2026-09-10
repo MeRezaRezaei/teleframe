@@ -19,8 +19,8 @@ final class TlPendingSuggestionPendingSuggestionFactory extends Factory
     {
         return [
             'suggestion' => 'suggestion-1',
-            'title' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'description' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'title' => 1002,
+            'description' => 1003,
             'url' => 'url-4',
         ];
     }

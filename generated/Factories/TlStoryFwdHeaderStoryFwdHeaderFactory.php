@@ -20,7 +20,7 @@ final class TlStoryFwdHeaderStoryFwdHeaderFactory extends Factory
         return [
             'flags' => 1,
             'modified' => true,
-            'tl_from' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_from' => 1003,
             'from_name' => 'from_name-4',
             'story_id' => 5,
         ];

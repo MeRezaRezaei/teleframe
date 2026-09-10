@@ -18,7 +18,7 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionExportedInvite
     public function definition(): array
     {
         return [
-            'invite' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'invite' => 1001,
         ];
     }
 }

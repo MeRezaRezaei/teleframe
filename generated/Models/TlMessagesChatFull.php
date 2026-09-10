@@ -14,7 +14,7 @@ final class TlMessagesChatFull extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_chat_full';
+    protected $table = 'tl_messages_chat_full_chat_full';
 
     protected $guarded = [];
 }

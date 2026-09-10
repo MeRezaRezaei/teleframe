@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputPasskeyResponse;
 
 /** Constructor model for inputPasskeyCredentialPublicKey of InputPasskeyCredential (crc32 3c27b78f). */
-final class TlInputPasskeyCredentialInputPasskeyCredentialPublicKey extends TlInstanceModel
+final class TlInputPasskeyCredentialInputPasskeyCredentialPublicKey extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

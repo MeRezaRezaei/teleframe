@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountConnectedBotsConnectedBotsConnected_bots;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlAccountConnectedBotsConnectedBotsUsers;
 
 /** Constructor model for account.connectedBots of account.ConnectedBots (crc32 17d7f87b). */
-final class TlAccountConnectedBotsConnectedBots extends TlInstanceModel
+final class TlAccountConnectedBotsConnectedBots extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

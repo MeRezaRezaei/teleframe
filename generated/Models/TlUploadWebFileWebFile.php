@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStorageFileType;
 
 /** Constructor model for upload.webFile of upload.WebFile (crc32 21e753bc). */
-final class TlUploadWebFileWebFile extends TlInstanceModel
+final class TlUploadWebFileWebFile extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

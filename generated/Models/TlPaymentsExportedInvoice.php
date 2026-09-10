@@ -14,7 +14,7 @@ final class TlPaymentsExportedInvoice extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_exported_invoice';
+    protected $table = 'tl_payments_exported_invoice_exported_invoice';
 
     protected $guarded = [];
 }

@@ -19,7 +19,7 @@ final class TlUpdateUpdateReadMonoForumInboxFactory extends Factory
     {
         return [
             'channel_id' => 1001,
-            'saved_peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'saved_peer_id' => 1002,
             'read_max_id' => 3,
         ];
     }

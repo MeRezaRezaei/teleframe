@@ -14,7 +14,7 @@ final class TlBotsRequestedButton extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bots_requested_button';
+    protected $table = 'tl_bots_requested_button_requested_button';
 
     protected $guarded = [];
 }

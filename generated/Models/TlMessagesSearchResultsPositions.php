@@ -14,7 +14,7 @@ final class TlMessagesSearchResultsPositions extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_search_results_positions';
+    protected $table = 'tl_messages_search_results_positions_search_r_d401856bd5e6';
 
     protected $guarded = [];
 }

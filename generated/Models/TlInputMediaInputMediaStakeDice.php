@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputMediaStakeDice of InputMedia (crc32 f3a9244a). */
-final class TlInputMediaInputMediaStakeDice extends TlInstanceModel
+final class TlInputMediaInputMediaStakeDice extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

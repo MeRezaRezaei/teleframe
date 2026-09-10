@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for updateRecentReactions of Update (crc32 6f7863f4). */
-final class TlUpdateUpdateRecentReactions extends TlInstanceModel
+final class TlUpdateUpdateRecentReactions extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

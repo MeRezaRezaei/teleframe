@@ -14,7 +14,7 @@ final class TlAvailableReaction extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_available_reaction';
+    protected $table = 'tl_available_reaction_available_reaction';
 
     protected $guarded = [];
 }

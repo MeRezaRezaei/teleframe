@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesPeerSettingsPeerSettingsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesPeerSettingsPeerSettingsUsers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPeerSettings;
 
 /** Constructor model for messages.peerSettings of messages.PeerSettings (crc32 6880b94d). */
-final class TlMessagesPeerSettingsPeerSettings extends TlInstanceModel
+final class TlMessagesPeerSettingsPeerSettings extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlBindAuthKeyInner extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bind_auth_key_inner';
+    protected $table = 'tl_bind_auth_key_inner_bind_auth_key_inner';
 
     protected $guarded = [];
 }

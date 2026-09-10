@@ -29,9 +29,9 @@ final class TlUpdatesUpdateShortMessageFactory extends Factory
             'pts' => 9,
             'pts_count' => 10,
             'date' => 11,
-            'fwd_from' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'fwd_from' => 1012,
             'via_bot_id' => 1013,
-            'reply_to' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reply_to' => 1014,
             'ttl_period' => 15,
         ];
     }

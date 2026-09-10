@@ -14,7 +14,7 @@ final class TlAccountChatThemes extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_chat_themes';
+    protected $table = 'tl_account_chat_themes_chat_themes';
 
     protected $guarded = [];
 }

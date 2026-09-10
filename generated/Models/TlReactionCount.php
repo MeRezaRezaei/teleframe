@@ -14,7 +14,7 @@ final class TlReactionCount extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_reaction_count';
+    protected $table = 'tl_reaction_count_reaction_count';
 
     protected $guarded = [];
 }

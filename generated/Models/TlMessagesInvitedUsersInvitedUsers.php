@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesInvitedUsersInvitedUsersMissing_invitees;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdates;
 
 /** Constructor model for messages.invitedUsers of messages.InvitedUsers (crc32 7f5defa6). */
-final class TlMessagesInvitedUsersInvitedUsers extends TlInstanceModel
+final class TlMessagesInvitedUsersInvitedUsers extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

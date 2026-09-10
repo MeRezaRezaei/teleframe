@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStoriesStoriesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStoriesStoriesPinned_to_top;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStoriesStoriesStories;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStoriesStoriesUsers;
 
 /** Constructor model for stories.stories of stories.Stories (crc32 63c3dd0a). */
-final class TlStoriesStoriesStories extends TlInstanceModel
+final class TlStoriesStoriesStories extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

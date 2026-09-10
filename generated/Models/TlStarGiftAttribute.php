@@ -14,7 +14,7 @@ final class TlStarGiftAttribute extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_star_gift_attribute';
+    protected $table = 'tl_star_gift_attribute_star_gift_attribute_backdrop';
 
     protected $guarded = [];
 }

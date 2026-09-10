@@ -14,7 +14,7 @@ final class TlMessagesSponsoredMessages extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_sponsored_messages';
+    protected $table = 'tl_messages_sponsored_messages_sponsored_messages';
 
     protected $guarded = [];
 }

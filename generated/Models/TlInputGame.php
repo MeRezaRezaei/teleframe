@@ -16,7 +16,7 @@ final class TlInputGame extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_game';
+    protected $table = 'tl_input_game_input_game_i_d';
 
     protected $guarded = [];
 

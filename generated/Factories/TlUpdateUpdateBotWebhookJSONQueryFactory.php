@@ -19,7 +19,7 @@ final class TlUpdateUpdateBotWebhookJSONQueryFactory extends Factory
     {
         return [
             'query_id' => 1001,
-            'data' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'data' => 1002,
             'timeout' => 3,
         ];
     }

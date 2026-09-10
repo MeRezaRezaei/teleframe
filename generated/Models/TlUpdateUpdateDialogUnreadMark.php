@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialogPeer;
 
 /** Constructor model for updateDialogUnreadMark of Update (crc32 b658f23e). */
-final class TlUpdateUpdateDialogUnreadMark extends TlInstanceModel
+final class TlUpdateUpdateDialogUnreadMark extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlExportedContactToken extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_exported_contact_token';
+    protected $table = 'tl_exported_contact_token_exported_contact_token';
 
     protected $guarded = [];
 }

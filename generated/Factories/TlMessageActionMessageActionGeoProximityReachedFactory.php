@@ -18,8 +18,8 @@ final class TlMessageActionMessageActionGeoProximityReachedFactory extends Facto
     public function definition(): array
     {
         return [
-            'from_id' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'to_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'from_id' => 1001,
+            'to_id' => 1002,
             'distance' => 3,
         ];
     }

@@ -19,7 +19,7 @@ final class TlUpdateUpdateChannelWebPageFactory extends Factory
     {
         return [
             'channel_id' => 1001,
-            'webpage' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'webpage' => 1002,
             'pts' => 3,
             'pts_count' => 4,
         ];

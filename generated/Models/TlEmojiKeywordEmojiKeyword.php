@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlEmojiKeywordEmojiKeywordEmoticons;
 
 /** Constructor model for emojiKeyword of EmojiKeyword (crc32 d5b3b9f9). */
-final class TlEmojiKeywordEmojiKeyword extends TlInstanceModel
+final class TlEmojiKeywordEmojiKeyword extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

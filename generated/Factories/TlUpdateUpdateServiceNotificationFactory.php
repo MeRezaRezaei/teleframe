@@ -24,7 +24,7 @@ final class TlUpdateUpdateServiceNotificationFactory extends Factory
             'inbox_date' => 4,
             'tl_type' => 'type-5',
             'message' => 'message-6',
-            'media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'media' => 1007,
         ];
     }
 }

@@ -21,13 +21,13 @@ final class TlSavedDialogMonoForumDialogFactory extends Factory
             'flags' => 1,
             'unread_mark' => true,
             'nopaid_messages_exception' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1004,
             'top_message' => 5,
             'read_inbox_max_id' => 6,
             'read_outbox_max_id' => 7,
             'unread_count' => 8,
             'unread_reactions_count' => 9,
-            'draft' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'draft' => 1010,
         ];
     }
 }

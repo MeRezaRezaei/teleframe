@@ -19,7 +19,7 @@ final class TlUpdateUpdateUserEmojiStatusFactory extends Factory
     {
         return [
             'user_id' => 1001,
-            'emoji_status' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'emoji_status' => 1002,
         ];
     }
 }

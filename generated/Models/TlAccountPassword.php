@@ -14,7 +14,7 @@ final class TlAccountPassword extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_password';
+    protected $table = 'tl_account_password_password';
 
     protected $guarded = [];
 }

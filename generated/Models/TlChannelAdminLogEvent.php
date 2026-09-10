@@ -14,7 +14,7 @@ final class TlChannelAdminLogEvent extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_channel_admin_log_event';
+    protected $table = 'tl_channel_admin_log_event_channel_admin_log_event';
 
     protected $guarded = [];
 }

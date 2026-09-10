@@ -16,7 +16,7 @@ final class TlStickerSetCovered extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_sticker_set_covered';
+    protected $table = 'tl_sticker_set_covered_sticker_set_covered';
 
     protected $guarded = [];
 

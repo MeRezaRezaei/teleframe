@@ -16,7 +16,7 @@ final class TlPendingSuggestion extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_pending_suggestion';
+    protected $table = 'tl_pending_suggestion_pending_suggestion';
 
     protected $guarded = [];
 

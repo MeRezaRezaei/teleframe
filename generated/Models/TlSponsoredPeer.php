@@ -14,7 +14,7 @@ final class TlSponsoredPeer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_sponsored_peer';
+    protected $table = 'tl_sponsored_peer_sponsored_peer';
 
     protected $guarded = [];
 }

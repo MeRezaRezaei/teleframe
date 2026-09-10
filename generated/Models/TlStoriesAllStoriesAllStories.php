@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesAllStoriesAllStoriesChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesAllStoriesAllStoriesPeer_stories;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesAllStoriesAllStoriesUsers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStealthMode;
 
 /** Constructor model for stories.allStories of stories.AllStories (crc32 6efc5e81). */
-final class TlStoriesAllStoriesAllStories extends TlInstanceModel
+final class TlStoriesAllStoriesAllStories extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

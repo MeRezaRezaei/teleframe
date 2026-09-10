@@ -23,12 +23,12 @@ final class TlMessageMediaMessageMediaInvoiceFactory extends Factory
             'test' => true,
             'title' => 'title-4',
             'description' => 'description-5',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1006,
             'receipt_msg_id' => 7,
             'currency' => 'currency-8',
             'total_amount' => 1009,
             'start_param' => 'start_param-10',
-            'extended_media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'extended_media' => 1011,
         ];
     }
 }

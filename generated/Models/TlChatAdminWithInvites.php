@@ -14,7 +14,7 @@ final class TlChatAdminWithInvites extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_chat_admin_with_invites';
+    protected $table = 'tl_chat_admin_with_invites_chat_admin_with_invites';
 
     protected $guarded = [];
 }

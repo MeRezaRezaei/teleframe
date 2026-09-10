@@ -17,7 +17,7 @@ final class TlBotInlineMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bot_inline_message';
+    protected $table = 'tl_bot_inline_message_bot_inline_message_media_auto';
 
     protected $guarded = [];
 

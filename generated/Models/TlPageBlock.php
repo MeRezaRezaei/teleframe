@@ -16,7 +16,7 @@ final class TlPageBlock extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_page_block';
+    protected $table = 'tl_page_block_input_page_block_map';
 
     protected $guarded = [];
 

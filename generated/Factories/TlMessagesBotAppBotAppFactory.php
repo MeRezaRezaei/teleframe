@@ -22,7 +22,7 @@ final class TlMessagesBotAppBotAppFactory extends Factory
             'inactive' => true,
             'request_write_access' => true,
             'has_settings' => true,
-            'app' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'app' => 1005,
         ];
     }
 }

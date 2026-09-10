@@ -14,7 +14,7 @@ final class TlInputAiComposeTone extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_ai_compose_tone';
+    protected $table = 'tl_input_ai_compose_tone_input_ai_compose_tone_default';
 
     protected $guarded = [];
 }

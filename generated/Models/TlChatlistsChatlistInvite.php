@@ -14,7 +14,7 @@ final class TlChatlistsChatlistInvite extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_chatlists_chatlist_invite';
+    protected $table = 'tl_chatlists_chatlist_invite_chatlist_invite';
 
     protected $guarded = [];
 }

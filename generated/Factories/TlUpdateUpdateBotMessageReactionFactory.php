@@ -18,10 +18,10 @@ final class TlUpdateUpdateBotMessageReactionFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1001,
             'msg_id' => 2,
             'date' => 3,
-            'actor' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'actor' => 1004,
             'qts' => 5,
         ];
     }

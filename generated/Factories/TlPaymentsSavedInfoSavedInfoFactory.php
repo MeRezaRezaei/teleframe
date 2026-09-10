@@ -20,7 +20,7 @@ final class TlPaymentsSavedInfoSavedInfoFactory extends Factory
         return [
             'flags' => 1,
             'has_saved_credentials' => true,
-            'saved_info' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'saved_info' => 1003,
         ];
     }
 }

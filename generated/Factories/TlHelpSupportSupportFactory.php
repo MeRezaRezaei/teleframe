@@ -19,7 +19,7 @@ final class TlHelpSupportSupportFactory extends Factory
     {
         return [
             'phone_number' => 'phone_number-1',
-            'tl_user' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_user' => 1002,
         ];
     }
 }

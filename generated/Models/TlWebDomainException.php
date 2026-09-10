@@ -16,7 +16,7 @@ final class TlWebDomainException extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_web_domain_exception';
+    protected $table = 'tl_web_domain_exception_web_domain_exception';
 
     protected $guarded = [];
 

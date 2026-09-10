@@ -21,13 +21,13 @@ final class TlInputMediaInputMediaInvoiceFactory extends Factory
             'flags' => 1,
             'title' => 'title-2',
             'description' => 'description-3',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'invoice' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1004,
+            'invoice' => 1005,
             'payload' => 'Ynl0ZXMtNg==',
             'provider' => 'provider-7',
-            'provider_data' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'provider_data' => 1008,
             'start_param' => 'start_param-9',
-            'extended_media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'extended_media' => 1010,
         ];
     }
 }

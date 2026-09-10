@@ -24,8 +24,8 @@ final class TlBotAppBotAppFactory extends Factory
             'short_name' => 'short_name-4',
             'title' => 'title-5',
             'description' => 'description-6',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1007,
+            'document' => 1008,
             'hash' => 1009,
         ];
     }

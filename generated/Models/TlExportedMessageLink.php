@@ -14,7 +14,7 @@ final class TlExportedMessageLink extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_exported_message_link';
+    protected $table = 'tl_exported_message_link_exported_message_link';
 
     protected $guarded = [];
 }

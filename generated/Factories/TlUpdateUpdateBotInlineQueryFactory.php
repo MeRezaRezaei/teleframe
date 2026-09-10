@@ -22,8 +22,8 @@ final class TlUpdateUpdateBotInlineQueryFactory extends Factory
             'query_id' => 1002,
             'user_id' => 1003,
             'query' => 'query-4',
-            'geo' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'peer_type' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'geo' => 1005,
+            'peer_type' => 1006,
             'tl_offset' => 'offset-7',
         ];
     }

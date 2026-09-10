@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for messageEntitySpoiler of MessageEntity (crc32 32ca960f). */
-final class TlMessageEntityMessageEntitySpoiler extends TlInstanceModel
+final class TlMessageEntityMessageEntitySpoiler extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

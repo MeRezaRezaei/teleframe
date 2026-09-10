@@ -17,7 +17,7 @@ final class TlStatsPercentValue extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stats_percent_value';
+    protected $table = 'tl_stats_percent_value_stats_percent_value';
 
     protected $guarded = [];
 

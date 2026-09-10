@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPromoDataPromoDataChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPromoDataPromoDataDismissed_suggestions;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPromoDataPromoDataPending_suggestions;
@@ -20,7 +20,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpPromoDataPromoDataUsers
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPendingSuggestion;
 
 /** Constructor model for help.promoData of help.PromoData (crc32 08a4d87a). */
-final class TlHelpPromoDataPromoData extends TlInstanceModel
+final class TlHelpPromoDataPromoData extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

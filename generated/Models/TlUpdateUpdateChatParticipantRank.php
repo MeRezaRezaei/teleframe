@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for updateChatParticipantRank of Update (crc32 bd8367b9). */
-final class TlUpdateUpdateChatParticipantRank extends TlInstanceModel
+final class TlUpdateUpdateChatParticipantRank extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

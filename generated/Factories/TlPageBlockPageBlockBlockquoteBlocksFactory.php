@@ -18,7 +18,7 @@ final class TlPageBlockPageBlockBlockquoteBlocksFactory extends Factory
     public function definition(): array
     {
         return [
-            'caption' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'caption' => 1001,
         ];
     }
 }

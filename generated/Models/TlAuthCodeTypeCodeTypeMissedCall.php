@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for auth.codeTypeMissedCall of auth.CodeType (crc32 d61ad6ee). */
-final class TlAuthCodeTypeCodeTypeMissedCall extends TlInstanceModel
+final class TlAuthCodeTypeCodeTypeMissedCall extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -19,7 +19,7 @@ final class TlKeyboardButtonKeyboardButtonUrlAuthFactory extends Factory
     {
         return [
             'flags' => 1,
-            'style' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'style' => 1002,
             'text' => 'text-3',
             'fwd_text' => 'fwd_text-4',
             'url' => 'url-5',

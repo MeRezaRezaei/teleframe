@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for attachMenuBotIconColor of AttachMenuBotIconColor (crc32 4576f3f0). */
-final class TlAttachMenuBotIconColorAttachMenuBotIconColor extends TlInstanceModel
+final class TlAttachMenuBotIconColorAttachMenuBotIconColor extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

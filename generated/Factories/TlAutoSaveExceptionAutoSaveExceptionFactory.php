@@ -18,8 +18,8 @@ final class TlAutoSaveExceptionAutoSaveExceptionFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'settings' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1001,
+            'settings' => 1002,
         ];
     }
 }

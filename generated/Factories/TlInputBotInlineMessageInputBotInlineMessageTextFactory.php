@@ -22,7 +22,7 @@ final class TlInputBotInlineMessageInputBotInlineMessageTextFactory extends Fact
             'no_webpage' => true,
             'invert_media' => true,
             'message' => 'message-4',
-            'reply_markup' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reply_markup' => 1005,
         ];
     }
 }

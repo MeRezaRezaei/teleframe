@@ -24,9 +24,9 @@ final class TlMessageActionMessageActionPaymentSentMeFactory extends Factory
             'currency' => 'currency-4',
             'total_amount' => 1005,
             'payload' => 'Ynl0ZXMtNg==',
-            'info' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'info' => 1007,
             'shipping_option_id' => 'shipping_option_id-8',
-            'charge' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'charge' => 1009,
             'subscription_until_date' => 10,
         ];
     }

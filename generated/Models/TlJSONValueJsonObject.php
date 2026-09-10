@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlJSONValueJsonObjectValue;
 
 /** Constructor model for jsonObject of JSONValue (crc32 99c1d49d). */
-final class TlJSONValueJsonObject extends TlInstanceModel
+final class TlJSONValueJsonObject extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

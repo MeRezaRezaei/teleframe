@@ -14,7 +14,7 @@ final class TlStatsGroupTopInviter extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stats_group_top_inviter';
+    protected $table = 'tl_stats_group_top_inviter_stats_group_top_inviter';
 
     protected $guarded = [];
 }

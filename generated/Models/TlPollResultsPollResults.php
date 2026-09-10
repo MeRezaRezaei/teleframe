@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMedia;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollResultsPollResultsRecent_voters;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollResultsPollResultsResults;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPollResultsPollResultsSolution_entities;
 
 /** Constructor model for pollResults of PollResults (crc32 ba7bb15e). */
-final class TlPollResultsPollResults extends TlInstanceModel
+final class TlPollResultsPollResults extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

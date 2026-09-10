@@ -14,7 +14,7 @@ final class TlSetClientDHParamsAnswer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_set_client__d_h_params_answer';
+    protected $table = 'tl_set_client__d_h_params_answer_dh_gen_fail';
 
     protected $guarded = [];
 }

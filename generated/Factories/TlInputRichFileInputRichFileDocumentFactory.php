@@ -19,7 +19,7 @@ final class TlInputRichFileInputRichFileDocumentFactory extends Factory
     {
         return [
             'tl_id' => 'id-1',
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1002,
         ];
     }
 }

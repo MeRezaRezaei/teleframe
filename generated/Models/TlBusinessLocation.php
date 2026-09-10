@@ -16,7 +16,7 @@ final class TlBusinessLocation extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_business_location';
+    protected $table = 'tl_business_location_business_location';
 
     protected $guarded = [];
 

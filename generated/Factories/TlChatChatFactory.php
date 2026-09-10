@@ -27,13 +27,13 @@ final class TlChatChatFactory extends Factory
             'noforwards' => true,
             'tl_id' => 1008,
             'title' => 'title-9',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1010,
             'participants_count' => 11,
             'date' => 12,
             'version' => 13,
-            'migrated_to' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'admin_rights' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'default_banned_rights' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'migrated_to' => 1014,
+            'admin_rights' => 1015,
+            'default_banned_rights' => 1016,
         ];
     }
 }

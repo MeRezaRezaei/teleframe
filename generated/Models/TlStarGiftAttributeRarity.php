@@ -18,7 +18,7 @@ final class TlStarGiftAttributeRarity extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_star_gift_attribute_rarity';
+    protected $table = 'tl_star_gift_attribute_rarity_star_gift_attribute_rarity';
 
     protected $guarded = [];
 

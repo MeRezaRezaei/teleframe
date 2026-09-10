@@ -17,7 +17,7 @@ final class TlPasswordKdfAlgo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_password_kdf_algo';
+    protected $table = 'tl_password_kdf_algo_password_kdf_algo_s_h_a2_ac2e9e239dcc';
 
     protected $guarded = [];
 

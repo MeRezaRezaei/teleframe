@@ -64,7 +64,7 @@ final class TlRichText extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_rich_text';
+    protected $table = 'tl_rich_text_text_anchor';
 
     protected $guarded = [];
 

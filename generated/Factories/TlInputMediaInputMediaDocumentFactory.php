@@ -20,8 +20,8 @@ final class TlInputMediaInputMediaDocumentFactory extends Factory
         return [
             'flags' => 1,
             'spoiler' => true,
-            'tl_id' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'video_cover' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_id' => 1003,
+            'video_cover' => 1004,
             'video_timestamp' => 5,
             'ttl_seconds' => 6,
             'query' => 'query-7',

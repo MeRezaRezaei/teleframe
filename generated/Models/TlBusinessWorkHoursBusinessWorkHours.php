@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBusinessWorkHoursBusinessWorkHoursWeekly_open;
 
 /** Constructor model for businessWorkHours of BusinessWorkHours (crc32 8c92b098). */
-final class TlBusinessWorkHoursBusinessWorkHours extends TlInstanceModel
+final class TlBusinessWorkHoursBusinessWorkHours extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

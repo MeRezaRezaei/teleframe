@@ -25,7 +25,7 @@ final class TlRichTextTextDateFactory extends Factory
             'short_date' => true,
             'long_date' => true,
             'day_of_week' => true,
-            'text' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'text' => 1008,
             'date' => 9,
         ];
     }

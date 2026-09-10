@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatFull;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesChatFullChatFullChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesChatFullChatFullUsers;
 
 /** Constructor model for messages.chatFull of messages.ChatFull (crc32 e5d7d19c). */
-final class TlMessagesChatFullChatFull extends TlInstanceModel
+final class TlMessagesChatFullChatFull extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

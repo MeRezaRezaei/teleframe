@@ -14,7 +14,7 @@ final class TlMessagesInactiveChats extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_inactive_chats';
+    protected $table = 'tl_messages_inactive_chats_inactive_chats';
 
     protected $guarded = [];
 }

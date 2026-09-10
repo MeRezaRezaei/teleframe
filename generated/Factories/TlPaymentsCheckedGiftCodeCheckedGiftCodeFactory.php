@@ -20,7 +20,7 @@ final class TlPaymentsCheckedGiftCodeCheckedGiftCodeFactory extends Factory
         return [
             'flags' => 1,
             'via_giveaway' => true,
-            'from_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'from_id' => 1003,
             'giveaway_msg_id' => 4,
             'to_id' => 1005,
             'date' => 6,

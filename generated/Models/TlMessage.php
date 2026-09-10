@@ -34,7 +34,7 @@ final class TlMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message';
+    protected $table = 'tl_message_message';
 
     protected $guarded = [];
 

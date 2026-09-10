@@ -14,7 +14,7 @@ final class TlBotsPopularAppBots extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bots_popular_app_bots';
+    protected $table = 'tl_bots_popular_app_bots_popular_app_bots';
 
     protected $guarded = [];
 }

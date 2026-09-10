@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for fragment.collectibleInfo of fragment.CollectibleInfo (crc32 6ebdff91). */
-final class TlFragmentCollectibleInfoCollectibleInfo extends TlInstanceModel
+final class TlFragmentCollectibleInfoCollectibleInfo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUsersSavedMusicSavedMusicDocuments;
 
 /** Constructor model for users.savedMusic of users.SavedMusic (crc32 34a2f297). */
-final class TlUsersSavedMusicSavedMusic extends TlInstanceModel
+final class TlUsersSavedMusicSavedMusic extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

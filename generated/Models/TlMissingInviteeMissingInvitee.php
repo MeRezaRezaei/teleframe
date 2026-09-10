@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for missingInvitee of MissingInvitee (crc32 628c9224). */
-final class TlMissingInviteeMissingInvitee extends TlInstanceModel
+final class TlMissingInviteeMissingInvitee extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlMessagesBotCallbackAnswer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_bot_callback_answer';
+    protected $table = 'tl_messages_bot_callback_answer_bot_callback_answer';
 
     protected $guarded = [];
 }

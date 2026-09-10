@@ -14,7 +14,7 @@ final class TlBotsBotInfo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bots_bot_info';
+    protected $table = 'tl_bots_bot_info_bot_info';
 
     protected $guarded = [];
 }

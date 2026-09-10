@@ -20,11 +20,11 @@ final class TlInputThemeSettingsInputThemeSettingsFactory extends Factory
         return [
             'flags' => 1,
             'message_colors_animated' => true,
-            'base_theme' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'base_theme' => 1003,
             'accent_color' => 4,
             'outbox_accent_color' => 5,
-            'wallpaper' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'wallpaper_settings' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'wallpaper' => 1006,
+            'wallpaper_settings' => 1007,
         ];
     }
 }

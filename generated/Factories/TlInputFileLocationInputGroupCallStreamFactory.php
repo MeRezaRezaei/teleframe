@@ -19,7 +19,7 @@ final class TlInputFileLocationInputGroupCallStreamFactory extends Factory
     {
         return [
             'flags' => 1,
-            'call' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'call' => 1002,
             'time_ms' => 1003,
             'scale' => 4,
             'video_channel' => 5,

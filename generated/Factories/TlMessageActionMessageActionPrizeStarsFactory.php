@@ -22,7 +22,7 @@ final class TlMessageActionMessageActionPrizeStarsFactory extends Factory
             'unclaimed' => true,
             'stars' => 1003,
             'transaction_id' => 'transaction_id-4',
-            'boost_peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'boost_peer' => 1005,
             'giveaway_msg_id' => 6,
         ];
     }

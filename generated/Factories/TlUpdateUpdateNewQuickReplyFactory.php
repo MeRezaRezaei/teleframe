@@ -18,7 +18,7 @@ final class TlUpdateUpdateNewQuickReplyFactory extends Factory
     public function definition(): array
     {
         return [
-            'quick_reply' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'quick_reply' => 1001,
         ];
     }
 }

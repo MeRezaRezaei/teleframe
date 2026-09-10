@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBaseTheme;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlThemeSettingsThemeSettingsMessage_colors;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWallPaper;
 
 /** Constructor model for themeSettings of ThemeSettings (crc32 fa58b6d4). */
-final class TlThemeSettingsThemeSettings extends TlInstanceModel
+final class TlThemeSettingsThemeSettings extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

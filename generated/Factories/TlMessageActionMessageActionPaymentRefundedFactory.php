@@ -19,11 +19,11 @@ final class TlMessageActionMessageActionPaymentRefundedFactory extends Factory
     {
         return [
             'flags' => 1,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1002,
             'currency' => 'currency-3',
             'total_amount' => 1004,
             'payload' => 'Ynl0ZXMtNQ==',
-            'charge' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'charge' => 1006,
         ];
     }
 }

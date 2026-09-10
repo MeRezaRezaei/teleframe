@@ -14,7 +14,7 @@ final class TlStoriesAlbums extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stories_albums';
+    protected $table = 'tl_stories_albums_albums';
 
     protected $guarded = [];
 }

@@ -14,7 +14,7 @@ final class TlPaymentsValidatedRequestedInfo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_validated_requested_info';
+    protected $table = 'tl_payments_validated_requested_info_validate_9668a5a19280';
 
     protected $guarded = [];
 }

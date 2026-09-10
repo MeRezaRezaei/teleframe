@@ -14,7 +14,7 @@ final class TlPeerBlocked extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_peer_blocked';
+    protected $table = 'tl_peer_blocked_peer_blocked';
 
     protected $guarded = [];
 }

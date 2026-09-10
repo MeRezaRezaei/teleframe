@@ -18,8 +18,8 @@ final class TlStickerSetCoveredStickerSetCoveredFactory extends Factory
     public function definition(): array
     {
         return [
-            'set' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'cover' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'set' => 1001,
+            'cover' => 1002,
         ];
     }
 }

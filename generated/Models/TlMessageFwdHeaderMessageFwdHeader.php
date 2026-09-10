@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for messageFwdHeader of MessageFwdHeader (crc32 4e4df4bb). */
-final class TlMessageFwdHeaderMessageFwdHeader extends TlInstanceModel
+final class TlMessageFwdHeaderMessageFwdHeader extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

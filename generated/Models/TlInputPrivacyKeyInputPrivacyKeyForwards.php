@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputPrivacyKeyForwards of InputPrivacyKey (crc32 a4dd4c08). */
-final class TlInputPrivacyKeyInputPrivacyKeyForwards extends TlInstanceModel
+final class TlInputPrivacyKeyInputPrivacyKeyForwards extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

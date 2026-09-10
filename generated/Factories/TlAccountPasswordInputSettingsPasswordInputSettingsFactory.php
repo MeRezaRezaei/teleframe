@@ -19,11 +19,11 @@ final class TlAccountPasswordInputSettingsPasswordInputSettingsFactory extends F
     {
         return [
             'flags' => 1,
-            'new_algo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'new_algo' => 1002,
             'new_password_hash' => 'Ynl0ZXMtMw==',
             'hint' => 'hint-4',
             'email' => 'email-5',
-            'new_secure_settings' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'new_secure_settings' => 1006,
         ];
     }
 }

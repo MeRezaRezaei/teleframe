@@ -14,7 +14,7 @@ final class TlLangPackLanguage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_lang_pack_language';
+    protected $table = 'tl_lang_pack_language_lang_pack_language';
 
     protected $guarded = [];
 }

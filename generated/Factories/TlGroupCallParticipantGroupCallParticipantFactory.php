@@ -29,15 +29,15 @@ final class TlGroupCallParticipantGroupCallParticipantFactory extends Factory
             'volume_by_admin' => true,
             'self' => true,
             'video_joined' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1012,
             'date' => 13,
             'active_date' => 14,
             'source' => 15,
             'volume' => 16,
             'about' => 'about-17',
             'raise_hand_rating' => 1018,
-            'video' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'presentation' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'video' => 1019,
+            'presentation' => 1020,
             'paid_stars_total' => 1021,
         ];
     }

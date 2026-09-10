@@ -21,7 +21,7 @@ final class TlStoryViewStoryViewPublicForwardFactory extends Factory
             'flags' => 1,
             'blocked' => true,
             'blocked_my_stories_from' => true,
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1004,
         ];
     }
 }

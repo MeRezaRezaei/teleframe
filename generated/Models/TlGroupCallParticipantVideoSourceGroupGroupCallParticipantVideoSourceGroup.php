@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGroupCallParticipantVideoSourceGroupD4c024526fb4Sources;
 
 /** Constructor model for groupCallParticipantVideoSourceGroup of GroupCallParticipantVideoSourceGroup (crc32 dcb118b7). */
-final class TlGroupCallParticipantVideoSourceGroupGroupCallParticipantVideoSourceGroup extends TlInstanceModel
+final class TlGroupCallParticipantVideoSourceGroupGroupCallParticipantVideoSourceGroup extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

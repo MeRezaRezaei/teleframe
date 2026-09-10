@@ -16,7 +16,7 @@ final class TlStoryFwdHeader extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_story_fwd_header';
+    protected $table = 'tl_story_fwd_header_story_fwd_header';
 
     protected $guarded = [];
 

@@ -18,7 +18,7 @@ final class TlInputInvoiceInputInvoiceStarsFactory extends Factory
     public function definition(): array
     {
         return [
-            'purpose' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'purpose' => 1001,
         ];
     }
 }

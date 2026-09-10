@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpCountriesListCountriesListCountries;
 
 /** Constructor model for help.countriesList of help.CountriesList (crc32 87d0759e). */
-final class TlHelpCountriesListCountriesList extends TlInstanceModel
+final class TlHelpCountriesListCountriesList extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

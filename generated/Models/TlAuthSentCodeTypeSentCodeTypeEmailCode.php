@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for auth.sentCodeTypeEmailCode of auth.SentCodeType (crc32 f450f59b). */
-final class TlAuthSentCodeTypeSentCodeTypeEmailCode extends TlInstanceModel
+final class TlAuthSentCodeTypeSentCodeTypeEmailCode extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

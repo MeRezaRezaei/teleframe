@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageActionMessageActionRequestedPeerPeers;
 
 /** Constructor model for messageActionRequestedPeer of MessageAction (crc32 31518e9b). */
-final class TlMessageActionMessageActionRequestedPeer extends TlInstanceModel
+final class TlMessageActionMessageActionRequestedPeer extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

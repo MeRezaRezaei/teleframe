@@ -18,7 +18,7 @@ final class TlGroupCallParticipant extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_group_call_participant';
+    protected $table = 'tl_group_call_participant_group_call_participant';
 
     protected $guarded = [];
 

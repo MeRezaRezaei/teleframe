@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdatePendingJoinRequestsRecent_requesters;
 
 /** Constructor model for updatePendingJoinRequests of Update (crc32 7063c3db). */
-final class TlUpdateUpdatePendingJoinRequests extends TlInstanceModel
+final class TlUpdateUpdatePendingJoinRequests extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

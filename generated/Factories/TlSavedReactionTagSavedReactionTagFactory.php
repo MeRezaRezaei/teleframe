@@ -19,7 +19,7 @@ final class TlSavedReactionTagSavedReactionTagFactory extends Factory
     {
         return [
             'flags' => 1,
-            'reaction' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reaction' => 1002,
             'title' => 'title-3',
             'count' => 4,
         ];

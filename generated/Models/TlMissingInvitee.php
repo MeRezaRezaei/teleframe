@@ -14,7 +14,7 @@ final class TlMissingInvitee extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_missing_invitee';
+    protected $table = 'tl_missing_invitee_missing_invitee';
 
     protected $guarded = [];
 }

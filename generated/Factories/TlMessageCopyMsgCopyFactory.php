@@ -18,7 +18,7 @@ final class TlMessageCopyMsgCopyFactory extends Factory
     public function definition(): array
     {
         return [
-            'orig_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'orig_message' => 1001,
         ];
     }
 }

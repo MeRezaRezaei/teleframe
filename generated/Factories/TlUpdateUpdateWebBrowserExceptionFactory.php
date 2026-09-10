@@ -20,8 +20,8 @@ final class TlUpdateUpdateWebBrowserExceptionFactory extends Factory
         return [
             'flags' => 1,
             'delete' => true,
-            'open_external_browser' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'exception' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'open_external_browser' => 1003,
+            'exception' => 1004,
         ];
     }
 }

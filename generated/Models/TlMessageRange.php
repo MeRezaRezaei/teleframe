@@ -14,7 +14,7 @@ final class TlMessageRange extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_range';
+    protected $table = 'tl_message_range_message_range';
 
     protected $guarded = [];
 }

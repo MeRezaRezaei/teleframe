@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatParticipant;
 
 /** Constructor model for chatParticipantsForbidden of ChatParticipants (crc32 8763d3e1). */
-final class TlChatParticipantsChatParticipantsForbidden extends TlInstanceModel
+final class TlChatParticipantsChatParticipantsForbidden extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebPage;
 
 /** Constructor model for messageMediaWebPage of MessageMedia (crc32 ddf10c3b). */
-final class TlMessageMediaMessageMediaWebPage extends TlInstanceModel
+final class TlMessageMediaMessageMediaWebPage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

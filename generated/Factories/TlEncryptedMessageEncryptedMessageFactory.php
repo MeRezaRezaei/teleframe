@@ -22,7 +22,7 @@ final class TlEncryptedMessageEncryptedMessageFactory extends Factory
             'chat_id' => 2,
             'date' => 3,
             'bytes' => 'Ynl0ZXMtNA==',
-            'file' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'file' => 1005,
         ];
     }
 }

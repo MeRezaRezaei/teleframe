@@ -24,7 +24,7 @@ final class TlUpdatesUpdateShortSentMessageFactory extends Factory
             'pts' => 4,
             'pts_count' => 5,
             'date' => 6,
-            'media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'media' => 1007,
             'ttl_period' => 8,
         ];
     }

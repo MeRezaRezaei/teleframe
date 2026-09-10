@@ -19,7 +19,7 @@ final class TlContactStatusContactStatusFactory extends Factory
     {
         return [
             'user_id' => 1001,
-            'status' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'status' => 1002,
         ];
     }
 }

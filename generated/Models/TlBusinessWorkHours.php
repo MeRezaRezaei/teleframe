@@ -16,7 +16,7 @@ final class TlBusinessWorkHours extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_business_work_hours';
+    protected $table = 'tl_business_work_hours_business_work_hours';
 
     protected $guarded = [];
 

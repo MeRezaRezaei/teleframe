@@ -18,8 +18,8 @@ final class TlUpdateUpdateGroupCallEncryptedMessageFactory extends Factory
     public function definition(): array
     {
         return [
-            'call' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'from_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'call' => 1001,
+            'from_id' => 1002,
             'encrypted_message' => 'Ynl0ZXMtMw==',
         ];
     }

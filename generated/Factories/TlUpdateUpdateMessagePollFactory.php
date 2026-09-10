@@ -19,12 +19,12 @@ final class TlUpdateUpdateMessagePollFactory extends Factory
     {
         return [
             'flags' => 1,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1002,
             'msg_id' => 3,
             'top_msg_id' => 4,
             'poll_id' => 1005,
-            'poll' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'results' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'poll' => 1006,
+            'results' => 1007,
         ];
     }
 }

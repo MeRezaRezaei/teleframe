@@ -23,7 +23,7 @@ final class TlStoryViewStoryViewFactory extends Factory
             'blocked_my_stories_from' => true,
             'user_id' => 1004,
             'date' => 5,
-            'reaction' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reaction' => 1006,
         ];
     }
 }

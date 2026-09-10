@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGroupCall;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateGroupCallParticipantsParticipants;
 
 /** Constructor model for updateGroupCallParticipants of Update (crc32 f2ebdb4e). */
-final class TlUpdateUpdateGroupCallParticipants extends TlInstanceModel
+final class TlUpdateUpdateGroupCallParticipants extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

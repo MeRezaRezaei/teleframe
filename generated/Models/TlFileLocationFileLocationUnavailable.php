@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for fileLocationUnavailable of FileLocation (crc32 7c596b46). */
-final class TlFileLocationFileLocationUnavailable extends TlInstanceModel
+final class TlFileLocationFileLocationUnavailable extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

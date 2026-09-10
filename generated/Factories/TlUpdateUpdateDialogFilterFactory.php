@@ -20,7 +20,7 @@ final class TlUpdateUpdateDialogFilterFactory extends Factory
         return [
             'flags' => 1,
             'tl_id' => 2,
-            'filter' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'filter' => 1003,
         ];
     }
 }

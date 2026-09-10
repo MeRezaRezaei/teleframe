@@ -18,7 +18,7 @@ final class TlMessageActionMessageActionSuggestedPostSuccessFactory extends Fact
     public function definition(): array
     {
         return [
-            'price' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'price' => 1001,
         ];
     }
 }

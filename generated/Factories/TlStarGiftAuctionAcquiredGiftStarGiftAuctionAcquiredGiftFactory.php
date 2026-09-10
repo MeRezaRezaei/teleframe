@@ -20,12 +20,12 @@ final class TlStarGiftAuctionAcquiredGiftStarGiftAuctionAcquiredGiftFactory exte
         return [
             'flags' => 1,
             'name_hidden' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
             'date' => 4,
             'bid_amount' => 1005,
             'round' => 6,
             'pos' => 7,
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1008,
             'gift_num' => 9,
         ];
     }

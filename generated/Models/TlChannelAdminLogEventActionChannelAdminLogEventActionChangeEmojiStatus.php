@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlEmojiStatus;
 
 /** Constructor model for channelAdminLogEventActionChangeEmojiStatus of ChannelAdminLogEventAction (crc32 3ea9feb1). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeEmojiStatus extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionChangeEmojiStatus extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

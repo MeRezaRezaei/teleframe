@@ -23,7 +23,7 @@ final class TlUrlAuthResultUrlAuthResultRequestFactory extends Factory
             'request_phone_number' => true,
             'match_codes_first' => true,
             'is_app' => true,
-            'bot' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'bot' => 1006,
             'domain' => 'domain-7',
             'browser' => 'browser-8',
             'platform' => 'platform-9',

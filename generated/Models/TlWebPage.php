@@ -19,7 +19,7 @@ final class TlWebPage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_web_page';
+    protected $table = 'tl_web_page_web_page';
 
     protected $guarded = [];
 

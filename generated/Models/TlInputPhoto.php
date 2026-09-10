@@ -23,7 +23,7 @@ final class TlInputPhoto extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_photo';
+    protected $table = 'tl_input_photo_input_photo';
 
     protected $guarded = [];
 

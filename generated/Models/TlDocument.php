@@ -37,7 +37,7 @@ final class TlDocument extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_document';
+    protected $table = 'tl_document_document';
 
     protected $guarded = [];
 

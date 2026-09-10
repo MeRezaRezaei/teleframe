@@ -14,7 +14,7 @@ final class TlHelpAppUpdate extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_help_app_update';
+    protected $table = 'tl_help_app_update_app_update';
 
     protected $guarded = [];
 }

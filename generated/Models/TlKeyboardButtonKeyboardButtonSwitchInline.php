@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlKeyboardButtonKeyboardButtonSwitchInlinePeer_types;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlKeyboardButtonStyle;
 
 /** Constructor model for keyboardButtonSwitchInline of KeyboardButton (crc32 991399fc). */
-final class TlKeyboardButtonKeyboardButtonSwitchInline extends TlInstanceModel
+final class TlKeyboardButtonKeyboardButtonSwitchInline extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

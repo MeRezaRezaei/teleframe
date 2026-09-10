@@ -20,7 +20,7 @@ final class TlStoriesAllStoriesAllStoriesNotModifiedFactory extends Factory
         return [
             'flags' => 1,
             'state' => 'state-2',
-            'stealth_mode' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'stealth_mode' => 1003,
         ];
     }
 }

@@ -18,7 +18,7 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionCreateTopicFac
     public function definition(): array
     {
         return [
-            'topic' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'topic' => 1001,
         ];
     }
 }

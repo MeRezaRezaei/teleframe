@@ -18,7 +18,7 @@ final class TlWebPageAttributeWebPageAttributeStarGiftAuctionFactory extends Fac
     public function definition(): array
     {
         return [
-            'gift' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'gift' => 1001,
             'end_date' => 2,
         ];
     }

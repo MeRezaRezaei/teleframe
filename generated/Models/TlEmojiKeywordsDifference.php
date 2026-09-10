@@ -14,7 +14,7 @@ final class TlEmojiKeywordsDifference extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_emoji_keywords_difference';
+    protected $table = 'tl_emoji_keywords_difference_emoji_keywords_difference';
 
     protected $guarded = [];
 }

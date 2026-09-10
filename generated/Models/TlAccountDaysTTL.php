@@ -14,7 +14,7 @@ final class TlAccountDaysTTL extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_days_t_t_l';
+    protected $table = 'tl_account_days_t_t_l_account_days_t_t_l';
 
     protected $guarded = [];
 }

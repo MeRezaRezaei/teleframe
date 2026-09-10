@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputPhoneCall of InputPhoneCall (crc32 1e36fded). */
-final class TlInputPhoneCallInputPhoneCall extends TlInstanceModel
+final class TlInputPhoneCallInputPhoneCall extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

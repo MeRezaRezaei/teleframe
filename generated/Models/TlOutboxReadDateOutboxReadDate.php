@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for outboxReadDate of OutboxReadDate (crc32 3bb842ac). */
-final class TlOutboxReadDateOutboxReadDate extends TlInstanceModel
+final class TlOutboxReadDateOutboxReadDate extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

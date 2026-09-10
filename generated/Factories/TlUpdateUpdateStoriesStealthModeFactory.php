@@ -18,7 +18,7 @@ final class TlUpdateUpdateStoriesStealthModeFactory extends Factory
     public function definition(): array
     {
         return [
-            'stealth_mode' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'stealth_mode' => 1001,
         ];
     }
 }

@@ -19,7 +19,7 @@ final class TlTodoCompletionTodoCompletionFactory extends Factory
     {
         return [
             'tl_id' => 1,
-            'completed_by' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'completed_by' => 1002,
             'date' => 3,
         ];
     }

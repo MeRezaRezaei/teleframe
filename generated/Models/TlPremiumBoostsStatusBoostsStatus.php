@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPremiumBoostsStatusBoostsStatusMy_boost_slots;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPremiumBoostsStatusBoostsStatusPrepaid_giveaways;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStatsPercentValue;
 
 /** Constructor model for premium.boostsStatus of premium.BoostsStatus (crc32 4959427a). */
-final class TlPremiumBoostsStatusBoostsStatus extends TlInstanceModel
+final class TlPremiumBoostsStatusBoostsStatus extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

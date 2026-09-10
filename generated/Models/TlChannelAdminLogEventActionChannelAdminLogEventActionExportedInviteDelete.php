@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlExportedChatInvite;
 
 /** Constructor model for channelAdminLogEventActionExportedInviteDelete of ChannelAdminLogEventAction (crc32 5a50fca4). */
-final class TlChannelAdminLogEventActionChannelAdminLogEventActionExportedInviteDelete extends TlInstanceModel
+final class TlChannelAdminLogEventActionChannelAdminLogEventActionExportedInviteDelete extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

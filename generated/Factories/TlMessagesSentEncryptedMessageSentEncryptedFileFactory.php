@@ -19,7 +19,7 @@ final class TlMessagesSentEncryptedMessageSentEncryptedFileFactory extends Facto
     {
         return [
             'date' => 1,
-            'file' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'file' => 1002,
         ];
     }
 }

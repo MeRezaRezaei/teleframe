@@ -22,7 +22,7 @@ final class TlMessageReactorMessageReactorFactory extends Factory
             'top' => true,
             'my' => true,
             'anonymous' => true,
-            'peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer_id' => 1005,
             'count' => 6,
         ];
     }

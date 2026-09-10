@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarsStatusStarsStatusChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarsStatusStarsStatusHistory;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarsStatusStarsStatusSubscriptions;
@@ -19,7 +19,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarsStatusStarsSta
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarsAmount;
 
 /** Constructor model for payments.starsStatus of payments.StarsStatus (crc32 6c9ce8ed). */
-final class TlPaymentsStarsStatusStarsStatus extends TlInstanceModel
+final class TlPaymentsStarsStatusStarsStatus extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -21,7 +21,7 @@ final class TlRequestedPeerRequestedPeerChatFactory extends Factory
             'flags' => 1,
             'chat_id' => 1002,
             'title' => 'title-3',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1004,
         ];
     }
 }

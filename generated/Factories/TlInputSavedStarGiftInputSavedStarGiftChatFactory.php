@@ -18,7 +18,7 @@ final class TlInputSavedStarGiftInputSavedStarGiftChatFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1001,
             'saved_id' => 1002,
         ];
     }

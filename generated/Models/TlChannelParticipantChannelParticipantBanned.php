@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatBannedRights;
 
 /** Constructor model for channelParticipantBanned of ChannelParticipant (crc32 d5f0ad91). */
-final class TlChannelParticipantChannelParticipantBanned extends TlInstanceModel
+final class TlChannelParticipantChannelParticipantBanned extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

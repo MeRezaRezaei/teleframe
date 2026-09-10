@@ -16,7 +16,7 @@ final class TlMessagesFilter extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_filter';
+    protected $table = 'tl_messages_filter_input_messages_filter_chat_photos';
 
     protected $guarded = [];
 

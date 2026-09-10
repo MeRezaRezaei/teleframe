@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for pageRelatedArticle of PageRelatedArticle (crc32 b390dc08). */
-final class TlPageRelatedArticlePageRelatedArticle extends TlInstanceModel
+final class TlPageRelatedArticlePageRelatedArticle extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

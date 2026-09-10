@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGeoPoint;
 
 /** Constructor model for messageMediaGeo of MessageMedia (crc32 56e0d474). */
-final class TlMessageMediaMessageMediaGeo extends TlInstanceModel
+final class TlMessageMediaMessageMediaGeo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

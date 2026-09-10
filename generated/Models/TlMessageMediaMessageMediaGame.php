@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlGame;
 
 /** Constructor model for messageMediaGame of MessageMedia (crc32 fdb19008). */
-final class TlMessageMediaMessageMediaGame extends TlInstanceModel
+final class TlMessageMediaMessageMediaGame extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

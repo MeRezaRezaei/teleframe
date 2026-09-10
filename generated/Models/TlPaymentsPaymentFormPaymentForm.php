@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDataJSON;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInvoice;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentRequestedInfo;
@@ -21,7 +21,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsPaymentFormPaymentF
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebDocument;
 
 /** Constructor model for payments.paymentForm of payments.PaymentForm (crc32 a0058751). */
-final class TlPaymentsPaymentFormPaymentForm extends TlInstanceModel
+final class TlPaymentsPaymentFormPaymentForm extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

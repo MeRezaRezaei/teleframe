@@ -14,7 +14,7 @@ final class TlMessageReportOption extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_report_option';
+    protected $table = 'tl_message_report_option_message_report_option';
 
     protected $guarded = [];
 }

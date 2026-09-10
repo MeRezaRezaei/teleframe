@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsUniqueStarGiftUniqueStarGiftChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsUniqueStarGiftUniqueStarGiftUsers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGift;
 
 /** Constructor model for payments.uniqueStarGift of payments.UniqueStarGift (crc32 416c56e8). */
-final class TlPaymentsUniqueStarGiftUniqueStarGift extends TlInstanceModel
+final class TlPaymentsUniqueStarGiftUniqueStarGift extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

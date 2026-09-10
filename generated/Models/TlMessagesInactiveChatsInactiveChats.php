@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesInactiveChatsInactiveChatsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesInactiveChatsInactiveChatsDates;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesInactiveChatsInactiveChatsUsers;
 
 /** Constructor model for messages.inactiveChats of messages.InactiveChats (crc32 a927fec5). */
-final class TlMessagesInactiveChatsInactiveChats extends TlInstanceModel
+final class TlMessagesInactiveChatsInactiveChats extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

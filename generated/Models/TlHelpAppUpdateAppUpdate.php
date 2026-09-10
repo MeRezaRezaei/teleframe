@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlHelpAppUpdateAppUpdateEntities;
 
 /** Constructor model for help.appUpdate of help.AppUpdate (crc32 ccbbce30). */
-final class TlHelpAppUpdateAppUpdate extends TlInstanceModel
+final class TlHelpAppUpdateAppUpdate extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

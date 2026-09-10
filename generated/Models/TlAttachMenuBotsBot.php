@@ -14,7 +14,7 @@ final class TlAttachMenuBotsBot extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_attach_menu_bots_bot';
+    protected $table = 'tl_attach_menu_bots_bot_attach_menu_bots_bot';
 
     protected $guarded = [];
 }

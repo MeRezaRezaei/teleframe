@@ -32,7 +32,7 @@ final class TlExportedChatInviteChatInviteExportedFactory extends Factory
             'requested' => 12,
             'subscription_expired' => 13,
             'title' => 'title-14',
-            'subscription_pricing' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'subscription_pricing' => 1015,
         ];
     }
 }

@@ -17,7 +17,7 @@ final class TlChannelLocation extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_channel_location';
+    protected $table = 'tl_channel_location_channel_location';
 
     protected $guarded = [];
 

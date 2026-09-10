@@ -14,7 +14,7 @@ final class TlInputChatlist extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_chatlist';
+    protected $table = 'tl_input_chatlist_input_chatlist_dialog_filter';
 
     protected $guarded = [];
 }

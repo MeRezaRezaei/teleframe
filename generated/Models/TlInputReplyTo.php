@@ -16,7 +16,7 @@ final class TlInputReplyTo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_reply_to';
+    protected $table = 'tl_input_reply_to_input_reply_to_message';
 
     protected $guarded = [];
 

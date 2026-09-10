@@ -22,7 +22,7 @@ final class TlInputMediaInputMediaDocumentExternalFactory extends Factory
             'spoiler' => true,
             'url' => 'url-3',
             'ttl_seconds' => 4,
-            'video_cover' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'video_cover' => 1005,
             'video_timestamp' => 6,
         ];
     }

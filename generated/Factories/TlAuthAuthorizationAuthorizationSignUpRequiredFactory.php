@@ -19,7 +19,7 @@ final class TlAuthAuthorizationAuthorizationSignUpRequiredFactory extends Factor
     {
         return [
             'flags' => 1,
-            'terms_of_service' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'terms_of_service' => 1002,
         ];
     }
 }

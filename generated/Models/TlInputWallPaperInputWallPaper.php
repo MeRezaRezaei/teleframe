@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputWallPaper of InputWallPaper (crc32 e630b979). */
-final class TlInputWallPaperInputWallPaper extends TlInstanceModel
+final class TlInputWallPaperInputWallPaper extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

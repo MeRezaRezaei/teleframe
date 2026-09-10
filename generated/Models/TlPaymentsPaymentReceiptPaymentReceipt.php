@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInvoice;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentRequestedInfo;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsPaymentReceiptPaymentReceiptUsers;
@@ -19,7 +19,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlShippingOption;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebDocument;
 
 /** Constructor model for payments.paymentReceipt of payments.PaymentReceipt (crc32 70c4fe03). */
-final class TlPaymentsPaymentReceiptPaymentReceipt extends TlInstanceModel
+final class TlPaymentsPaymentReceiptPaymentReceipt extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

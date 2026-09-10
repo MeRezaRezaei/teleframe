@@ -23,8 +23,8 @@ final class TlPaymentsPaymentFormPaymentFormStarsFactory extends Factory
             'bot_id' => 1003,
             'title' => 'title-4',
             'description' => 'description-5',
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'invoice' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1006,
+            'invoice' => 1007,
         ];
     }
 }

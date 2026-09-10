@@ -14,7 +14,7 @@ final class TlPrepaidGiveaway extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_prepaid_giveaway';
+    protected $table = 'tl_prepaid_giveaway_prepaid_giveaway';
 
     protected $guarded = [];
 }

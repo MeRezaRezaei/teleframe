@@ -19,7 +19,7 @@ final class TlDecryptedMessageDecryptedMessageServiceFactory extends Factory
     {
         return [
             'random_id' => 1001,
-            'action' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'action' => 1002,
         ];
     }
 }

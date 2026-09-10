@@ -18,7 +18,7 @@ final class TlPaymentsUniqueStarGiftUniqueStarGiftFactory extends Factory
     public function definition(): array
     {
         return [
-            'gift' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'gift' => 1001,
         ];
     }
 }

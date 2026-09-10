@@ -18,7 +18,7 @@ final class TlInputChannelInputChannelFromMessageFactory extends Factory
     public function definition(): array
     {
         return [
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1001,
             'msg_id' => 2,
             'channel_id' => 1003,
         ];

@@ -18,8 +18,8 @@ final class TlChatlistsExportedChatlistInviteExportedChatlistInviteFactory exten
     public function definition(): array
     {
         return [
-            'filter' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'invite' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'filter' => 1001,
+            'invite' => 1002,
         ];
     }
 }

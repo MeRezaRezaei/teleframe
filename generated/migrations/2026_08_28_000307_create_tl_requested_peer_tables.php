@@ -1,0 +1,70 @@
+<?php
+
+// GENERATED — do not edit; run artisan teleframe:regenerate
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('tl_requested_peer_requested_peer_channel', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->bigInteger('constructor_id');
+            $table->string('constructor_name', 96);
+            $table->bigInteger('flags')->nullable();
+            $table->bigInteger('channel_id')->nullable();
+            $table->index('channel_id', 'ix_93f6dcc5026b2a5011da8ab6');
+            $table->text('title')->nullable();
+            $table->text('username')->nullable();
+            $table->bigInteger('photo')->nullable();
+            $table->index('photo', 'ix_962a78719eae85b879866ad9');
+            $table->bigInteger('account_id');
+            $table->timestamps();
+            $table->index('constructor_id', 'ix_4f4cb6aeeeea10a263cbb0d2');
+            $table->index('account_id', 'ix_edbf5d3629626c68ed2551d0');
+        });
+        Schema::create('tl_requested_peer_requested_peer_chat', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->bigInteger('constructor_id');
+            $table->string('constructor_name', 96);
+            $table->bigInteger('flags')->nullable();
+            $table->bigInteger('chat_id')->nullable();
+            $table->index('chat_id', 'ix_fe640469957c1c2332e84410');
+            $table->text('title')->nullable();
+            $table->bigInteger('photo')->nullable();
+            $table->index('photo', 'ix_03d8dfc0ba15000b450ac2ee');
+            $table->bigInteger('account_id');
+            $table->timestamps();
+            $table->index('constructor_id', 'ix_6a3f40a437d3b95961636673');
+            $table->index('account_id', 'ix_fc9b6fb08a5e3af7b1d18415');
+        });
+        Schema::create('tl_requested_peer_requested_peer_user', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->bigInteger('constructor_id');
+            $table->string('constructor_name', 96);
+            $table->bigInteger('flags')->nullable();
+            $table->bigInteger('user_id')->nullable();
+            $table->index('user_id', 'ix_cef323d230d2e152c272a36c');
+            $table->text('first_name')->nullable();
+            $table->text('last_name')->nullable();
+            $table->text('username')->nullable();
+            $table->bigInteger('photo')->nullable();
+            $table->index('photo', 'ix_a4a30cfb22e56b06eda6a145');
+            $table->bigInteger('account_id');
+            $table->timestamps();
+            $table->index('constructor_id', 'ix_1409250365b021ecf4ea4be8');
+            $table->index('account_id', 'ix_626a5f6d5ff2ebcad67b1407');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('tl_requested_peer_requested_peer_user');
+        Schema::dropIfExists('tl_requested_peer_requested_peer_chat');
+        Schema::dropIfExists('tl_requested_peer_requested_peer_channel');
+    }
+};

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesPeerDialogsPeerDialogsChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesPeerDialogsPeerDialogsDialogs;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesPeerDialogsPeerDialogsMessages;
@@ -19,7 +19,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesPeerDialogsPeerDial
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesState;
 
 /** Constructor model for messages.peerDialogs of messages.PeerDialogs (crc32 3371c354). */
-final class TlMessagesPeerDialogsPeerDialogs extends TlInstanceModel
+final class TlMessagesPeerDialogsPeerDialogs extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

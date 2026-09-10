@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagePeerVoteMessagePeerVoteMultipleOptions;
 
 /** Constructor model for messagePeerVoteMultiple of MessagePeerVote (crc32 4628f6e6). */
-final class TlMessagePeerVoteMessagePeerVoteMultiple extends TlInstanceModel
+final class TlMessagePeerVoteMessagePeerVoteMultiple extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

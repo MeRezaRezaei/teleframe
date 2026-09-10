@@ -14,7 +14,7 @@ final class TlPaymentsStarsRevenueAdsAccountUrl extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_stars_revenue_ads_account_url';
+    protected $table = 'tl_payments_stars_revenue_ads_account_url_sta_1943787d2312';
 
     protected $guarded = [];
 }

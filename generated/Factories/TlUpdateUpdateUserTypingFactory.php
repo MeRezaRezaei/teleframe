@@ -21,7 +21,7 @@ final class TlUpdateUpdateUserTypingFactory extends Factory
             'flags' => 1,
             'user_id' => 1002,
             'top_msg_id' => 3,
-            'action' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'action' => 1004,
         ];
     }
 }

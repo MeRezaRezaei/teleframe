@@ -19,9 +19,9 @@ final class TlMessageMediaMessageMediaPollFactory extends Factory
     {
         return [
             'flags' => 1,
-            'poll' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'results' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'attached_media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'poll' => 1002,
+            'results' => 1003,
+            'attached_media' => 1004,
         ];
     }
 }

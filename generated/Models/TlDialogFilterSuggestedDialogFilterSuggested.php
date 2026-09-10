@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDialogFilter;
 
 /** Constructor model for dialogFilterSuggested of DialogFilterSuggested (crc32 77744d4a). */
-final class TlDialogFilterSuggestedDialogFilterSuggested extends TlInstanceModel
+final class TlDialogFilterSuggestedDialogFilterSuggested extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

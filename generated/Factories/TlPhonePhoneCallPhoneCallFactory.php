@@ -18,7 +18,7 @@ final class TlPhonePhoneCallPhoneCallFactory extends Factory
     public function definition(): array
     {
         return [
-            'phone_call' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'phone_call' => 1001,
         ];
     }
 }

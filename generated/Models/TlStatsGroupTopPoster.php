@@ -14,7 +14,7 @@ final class TlStatsGroupTopPoster extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stats_group_top_poster';
+    protected $table = 'tl_stats_group_top_poster_stats_group_top_poster';
 
     protected $guarded = [];
 }

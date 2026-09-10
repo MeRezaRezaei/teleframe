@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for storage.fileMov of storage.FileType (crc32 4b09ebbc). */
-final class TlStorageFileTypeFileMov extends TlInstanceModel
+final class TlStorageFileTypeFileMov extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -16,7 +16,7 @@ final class TlStarsRating extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stars_rating';
+    protected $table = 'tl_stars_rating_stars_rating';
 
     protected $guarded = [];
 

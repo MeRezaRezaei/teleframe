@@ -23,7 +23,7 @@ final class TlMessageMediaMessageMediaWebPageFactory extends Factory
             'force_small_media' => true,
             'manual' => true,
             'safe' => true,
-            'webpage' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'webpage' => 1006,
         ];
     }
 }

@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateBotDeleteBusinessMessageMessages;
 
 /** Constructor model for updateBotDeleteBusinessMessage of Update (crc32 a02a982e). */
-final class TlUpdateUpdateBotDeleteBusinessMessage extends TlInstanceModel
+final class TlUpdateUpdateBotDeleteBusinessMessage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

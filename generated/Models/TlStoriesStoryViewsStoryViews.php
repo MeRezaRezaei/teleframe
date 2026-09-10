@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStoryViewsStoryViewsUsers;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoriesStoryViewsStoryViewsViews;
 
 /** Constructor model for stories.storyViews of stories.StoryViews (crc32 de9eed1d). */
-final class TlStoriesStoryViewsStoryViews extends TlInstanceModel
+final class TlStoriesStoryViewsStoryViews extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

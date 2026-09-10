@@ -19,9 +19,9 @@ final class TlPaymentsStarsRevenueStatsStarsRevenueStatsFactory extends Factory
     {
         return [
             'flags' => 1,
-            'top_hours_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'revenue_graph' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'status' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'top_hours_graph' => 1002,
+            'revenue_graph' => 1003,
+            'status' => 1004,
             'usd_rate' => 0.5,
         ];
     }

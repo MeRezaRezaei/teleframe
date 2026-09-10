@@ -14,7 +14,7 @@ final class TlMsgsStateReq extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_msgs_state_req';
+    protected $table = 'tl_msgs_state_req_msgs_state_req';
 
     protected $guarded = [];
 }

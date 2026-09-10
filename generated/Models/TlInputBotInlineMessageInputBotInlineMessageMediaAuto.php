@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputBotInlineMessageInputBotInline93d9b4b179e4Entities;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReplyMarkup;
 
 /** Constructor model for inputBotInlineMessageMediaAuto of InputBotInlineMessage (crc32 3380c786). */
-final class TlInputBotInlineMessageInputBotInlineMessageMediaAuto extends TlInstanceModel
+final class TlInputBotInlineMessageInputBotInlineMessageMediaAuto extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

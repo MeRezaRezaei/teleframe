@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for rsa_public_key of RSAPublicKey (crc32 7a19cb76). */
-final class TlRSAPublicKeyRsaPublicKey extends TlInstanceModel
+final class TlRSAPublicKeyRsaPublicKey extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

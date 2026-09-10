@@ -10,14 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsImportedContactsImportedContactsImported;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsImportedContactsImportedContactsPopular_invites;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsImportedContactsImportedContactsRetry_contacts;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlContactsImportedContactsImportedContactsUsers;
 
 /** Constructor model for contacts.importedContacts of contacts.ImportedContacts (crc32 77d01c3b). */
-final class TlContactsImportedContactsImportedContacts extends TlInstanceModel
+final class TlContactsImportedContactsImportedContacts extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

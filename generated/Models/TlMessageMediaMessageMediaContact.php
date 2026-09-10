@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for messageMediaContact of MessageMedia (crc32 70322949). */
-final class TlMessageMediaMessageMediaContact extends TlInstanceModel
+final class TlMessageMediaMessageMediaContact extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

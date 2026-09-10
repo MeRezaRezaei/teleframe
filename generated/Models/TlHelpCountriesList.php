@@ -14,7 +14,7 @@ final class TlHelpCountriesList extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_help_countries_list';
+    protected $table = 'tl_help_countries_list_countries_list';
 
     protected $guarded = [];
 }

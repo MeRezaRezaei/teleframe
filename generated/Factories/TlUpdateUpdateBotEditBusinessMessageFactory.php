@@ -20,8 +20,8 @@ final class TlUpdateUpdateBotEditBusinessMessageFactory extends Factory
         return [
             'flags' => 1,
             'connection_id' => 'connection_id-2',
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'reply_to_message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1003,
+            'reply_to_message' => 1004,
             'qts' => 5,
         ];
     }

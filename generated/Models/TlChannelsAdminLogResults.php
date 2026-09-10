@@ -14,7 +14,7 @@ final class TlChannelsAdminLogResults extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_channels_admin_log_results';
+    protected $table = 'tl_channels_admin_log_results_admin_log_results';
 
     protected $guarded = [];
 }

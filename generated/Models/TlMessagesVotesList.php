@@ -14,7 +14,7 @@ final class TlMessagesVotesList extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_votes_list';
+    protected $table = 'tl_messages_votes_list_votes_list';
 
     protected $guarded = [];
 }

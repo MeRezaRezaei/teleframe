@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 
 /** Constructor model for requestedPeerChat of RequestedPeer (crc32 7307544f). */
-final class TlRequestedPeerRequestedPeerChat extends TlInstanceModel
+final class TlRequestedPeerRequestedPeerChat extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

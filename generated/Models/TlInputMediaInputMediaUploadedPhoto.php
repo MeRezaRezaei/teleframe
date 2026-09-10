@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputFile;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputMediaInputMediaUploadedPhotoStickers;
 
 /** Constructor model for inputMediaUploadedPhoto of InputMedia (crc32 7d8375da). */
-final class TlInputMediaInputMediaUploadedPhoto extends TlInstanceModel
+final class TlInputMediaInputMediaUploadedPhoto extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

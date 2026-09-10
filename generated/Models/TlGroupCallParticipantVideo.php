@@ -16,7 +16,7 @@ final class TlGroupCallParticipantVideo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_group_call_participant_video';
+    protected $table = 'tl_group_call_participant_video_group_call_pa_2d621b7be2a1';
 
     protected $guarded = [];
 

@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStorePaymentPurpose;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPremiumGiftCodeOption;
 
 /** Constructor model for inputInvoicePremiumGiftCode of InputInvoice (crc32 98986c0d). */
-final class TlInputInvoiceInputInvoicePremiumGiftCode extends TlInstanceModel
+final class TlInputInvoiceInputInvoicePremiumGiftCode extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

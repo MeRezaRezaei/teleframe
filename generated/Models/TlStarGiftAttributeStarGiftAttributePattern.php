@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStarGiftAttributeRarity;
 
 /** Constructor model for starGiftAttributePattern of StarGiftAttribute (crc32 4e7085ea). */
-final class TlStarGiftAttributeStarGiftAttributePattern extends TlInstanceModel
+final class TlStarGiftAttributeStarGiftAttributePattern extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

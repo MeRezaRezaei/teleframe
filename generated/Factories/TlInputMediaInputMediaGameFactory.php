@@ -18,7 +18,7 @@ final class TlInputMediaInputMediaGameFactory extends Factory
     public function definition(): array
     {
         return [
-            'tl_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_id' => 1001,
         ];
     }
 }

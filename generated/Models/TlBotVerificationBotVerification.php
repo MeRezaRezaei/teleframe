@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for botVerification of BotVerification (crc32 f93cd45c). */
-final class TlBotVerificationBotVerification extends TlInstanceModel
+final class TlBotVerificationBotVerification extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

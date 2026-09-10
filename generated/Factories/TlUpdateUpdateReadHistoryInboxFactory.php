@@ -20,7 +20,7 @@ final class TlUpdateUpdateReadHistoryInboxFactory extends Factory
         return [
             'flags' => 1,
             'folder_id' => 2,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
             'top_msg_id' => 4,
             'max_id' => 5,
             'still_unread_count' => 6,

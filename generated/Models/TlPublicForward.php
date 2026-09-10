@@ -14,7 +14,7 @@ final class TlPublicForward extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_public_forward';
+    protected $table = 'tl_public_forward_public_forward_message';
 
     protected $guarded = [];
 }

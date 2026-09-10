@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPhoto;
 
 /** Constructor model for requestedPeerUser of RequestedPeer (crc32 d62ff46a). */
-final class TlRequestedPeerRequestedPeerUser extends TlInstanceModel
+final class TlRequestedPeerRequestedPeerUser extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

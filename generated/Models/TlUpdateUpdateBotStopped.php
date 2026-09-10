@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBool;
 
 /** Constructor model for updateBotStopped of Update (crc32 c4870a49). */
-final class TlUpdateUpdateBotStopped extends TlInstanceModel
+final class TlUpdateUpdateBotStopped extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

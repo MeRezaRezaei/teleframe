@@ -14,7 +14,7 @@ final class TlCdnPublicKey extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_cdn_public_key';
+    protected $table = 'tl_cdn_public_key_cdn_public_key';
 
     protected $guarded = [];
 }

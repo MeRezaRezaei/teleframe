@@ -14,7 +14,7 @@ final class TlInputQuickReplyShortcut extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_quick_reply_shortcut';
+    protected $table = 'tl_input_quick_reply_shortcut_input_quick_reply_shortcut';
 
     protected $guarded = [];
 }

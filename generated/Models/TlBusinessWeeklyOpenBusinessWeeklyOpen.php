@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for businessWeeklyOpen of BusinessWeeklyOpen (crc32 120b1ab9). */
-final class TlBusinessWeeklyOpenBusinessWeeklyOpen extends TlInstanceModel
+final class TlBusinessWeeklyOpenBusinessWeeklyOpen extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

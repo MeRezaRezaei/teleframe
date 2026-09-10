@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarGiftUpgradePreviewStarGi2469e890a24dNext_prices;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarGiftUpgradePreviewStarGi2469e890a24dPrices;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPaymentsStarGiftUpgradePreviewStarGi2469e890a24dSample_attributes;
 
 /** Constructor model for payments.starGiftUpgradePreview of payments.StarGiftUpgradePreview (crc32 3de1dfed). */
-final class TlPaymentsStarGiftUpgradePreviewStarGiftUpgradePreview extends TlInstanceModel
+final class TlPaymentsStarGiftUpgradePreviewStarGiftUpgradePreview extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

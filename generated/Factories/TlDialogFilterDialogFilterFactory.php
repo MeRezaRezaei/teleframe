@@ -29,7 +29,7 @@ final class TlDialogFilterDialogFilterFactory extends Factory
             'exclude_archived' => true,
             'title_noanimate' => true,
             'tl_id' => 11,
-            'title' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'title' => 1012,
             'emoticon' => 'emoticon-13',
             'color' => 14,
         ];

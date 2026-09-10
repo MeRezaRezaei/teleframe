@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputStickerSet;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMaskCoords;
 
 /** Constructor model for documentAttributeSticker of DocumentAttribute (crc32 6319d612). */
-final class TlDocumentAttributeDocumentAttributeSticker extends TlInstanceModel
+final class TlDocumentAttributeDocumentAttributeSticker extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

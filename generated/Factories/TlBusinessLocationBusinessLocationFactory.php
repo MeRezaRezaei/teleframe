@@ -19,7 +19,7 @@ final class TlBusinessLocationBusinessLocationFactory extends Factory
     {
         return [
             'flags' => 1,
-            'geo_point' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'geo_point' => 1002,
             'address' => 'address-3',
         ];
     }

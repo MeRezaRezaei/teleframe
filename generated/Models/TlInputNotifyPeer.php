@@ -14,7 +14,7 @@ final class TlInputNotifyPeer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_notify_peer';
+    protected $table = 'tl_input_notify_peer_input_notify_broadcasts';
 
     protected $guarded = [];
 }

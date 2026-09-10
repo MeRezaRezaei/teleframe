@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlLangPackDifference;
 
 /** Constructor model for updateLangPack of Update (crc32 56022f4d). */
-final class TlUpdateUpdateLangPack extends TlInstanceModel
+final class TlUpdateUpdateLangPack extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlPaymentsCheckedGiftCode extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_checked_gift_code';
+    protected $table = 'tl_payments_checked_gift_code_checked_gift_code';
 
     protected $guarded = [];
 }

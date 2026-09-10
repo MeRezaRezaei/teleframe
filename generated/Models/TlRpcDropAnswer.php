@@ -14,7 +14,7 @@ final class TlRpcDropAnswer extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_rpc_drop_answer';
+    protected $table = 'tl_rpc_drop_answer_rpc_answer_dropped';
 
     protected $guarded = [];
 }

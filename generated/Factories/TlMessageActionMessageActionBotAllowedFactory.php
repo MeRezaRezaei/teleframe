@@ -22,7 +22,7 @@ final class TlMessageActionMessageActionBotAllowedFactory extends Factory
             'attach_menu' => true,
             'from_request' => true,
             'domain' => 'domain-4',
-            'app' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'app' => 1005,
         ];
     }
 }

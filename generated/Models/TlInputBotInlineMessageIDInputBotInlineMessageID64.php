@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputBotInlineMessageID64 of InputBotInlineMessageID (crc32 b6d915d7). */
-final class TlInputBotInlineMessageIDInputBotInlineMessageID64 extends TlInstanceModel
+final class TlInputBotInlineMessageIDInputBotInlineMessageID64 extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlJSONObjectValue extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_j_s_o_n_object_value';
+    protected $table = 'tl_j_s_o_n_object_value_json_object_value';
 
     protected $guarded = [];
 }

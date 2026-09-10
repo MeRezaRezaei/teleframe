@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputUser;
 
 /** Constructor model for botCommandScopePeerUser of BotCommandScope (crc32 0a1321f3). */
-final class TlBotCommandScopeBotCommandScopePeerUser extends TlInstanceModel
+final class TlBotCommandScopeBotCommandScopePeerUser extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -14,7 +14,7 @@ final class TlFutureSalt extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_future_salt';
+    protected $table = 'tl_future_salt_future_salt';
 
     protected $guarded = [];
 }

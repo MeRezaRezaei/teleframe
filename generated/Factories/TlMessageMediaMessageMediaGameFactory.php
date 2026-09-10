@@ -18,7 +18,7 @@ final class TlMessageMediaMessageMediaGameFactory extends Factory
     public function definition(): array
     {
         return [
-            'game' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'game' => 1001,
         ];
     }
 }

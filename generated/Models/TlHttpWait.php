@@ -14,7 +14,7 @@ final class TlHttpWait extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_http_wait';
+    protected $table = 'tl_http_wait_http_wait';
 
     protected $guarded = [];
 }

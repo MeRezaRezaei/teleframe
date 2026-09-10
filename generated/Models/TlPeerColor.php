@@ -21,7 +21,7 @@ final class TlPeerColor extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_peer_color';
+    protected $table = 'tl_peer_color_input_peer_color_collectible';
 
     protected $guarded = [];
 

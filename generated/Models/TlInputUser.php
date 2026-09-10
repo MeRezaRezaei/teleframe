@@ -25,7 +25,7 @@ final class TlInputUser extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_user';
+    protected $table = 'tl_input_user_input_user';
 
     protected $guarded = [];
 

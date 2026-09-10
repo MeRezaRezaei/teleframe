@@ -18,7 +18,7 @@ final class TlPageBlockPageBlockChannelFactory extends Factory
     public function definition(): array
     {
         return [
-            'channel' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'channel' => 1001,
         ];
     }
 }

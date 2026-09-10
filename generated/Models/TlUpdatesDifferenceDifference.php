@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesDifferenceDifferenceChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesDifferenceDifferenceNew_encrypted_messages;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesDifferenceDifferenceNew_messages;
@@ -20,7 +20,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesDifferenceDifference
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesState;
 
 /** Constructor model for updates.difference of updates.Difference (crc32 00f49ca0). */
-final class TlUpdatesDifferenceDifference extends TlInstanceModel
+final class TlUpdatesDifferenceDifference extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

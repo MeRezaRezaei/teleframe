@@ -19,7 +19,7 @@ final class TlRecentMeUrlRecentMeUrlChatInviteFactory extends Factory
     {
         return [
             'url' => 'url-1',
-            'chat_invite' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'chat_invite' => 1002,
         ];
     }
 }

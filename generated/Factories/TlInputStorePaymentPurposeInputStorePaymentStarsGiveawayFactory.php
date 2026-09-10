@@ -22,7 +22,7 @@ final class TlInputStorePaymentPurposeInputStorePaymentStarsGiveawayFactory exte
             'only_new_subscribers' => true,
             'winners_are_visible' => true,
             'stars' => 1004,
-            'boost_peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'boost_peer' => 1005,
             'prize_description' => 'prize_description-6',
             'random_id' => 1007,
             'until_date' => 8,

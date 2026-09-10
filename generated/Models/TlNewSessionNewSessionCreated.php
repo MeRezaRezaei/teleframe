@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for new_session_created of NewSession (crc32 9ec20908). */
-final class TlNewSessionNewSessionCreated extends TlInstanceModel
+final class TlNewSessionNewSessionCreated extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

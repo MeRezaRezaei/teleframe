@@ -14,7 +14,7 @@ final class TlContactBirthday extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_contact_birthday';
+    protected $table = 'tl_contact_birthday_contact_birthday';
 
     protected $guarded = [];
 }

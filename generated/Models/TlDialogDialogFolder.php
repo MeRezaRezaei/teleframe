@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlFolder;
 
 /** Constructor model for dialogFolder of Dialog (crc32 71bd134c). */
-final class TlDialogDialogFolder extends TlInstanceModel
+final class TlDialogDialogFolder extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

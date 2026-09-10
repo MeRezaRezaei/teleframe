@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdateDialogFilterOrderOrder;
 
 /** Constructor model for updateDialogFilterOrder of Update (crc32 a5d72105). */
-final class TlUpdateUpdateDialogFilterOrder extends TlInstanceModel
+final class TlUpdateUpdateDialogFilterOrder extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

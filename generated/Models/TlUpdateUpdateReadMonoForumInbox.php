@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for updateReadMonoForumInbox of Update (crc32 77b0e372). */
-final class TlUpdateUpdateReadMonoForumInbox extends TlInstanceModel
+final class TlUpdateUpdateReadMonoForumInbox extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

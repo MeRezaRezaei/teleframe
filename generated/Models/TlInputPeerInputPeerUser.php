@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputPeerUser of InputPeer (crc32 dde8a54c). */
-final class TlInputPeerInputPeerUser extends TlInstanceModel
+final class TlInputPeerInputPeerUser extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -16,7 +16,7 @@ final class TlBotVerifierSettings extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bot_verifier_settings';
+    protected $table = 'tl_bot_verifier_settings_bot_verifier_settings';
 
     protected $guarded = [];
 

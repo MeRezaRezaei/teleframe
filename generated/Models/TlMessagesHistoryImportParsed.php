@@ -14,7 +14,7 @@ final class TlMessagesHistoryImportParsed extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_history_import_parsed';
+    protected $table = 'tl_messages_history_import_parsed_history_import_parsed';
 
     protected $guarded = [];
 }

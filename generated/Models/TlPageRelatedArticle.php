@@ -14,7 +14,7 @@ final class TlPageRelatedArticle extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_page_related_article';
+    protected $table = 'tl_page_related_article_page_related_article';
 
     protected $guarded = [];
 }

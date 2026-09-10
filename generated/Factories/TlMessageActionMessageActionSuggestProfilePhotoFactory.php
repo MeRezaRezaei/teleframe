@@ -18,7 +18,7 @@ final class TlMessageActionMessageActionSuggestProfilePhotoFactory extends Facto
     public function definition(): array
     {
         return [
-            'photo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'photo' => 1001,
         ];
     }
 }

@@ -14,7 +14,7 @@ final class TlMessagePeerReaction extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_peer_reaction';
+    protected $table = 'tl_message_peer_reaction_message_peer_reaction';
 
     protected $guarded = [];
 }

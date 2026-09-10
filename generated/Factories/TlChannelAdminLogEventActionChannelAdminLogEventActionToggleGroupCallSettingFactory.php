@@ -18,7 +18,7 @@ final class TlChannelAdminLogEventActionChannelAdminLogEventActionToggleGroupCal
     public function definition(): array
     {
         return [
-            'join_muted' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'join_muted' => 1001,
         ];
     }
 }

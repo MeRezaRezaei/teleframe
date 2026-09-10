@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputFile;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlVideoSize;
 
 /** Constructor model for inputChatUploadedPhoto of InputChatPhoto (crc32 bdcdaec0). */
-final class TlInputChatPhotoInputChatUploadedPhoto extends TlInstanceModel
+final class TlInputChatPhotoInputChatUploadedPhoto extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

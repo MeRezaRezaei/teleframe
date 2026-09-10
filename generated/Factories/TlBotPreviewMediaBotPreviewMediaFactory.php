@@ -19,7 +19,7 @@ final class TlBotPreviewMediaBotPreviewMediaFactory extends Factory
     {
         return [
             'date' => 1,
-            'media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'media' => 1002,
         ];
     }
 }

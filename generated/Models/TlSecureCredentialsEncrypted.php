@@ -16,7 +16,7 @@ final class TlSecureCredentialsEncrypted extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_secure_credentials_encrypted';
+    protected $table = 'tl_secure_credentials_encrypted_secure_creden_5d7271a97981';
 
     protected $guarded = [];
 

@@ -18,7 +18,7 @@ final class TlUpdateUpdateBotBusinessConnectFactory extends Factory
     public function definition(): array
     {
         return [
-            'connection' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'connection' => 1001,
             'qts' => 2,
         ];
     }

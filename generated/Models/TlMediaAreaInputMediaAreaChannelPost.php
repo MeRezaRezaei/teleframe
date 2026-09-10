@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputChannel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMediaAreaCoordinates;
 
 /** Constructor model for inputMediaAreaChannelPost of MediaArea (crc32 2271f2bf). */
-final class TlMediaAreaInputMediaAreaChannelPost extends TlInstanceModel
+final class TlMediaAreaInputMediaAreaChannelPost extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

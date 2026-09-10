@@ -14,7 +14,7 @@ final class TlMessagesMessages extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_messages';
+    protected $table = 'tl_messages_messages_channel_messages';
 
     protected $guarded = [];
 }

@@ -21,9 +21,9 @@ final class TlUpdateUpdateBotInlineSendFactory extends Factory
             'flags' => 1,
             'user_id' => 1002,
             'query' => 'query-3',
-            'geo' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'geo' => 1004,
             'tl_id' => 'id-5',
-            'msg_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'msg_id' => 1006,
         ];
     }
 }

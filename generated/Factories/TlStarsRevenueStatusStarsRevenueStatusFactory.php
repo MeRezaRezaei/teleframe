@@ -20,9 +20,9 @@ final class TlStarsRevenueStatusStarsRevenueStatusFactory extends Factory
         return [
             'flags' => 1,
             'withdrawal_enabled' => true,
-            'current_balance' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'available_balance' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'overall_revenue' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'current_balance' => 1003,
+            'available_balance' => 1004,
+            'overall_revenue' => 1005,
             'next_withdrawal_at' => 6,
         ];
     }

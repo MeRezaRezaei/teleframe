@@ -14,7 +14,7 @@ final class TlInputAppEvent extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_app_event';
+    protected $table = 'tl_input_app_event_input_app_event';
 
     protected $guarded = [];
 }

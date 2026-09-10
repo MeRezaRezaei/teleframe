@@ -19,7 +19,7 @@ final class TlPaymentsPaymentFormPaymentFormStarGiftFactory extends Factory
     {
         return [
             'form_id' => 1001,
-            'invoice' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'invoice' => 1002,
         ];
     }
 }

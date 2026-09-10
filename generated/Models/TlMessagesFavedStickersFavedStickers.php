@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesFavedStickersFavedStickersPacks;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesFavedStickersFavedStickersStickers;
 
 /** Constructor model for messages.favedStickers of messages.FavedStickers (crc32 2cb51097). */
-final class TlMessagesFavedStickersFavedStickers extends TlInstanceModel
+final class TlMessagesFavedStickersFavedStickers extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

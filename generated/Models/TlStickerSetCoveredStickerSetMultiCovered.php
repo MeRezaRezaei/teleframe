@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStickerSet;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStickerSetCoveredStickerSetMultiCoveredCovers;
 
 /** Constructor model for stickerSetMultiCovered of StickerSetCovered (crc32 3407e51b). */
-final class TlStickerSetCoveredStickerSetMultiCovered extends TlInstanceModel
+final class TlStickerSetCoveredStickerSetMultiCovered extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

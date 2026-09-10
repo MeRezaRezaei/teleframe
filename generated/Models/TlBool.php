@@ -43,7 +43,7 @@ final class TlBool extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bool';
+    protected $table = 'tl_bool_bool_false';
 
     protected $guarded = [];
 

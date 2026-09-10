@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for secureValueTypePassportRegistration of SecureValueType (crc32 99e3806a). */
-final class TlSecureValueTypeSecureValueTypePassportRegistration extends TlInstanceModel
+final class TlSecureValueTypeSecureValueTypePassportRegistration extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

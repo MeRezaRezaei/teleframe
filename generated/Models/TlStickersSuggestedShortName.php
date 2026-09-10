@@ -14,7 +14,7 @@ final class TlStickersSuggestedShortName extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_stickers_suggested_short_name';
+    protected $table = 'tl_stickers_suggested_short_name_suggested_short_name';
 
     protected $guarded = [];
 }

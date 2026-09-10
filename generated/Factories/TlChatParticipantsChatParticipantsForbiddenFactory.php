@@ -20,7 +20,7 @@ final class TlChatParticipantsChatParticipantsForbiddenFactory extends Factory
         return [
             'flags' => 1,
             'chat_id' => 1002,
-            'self_participant' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'self_participant' => 1003,
         ];
     }
 }

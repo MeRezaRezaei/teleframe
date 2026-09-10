@@ -14,7 +14,7 @@ final class TlPaymentSavedCredentials extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payment_saved_credentials';
+    protected $table = 'tl_payment_saved_credentials_payment_saved_cr_5362dcf43125';
 
     protected $guarded = [];
 }

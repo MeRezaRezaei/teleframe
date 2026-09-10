@@ -18,7 +18,7 @@ final class TlAttachMenuBotsBotAttachMenuBotsBotFactory extends Factory
     public function definition(): array
     {
         return [
-            'bot' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'bot' => 1001,
         ];
     }
 }

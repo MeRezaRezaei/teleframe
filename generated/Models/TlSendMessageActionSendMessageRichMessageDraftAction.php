@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlRichMessage;
 
 /** Constructor model for sendMessageRichMessageDraftAction of SendMessageAction (crc32 a2cb24f9). */
-final class TlSendMessageActionSendMessageRichMessageDraftAction extends TlInstanceModel
+final class TlSendMessageActionSendMessageRichMessageDraftAction extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

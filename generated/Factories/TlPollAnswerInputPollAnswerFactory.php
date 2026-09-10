@@ -19,8 +19,8 @@ final class TlPollAnswerInputPollAnswerFactory extends Factory
     {
         return [
             'flags' => 1,
-            'text' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'media' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'text' => 1002,
+            'media' => 1003,
         ];
     }
 }

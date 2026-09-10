@@ -14,7 +14,7 @@ final class TlMessageReactor extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_message_reactor';
+    protected $table = 'tl_message_reactor_message_reactor';
 
     protected $guarded = [];
 }

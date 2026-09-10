@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesFoundStickerSetsFoundStickerSetsSets;
 
 /** Constructor model for messages.foundStickerSets of messages.FoundStickerSets (crc32 8af09dd2). */
-final class TlMessagesFoundStickerSetsFoundStickerSets extends TlInstanceModel
+final class TlMessagesFoundStickerSetsFoundStickerSets extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

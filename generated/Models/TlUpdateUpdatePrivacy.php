@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPrivacyKey;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdatePrivacyRules;
 
 /** Constructor model for updatePrivacy of Update (crc32 ee3b272a). */
-final class TlUpdateUpdatePrivacy extends TlInstanceModel
+final class TlUpdateUpdatePrivacy extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

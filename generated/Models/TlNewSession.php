@@ -14,7 +14,7 @@ final class TlNewSession extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_new_session';
+    protected $table = 'tl_new_session_new_session_created';
 
     protected $guarded = [];
 }

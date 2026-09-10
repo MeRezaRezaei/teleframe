@@ -18,7 +18,7 @@ final class TlInputPaymentCredentialsInputPaymentCredentialsGooglePayFactory ext
     public function definition(): array
     {
         return [
-            'payment_token' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'payment_token' => 1001,
         ];
     }
 }

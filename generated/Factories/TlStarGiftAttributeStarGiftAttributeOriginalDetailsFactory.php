@@ -19,10 +19,10 @@ final class TlStarGiftAttributeStarGiftAttributeOriginalDetailsFactory extends F
     {
         return [
             'flags' => 1,
-            'sender_id' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'recipient_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'sender_id' => 1002,
+            'recipient_id' => 1003,
             'date' => 4,
-            'message' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'message' => 1005,
         ];
     }
 }

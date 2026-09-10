@@ -14,7 +14,7 @@ final class TlMessagesSavedDialogs extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_saved_dialogs';
+    protected $table = 'tl_messages_saved_dialogs_saved_dialogs';
 
     protected $guarded = [];
 }

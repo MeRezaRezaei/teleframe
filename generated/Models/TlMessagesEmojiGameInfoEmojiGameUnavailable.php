@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for messages.emojiGameUnavailable of messages.EmojiGameInfo (crc32 59e65335). */
-final class TlMessagesEmojiGameInfoEmojiGameUnavailable extends TlInstanceModel
+final class TlMessagesEmojiGameInfoEmojiGameUnavailable extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

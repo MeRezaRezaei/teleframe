@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDecryptedMessageMediaDecryptedMessage1652f9c81874Attributes;
 
 /** Constructor model for decryptedMessageMediaDocument of DecryptedMessageMedia (crc32 6abd9782). */
-final class TlDecryptedMessageMediaDecryptedMessageMediaDocument extends TlInstanceModel
+final class TlDecryptedMessageMediaDecryptedMessageMediaDocument extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

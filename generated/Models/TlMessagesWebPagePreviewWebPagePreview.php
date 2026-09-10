@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMedia;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesWebPagePreviewWebPagePreviewChats;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesWebPagePreviewWebPagePreviewUsers;
 
 /** Constructor model for messages.webPagePreview of messages.WebPagePreview (crc32 8c9a88ac). */
-final class TlMessagesWebPagePreviewWebPagePreview extends TlInstanceModel
+final class TlMessagesWebPagePreviewWebPagePreview extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

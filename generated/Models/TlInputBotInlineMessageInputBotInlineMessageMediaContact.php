@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReplyMarkup;
 
 /** Constructor model for inputBotInlineMessageMediaContact of InputBotInlineMessage (crc32 a6edbffd). */
-final class TlInputBotInlineMessageInputBotInlineMessageMediaContact extends TlInstanceModel
+final class TlInputBotInlineMessageInputBotInlineMessageMediaContact extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesArchivedStickersArchivedStickersSets;
 
 /** Constructor model for messages.archivedStickers of messages.ArchivedStickers (crc32 4fcba9c8). */
-final class TlMessagesArchivedStickersArchivedStickers extends TlInstanceModel
+final class TlMessagesArchivedStickersArchivedStickers extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

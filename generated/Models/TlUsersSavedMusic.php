@@ -14,7 +14,7 @@ final class TlUsersSavedMusic extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_users_saved_music';
+    protected $table = 'tl_users_saved_music_saved_music';
 
     protected $guarded = [];
 }

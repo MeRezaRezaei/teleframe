@@ -25,7 +25,7 @@ final class TlInputBotInlineMessageInputBotInlineMessageMediaWebPageFactory exte
             'optional' => true,
             'message' => 'message-6',
             'url' => 'url-7',
-            'reply_markup' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'reply_markup' => 1008,
         ];
     }
 }

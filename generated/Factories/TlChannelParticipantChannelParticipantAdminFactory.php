@@ -25,7 +25,7 @@ final class TlChannelParticipantChannelParticipantAdminFactory extends Factory
             'inviter_id' => 1005,
             'promoted_by' => 1006,
             'date' => 7,
-            'admin_rights' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'admin_rights' => 1008,
             'rank' => 'rank-9',
         ];
     }

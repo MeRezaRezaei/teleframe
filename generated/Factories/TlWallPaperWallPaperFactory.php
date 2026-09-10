@@ -26,8 +26,8 @@ final class TlWallPaperWallPaperFactory extends Factory
             'dark' => true,
             'access_hash' => 1007,
             'slug' => 'slug-8',
-            'document' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'settings' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'document' => 1009,
+            'settings' => 1010,
         ];
     }
 }

@@ -16,7 +16,7 @@ final class TlDecryptedMessageAction extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_decrypted_message_action';
+    protected $table = 'tl_decrypted_message_action_decrypted_message_b894d313966b';
 
     protected $guarded = [];
 

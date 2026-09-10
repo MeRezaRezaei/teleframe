@@ -19,7 +19,7 @@ final class TlDraftMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_draft_message';
+    protected $table = 'tl_draft_message_draft_message';
 
     protected $guarded = [];
 

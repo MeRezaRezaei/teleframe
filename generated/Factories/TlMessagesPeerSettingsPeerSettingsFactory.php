@@ -18,7 +18,7 @@ final class TlMessagesPeerSettingsPeerSettingsFactory extends Factory
     public function definition(): array
     {
         return [
-            'settings' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'settings' => 1001,
         ];
     }
 }

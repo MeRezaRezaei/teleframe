@@ -14,7 +14,7 @@ final class TlAccountWallPapers extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_account_wall_papers';
+    protected $table = 'tl_account_wall_papers_wall_papers';
 
     protected $guarded = [];
 }

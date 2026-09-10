@@ -14,7 +14,7 @@ final class TlMessagesSearchResultsCalendar extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_search_results_calendar';
+    protected $table = 'tl_messages_search_results_calendar_search_re_b1534ec0e56f';
 
     protected $guarded = [];
 }

@@ -27,7 +27,7 @@ final class TlGeoPoint extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_geo_point';
+    protected $table = 'tl_geo_point_geo_point';
 
     protected $guarded = [];
 

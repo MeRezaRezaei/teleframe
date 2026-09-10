@@ -16,7 +16,7 @@ final class TlLangPackDifference extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_lang_pack_difference';
+    protected $table = 'tl_lang_pack_difference_lang_pack_difference';
 
     protected $guarded = [];
 

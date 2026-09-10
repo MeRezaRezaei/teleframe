@@ -21,7 +21,7 @@ final class TlInputInvoiceInputInvoiceStarGiftResaleFactory extends Factory
             'flags' => 1,
             'ton' => true,
             'slug' => 'slug-3',
-            'to_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'to_id' => 1004,
         ];
     }
 }

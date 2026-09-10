@@ -17,7 +17,7 @@ final class TlHelpTermsOfService extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_help_terms_of_service';
+    protected $table = 'tl_help_terms_of_service_terms_of_service';
 
     protected $guarded = [];
 

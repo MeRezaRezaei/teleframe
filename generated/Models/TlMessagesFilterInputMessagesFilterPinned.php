@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for inputMessagesFilterPinned of MessagesFilter (crc32 1bb00451). */
-final class TlMessagesFilterInputMessagesFilterPinned extends TlInstanceModel
+final class TlMessagesFilterInputMessagesFilterPinned extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

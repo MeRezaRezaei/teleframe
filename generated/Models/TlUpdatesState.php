@@ -18,7 +18,7 @@ final class TlUpdatesState extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_updates_state';
+    protected $table = 'tl_updates_state_state';
 
     protected $guarded = [];
 

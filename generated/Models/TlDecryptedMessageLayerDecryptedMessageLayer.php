@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDecryptedMessage;
 
 /** Constructor model for decryptedMessageLayer of DecryptedMessageLayer (crc32 1be31789). */
-final class TlDecryptedMessageLayerDecryptedMessageLayer extends TlInstanceModel
+final class TlDecryptedMessageLayerDecryptedMessageLayer extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

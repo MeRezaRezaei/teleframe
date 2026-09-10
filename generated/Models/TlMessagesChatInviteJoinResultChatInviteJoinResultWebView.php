@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesChatInviteJoinResultChatInviDacd8245b982Users;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlWebViewResult;
 
 /** Constructor model for messages.chatInviteJoinResultWebView of messages.ChatInviteJoinResult (crc32 2f51c337). */
-final class TlMessagesChatInviteJoinResultChatInviteJoinResultWebView extends TlInstanceModel
+final class TlMessagesChatInviteJoinResultChatInviteJoinResultWebView extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

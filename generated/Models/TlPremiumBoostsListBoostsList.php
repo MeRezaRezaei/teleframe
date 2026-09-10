@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPremiumBoostsListBoostsListBoosts;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPremiumBoostsListBoostsListUsers;
 
 /** Constructor model for premium.boostsList of premium.BoostsList (crc32 86f8613c). */
-final class TlPremiumBoostsListBoostsList extends TlInstanceModel
+final class TlPremiumBoostsListBoostsList extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

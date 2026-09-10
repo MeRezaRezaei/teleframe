@@ -14,7 +14,7 @@ final class TlPaymentsPaymentReceipt extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_payments_payment_receipt';
+    protected $table = 'tl_payments_payment_receipt_payment_receipt';
 
     protected $guarded = [];
 }

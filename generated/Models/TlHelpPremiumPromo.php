@@ -14,7 +14,7 @@ final class TlHelpPremiumPromo extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_help_premium_promo';
+    protected $table = 'tl_help_premium_promo_premium_promo';
 
     protected $guarded = [];
 }

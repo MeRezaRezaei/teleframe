@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdateUpdatePeerLocatedPeers;
 
 /** Constructor model for updatePeerLocated of Update (crc32 b4afcfb0). */
-final class TlUpdateUpdatePeerLocated extends TlInstanceModel
+final class TlUpdateUpdatePeerLocated extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

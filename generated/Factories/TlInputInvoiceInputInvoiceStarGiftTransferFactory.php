@@ -18,8 +18,8 @@ final class TlInputInvoiceInputInvoiceStarGiftTransferFactory extends Factory
     public function definition(): array
     {
         return [
-            'stargift' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'to_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'stargift' => 1001,
+            'to_id' => 1002,
         ];
     }
 }

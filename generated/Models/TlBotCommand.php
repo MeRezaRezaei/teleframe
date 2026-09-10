@@ -14,7 +14,7 @@ final class TlBotCommand extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_bot_command';
+    protected $table = 'tl_bot_command_bot_command';
 
     protected $guarded = [];
 }

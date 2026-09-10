@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatAdminRights;
 
 /** Constructor model for channelParticipantCreator of ChannelParticipant (crc32 2fe601d3). */
-final class TlChannelParticipantChannelParticipantCreator extends TlInstanceModel
+final class TlChannelParticipantChannelParticipantCreator extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

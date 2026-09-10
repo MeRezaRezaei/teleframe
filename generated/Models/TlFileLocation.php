@@ -14,7 +14,7 @@ final class TlFileLocation extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_file_location';
+    protected $table = 'tl_file_location_file_location';
 
     protected $guarded = [];
 }

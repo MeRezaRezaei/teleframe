@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat;
 
 /** Constructor model for chatInviteAlready of ChatInvite (crc32 5a686d7c). */
-final class TlChatInviteChatInviteAlready extends TlInstanceModel
+final class TlChatInviteChatInviteAlready extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

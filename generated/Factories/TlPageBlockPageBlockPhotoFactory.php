@@ -21,7 +21,7 @@ final class TlPageBlockPageBlockPhotoFactory extends Factory
             'flags' => 1,
             'spoiler' => true,
             'photo_id' => 1003,
-            'caption' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'caption' => 1004,
             'url' => 'url-5',
             'webpage_id' => 1006,
         ];

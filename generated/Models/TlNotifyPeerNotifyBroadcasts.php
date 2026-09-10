@@ -9,10 +9,10 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for notifyBroadcasts of NotifyPeer (crc32 d612e8ef). */
-final class TlNotifyPeerNotifyBroadcasts extends TlInstanceModel
+final class TlNotifyPeerNotifyBroadcasts extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

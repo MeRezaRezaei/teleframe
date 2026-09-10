@@ -18,7 +18,7 @@ final class TlUsersUserFullUserFullFactory extends Factory
     public function definition(): array
     {
         return [
-            'full_user' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'full_user' => 1001,
         ];
     }
 }

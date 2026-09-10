@@ -20,7 +20,7 @@ final class TlUpdateUpdatePinnedForumTopicFactory extends Factory
         return [
             'flags' => 1,
             'pinned' => true,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1003,
             'topic_id' => 4,
         ];
     }

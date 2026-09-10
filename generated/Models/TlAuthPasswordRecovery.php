@@ -14,7 +14,7 @@ final class TlAuthPasswordRecovery extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_auth_password_recovery';
+    protected $table = 'tl_auth_password_recovery_password_recovery';
 
     protected $guarded = [];
 }

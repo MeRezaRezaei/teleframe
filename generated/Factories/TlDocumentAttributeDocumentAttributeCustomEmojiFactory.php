@@ -22,7 +22,7 @@ final class TlDocumentAttributeDocumentAttributeCustomEmojiFactory extends Facto
             'free' => true,
             'text_color' => true,
             'alt' => 'alt-4',
-            'stickerset' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'stickerset' => 1005,
         ];
     }
 }

@@ -14,7 +14,7 @@ final class TlInputCheckPasswordSRP extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_check_password_s_r_p';
+    protected $table = 'tl_input_check_password_s_r_p_input_check_password_empty';
 
     protected $guarded = [];
 }

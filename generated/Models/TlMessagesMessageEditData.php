@@ -14,7 +14,7 @@ final class TlMessagesMessageEditData extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_message_edit_data';
+    protected $table = 'tl_messages_message_edit_data_message_edit_data';
 
     protected $guarded = [];
 }

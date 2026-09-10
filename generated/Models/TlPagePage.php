@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPagePageBlocks;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPagePageDocuments;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlPagePagePhotos;
 
 /** Constructor model for page of Page (crc32 98657f0d). */
-final class TlPagePage extends TlInstanceModel
+final class TlPagePage extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

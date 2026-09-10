@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotsPreviewInfoPreviewInfoLang_codes;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlBotsPreviewInfoPreviewInfoMedia;
 
 /** Constructor model for bots.previewInfo of bots.PreviewInfo (crc32 0ca71d64). */
-final class TlBotsPreviewInfoPreviewInfo extends TlInstanceModel
+final class TlBotsPreviewInfoPreviewInfo extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

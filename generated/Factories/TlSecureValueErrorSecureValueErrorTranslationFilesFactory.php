@@ -18,7 +18,7 @@ final class TlSecureValueErrorSecureValueErrorTranslationFilesFactory extends Fa
     public function definition(): array
     {
         return [
-            'tl_type' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'tl_type' => 1001,
             'text' => 'text-2',
         ];
     }

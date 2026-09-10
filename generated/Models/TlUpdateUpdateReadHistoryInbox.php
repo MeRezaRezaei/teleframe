@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Constructor model for updateReadHistoryInbox of Update (crc32 9e84bc99). */
-final class TlUpdateUpdateReadHistoryInbox extends TlInstanceModel
+final class TlUpdateUpdateReadHistoryInbox extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

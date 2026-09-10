@@ -21,7 +21,7 @@ final class TlGroupCallDonorGroupCallDonorFactory extends Factory
             'flags' => 1,
             'top' => true,
             'my' => true,
-            'peer_id' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer_id' => 1004,
             'stars' => 1005,
         ];
     }

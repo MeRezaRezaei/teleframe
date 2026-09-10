@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlInputGroupCall;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageActionMessageActionInviteToGroupCallUsers;
 
 /** Constructor model for messageActionInviteToGroupCall of MessageAction (crc32 502f92f7). */
-final class TlMessageActionMessageActionInviteToGroupCall extends TlInstanceModel
+final class TlMessageActionMessageActionInviteToGroupCall extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

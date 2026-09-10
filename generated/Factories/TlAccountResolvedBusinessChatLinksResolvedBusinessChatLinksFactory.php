@@ -19,7 +19,7 @@ final class TlAccountResolvedBusinessChatLinksResolvedBusinessChatLinksFactory e
     {
         return [
             'flags' => 1,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1002,
             'message' => 'message-3',
         ];
     }

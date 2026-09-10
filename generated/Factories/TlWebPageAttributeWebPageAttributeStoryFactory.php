@@ -19,9 +19,9 @@ final class TlWebPageAttributeWebPageAttributeStoryFactory extends Factory
     {
         return [
             'flags' => 1,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1002,
             'tl_id' => 3,
-            'story' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'story' => 1004,
         ];
     }
 }

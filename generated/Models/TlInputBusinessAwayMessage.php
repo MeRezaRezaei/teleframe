@@ -14,7 +14,7 @@ final class TlInputBusinessAwayMessage extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_input_business_away_message';
+    protected $table = 'tl_input_business_away_message_input_business_away_message';
 
     protected $guarded = [];
 }

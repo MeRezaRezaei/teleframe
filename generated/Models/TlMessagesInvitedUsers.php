@@ -14,7 +14,7 @@ final class TlMessagesInvitedUsers extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_messages_invited_users';
+    protected $table = 'tl_messages_invited_users_invited_users';
 
     protected $guarded = [];
 }

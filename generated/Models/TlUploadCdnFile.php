@@ -14,7 +14,7 @@ final class TlUploadCdnFile extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_upload_cdn_file';
+    protected $table = 'tl_upload_cdn_file_cdn_file';
 
     protected $guarded = [];
 }

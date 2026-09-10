@@ -18,7 +18,7 @@ final class TlUpdateUpdateGroupCallParticipantsFactory extends Factory
     public function definition(): array
     {
         return [
-            'call' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'call' => 1001,
             'version' => 2,
         ];
     }

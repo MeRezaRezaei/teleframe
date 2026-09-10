@@ -17,7 +17,7 @@ final class TlMaskCoords extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tl_mask_coords';
+    protected $table = 'tl_mask_coords_mask_coords';
 
     protected $guarded = [];
 

@@ -21,10 +21,10 @@ final class TlHelpPromoDataPromoDataFactory extends Factory
             'flags' => 1,
             'proxy' => true,
             'expires' => 3,
-            'peer' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'peer' => 1004,
             'psa_type' => 'psa_type-5',
             'psa_message' => 'psa_message-6',
-            'custom_pending_suggestion' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'custom_pending_suggestion' => 1007,
         ];
     }
 }

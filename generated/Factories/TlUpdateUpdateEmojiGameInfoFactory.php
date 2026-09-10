@@ -18,7 +18,7 @@ final class TlUpdateUpdateEmojiGameInfoFactory extends Factory
     public function definition(): array
     {
         return [
-            'info' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'info' => 1001,
         ];
     }
 }

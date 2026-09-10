@@ -18,7 +18,7 @@ final class TlStoriesPeerStoriesPeerStoriesFactory extends Factory
     public function definition(): array
     {
         return [
-            'stories' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'stories' => 1001,
         ];
     }
 }

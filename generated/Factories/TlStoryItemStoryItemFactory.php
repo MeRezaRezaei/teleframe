@@ -30,14 +30,14 @@ final class TlStoryItemStoryItemFactory extends Factory
             'out' => true,
             'tl_id' => 11,
             'date' => 12,
-            'from_id' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'fwd_from' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'from_id' => 1013,
+            'fwd_from' => 1014,
             'expire_date' => 15,
             'caption' => 'caption-16',
-            'media' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'views' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'sent_reaction' => (string) new \Symfony\Component\Uid\UuidV7(),
-            'music' => (string) new \Symfony\Component\Uid\UuidV7(),
+            'media' => 1017,
+            'views' => 1018,
+            'sent_reaction' => 1019,
+            'music' => 1020,
         ];
     }
 }

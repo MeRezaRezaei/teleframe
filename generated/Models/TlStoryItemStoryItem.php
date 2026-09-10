@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlDocument;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessageMedia;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlReaction;
@@ -24,7 +24,7 @@ use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryItemStoryItemPrivacy;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStoryViews;
 
 /** Constructor model for storyItem of StoryItem (crc32 16a4b93c). */
-final class TlStoryItemStoryItem extends TlInstanceModel
+final class TlStoryItemStoryItem extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

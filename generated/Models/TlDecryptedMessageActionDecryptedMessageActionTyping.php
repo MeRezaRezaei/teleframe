@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSendMessageAction;
 
 /** Constructor model for decryptedMessageActionTyping of DecryptedMessageAction (crc32 ccb27641). */
-final class TlDecryptedMessageActionDecryptedMessageActionTyping extends TlInstanceModel
+final class TlDecryptedMessageActionDecryptedMessageActionTyping extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;

@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\HasTlChildren;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlInstanceModel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesStickerSetStickerSetDocuments;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesStickerSetStickerSetKeywords;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessagesStickerSetStickerSetPacks;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStickerSet;
 
 /** Constructor model for messages.stickerSet of messages.StickerSet (crc32 6e153f16). */
-final class TlMessagesStickerSetStickerSet extends TlInstanceModel
+final class TlMessagesStickerSetStickerSet extends TlAnchorModel
 {
     use HasFactory, HasTlChildren;
     use AccountScoped;
