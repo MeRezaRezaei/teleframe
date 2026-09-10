@@ -72,7 +72,8 @@ return new class extends Migration
         });
         Schema::create('tl_photo_size_photo_size_progressive__sizes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_photo_size_photo_size_progressive', 'id', 'fk_8c956f4c7b32cf7fec5e044f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_8c956f4c7b32cf7fec5e044f')->references('id')->on('tl_photo_size_photo_size_progressive')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');

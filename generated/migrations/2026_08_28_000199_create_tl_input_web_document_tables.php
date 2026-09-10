@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_web_document_input_web_document__attributes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_web_document_input_web_document', 'id', 'fk_4e746843a751c58acb030f58')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4e746843a751c58acb030f58')->references('id')->on('tl_input_web_document_input_web_document')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

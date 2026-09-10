@@ -62,11 +62,11 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_58b6cd453cf8896539115b6f');
             $table->index('account_id', 'ix_3f7153228e1b18817a433bcd');
-            $table->unique(['starref_peer', 'account_id'], 'ux_1e65c9407200943d287f');
         });
         Schema::create('tl_stars_transaction_stars_transaction__extended_media', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stars_transaction_stars_transaction', 'id', 'fk_c8763db785233b113bcc392c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c8763db785233b113bcc392c')->references('id')->on('tl_stars_transaction_stars_transaction')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

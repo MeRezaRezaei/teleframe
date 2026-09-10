@@ -39,7 +39,8 @@ return new class extends Migration
         });
         Schema::create('tl_upload_file_file_cdn_redirect__file_hashes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_upload_file_file_cdn_redirect', 'id', 'fk_0e48d8359d72626945f24cd2')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0e48d8359d72626945f24cd2')->references('id')->on('tl_upload_file_file_cdn_redirect')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_user_user', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -78,7 +78,8 @@ return new class extends Migration
         });
         Schema::create('tl_user_user__restriction_reason', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_user_user', 'id', 'fk_eeedb109b8cdf8bbc57a775f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_eeedb109b8cdf8bbc57a775f')->references('id')->on('tl_user_user')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -87,7 +88,8 @@ return new class extends Migration
         });
         Schema::create('tl_user_user__usernames', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_user_user', 'id', 'fk_dd1ced71e252d8b1ff23f168')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_dd1ced71e252d8b1ff23f168')->references('id')->on('tl_user_user')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -95,7 +97,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_9fe740cb631070eb0eada112');
         });
         Schema::create('tl_user_user_empty', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();

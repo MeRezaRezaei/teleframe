@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_stories_albums_albums__albums', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stories_albums_albums', 'id', 'fk_a678f061f06ef8019df354d0')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a678f061f06ef8019df354d0')->references('id')->on('tl_stories_albums_albums')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

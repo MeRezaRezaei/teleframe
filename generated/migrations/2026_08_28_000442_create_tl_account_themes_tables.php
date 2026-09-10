@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_themes_themes__themes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_themes_themes', 'id', 'fk_38cbf84cba991b3f6604256d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_38cbf84cba991b3f6604256d')->references('id')->on('tl_account_themes_themes')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

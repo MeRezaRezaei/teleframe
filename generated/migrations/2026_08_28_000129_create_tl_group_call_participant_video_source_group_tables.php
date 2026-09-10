@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_group_call_participant_video_source_group__3aa33ccb5d6b', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_group_call_participant_video_source_group__d4c024526fb4', 'id', 'fk_5d96a7eaeaeea248cfc42faf')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5d96a7eaeaeea248cfc42faf')->references('id')->on('tl_group_call_participant_video_source_group__d4c024526fb4')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_document_document', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -30,7 +30,8 @@ return new class extends Migration
         });
         Schema::create('tl_document_document__thumbs', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_document_document', 'id', 'fk_7da113b0160f05446f474446')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7da113b0160f05446f474446')->references('id')->on('tl_document_document')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -39,7 +40,8 @@ return new class extends Migration
         });
         Schema::create('tl_document_document__video_thumbs', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_document_document', 'id', 'fk_3aa336540c44ecfee19b4bb3')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_3aa336540c44ecfee19b4bb3')->references('id')->on('tl_document_document')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -48,7 +50,8 @@ return new class extends Migration
         });
         Schema::create('tl_document_document__attributes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_document_document', 'id', 'fk_4e08e1e3b5baf9e2a1997073')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4e08e1e3b5baf9e2a1997073')->references('id')->on('tl_document_document')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -56,7 +59,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_939eb536a889cff7fb5fff9d');
         });
         Schema::create('tl_document_document_empty', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();

@@ -32,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_code_settings_code_settings__logout_tokens', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_code_settings_code_settings', 'id', 'fk_f1741d86304f08305118346d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f1741d86304f08305118346d')->references('id')->on('tl_code_settings_code_settings')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->binary('value')->nullable();
             $table->bigInteger('account_id');

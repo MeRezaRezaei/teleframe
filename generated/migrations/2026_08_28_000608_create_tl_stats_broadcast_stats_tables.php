@@ -64,7 +64,8 @@ return new class extends Migration
         });
         Schema::create('tl_stats_broadcast_stats_broadcast_stats__rec_a92d3aa2a305', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stats_broadcast_stats_broadcast_stats', 'id', 'fk_c3bca797a5e27cadc1a78197')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c3bca797a5e27cadc1a78197')->references('id')->on('tl_stats_broadcast_stats_broadcast_stats')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

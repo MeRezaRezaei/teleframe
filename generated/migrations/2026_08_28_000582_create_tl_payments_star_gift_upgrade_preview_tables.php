@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_star_gift_upgrade_preview_star_gi_d382bb48e929', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_star_gift_upgrade_preview_star_gi_2469e890a24d', 'id', 'fk_ecc66a2b7776c315e83d5c89')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_ecc66a2b7776c315e83d5c89')->references('id')->on('tl_payments_star_gift_upgrade_preview_star_gi_2469e890a24d')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_star_gift_upgrade_preview_star_gi_7020ccaa5d71', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_star_gift_upgrade_preview_star_gi_2469e890a24d', 'id', 'fk_7f1fe53257be8cfcdcae68f4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7f1fe53257be8cfcdcae68f4')->references('id')->on('tl_payments_star_gift_upgrade_preview_star_gi_2469e890a24d')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_star_gift_upgrade_preview_star_gi_668a785fa9b7', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_star_gift_upgrade_preview_star_gi_2469e890a24d', 'id', 'fk_555cc5861caf44c4040f4575')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_555cc5861caf44c4040f4575')->references('id')->on('tl_payments_star_gift_upgrade_preview_star_gi_2469e890a24d')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

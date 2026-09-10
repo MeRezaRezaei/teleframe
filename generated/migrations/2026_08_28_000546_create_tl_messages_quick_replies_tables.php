@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_quick_replies_quick_replies__quick_replies', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_quick_replies_quick_replies', 'id', 'fk_bac8e7159ccad62b1b89ba9c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bac8e7159ccad62b1b89ba9c')->references('id')->on('tl_messages_quick_replies_quick_replies')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_quick_replies_quick_replies__messages', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_quick_replies_quick_replies', 'id', 'fk_39ff8f145937f66d3ee4a8cf')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_39ff8f145937f66d3ee4a8cf')->references('id')->on('tl_messages_quick_replies_quick_replies')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_quick_replies_quick_replies__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_quick_replies_quick_replies', 'id', 'fk_bd830d5b3f3696fda3cdecdb')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bd830d5b3f3696fda3cdecdb')->references('id')->on('tl_messages_quick_replies_quick_replies')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -49,7 +52,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_quick_replies_quick_replies__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_quick_replies_quick_replies', 'id', 'fk_79eaf01335989ecf4bbee5dd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_79eaf01335989ecf4bbee5dd')->references('id')->on('tl_messages_quick_replies_quick_replies')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

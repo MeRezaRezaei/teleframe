@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_msg_resend_req_msg_resend_ans_req__msg_ids', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_msg_resend_req_msg_resend_ans_req', 'id', 'fk_6ac46cf5e62defbc2a043cd0')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6ac46cf5e62defbc2a043cd0')->references('id')->on('tl_msg_resend_req_msg_resend_ans_req')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +41,8 @@ return new class extends Migration
         });
         Schema::create('tl_msg_resend_req_msg_resend_req__msg_ids', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_msg_resend_req_msg_resend_req', 'id', 'fk_70324de9879132a77f93bff0')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_70324de9879132a77f93bff0')->references('id')->on('tl_msg_resend_req_msg_resend_req')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');

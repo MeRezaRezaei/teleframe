@@ -49,7 +49,8 @@ return new class extends Migration
         });
         Schema::create('tl_saved_star_gift_saved_star_gift__collection_id', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_saved_star_gift_saved_star_gift', 'id', 'fk_1ff379fc7c55bd2a4c4f0876')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1ff379fc7c55bd2a4c4f0876')->references('id')->on('tl_saved_star_gift_saved_star_gift')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');

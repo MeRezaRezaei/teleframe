@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_table_row_page_table_row__cells', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_table_row_page_table_row', 'id', 'fk_dfb9119b911db63c18359eba')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_dfb9119b911db63c18359eba')->references('id')->on('tl_page_table_row_page_table_row')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_users_users_users__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_users_users_users', 'id', 'fk_21a76be64aaf11767110e09c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_21a76be64aaf11767110e09c')->references('id')->on('tl_users_users_users')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -41,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_users_users_users_slice__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_users_users_users_slice', 'id', 'fk_aeccda9c7e4839057499a6d6')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_aeccda9c7e4839057499a6d6')->references('id')->on('tl_users_users_users_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

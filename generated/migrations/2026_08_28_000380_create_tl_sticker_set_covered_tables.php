@@ -37,7 +37,8 @@ return new class extends Migration
         });
         Schema::create('tl_sticker_set_covered_sticker_set_full_covered__packs', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_sticker_set_covered_sticker_set_full_covered', 'id', 'fk_2bbedca202d2e3ed671965dd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2bbedca202d2e3ed671965dd')->references('id')->on('tl_sticker_set_covered_sticker_set_full_covered')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -46,7 +47,8 @@ return new class extends Migration
         });
         Schema::create('tl_sticker_set_covered_sticker_set_full_covered__keywords', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_sticker_set_covered_sticker_set_full_covered', 'id', 'fk_abe0f82b021c0e860276bcff')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_abe0f82b021c0e860276bcff')->references('id')->on('tl_sticker_set_covered_sticker_set_full_covered')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -55,7 +57,8 @@ return new class extends Migration
         });
         Schema::create('tl_sticker_set_covered_sticker_set_full_covered__documents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_sticker_set_covered_sticker_set_full_covered', 'id', 'fk_7eefdbbcd779396d36860668')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7eefdbbcd779396d36860668')->references('id')->on('tl_sticker_set_covered_sticker_set_full_covered')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -75,7 +78,8 @@ return new class extends Migration
         });
         Schema::create('tl_sticker_set_covered_sticker_set_multi_covered__covers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_sticker_set_covered_sticker_set_multi_covered', 'id', 'fk_695fcf2a9bc4892da17e6dd4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_695fcf2a9bc4892da17e6dd4')->references('id')->on('tl_sticker_set_covered_sticker_set_multi_covered')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

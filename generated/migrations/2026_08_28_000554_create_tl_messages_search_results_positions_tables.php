@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_search_results_positions_search_r_88108eb29971', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_search_results_positions_search_r_d401856bd5e6', 'id', 'fk_6498b7489358475445f45f26')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6498b7489358475445f45f26')->references('id')->on('tl_messages_search_results_positions_search_r_d401856bd5e6')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

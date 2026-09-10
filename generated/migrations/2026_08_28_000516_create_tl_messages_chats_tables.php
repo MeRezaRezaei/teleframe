@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_chats_chats__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_chats_chats', 'id', 'fk_4a6bea977bf837286c5ccebf')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4a6bea977bf837286c5ccebf')->references('id')->on('tl_messages_chats_chats')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -41,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_chats_chats_slice__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_chats_chats_slice', 'id', 'fk_f746cb6ad359c2b76e35c25d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f746cb6ad359c2b76e35c25d')->references('id')->on('tl_messages_chats_chats_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

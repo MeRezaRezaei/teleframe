@@ -27,7 +27,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_country_country__country_codes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_country_country', 'id', 'fk_2a0a9cd9673857106b18ac14')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2a0a9cd9673857106b18ac14')->references('id')->on('tl_help_country_country')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

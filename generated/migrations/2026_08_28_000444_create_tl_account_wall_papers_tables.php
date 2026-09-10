@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_wall_papers_wall_papers__wallpapers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_wall_papers_wall_papers', 'id', 'fk_9e63c903b887944a6ba64d94')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9e63c903b887944a6ba64d94')->references('id')->on('tl_account_wall_papers_wall_papers')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

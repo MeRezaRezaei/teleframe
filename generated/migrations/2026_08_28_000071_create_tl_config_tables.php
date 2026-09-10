@@ -71,7 +71,8 @@ return new class extends Migration
         });
         Schema::create('tl_config_config__dc_options', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_config_config', 'id', 'fk_c390d30e9603ee3bc7ffaf2e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c390d30e9603ee3bc7ffaf2e')->references('id')->on('tl_config_config')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

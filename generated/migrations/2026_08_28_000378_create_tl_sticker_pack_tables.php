@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_sticker_pack_sticker_pack__documents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_sticker_pack_sticker_pack', 'id', 'fk_0833a98e67fab24abfac90a0')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0833a98e67fab24abfac90a0')->references('id')->on('tl_sticker_pack_sticker_pack')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');

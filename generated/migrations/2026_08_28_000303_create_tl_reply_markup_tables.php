@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_reply_markup_reply_inline_markup__rows', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_reply_markup_reply_inline_markup', 'id', 'fk_299755f0479cdc08d4a4445c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_299755f0479cdc08d4a4445c')->references('id')->on('tl_reply_markup_reply_inline_markup')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -70,7 +71,8 @@ return new class extends Migration
         });
         Schema::create('tl_reply_markup_reply_keyboard_markup__rows', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_reply_markup_reply_keyboard_markup', 'id', 'fk_a47c802285245bc4ab14c284')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a47c802285245bc4ab14c284')->references('id')->on('tl_reply_markup_reply_keyboard_markup')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_business_chat_links_business_chat_links__links', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_business_chat_links_business_chat_links', 'id', 'fk_b836c1ef0e16edb131a4511e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b836c1ef0e16edb131a4511e')->references('id')->on('tl_account_business_chat_links_business_chat_links')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_business_chat_links_business_chat_links__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_business_chat_links_business_chat_links', 'id', 'fk_f18f0600ceb91bc960518e04')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f18f0600ceb91bc960518e04')->references('id')->on('tl_account_business_chat_links_business_chat_links')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_business_chat_links_business_chat_links__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_business_chat_links_business_chat_links', 'id', 'fk_e1abbd0ee3d8d1c47ef95545')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_e1abbd0ee3d8d1c47ef95545')->references('id')->on('tl_account_business_chat_links_business_chat_links')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

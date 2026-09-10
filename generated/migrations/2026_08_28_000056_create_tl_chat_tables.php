@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_chat_channel', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -80,7 +80,8 @@ return new class extends Migration
         });
         Schema::create('tl_chat_channel__restriction_reason', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chat_channel', 'id', 'fk_35de690f3c31afcfb16f660f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_35de690f3c31afcfb16f660f')->references('id')->on('tl_chat_channel')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -89,7 +90,8 @@ return new class extends Migration
         });
         Schema::create('tl_chat_channel__usernames', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chat_channel', 'id', 'fk_7536876c67441da486967eaf')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7536876c67441da486967eaf')->references('id')->on('tl_chat_channel')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -97,7 +99,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_c9aac6fbeddd477cef23dac1');
         });
         Schema::create('tl_chat_channel_forbidden', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -114,7 +116,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_d2b515d16ce4b2714257faf6');
         });
         Schema::create('tl_chat_chat', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -143,7 +145,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_a20319775f75cf33521285a3');
         });
         Schema::create('tl_chat_chat_empty', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -153,7 +155,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_fb343dee47fbd3f4b5b25266');
         });
         Schema::create('tl_chat_chat_forbidden', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();

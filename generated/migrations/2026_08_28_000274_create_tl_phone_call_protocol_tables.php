@@ -27,7 +27,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_call_protocol_phone_call_protocol__l_d2c022a39003', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_call_protocol_phone_call_protocol', 'id', 'fk_101b3e103e3631e0c67a7f42')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_101b3e103e3631e0c67a7f42')->references('id')->on('tl_phone_call_protocol_phone_call_protocol')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');

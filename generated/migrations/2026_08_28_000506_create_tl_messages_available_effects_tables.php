@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_available_effects_available_effects__effects', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_available_effects_available_effects', 'id', 'fk_3df3b7734f5db8a39e98c090')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_3df3b7734f5db8a39e98c090')->references('id')->on('tl_messages_available_effects_available_effects')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -32,7 +33,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_available_effects_available_effects__documents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_available_effects_available_effects', 'id', 'fk_5956222c77e76c8af80fa84e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5956222c77e76c8af80fa84e')->references('id')->on('tl_messages_available_effects_available_effects')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_chat_participants_chat_participants__participants', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chat_participants_chat_participants', 'id', 'fk_03d129482e51b62f58fb2f91')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_03d129482e51b62f58fb2f91')->references('id')->on('tl_chat_participants_chat_participants')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

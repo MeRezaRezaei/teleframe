@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_stories_story_reactions_list_story_reactio_d7e48e0a40c9', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stories_story_reactions_list_story_reactions_list', 'id', 'fk_c9ece651e3d0cf3b7d017806')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c9ece651e3d0cf3b7d017806')->references('id')->on('tl_stories_story_reactions_list_story_reactions_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -34,7 +35,8 @@ return new class extends Migration
         });
         Schema::create('tl_stories_story_reactions_list_story_reactio_19a95eef9ec1', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stories_story_reactions_list_story_reactions_list', 'id', 'fk_f8ba956b10a05a025fc0bbe8')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f8ba956b10a05a025fc0bbe8')->references('id')->on('tl_stories_story_reactions_list_story_reactions_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -43,7 +45,8 @@ return new class extends Migration
         });
         Schema::create('tl_stories_story_reactions_list_story_reactio_fd3c0d26748d', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stories_story_reactions_list_story_reactions_list', 'id', 'fk_e0da18135709cb8fe21c5edf')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_e0da18135709cb8fe21c5edf')->references('id')->on('tl_stories_story_reactions_list_story_reactions_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

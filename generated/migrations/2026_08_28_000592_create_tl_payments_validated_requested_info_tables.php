@@ -21,11 +21,11 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_fd0361503e3bfb97e656c29e');
             $table->index('account_id', 'ix_c1922504e717ff76df273dfb');
-            $table->unique(['account_id'], 'ux_5a0bf6003cd2d1540c04');
         });
         Schema::create('tl_payments_validated_requested_info_validate_be6f170ec8df', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_validated_requested_info_validate_9668a5a19280', 'id', 'fk_0489c7dbb0de9332dddbf58d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0489c7dbb0de9332dddbf58d')->references('id')->on('tl_payments_validated_requested_info_validate_9668a5a19280')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

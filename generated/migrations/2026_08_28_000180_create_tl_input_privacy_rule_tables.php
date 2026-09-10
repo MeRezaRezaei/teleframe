@@ -40,7 +40,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_privacy_rule_input_privacy_value_all_c89442bd25b2', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_privacy_rule_input_privacy_value_all_b839cc5564e5', 'id', 'fk_d7d34de11d7b1ad356b8b85c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d7d34de11d7b1ad356b8b85c')->references('id')->on('tl_input_privacy_rule_input_privacy_value_all_b839cc5564e5')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -85,7 +86,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_privacy_rule_input_privacy_value_all_71681af9150e', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_privacy_rule_input_privacy_value_allow_users', 'id', 'fk_d5b543482ce826537e3813ff')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d5b543482ce826537e3813ff')->references('id')->on('tl_input_privacy_rule_input_privacy_value_allow_users')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -121,7 +123,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_privacy_rule_input_privacy_value_dis_bb41d2b871d8', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_privacy_rule_input_privacy_value_dis_92dd14476e43', 'id', 'fk_6c689e635c7186b5aa268c26')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6c689e635c7186b5aa268c26')->references('id')->on('tl_input_privacy_rule_input_privacy_value_dis_92dd14476e43')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -148,7 +151,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_privacy_rule_input_privacy_value_dis_d8b619151246', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_privacy_rule_input_privacy_value_disallow_users', 'id', 'fk_e72414b5916651446e83408a')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_e72414b5916651446e83408a')->references('id')->on('tl_input_privacy_rule_input_privacy_value_disallow_users')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

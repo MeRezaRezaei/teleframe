@@ -28,7 +28,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_1c749f2c7b6a50d5abcf0f10');
             $table->index('account_id', 'ix_eb819daacaea8eb02d081862');
-            $table->unique(['account_id'], 'ux_e9fcc1e96a3abce75e0e');
         });
         Schema::create('tl_encrypted_chat_encrypted_chat_discarded', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -41,7 +40,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_674edafc93c7582bc93bd4ef');
             $table->index('account_id', 'ix_b2ea5fc94d3905e215ee5f18');
-            $table->unique(['account_id'], 'ux_2641e16a46b718b7b69a');
         });
         Schema::create('tl_encrypted_chat_encrypted_chat_empty', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -52,7 +50,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_2478d5216a21fbe86f4b73ed');
             $table->index('account_id', 'ix_1745e42f77291a5cb333e7e1');
-            $table->unique(['account_id'], 'ux_fded20f0d341ebda2fb0');
         });
         Schema::create('tl_encrypted_chat_encrypted_chat_requested', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -72,7 +69,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_eae154036d48ef90f7db5af6');
             $table->index('account_id', 'ix_08919fd237bfa395415eabb3');
-            $table->unique(['account_id'], 'ux_52144a12a8faa2378670');
         });
         Schema::create('tl_encrypted_chat_encrypted_chat_waiting', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -89,7 +85,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_86c8f9e067932d72fb78a0af');
             $table->index('account_id', 'ix_072721cc33c8486873828cba');
-            $table->unique(['account_id'], 'ux_2e4ea47cf728c1bea76a');
         });
     }
 

@@ -30,7 +30,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_eda7fd6c3654a577fda934a1');
             $table->index('account_id', 'ix_061a5fb1d3a7a503bc813f0a');
-            $table->unique(['account_id'], 'ux_926317a8fdcbe45aefd3');
         });
         Schema::create('tl_bot_inline_result_bot_inline_result', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -52,7 +51,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_34d2ed28c5f63a3f1c658ed5');
             $table->index('account_id', 'ix_f793d2013c96578363927c76');
-            $table->unique(['account_id'], 'ux_89785094f75b7d83114b');
         });
     }
 

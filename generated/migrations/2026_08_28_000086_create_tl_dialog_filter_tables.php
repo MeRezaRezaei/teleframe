@@ -34,11 +34,11 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_51ccda8a0278c806f76a45ea');
             $table->index('account_id', 'ix_da5be758a39917b5aa6ac1d4');
-            $table->unique(['account_id'], 'ux_4abd3aec2129c7006f5e');
         });
         Schema::create('tl_dialog_filter_dialog_filter__pinned_peers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_dialog_filter_dialog_filter', 'id', 'fk_2e915772fda9d6dfd87fad49')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2e915772fda9d6dfd87fad49')->references('id')->on('tl_dialog_filter_dialog_filter')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -47,7 +47,8 @@ return new class extends Migration
         });
         Schema::create('tl_dialog_filter_dialog_filter__include_peers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_dialog_filter_dialog_filter', 'id', 'fk_517277ab189fdfa1f15028b3')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_517277ab189fdfa1f15028b3')->references('id')->on('tl_dialog_filter_dialog_filter')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -56,7 +57,8 @@ return new class extends Migration
         });
         Schema::create('tl_dialog_filter_dialog_filter__exclude_peers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_dialog_filter_dialog_filter', 'id', 'fk_1e076a1609f62b53687dc937')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1e076a1609f62b53687dc937')->references('id')->on('tl_dialog_filter_dialog_filter')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -79,11 +81,11 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_db78b662cd90eb5018b1a8c1');
             $table->index('account_id', 'ix_662f86cdb682fd6b69d4db50');
-            $table->unique(['account_id'], 'ux_5355cb106964e12e3421');
         });
         Schema::create('tl_dialog_filter_dialog_filter_chatlist__pinned_peers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_dialog_filter_dialog_filter_chatlist', 'id', 'fk_50fb6b073eecf250fc2bb672')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_50fb6b073eecf250fc2bb672')->references('id')->on('tl_dialog_filter_dialog_filter_chatlist')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -92,7 +94,8 @@ return new class extends Migration
         });
         Schema::create('tl_dialog_filter_dialog_filter_chatlist__include_peers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_dialog_filter_dialog_filter_chatlist', 'id', 'fk_cf26b16c212b1bb55fd3f1cd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_cf26b16c212b1bb55fd3f1cd')->references('id')->on('tl_dialog_filter_dialog_filter_chatlist')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

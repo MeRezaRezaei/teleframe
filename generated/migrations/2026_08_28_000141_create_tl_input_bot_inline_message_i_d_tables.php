@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_input_bot_inline_message_i_d_input_bot_inl_65be0b9b7598', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->integer('dc_id')->nullable();
@@ -36,7 +36,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_59d0e2d99233b0839f77eb32');
             $table->index('account_id', 'ix_217bf9955bbea4ab0dc23735');
-            $table->unique(['account_id'], 'ux_247b8e4cd7f8a340cc74');
         });
     }
 

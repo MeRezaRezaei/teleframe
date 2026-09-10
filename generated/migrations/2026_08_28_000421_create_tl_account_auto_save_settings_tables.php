@@ -28,7 +28,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_auto_save_settings_auto_save_setti_b5d6efe7410e', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_auto_save_settings_auto_save_settings', 'id', 'fk_c798117d4d8681d6a2e905cc')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c798117d4d8681d6a2e905cc')->references('id')->on('tl_account_auto_save_settings_auto_save_settings')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -37,7 +38,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_auto_save_settings_auto_save_settings__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_auto_save_settings_auto_save_settings', 'id', 'fk_3362942b5b0f4301c0afbe9b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_3362942b5b0f4301c0afbe9b')->references('id')->on('tl_account_auto_save_settings_auto_save_settings')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -46,7 +48,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_auto_save_settings_auto_save_settings__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_auto_save_settings_auto_save_settings', 'id', 'fk_2236fd788c49b0301bd515ff')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2236fd788c49b0301bd515ff')->references('id')->on('tl_account_auto_save_settings_auto_save_settings')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_future_salts_future_salts__salts', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_future_salts_future_salts', 'id', 'fk_1323d7299ea2b000104faf98')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1323d7299ea2b000104faf98')->references('id')->on('tl_future_salts_future_salts')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

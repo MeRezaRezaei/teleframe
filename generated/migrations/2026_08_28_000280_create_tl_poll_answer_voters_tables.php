@@ -27,7 +27,8 @@ return new class extends Migration
         });
         Schema::create('tl_poll_answer_voters_poll_answer_voters__recent_voters', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_poll_answer_voters_poll_answer_voters', 'id', 'fk_d4bebaaf2cea71fb49d5697d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d4bebaaf2cea71fb49d5697d')->references('id')->on('tl_poll_answer_voters_poll_answer_voters')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -33,7 +33,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_reply_to_input_reply_to_message__quote_entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_reply_to_input_reply_to_message', 'id', 'fk_526840a6b4065585f625178d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_526840a6b4065585f625178d')->references('id')->on('tl_input_reply_to_input_reply_to_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -42,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_payment_receipt_payment_receipt__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_payment_receipt_payment_receipt', 'id', 'fk_be0edb52c56f80e008b17201')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_be0edb52c56f80e008b17201')->references('id')->on('tl_payments_payment_receipt_payment_receipt')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -73,7 +74,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_payment_receipt_payment_receipt_stars__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_payment_receipt_payment_receipt_stars', 'id', 'fk_93be7352503aa96cca815791')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_93be7352503aa96cca815791')->references('id')->on('tl_payments_payment_receipt_payment_receipt_stars')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

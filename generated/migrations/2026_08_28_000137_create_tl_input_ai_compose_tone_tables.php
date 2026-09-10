@@ -22,7 +22,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_0eec3c481a2226c421c50641');
         });
         Schema::create('tl_input_ai_compose_tone_input_ai_compose_tone_i_d', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();

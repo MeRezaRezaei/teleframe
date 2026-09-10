@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_suggested_star_ref_bots_suggested_493afd9c3485', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_suggested_star_ref_bots_suggested_2b419606faf4', 'id', 'fk_6f981f4aa2006b97dbd2a38b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6f981f4aa2006b97dbd2a38b')->references('id')->on('tl_payments_suggested_star_ref_bots_suggested_2b419606faf4')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -34,7 +35,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_suggested_star_ref_bots_suggested_a10aaedcb3f4', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_suggested_star_ref_bots_suggested_2b419606faf4', 'id', 'fk_ac5f3584f4c0ec3ed81dac2f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_ac5f3584f4c0ec3ed81dac2f')->references('id')->on('tl_payments_suggested_star_ref_bots_suggested_2b419606faf4')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

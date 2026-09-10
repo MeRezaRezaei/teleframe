@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_authorization_form_authorization_f_bfc11bfaf63e', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_authorization_form_authorization_form', 'id', 'fk_10191acfd8dd52e7b09f7843')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_10191acfd8dd52e7b09f7843')->references('id')->on('tl_account_authorization_form_authorization_form')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -33,7 +34,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_authorization_form_authorization_form__values', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_authorization_form_authorization_form', 'id', 'fk_1b9a82bc0ed027f37dbf8d40')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1b9a82bc0ed027f37dbf8d40')->references('id')->on('tl_account_authorization_form_authorization_form')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -42,7 +44,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_authorization_form_authorization_form__errors', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_authorization_form_authorization_form', 'id', 'fk_907fc5cfd1ae59995440442e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_907fc5cfd1ae59995440442e')->references('id')->on('tl_account_authorization_form_authorization_form')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -51,7 +54,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_authorization_form_authorization_form__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_authorization_form_authorization_form', 'id', 'fk_46a3213b9ffcee9436987cbb')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_46a3213b9ffcee9436987cbb')->references('id')->on('tl_account_authorization_form_authorization_form')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

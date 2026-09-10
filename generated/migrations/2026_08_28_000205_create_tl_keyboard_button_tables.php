@@ -221,7 +221,8 @@ return new class extends Migration
         });
         Schema::create('tl_keyboard_button_keyboard_button_switch_inl_24451aa92e03', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_keyboard_button_keyboard_button_switch_inline', 'id', 'fk_fdbef72c0676991ddebb449b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fdbef72c0676991ddebb449b')->references('id')->on('tl_keyboard_button_keyboard_button_switch_inline')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

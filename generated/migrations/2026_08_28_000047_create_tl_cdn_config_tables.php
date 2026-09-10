@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_cdn_config_cdn_config__public_keys', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_cdn_config_cdn_config', 'id', 'fk_89a864a96ec4e8bf99212d6c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_89a864a96ec4e8bf99212d6c')->references('id')->on('tl_cdn_config_cdn_config')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

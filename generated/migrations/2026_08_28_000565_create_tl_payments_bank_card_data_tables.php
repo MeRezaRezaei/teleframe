@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_bank_card_data_bank_card_data__open_urls', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_bank_card_data_bank_card_data', 'id', 'fk_a35a1468108b407011dd2895')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a35a1468108b407011dd2895')->references('id')->on('tl_payments_bank_card_data_bank_card_data')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

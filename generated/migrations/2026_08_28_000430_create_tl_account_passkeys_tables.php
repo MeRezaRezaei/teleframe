@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_passkeys_passkeys__passkeys', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_passkeys_passkeys', 'id', 'fk_9b0f511654639b90d88eca64')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9b0f511654639b90d88eca64')->references('id')->on('tl_account_passkeys_passkeys')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -28,7 +28,8 @@ return new class extends Migration
         });
         Schema::create('tl_business_bot_recipients_business_bot_recipients__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_business_bot_recipients_business_bot_recipients', 'id', 'fk_aa46f376beb4c6d101db0680')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_aa46f376beb4c6d101db0680')->references('id')->on('tl_business_bot_recipients_business_bot_recipients')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -37,7 +38,8 @@ return new class extends Migration
         });
         Schema::create('tl_business_bot_recipients_business_bot_recip_67c6d576f447', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_business_bot_recipients_business_bot_recipients', 'id', 'fk_4336a51f48c028550eda653f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4336a51f48c028550eda653f')->references('id')->on('tl_business_bot_recipients_business_bot_recipients')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');

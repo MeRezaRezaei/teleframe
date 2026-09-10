@@ -34,7 +34,8 @@ return new class extends Migration
         });
         Schema::create('tl_chat_theme_chat_theme_unique_gift__theme_settings', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chat_theme_chat_theme_unique_gift', 'id', 'fk_1fc361b1c3c159b8f87e01dd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1fc361b1c3c159b8f87e01dd')->references('id')->on('tl_chat_theme_chat_theme_unique_gift')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_chat_full_channel_full', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -105,7 +105,8 @@ return new class extends Migration
         });
         Schema::create('tl_chat_full_channel_full__bot_info', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chat_full_channel_full', 'id', 'fk_5dc87341a05d63312ba79378')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5dc87341a05d63312ba79378')->references('id')->on('tl_chat_full_channel_full')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -114,7 +115,8 @@ return new class extends Migration
         });
         Schema::create('tl_chat_full_channel_full__pending_suggestions', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chat_full_channel_full', 'id', 'fk_5ab3eaeaf8c1b1c8323c05db')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5ab3eaeaf8c1b1c8323c05db')->references('id')->on('tl_chat_full_channel_full')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');
@@ -123,7 +125,8 @@ return new class extends Migration
         });
         Schema::create('tl_chat_full_channel_full__recent_requesters', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chat_full_channel_full', 'id', 'fk_9493e59adf3dca970ec5734c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9493e59adf3dca970ec5734c')->references('id')->on('tl_chat_full_channel_full')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -131,7 +134,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_fde2ebda3d384288efd36b12');
         });
         Schema::create('tl_chat_full_chat_full', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -167,7 +170,8 @@ return new class extends Migration
         });
         Schema::create('tl_chat_full_chat_full__bot_info', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chat_full_chat_full', 'id', 'fk_a6b02d5b67923788ebd5f0f5')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a6b02d5b67923788ebd5f0f5')->references('id')->on('tl_chat_full_chat_full')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -176,7 +180,8 @@ return new class extends Migration
         });
         Schema::create('tl_chat_full_chat_full__recent_requesters', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chat_full_chat_full', 'id', 'fk_7b7e9aa642ff7ae8f46d6475')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7b7e9aa642ff7ae8f46d6475')->references('id')->on('tl_chat_full_chat_full')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');

@@ -48,7 +48,8 @@ return new class extends Migration
         });
         Schema::create('tl_stats_megagroup_stats_megagroup_stats__top_posters', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stats_megagroup_stats_megagroup_stats', 'id', 'fk_ec3bff8cce642f229b966290')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_ec3bff8cce642f229b966290')->references('id')->on('tl_stats_megagroup_stats_megagroup_stats')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -57,7 +58,8 @@ return new class extends Migration
         });
         Schema::create('tl_stats_megagroup_stats_megagroup_stats__top_admins', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stats_megagroup_stats_megagroup_stats', 'id', 'fk_569196f7a4a3baf301e9376f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_569196f7a4a3baf301e9376f')->references('id')->on('tl_stats_megagroup_stats_megagroup_stats')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -66,7 +68,8 @@ return new class extends Migration
         });
         Schema::create('tl_stats_megagroup_stats_megagroup_stats__top_inviters', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stats_megagroup_stats_megagroup_stats', 'id', 'fk_9c2202a148a6c54452efa73c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9c2202a148a6c54452efa73c')->references('id')->on('tl_stats_megagroup_stats_megagroup_stats')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -75,7 +78,8 @@ return new class extends Migration
         });
         Schema::create('tl_stats_megagroup_stats_megagroup_stats__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stats_megagroup_stats_megagroup_stats', 'id', 'fk_327821cd1af68511baf4b87e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_327821cd1af68511baf4b87e')->references('id')->on('tl_stats_megagroup_stats_megagroup_stats')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

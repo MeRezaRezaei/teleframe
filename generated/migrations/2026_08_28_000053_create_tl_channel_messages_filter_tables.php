@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_channel_messages_filter_channel_messages_filter__ranges', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channel_messages_filter_channel_messages_filter', 'id', 'fk_54cc0b0500cfb9d5c11201d6')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_54cc0b0500cfb9d5c11201d6')->references('id')->on('tl_channel_messages_filter_channel_messages_filter')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

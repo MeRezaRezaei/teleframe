@@ -39,7 +39,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_bot_inline_message_input_bot_inline__04c37cd8c27e', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_bot_inline_message_input_bot_inline__93d9b4b179e4', 'id', 'fk_5cde0dec88a2e125449c6a1f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5cde0dec88a2e125449c6a1f')->references('id')->on('tl_input_bot_inline_message_input_bot_inline__93d9b4b179e4')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -140,7 +141,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_bot_inline_message_input_bot_inline__a63d595c8be2', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_bot_inline_message_input_bot_inline__b2383747ff31', 'id', 'fk_015e7ae5d02260e1f7926282')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_015e7ae5d02260e1f7926282')->references('id')->on('tl_input_bot_inline_message_input_bot_inline__b2383747ff31')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -178,7 +180,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_bot_inline_message_input_bot_inline__24c36bb1c4b3', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_bot_inline_message_input_bot_inline_message_text', 'id', 'fk_fea81f863ea2fa8f8b4805fd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fea81f863ea2fa8f8b4805fd')->references('id')->on('tl_input_bot_inline_message_input_bot_inline_message_text')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

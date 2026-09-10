@@ -32,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_premium_boosts_status_boosts_status__prepaid_giveaways', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_premium_boosts_status_boosts_status', 'id', 'fk_dfdf0f4b76de5d46b0d9929c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_dfdf0f4b76de5d46b0d9929c')->references('id')->on('tl_premium_boosts_status_boosts_status')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -41,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_premium_boosts_status_boosts_status__my_boost_slots', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_premium_boosts_status_boosts_status', 'id', 'fk_1ee1652dd417a62ced9bb02d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1ee1652dd417a62ced9bb02d')->references('id')->on('tl_premium_boosts_status_boosts_status')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');

@@ -28,7 +28,8 @@ return new class extends Migration
         });
         Schema::create('tl_help_terms_of_service_terms_of_service__entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_terms_of_service_terms_of_service', 'id', 'fk_8b6b50b1e9c90ee63844fae5')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_8b6b50b1e9c90ee63844fae5')->references('id')->on('tl_help_terms_of_service_terms_of_service')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

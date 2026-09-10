@@ -32,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_theme_settings_input_theme_settings__a1d0879fb3ca', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_theme_settings_input_theme_settings', 'id', 'fk_c25969af6881a186f191f9cd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c25969af6881a186f191f9cd')->references('id')->on('tl_input_theme_settings_input_theme_settings')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');

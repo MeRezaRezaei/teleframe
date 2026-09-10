@@ -28,7 +28,8 @@ return new class extends Migration
         });
         Schema::create('tl_stories_story_views_list_story_views_list__views', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stories_story_views_list_story_views_list', 'id', 'fk_89922aa95c949bb96fa434b1')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_89922aa95c949bb96fa434b1')->references('id')->on('tl_stories_story_views_list_story_views_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -37,7 +38,8 @@ return new class extends Migration
         });
         Schema::create('tl_stories_story_views_list_story_views_list__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stories_story_views_list_story_views_list', 'id', 'fk_dab9a60320ff31e0f49b4af2')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_dab9a60320ff31e0f49b4af2')->references('id')->on('tl_stories_story_views_list_story_views_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -46,7 +48,8 @@ return new class extends Migration
         });
         Schema::create('tl_stories_story_views_list_story_views_list__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stories_story_views_list_story_views_list', 'id', 'fk_fbb3ae670f113edb1df55440')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fbb3ae670f113edb1df55440')->references('id')->on('tl_stories_story_views_list_story_views_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

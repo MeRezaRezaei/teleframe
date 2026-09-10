@@ -36,7 +36,8 @@ return new class extends Migration
         });
         Schema::create('tl_decrypted_message_decrypted_message__entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_decrypted_message_decrypted_message', 'id', 'fk_fbd070471c0c77fbe118e8e4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fbd070471c0c77fbe118e8e4')->references('id')->on('tl_decrypted_message_decrypted_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

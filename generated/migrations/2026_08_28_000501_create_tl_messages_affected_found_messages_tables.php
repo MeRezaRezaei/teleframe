@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_affected_found_messages_affected__84127c85d979', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_affected_found_messages_affected__d0b5b58c5216', 'id', 'fk_928fb01080a90c1a37032aad')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_928fb01080a90c1a37032aad')->references('id')->on('tl_messages_affected_found_messages_affected__d0b5b58c5216')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');

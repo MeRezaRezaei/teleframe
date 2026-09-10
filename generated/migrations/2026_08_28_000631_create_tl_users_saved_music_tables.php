@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_users_saved_music_saved_music__documents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_users_saved_music_saved_music', 'id', 'fk_03cb8f9fa3574ca842c625a4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_03cb8f9fa3574ca842c625a4')->references('id')->on('tl_users_saved_music_saved_music')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

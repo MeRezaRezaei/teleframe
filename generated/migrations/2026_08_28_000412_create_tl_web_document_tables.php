@@ -26,7 +26,8 @@ return new class extends Migration
         });
         Schema::create('tl_web_document_web_document__attributes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_web_document_web_document', 'id', 'fk_4a7efadd691287a640721fcd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4a7efadd691287a640721fcd')->references('id')->on('tl_web_document_web_document')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -47,7 +48,8 @@ return new class extends Migration
         });
         Schema::create('tl_web_document_web_document_no_proxy__attributes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_web_document_web_document_no_proxy', 'id', 'fk_4a93058622d99b4ab8e3efb5')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4a93058622d99b4ab8e3efb5')->references('id')->on('tl_web_document_web_document_no_proxy')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

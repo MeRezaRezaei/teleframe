@@ -28,7 +28,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_list_ordered_item_page_list_ordered_i_8d9d190d33ee', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_list_ordered_item_page_list_ordered_item_blocks', 'id', 'fk_27eb6986813bd868c94d44a4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_27eb6986813bd868c94d44a4')->references('id')->on('tl_page_list_ordered_item_page_list_ordered_item_blocks')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -28,7 +28,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_single_media_input_single_media__entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_single_media_input_single_media', 'id', 'fk_d7b6e41494cd32652ab78248')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d7b6e41494cd32652ab78248')->references('id')->on('tl_input_single_media_input_single_media')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_keyboard_button_row_keyboard_button_row__buttons', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_keyboard_button_row_keyboard_button_row', 'id', 'fk_dbb90e21c1998380f65dcb51')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_dbb90e21c1998380f65dcb51')->references('id')->on('tl_keyboard_button_row_keyboard_button_row')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

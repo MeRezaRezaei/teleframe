@@ -84,11 +84,11 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_e179b6c48cf7a7bae5133032');
             $table->index('account_id', 'ix_488f3bd2a1d1897b1f6406e9');
-            $table->unique(['from_id', 'account_id'], 'ux_09dd3ed3bc970fbdbb77');
         });
         Schema::create('tl_message_message__entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_message_message', 'id', 'fk_9cd693eead33d586ad1284f4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9cd693eead33d586ad1284f4')->references('id')->on('tl_message_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -97,7 +97,8 @@ return new class extends Migration
         });
         Schema::create('tl_message_message__restriction_reason', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_message_message', 'id', 'fk_8561b071aec30b528cfe934c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_8561b071aec30b528cfe934c')->references('id')->on('tl_message_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -116,7 +117,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_2a691278346e24a53742ac39');
             $table->index('account_id', 'ix_6278fc03b9bf1424dd3f6312');
-            $table->unique(['peer_id', 'account_id'], 'ux_06979b349742400c8c04');
         });
         Schema::create('tl_message_message_service', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -149,7 +149,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_43e5c36af1577a36167a3c39');
             $table->index('account_id', 'ix_799db91208004665ad2a2f8b');
-            $table->unique(['from_id', 'account_id'], 'ux_1d255784b4a3ef9c7f4c');
         });
     }
 

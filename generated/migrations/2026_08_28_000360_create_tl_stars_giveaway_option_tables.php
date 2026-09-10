@@ -30,7 +30,8 @@ return new class extends Migration
         });
         Schema::create('tl_stars_giveaway_option_stars_giveaway_option__winners', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stars_giveaway_option_stars_giveaway_option', 'id', 'fk_03ada73683baf7bca0e4c17f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_03ada73683baf7bca0e4c17f')->references('id')->on('tl_stars_giveaway_option_stars_giveaway_option')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

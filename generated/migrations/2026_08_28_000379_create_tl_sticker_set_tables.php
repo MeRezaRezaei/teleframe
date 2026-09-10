@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_sticker_set_sticker_set', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -41,7 +41,8 @@ return new class extends Migration
         });
         Schema::create('tl_sticker_set_sticker_set__thumbs', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_sticker_set_sticker_set', 'id', 'fk_b0e5a772acd9b10c36cb5be5')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b0e5a772acd9b10c36cb5be5')->references('id')->on('tl_sticker_set_sticker_set')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

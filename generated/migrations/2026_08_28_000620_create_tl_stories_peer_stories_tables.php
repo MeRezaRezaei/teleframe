@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_stories_peer_stories_peer_stories__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stories_peer_stories_peer_stories', 'id', 'fk_605fc2165cd5945d73089819')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_605fc2165cd5945d73089819')->references('id')->on('tl_stories_peer_stories_peer_stories')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -33,7 +34,8 @@ return new class extends Migration
         });
         Schema::create('tl_stories_peer_stories_peer_stories__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stories_peer_stories_peer_stories', 'id', 'fk_d83e33c2774f0cea4e62d6ad')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d83e33c2774f0cea4e62d6ad')->references('id')->on('tl_stories_peer_stories_peer_stories')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

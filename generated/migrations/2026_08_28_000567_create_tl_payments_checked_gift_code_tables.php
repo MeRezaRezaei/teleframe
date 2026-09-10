@@ -32,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_checked_gift_code_checked_gift_code__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_checked_gift_code_checked_gift_code', 'id', 'fk_9270ad93f8d1a1b08504e9f1')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9270ad93f8d1a1b08504e9f1')->references('id')->on('tl_payments_checked_gift_code_checked_gift_code')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -41,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_checked_gift_code_checked_gift_code__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_checked_gift_code_checked_gift_code', 'id', 'fk_1c6f286d6a684acc4859c9b9')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1c6f286d6a684acc4859c9b9')->references('id')->on('tl_payments_checked_gift_code_checked_gift_code')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

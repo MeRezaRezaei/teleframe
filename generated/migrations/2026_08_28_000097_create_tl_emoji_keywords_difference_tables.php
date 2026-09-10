@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_emoji_keywords_difference_emoji_keywords_d_8bb0c8308884', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_emoji_keywords_difference_emoji_keywords_difference', 'id', 'fk_5f58f5a7d2ab70371f059f72')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5f58f5a7d2ab70371f059f72')->references('id')->on('tl_emoji_keywords_difference_emoji_keywords_difference')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

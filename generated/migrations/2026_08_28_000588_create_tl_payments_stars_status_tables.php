@@ -28,7 +28,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_stars_status_stars_status__subscriptions', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_stars_status_stars_status', 'id', 'fk_275ff63ac745845614d032a9')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_275ff63ac745845614d032a9')->references('id')->on('tl_payments_stars_status_stars_status')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -37,7 +38,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_stars_status_stars_status__history', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_stars_status_stars_status', 'id', 'fk_9e4a6ae50b6345be35969f8f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9e4a6ae50b6345be35969f8f')->references('id')->on('tl_payments_stars_status_stars_status')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -46,7 +48,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_stars_status_stars_status__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_stars_status_stars_status', 'id', 'fk_0394d896bceafbff3277ddd8')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0394d896bceafbff3277ddd8')->references('id')->on('tl_payments_stars_status_stars_status')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -55,7 +58,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_stars_status_stars_status__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_stars_status_stars_status', 'id', 'fk_c01fd94c67b701668bc7023e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c01fd94c67b701668bc7023e')->references('id')->on('tl_payments_stars_status_stars_status')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

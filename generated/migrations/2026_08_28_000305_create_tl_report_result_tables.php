@@ -35,7 +35,8 @@ return new class extends Migration
         });
         Schema::create('tl_report_result_report_result_choose_option__options', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_report_result_report_result_choose_option', 'id', 'fk_966511cfd32a39c91bf9c896')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_966511cfd32a39c91bf9c896')->references('id')->on('tl_report_result_report_result_choose_option')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

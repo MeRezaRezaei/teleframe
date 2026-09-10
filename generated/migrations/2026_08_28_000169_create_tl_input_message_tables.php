@@ -22,7 +22,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_bd9550d88e020c29ce271fbb');
             $table->index('account_id', 'ix_70715fa3124f4f1da42f9caa');
-            $table->unique(['account_id'], 'ux_ca21104ebdf888614a42');
         });
         Schema::create('tl_input_message_input_message_i_d', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -33,7 +32,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_d85c85e442280808b081b3ca');
             $table->index('account_id', 'ix_792ba7f5d57d04326c7f0b1f');
-            $table->unique(['account_id'], 'ux_c606c8bfa4a4bb948667');
         });
         Schema::create('tl_input_message_input_message_pinned', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -53,7 +51,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_b8f099919f1fce19a06f0e53');
             $table->index('account_id', 'ix_cd2b4f17ca442044f3ccbba7');
-            $table->unique(['account_id'], 'ux_e8bfc5d5c1bb3205f58e');
         });
     }
 

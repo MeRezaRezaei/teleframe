@@ -36,7 +36,8 @@ return new class extends Migration
         });
         Schema::create('tl_invoice_invoice__prices', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_invoice_invoice', 'id', 'fk_2b845c1e6b48f2a342e942a2')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2b845c1e6b48f2a342e942a2')->references('id')->on('tl_invoice_invoice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -45,7 +46,8 @@ return new class extends Migration
         });
         Schema::create('tl_invoice_invoice__suggested_tip_amounts', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_invoice_invoice', 'id', 'fk_156d2b30a423e8ec5112e431')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_156d2b30a423e8ec5112e431')->references('id')->on('tl_invoice_invoice')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');

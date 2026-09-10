@@ -27,7 +27,8 @@ return new class extends Migration
         });
         Schema::create('tl_story_views_story_views__reactions', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_story_views_story_views', 'id', 'fk_f44eb60c87de496eaeaad243')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f44eb60c87de496eaeaad243')->references('id')->on('tl_story_views_story_views')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -36,7 +37,8 @@ return new class extends Migration
         });
         Schema::create('tl_story_views_story_views__recent_viewers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_story_views_story_views', 'id', 'fk_2c5dcf7728fdb9aa587dfed4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2c5dcf7728fdb9aa587dfed4')->references('id')->on('tl_story_views_story_views')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');

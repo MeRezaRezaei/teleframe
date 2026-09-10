@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_message_reactions_list_message_re_c1f5baa534c1', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_message_reactions_list_message_reactions_list', 'id', 'fk_7eccdd77d91adf7c01ace86c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7eccdd77d91adf7c01ace86c')->references('id')->on('tl_messages_message_reactions_list_message_reactions_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -34,7 +35,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_message_reactions_list_message_re_d7d3d8f71641', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_message_reactions_list_message_reactions_list', 'id', 'fk_f11d4e44377b840ee9b4a32d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f11d4e44377b840ee9b4a32d')->references('id')->on('tl_messages_message_reactions_list_message_reactions_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -43,7 +45,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_message_reactions_list_message_re_ca57fe0405a5', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_message_reactions_list_message_reactions_list', 'id', 'fk_6ed213f9137a54c2cdce6c51')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6ed213f9137a54c2cdce6c51')->references('id')->on('tl_messages_message_reactions_list_message_reactions_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

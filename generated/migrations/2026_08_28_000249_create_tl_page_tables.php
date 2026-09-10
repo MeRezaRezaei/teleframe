@@ -28,7 +28,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_page__blocks', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_page', 'id', 'fk_a47cfe449e84bf39cac78513')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a47cfe449e84bf39cac78513')->references('id')->on('tl_page_page')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -37,7 +38,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_page__photos', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_page', 'id', 'fk_e7b50a093d3c33dfa05e8ad2')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_e7b50a093d3c33dfa05e8ad2')->references('id')->on('tl_page_page')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -46,7 +48,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_page__documents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_page', 'id', 'fk_266bae176a9c66ef2b763148')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_266bae176a9c66ef2b763148')->references('id')->on('tl_page_page')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

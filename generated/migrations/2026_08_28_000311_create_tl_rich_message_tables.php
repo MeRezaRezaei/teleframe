@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_rich_message_rich_message__blocks', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_rich_message_rich_message', 'id', 'fk_1ff108399da623ab154987bd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1ff108399da623ab154987bd')->references('id')->on('tl_rich_message_rich_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -34,7 +35,8 @@ return new class extends Migration
         });
         Schema::create('tl_rich_message_rich_message__photos', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_rich_message_rich_message', 'id', 'fk_d1b444639b632f23e0464361')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d1b444639b632f23e0464361')->references('id')->on('tl_rich_message_rich_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -43,7 +45,8 @@ return new class extends Migration
         });
         Schema::create('tl_rich_message_rich_message__documents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_rich_message_rich_message', 'id', 'fk_9ee97b3df79c7ba97a10e07a')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9ee97b3df79c7ba97a10e07a')->references('id')->on('tl_rich_message_rich_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

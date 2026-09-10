@@ -30,7 +30,8 @@ return new class extends Migration
         });
         Schema::create('tl_theme_settings_theme_settings__message_colors', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_theme_settings_theme_settings', 'id', 'fk_8658576137d04605c559e570')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_8658576137d04605c559e570')->references('id')->on('tl_theme_settings_theme_settings')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');

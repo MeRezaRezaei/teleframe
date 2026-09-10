@@ -58,7 +58,8 @@ return new class extends Migration
         });
         Schema::create('tl_decrypted_message_action_decrypted_message_e89bdfd0d31d', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_decrypted_message_action_decrypted_message_1beea02c6150', 'id', 'fk_3888ab41f6a452a73ac414b2')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_3888ab41f6a452a73ac414b2')->references('id')->on('tl_decrypted_message_action_decrypted_message_1beea02c6150')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -104,7 +105,8 @@ return new class extends Migration
         });
         Schema::create('tl_decrypted_message_action_decrypted_message_eddbfc36281f', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_decrypted_message_action_decrypted_message_1d196e6db4b7', 'id', 'fk_4ab408c280ce594c1fe91837')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4ab408c280ce594c1fe91837')->references('id')->on('tl_decrypted_message_action_decrypted_message_1d196e6db4b7')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -145,7 +147,8 @@ return new class extends Migration
         });
         Schema::create('tl_decrypted_message_action_decrypted_message_039ececa033a', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_decrypted_message_action_decrypted_message_503f68851191', 'id', 'fk_b25008b06d29b05adf90ef11')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b25008b06d29b05adf90ef11')->references('id')->on('tl_decrypted_message_action_decrypted_message_503f68851191')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');

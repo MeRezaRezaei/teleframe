@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_aicompose_tones_tones__tones', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_aicompose_tones_tones', 'id', 'fk_51a9b2bc29b74b0a0c39d73e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_51a9b2bc29b74b0a0c39d73e')->references('id')->on('tl_aicompose_tones_tones')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -32,7 +33,8 @@ return new class extends Migration
         });
         Schema::create('tl_aicompose_tones_tones__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_aicompose_tones_tones', 'id', 'fk_54938fc648eec1992b9b5306')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_54938fc648eec1992b9b5306')->references('id')->on('tl_aicompose_tones_tones')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

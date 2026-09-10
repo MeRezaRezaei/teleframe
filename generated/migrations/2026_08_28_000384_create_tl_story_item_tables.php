@@ -45,11 +45,11 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_9108f1e00efe9571452b4f11');
             $table->index('account_id', 'ix_00c80a488b7a97893fbe0f99');
-            $table->unique(['from_id', 'account_id'], 'ux_9eccf57c06a390c77d77');
         });
         Schema::create('tl_story_item_story_item__entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_story_item_story_item', 'id', 'fk_6d69c5aa425a77f6d30a0a13')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6d69c5aa425a77f6d30a0a13')->references('id')->on('tl_story_item_story_item')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -58,7 +58,8 @@ return new class extends Migration
         });
         Schema::create('tl_story_item_story_item__media_areas', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_story_item_story_item', 'id', 'fk_2f292f704a0c1c88972e5992')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2f292f704a0c1c88972e5992')->references('id')->on('tl_story_item_story_item')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -67,7 +68,8 @@ return new class extends Migration
         });
         Schema::create('tl_story_item_story_item__privacy', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_story_item_story_item', 'id', 'fk_896f31f674137e090f82fad7')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_896f31f674137e090f82fad7')->references('id')->on('tl_story_item_story_item')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -76,7 +78,8 @@ return new class extends Migration
         });
         Schema::create('tl_story_item_story_item__albums', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_story_item_story_item', 'id', 'fk_6bafa74a594abc27f4b3b78b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6bafa74a594abc27f4b3b78b')->references('id')->on('tl_story_item_story_item')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');
@@ -92,7 +95,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_6fe33f58f52e4260394415d9');
             $table->index('account_id', 'ix_629ce46149fd38b6ea343a38');
-            $table->unique(['account_id'], 'ux_1ebabb1dd0eb2b2a86b6');
         });
         Schema::create('tl_story_item_story_item_skipped', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -108,7 +110,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_8dfc69c6fd6df7aa4f69a35e');
             $table->index('account_id', 'ix_7730f3e180f4e1b895da4b9b');
-            $table->unique(['account_id'], 'ux_2139e2790726418c669c');
         });
     }
 

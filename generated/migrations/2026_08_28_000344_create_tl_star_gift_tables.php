@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_star_gift_star_gift', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -53,7 +53,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_76285e06e8fd38e80e12e59e');
         });
         Schema::create('tl_star_gift_star_gift_unique', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -95,7 +95,8 @@ return new class extends Migration
         });
         Schema::create('tl_star_gift_star_gift_unique__attributes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_star_gift_star_gift_unique', 'id', 'fk_b37f8104ed875b0d2dce3050')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b37f8104ed875b0d2dce3050')->references('id')->on('tl_star_gift_star_gift_unique')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -104,7 +105,8 @@ return new class extends Migration
         });
         Schema::create('tl_star_gift_star_gift_unique__resell_amount', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_star_gift_star_gift_unique', 'id', 'fk_6fbca64f141ad259a25ab5b4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6fbca64f141ad259a25ab5b4')->references('id')->on('tl_star_gift_star_gift_unique')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

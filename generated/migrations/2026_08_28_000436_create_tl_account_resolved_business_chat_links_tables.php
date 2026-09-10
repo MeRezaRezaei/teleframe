@@ -26,7 +26,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_resolved_business_chat_links_resol_ee95c75ee22d', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_resolved_business_chat_links_resol_c591db58a589', 'id', 'fk_b6866a282e7b0d51c4ca1568')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b6866a282e7b0d51c4ca1568')->references('id')->on('tl_account_resolved_business_chat_links_resol_c591db58a589')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -35,7 +36,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_resolved_business_chat_links_resol_eb9e805b9db6', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_resolved_business_chat_links_resol_c591db58a589', 'id', 'fk_fb7ebff35b11fa7e7889ec8f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fb7ebff35b11fa7e7889ec8f')->references('id')->on('tl_account_resolved_business_chat_links_resol_c591db58a589')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -44,7 +46,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_resolved_business_chat_links_resol_eaf95553a9e4', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_resolved_business_chat_links_resol_c591db58a589', 'id', 'fk_96ffc92bd418d2baf8e4220a')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_96ffc92bd418d2baf8e4220a')->references('id')->on('tl_account_resolved_business_chat_links_resol_c591db58a589')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

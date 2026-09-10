@@ -39,7 +39,8 @@ return new class extends Migration
         });
         Schema::create('tl_video_size_video_size_emoji_markup__background_colors', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_video_size_video_size_emoji_markup', 'id', 'fk_4c5de7211135752b01facc40')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4c5de7211135752b01facc40')->references('id')->on('tl_video_size_video_size_emoji_markup')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');
@@ -61,7 +62,8 @@ return new class extends Migration
         });
         Schema::create('tl_video_size_video_size_sticker_markup__background_colors', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_video_size_video_size_sticker_markup', 'id', 'fk_fdd2a5aebdd457502ba93782')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fdd2a5aebdd457502ba93782')->references('id')->on('tl_video_size_video_size_sticker_markup')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');

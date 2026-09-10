@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_star_gift_collections_star_gift_c_3c2191db9981', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_star_gift_collections_star_gift_collections', 'id', 'fk_4bfdf43bae3d56d39ef3a09f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4bfdf43bae3d56d39ef3a09f')->references('id')->on('tl_payments_star_gift_collections_star_gift_collections')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

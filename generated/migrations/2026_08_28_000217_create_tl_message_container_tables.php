@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_message_container_msg_container__messages', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_message_container_msg_container', 'id', 'fk_7f840e33defcc5304f993c1d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7f840e33defcc5304f993c1d')->references('id')->on('tl_message_container_msg_container')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

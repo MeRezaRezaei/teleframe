@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_channels_channel_participants_channel_part_6b6c9e490b25', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channels_channel_participants_channel_participants', 'id', 'fk_397d229a99c26b482e8a80ee')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_397d229a99c26b482e8a80ee')->references('id')->on('tl_channels_channel_participants_channel_participants')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -32,7 +33,8 @@ return new class extends Migration
         });
         Schema::create('tl_channels_channel_participants_channel_part_10e2c32cd676', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channels_channel_participants_channel_participants', 'id', 'fk_d3a631b7e098a8a47a55ccdf')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d3a631b7e098a8a47a55ccdf')->references('id')->on('tl_channels_channel_participants_channel_participants')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -41,7 +43,8 @@ return new class extends Migration
         });
         Schema::create('tl_channels_channel_participants_channel_part_c16b51bee12a', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channels_channel_participants_channel_participants', 'id', 'fk_e41c3c807d417b61109de703')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_e41c3c807d417b61109de703')->references('id')->on('tl_channels_channel_participants_channel_participants')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

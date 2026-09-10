@@ -181,7 +181,8 @@ return new class extends Migration
         });
         Schema::create('tl_channel_admin_log_event_action_channel_adm_17108c5055e7', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channel_admin_log_event_action_channel_adm_38f150219e2e', 'id', 'fk_8b969bca028759afc2bf3e77')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_8b969bca028759afc2bf3e77')->references('id')->on('tl_channel_admin_log_event_action_channel_adm_38f150219e2e')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');
@@ -190,7 +191,8 @@ return new class extends Migration
         });
         Schema::create('tl_channel_admin_log_event_action_channel_adm_54649cabd20d', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_channel_admin_log_event_action_channel_adm_38f150219e2e', 'id', 'fk_30a4933bde43a8015b6ed237')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_30a4933bde43a8015b6ed237')->references('id')->on('tl_channel_admin_log_event_action_channel_adm_38f150219e2e')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');

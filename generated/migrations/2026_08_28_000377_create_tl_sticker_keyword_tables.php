@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_sticker_keyword_sticker_keyword__keyword', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_sticker_keyword_sticker_keyword', 'id', 'fk_78a5c1d250ca3f008a31d9ab')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_78a5c1d250ca3f008a31d9ab')->references('id')->on('tl_sticker_keyword_sticker_keyword')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');

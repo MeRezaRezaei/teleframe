@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_emoji_statuses_emoji_statuses__statuses', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_emoji_statuses_emoji_statuses', 'id', 'fk_28d817116d415891a311849f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_28d817116d415891a311849f')->references('id')->on('tl_account_emoji_statuses_emoji_statuses')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

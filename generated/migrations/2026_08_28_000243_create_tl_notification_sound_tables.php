@@ -41,7 +41,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_eaa2899951a7722535cf1ee1');
         });
         Schema::create('tl_notification_sound_notification_sound_ringtone', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();

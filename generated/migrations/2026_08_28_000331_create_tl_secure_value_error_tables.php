@@ -65,7 +65,8 @@ return new class extends Migration
         });
         Schema::create('tl_secure_value_error_secure_value_error_files__file_hash', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_secure_value_error_secure_value_error_files', 'id', 'fk_dc33f38f6a1f06638f04a26b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_dc33f38f6a1f06638f04a26b')->references('id')->on('tl_secure_value_error_secure_value_error_files')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->binary('value')->nullable();
             $table->bigInteger('account_id');
@@ -138,7 +139,8 @@ return new class extends Migration
         });
         Schema::create('tl_secure_value_error_secure_value_error_tran_f5846064b312', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_secure_value_error_secure_value_error_translation_files', 'id', 'fk_71f39bbbd3f7ebdaa027c673')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_71f39bbbd3f7ebdaa027c673')->references('id')->on('tl_secure_value_error_secure_value_error_translation_files')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->binary('value')->nullable();
             $table->bigInteger('account_id');

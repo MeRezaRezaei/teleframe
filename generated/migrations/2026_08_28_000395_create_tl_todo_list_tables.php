@@ -27,7 +27,8 @@ return new class extends Migration
         });
         Schema::create('tl_todo_list_todo_list__list', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_todo_list_todo_list', 'id', 'fk_8db6c133a575649e55cd09da')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_8db6c133a575649e55cd09da')->references('id')->on('tl_todo_list_todo_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

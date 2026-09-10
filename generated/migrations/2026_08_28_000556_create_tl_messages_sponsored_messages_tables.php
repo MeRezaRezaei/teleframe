@@ -26,7 +26,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_sponsored_messages_sponsored_mess_8fd982913adc', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_sponsored_messages_sponsored_messages', 'id', 'fk_1b753847ae5c63208d5aa8e1')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1b753847ae5c63208d5aa8e1')->references('id')->on('tl_messages_sponsored_messages_sponsored_messages')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -35,7 +36,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_sponsored_messages_sponsored_messages__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_sponsored_messages_sponsored_messages', 'id', 'fk_0ab449c7c7eb2166af61e32b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0ab449c7c7eb2166af61e32b')->references('id')->on('tl_messages_sponsored_messages_sponsored_messages')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -44,7 +46,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_sponsored_messages_sponsored_messages__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_sponsored_messages_sponsored_messages', 'id', 'fk_1be0cbe4712044b48a2a741f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1be0cbe4712044b48a2a741f')->references('id')->on('tl_messages_sponsored_messages_sponsored_messages')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

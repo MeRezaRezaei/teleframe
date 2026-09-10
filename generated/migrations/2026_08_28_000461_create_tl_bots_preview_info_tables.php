@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_bots_preview_info_preview_info__media', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_bots_preview_info_preview_info', 'id', 'fk_38288a7a3e143b1544223075')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_38288a7a3e143b1544223075')->references('id')->on('tl_bots_preview_info_preview_info')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_bots_preview_info_preview_info__lang_codes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_bots_preview_info_preview_info', 'id', 'fk_07019b2a4c9df13f36104060')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_07019b2a4c9df13f36104060')->references('id')->on('tl_bots_preview_info_preview_info')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');

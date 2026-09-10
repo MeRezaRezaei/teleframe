@@ -38,7 +38,8 @@ return new class extends Migration
         });
         Schema::create('tl_bot_info_bot_info__commands', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_bot_info_bot_info', 'id', 'fk_bb9452be31305793b5790c6a')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bb9452be31305793b5790c6a')->references('id')->on('tl_bot_info_bot_info')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

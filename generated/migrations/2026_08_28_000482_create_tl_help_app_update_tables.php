@@ -29,11 +29,11 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_ba32be773c5b0e5dfb15cc25');
             $table->index('account_id', 'ix_1a276183f9373b54765bb684');
-            $table->unique(['account_id'], 'ux_b8e321f82dcd20b62334');
         });
         Schema::create('tl_help_app_update_app_update__entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_help_app_update_app_update', 'id', 'fk_230b9b53ddd9a81d8db6627c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_230b9b53ddd9a81d8db6627c')->references('id')->on('tl_help_app_update_app_update')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -28,7 +28,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_business_recipients_input_business_r_f3ebd21efedf', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_business_recipients_input_business_recipients', 'id', 'fk_62137aa4d1f5aa74a381fefd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_62137aa4d1f5aa74a381fefd')->references('id')->on('tl_input_business_recipients_input_business_recipients')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

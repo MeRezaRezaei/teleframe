@@ -47,7 +47,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_710c2bf6c73289d0af967059');
             $table->index('account_id', 'ix_dd4360afa8d2256960e700a2');
-            $table->unique(['peer', 'account_id'], 'ux_705864cb0d6eebe32c49');
         });
         Schema::create('tl_forum_topic_forum_topic_deleted', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -58,7 +57,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_add6bb09a924e47b1f6aa08b');
             $table->index('account_id', 'ix_19203361fcc00fc362abc7d5');
-            $table->unique(['account_id'], 'ux_8bb151e588c53fd5cfe6');
         });
     }
 

@@ -57,7 +57,8 @@ return new class extends Migration
         });
         Schema::create('tl_decrypted_message_media_decrypted_message__fa113370e99a', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_decrypted_message_media_decrypted_message__1652f9c81874', 'id', 'fk_d00b451049fd434ded51f61a')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d00b451049fd434ded51f61a')->references('id')->on('tl_decrypted_message_media_decrypted_message__1652f9c81874')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -74,7 +75,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_35c87a313923adfbe60a2f9d');
         });
         Schema::create('tl_decrypted_message_media_decrypted_message__37e1a7328ec6', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -92,7 +93,8 @@ return new class extends Migration
         });
         Schema::create('tl_decrypted_message_media_decrypted_message__39292adb140f', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_decrypted_message_media_decrypted_message__37e1a7328ec6', 'id', 'fk_2aa9e18c0ec9ee9bee0b47ce')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2aa9e18c0ec9ee9bee0b47ce')->references('id')->on('tl_decrypted_message_media_decrypted_message__37e1a7328ec6')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

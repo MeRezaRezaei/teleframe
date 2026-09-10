@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_votes_list_votes_list__votes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_votes_list_votes_list', 'id', 'fk_6a704cba8a43790d12fb8ea8')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6a704cba8a43790d12fb8ea8')->references('id')->on('tl_messages_votes_list_votes_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -34,7 +35,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_votes_list_votes_list__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_votes_list_votes_list', 'id', 'fk_43999981575c3db63b6989ac')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_43999981575c3db63b6989ac')->references('id')->on('tl_messages_votes_list_votes_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -43,7 +45,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_votes_list_votes_list__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_votes_list_votes_list', 'id', 'fk_a12731670abf34013fde8eeb')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a12731670abf34013fde8eeb')->references('id')->on('tl_messages_votes_list_votes_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

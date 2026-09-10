@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_group_participants_group_participant_aa4634f2fc16', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_group_participants_group_participants', 'id', 'fk_66b205b5a60660c8aca8bbe9')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_66b205b5a60660c8aca8bbe9')->references('id')->on('tl_phone_group_participants_group_participants')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -34,7 +35,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_group_participants_group_participants__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_group_participants_group_participants', 'id', 'fk_cec342c6b01697b226aed730')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_cec342c6b01697b226aed730')->references('id')->on('tl_phone_group_participants_group_participants')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -43,7 +45,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_group_participants_group_participants__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_group_participants_group_participants', 'id', 'fk_fffa466fd2938f9eb0c81514')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fffa466fd2938f9eb0c81514')->references('id')->on('tl_phone_group_participants_group_participants')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

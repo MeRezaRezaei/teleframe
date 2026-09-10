@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_phone_call_phone_call__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_phone_call_phone_call', 'id', 'fk_ad5f85c0ba476b4dd6b646cc')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_ad5f85c0ba476b4dd6b646cc')->references('id')->on('tl_phone_phone_call_phone_call')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

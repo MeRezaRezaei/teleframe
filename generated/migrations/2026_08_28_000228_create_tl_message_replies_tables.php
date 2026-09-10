@@ -30,7 +30,8 @@ return new class extends Migration
         });
         Schema::create('tl_message_replies_message_replies__recent_repliers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_message_replies_message_replies', 'id', 'fk_b04fd4d527ec150a5e519175')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b04fd4d527ec150a5e519175')->references('id')->on('tl_message_replies_message_replies')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

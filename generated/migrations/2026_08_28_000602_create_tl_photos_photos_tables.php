@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_photos_photos_photos__photos', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_photos_photos_photos', 'id', 'fk_1a29b3b0fc61f0d87a835280')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1a29b3b0fc61f0d87a835280')->references('id')->on('tl_photos_photos_photos')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_photos_photos_photos__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_photos_photos_photos', 'id', 'fk_b61a1138b565aeb79f2a0e92')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b61a1138b565aeb79f2a0e92')->references('id')->on('tl_photos_photos_photos')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -50,7 +52,8 @@ return new class extends Migration
         });
         Schema::create('tl_photos_photos_photos_slice__photos', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_photos_photos_photos_slice', 'id', 'fk_0ab37acb2f683208e1b3916a')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0ab37acb2f683208e1b3916a')->references('id')->on('tl_photos_photos_photos_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -59,7 +62,8 @@ return new class extends Migration
         });
         Schema::create('tl_photos_photos_photos_slice__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_photos_photos_photos_slice', 'id', 'fk_3a3af5ee5b7ab583f8cce5b3')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_3a3af5ee5b7ab583f8cce5b3')->references('id')->on('tl_photos_photos_photos_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -50,7 +50,8 @@ return new class extends Migration
         });
         Schema::create('tl_message_peer_vote_message_peer_vote_multiple__options', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_message_peer_vote_message_peer_vote_multiple', 'id', 'fk_7bf771afe686419a2f2524c5')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7bf771afe686419a2f2524c5')->references('id')->on('tl_message_peer_vote_message_peer_vote_multiple')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->binary('value')->nullable();
             $table->bigInteger('account_id');

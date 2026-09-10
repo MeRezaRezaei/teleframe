@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_star_gift_upgrade_attributes_star_badc40fe3ef8', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_star_gift_upgrade_attributes_star_b00cb34f5cf4', 'id', 'fk_c4cca7479b40a5387c7ca02b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c4cca7479b40a5387c7ca02b')->references('id')->on('tl_payments_star_gift_upgrade_attributes_star_b00cb34f5cf4')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

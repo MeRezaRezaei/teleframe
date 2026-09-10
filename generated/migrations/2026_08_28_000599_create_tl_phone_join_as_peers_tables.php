@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_join_as_peers_join_as_peers__peers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_join_as_peers_join_as_peers', 'id', 'fk_3b6f2a2369cf257124c494fd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_3b6f2a2369cf257124c494fd')->references('id')->on('tl_phone_join_as_peers_join_as_peers')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_join_as_peers_join_as_peers__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_join_as_peers_join_as_peers', 'id', 'fk_c4242c3f8392ad646356431d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c4242c3f8392ad646356431d')->references('id')->on('tl_phone_join_as_peers_join_as_peers')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_join_as_peers_join_as_peers__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_join_as_peers_join_as_peers', 'id', 'fk_7a06f2eafc5381cad67eead5')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7a06f2eafc5381cad67eead5')->references('id')->on('tl_phone_join_as_peers_join_as_peers')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

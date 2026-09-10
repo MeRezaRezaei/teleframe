@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_saved_ringtones_saved_ringtones__ringtones', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_saved_ringtones_saved_ringtones', 'id', 'fk_cf0945d27d6a259bd4ef7104')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_cf0945d27d6a259bd4ef7104')->references('id')->on('tl_account_saved_ringtones_saved_ringtones')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

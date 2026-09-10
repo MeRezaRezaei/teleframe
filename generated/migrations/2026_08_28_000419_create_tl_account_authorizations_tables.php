@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_authorizations_authorizations__authorizations', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_authorizations_authorizations', 'id', 'fk_3b2c0588992f5814f49ff099')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_3b2c0588992f5814f49ff099')->references('id')->on('tl_account_authorizations_authorizations')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

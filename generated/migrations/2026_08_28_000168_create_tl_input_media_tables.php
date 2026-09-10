@@ -152,7 +152,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_media_input_media_paid_media__extended_media', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_media_input_media_paid_media', 'id', 'fk_9bb03206db7e799750703db4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9bb03206db7e799750703db4')->references('id')->on('tl_input_media_input_media_paid_media')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -208,7 +209,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_media_input_media_poll__correct_answers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_media_input_media_poll', 'id', 'fk_f0ec6603468caa10cd34b1d6')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f0ec6603468caa10cd34b1d6')->references('id')->on('tl_input_media_input_media_poll')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->integer('value')->nullable();
             $table->bigInteger('account_id');
@@ -217,7 +219,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_media_input_media_poll__solution_entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_media_input_media_poll', 'id', 'fk_a571b054474079759bbd126c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a571b054474079759bbd126c')->references('id')->on('tl_input_media_input_media_poll')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -247,7 +250,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_696b004091036caa27eb72be');
             $table->index('account_id', 'ix_50f5bcc6fbd38e2ebd0bd0db');
-            $table->unique(['peer', 'account_id'], 'ux_5ef555e68bd42bd0da56');
         });
         Schema::create('tl_input_media_input_media_todo', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -284,7 +286,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_media_input_media_uploaded_document__attributes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_media_input_media_uploaded_document', 'id', 'fk_c40d48c040e2cb0af702a862')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c40d48c040e2cb0af702a862')->references('id')->on('tl_input_media_input_media_uploaded_document')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -293,7 +296,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_media_input_media_uploaded_document__stickers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_media_input_media_uploaded_document', 'id', 'fk_c94039d4cf2605229fee96e1')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c94039d4cf2605229fee96e1')->references('id')->on('tl_input_media_input_media_uploaded_document')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -319,7 +323,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_media_input_media_uploaded_photo__stickers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_media_input_media_uploaded_photo', 'id', 'fk_bee3e6100ea0ecd17b89cc29')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bee3e6100ea0ecd17b89cc29')->references('id')->on('tl_input_media_input_media_uploaded_photo')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

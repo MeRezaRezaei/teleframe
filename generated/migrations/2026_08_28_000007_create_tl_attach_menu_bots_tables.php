@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_attach_menu_bots_attach_menu_bots__bots', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_attach_menu_bots_attach_menu_bots', 'id', 'fk_16ea98b7e4a2ac37f339e800')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_16ea98b7e4a2ac37f339e800')->references('id')->on('tl_attach_menu_bots_attach_menu_bots')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -32,7 +33,8 @@ return new class extends Migration
         });
         Schema::create('tl_attach_menu_bots_attach_menu_bots__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_attach_menu_bots_attach_menu_bots', 'id', 'fk_458369202726d84b77f705c8')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_458369202726d84b77f705c8')->references('id')->on('tl_attach_menu_bots_attach_menu_bots')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

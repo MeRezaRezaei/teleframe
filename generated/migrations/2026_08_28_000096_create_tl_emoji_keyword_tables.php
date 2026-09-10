@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_emoji_keyword_emoji_keyword__emoticons', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_emoji_keyword_emoji_keyword', 'id', 'fk_c3a2fb6fed8f2ea74afefcdc')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c3a2fb6fed8f2ea74afefcdc')->references('id')->on('tl_emoji_keyword_emoji_keyword')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');
@@ -42,7 +43,8 @@ return new class extends Migration
         });
         Schema::create('tl_emoji_keyword_emoji_keyword_deleted__emoticons', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_emoji_keyword_emoji_keyword_deleted', 'id', 'fk_bec66044bcc0b9d4c0bf8190')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bec66044bcc0b9d4c0bf8190')->references('id')->on('tl_emoji_keyword_emoji_keyword_deleted')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');

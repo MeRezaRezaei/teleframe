@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_lang_pack_difference_lang_pack_difference__strings', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_lang_pack_difference_lang_pack_difference', 'id', 'fk_356e8a84b1ad2f6f016be472')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_356e8a84b1ad2f6f016be472')->references('id')->on('tl_lang_pack_difference_lang_pack_difference')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

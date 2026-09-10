@@ -27,7 +27,8 @@ return new class extends Migration
         });
         Schema::create('tl_chatlists_chatlist_invite_chatlist_invite__peers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chatlists_chatlist_invite_chatlist_invite', 'id', 'fk_d24407edbf3291bbc22aaa99')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d24407edbf3291bbc22aaa99')->references('id')->on('tl_chatlists_chatlist_invite_chatlist_invite')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -36,7 +37,8 @@ return new class extends Migration
         });
         Schema::create('tl_chatlists_chatlist_invite_chatlist_invite__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chatlists_chatlist_invite_chatlist_invite', 'id', 'fk_878f0f8ca40cdf7576e89e47')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_878f0f8ca40cdf7576e89e47')->references('id')->on('tl_chatlists_chatlist_invite_chatlist_invite')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -45,7 +47,8 @@ return new class extends Migration
         });
         Schema::create('tl_chatlists_chatlist_invite_chatlist_invite__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chatlists_chatlist_invite_chatlist_invite', 'id', 'fk_485a83c385227c7e97741848')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_485a83c385227c7e97741848')->references('id')->on('tl_chatlists_chatlist_invite_chatlist_invite')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -64,7 +67,8 @@ return new class extends Migration
         });
         Schema::create('tl_chatlists_chatlist_invite_chatlist_invite__e88ac70d6871', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chatlists_chatlist_invite_chatlist_invite_already', 'id', 'fk_8642ddc60715a5057b46b97b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_8642ddc60715a5057b46b97b')->references('id')->on('tl_chatlists_chatlist_invite_chatlist_invite_already')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -73,7 +77,8 @@ return new class extends Migration
         });
         Schema::create('tl_chatlists_chatlist_invite_chatlist_invite__b7f3a8202539', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chatlists_chatlist_invite_chatlist_invite_already', 'id', 'fk_a037c81b30390d22f2f3fb34')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a037c81b30390d22f2f3fb34')->references('id')->on('tl_chatlists_chatlist_invite_chatlist_invite_already')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -82,7 +87,8 @@ return new class extends Migration
         });
         Schema::create('tl_chatlists_chatlist_invite_chatlist_invite__1d33efbd497a', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chatlists_chatlist_invite_chatlist_invite_already', 'id', 'fk_17171af632db98a98a876602')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_17171af632db98a98a876602')->references('id')->on('tl_chatlists_chatlist_invite_chatlist_invite_already')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -91,7 +97,8 @@ return new class extends Migration
         });
         Schema::create('tl_chatlists_chatlist_invite_chatlist_invite__f31957d13fad', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chatlists_chatlist_invite_chatlist_invite_already', 'id', 'fk_a1e691b5abb20e5f12538353')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a1e691b5abb20e5f12538353')->references('id')->on('tl_chatlists_chatlist_invite_chatlist_invite_already')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_found_stickers_found_stickers__stickers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_found_stickers_found_stickers', 'id', 'fk_4f5f957dae58d5b5b54848e9')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4f5f957dae58d5b5b54848e9')->references('id')->on('tl_messages_found_stickers_found_stickers')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_sticker_set_sticker_set__packs', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_sticker_set_sticker_set', 'id', 'fk_fb6779ae41227ace0613c7f0')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fb6779ae41227ace0613c7f0')->references('id')->on('tl_messages_sticker_set_sticker_set')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -33,7 +34,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_sticker_set_sticker_set__keywords', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_sticker_set_sticker_set', 'id', 'fk_7a47acf8bf0ea7e89943d4d7')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7a47acf8bf0ea7e89943d4d7')->references('id')->on('tl_messages_sticker_set_sticker_set')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -42,7 +44,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_sticker_set_sticker_set__documents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_sticker_set_sticker_set', 'id', 'fk_d8c78a19db2569ec88908252')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d8c78a19db2569ec88908252')->references('id')->on('tl_messages_sticker_set_sticker_set')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

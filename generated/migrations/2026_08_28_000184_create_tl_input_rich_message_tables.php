@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_rich_message_input_rich_message__blocks', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_rich_message_input_rich_message', 'id', 'fk_00ba3d35c3d11166a2670144')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_00ba3d35c3d11166a2670144')->references('id')->on('tl_input_rich_message_input_rich_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -34,7 +35,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_rich_message_input_rich_message__photos', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_rich_message_input_rich_message', 'id', 'fk_84be0165b6297de62534ec86')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_84be0165b6297de62534ec86')->references('id')->on('tl_input_rich_message_input_rich_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -43,7 +45,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_rich_message_input_rich_message__documents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_rich_message_input_rich_message', 'id', 'fk_7a591e767eb0939032b6e75f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7a591e767eb0939032b6e75f')->references('id')->on('tl_input_rich_message_input_rich_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -52,7 +55,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_rich_message_input_rich_message__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_rich_message_input_rich_message', 'id', 'fk_675b56afb7f64df412e20848')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_675b56afb7f64df412e20848')->references('id')->on('tl_input_rich_message_input_rich_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -74,7 +78,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_rich_message_input_rich_message_h_t_m_l__files', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_rich_message_input_rich_message_h_t_m_l', 'id', 'fk_494b1ed9b416c00e2c51ae39')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_494b1ed9b416c00e2c51ae39')->references('id')->on('tl_input_rich_message_input_rich_message_h_t_m_l')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -96,7 +101,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_rich_message_input_rich_message_markdown__files', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_rich_message_input_rich_message_markdown', 'id', 'fk_930524e0d49865dce5849c01')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_930524e0d49865dce5849c01')->references('id')->on('tl_input_rich_message_input_rich_message_markdown')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -58,7 +58,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_store_payment_purpose_input_store_pa_371b3f5239e2', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_store_payment_purpose_input_store_pa_dd29b020fdd6', 'id', 'fk_b329c68719cfddb6b7bff69d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b329c68719cfddb6b7bff69d')->references('id')->on('tl_input_store_payment_purpose_input_store_pa_dd29b020fdd6')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -87,7 +88,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_store_payment_purpose_input_store_pa_50ddd03f255d', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_store_payment_purpose_input_store_pa_a2df1d4d4d93', 'id', 'fk_906cc031cd931bb7603aecb2')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_906cc031cd931bb7603aecb2')->references('id')->on('tl_input_store_payment_purpose_input_store_pa_a2df1d4d4d93')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -96,7 +98,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_store_payment_purpose_input_store_pa_91597f6f2753', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_store_payment_purpose_input_store_pa_a2df1d4d4d93', 'id', 'fk_59a86d8ef29363632852f1b0')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_59a86d8ef29363632852f1b0')->references('id')->on('tl_input_store_payment_purpose_input_store_pa_a2df1d4d4d93')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');
@@ -153,7 +156,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_store_payment_purpose_input_store_pa_d3d3e4e26498', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_store_payment_purpose_input_store_pa_ab10defc70e9', 'id', 'fk_0fdd84d70dc911088a4456ef')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0fdd84d70dc911088a4456ef')->references('id')->on('tl_input_store_payment_purpose_input_store_pa_ab10defc70e9')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -162,7 +166,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_store_payment_purpose_input_store_pa_94f902dbf3fa', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_store_payment_purpose_input_store_pa_ab10defc70e9', 'id', 'fk_a522f4dbc1fa8db3f91cf997')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a522f4dbc1fa8db3f91cf997')->references('id')->on('tl_input_store_payment_purpose_input_store_pa_ab10defc70e9')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');

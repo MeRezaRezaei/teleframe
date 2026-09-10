@@ -30,7 +30,8 @@ return new class extends Migration
         });
         Schema::create('tl_poll_results_poll_results__results', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_poll_results_poll_results', 'id', 'fk_e92900af84a2941a8dd8bfc5')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_e92900af84a2941a8dd8bfc5')->references('id')->on('tl_poll_results_poll_results')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -39,7 +40,8 @@ return new class extends Migration
         });
         Schema::create('tl_poll_results_poll_results__recent_voters', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_poll_results_poll_results', 'id', 'fk_60fb612fe63240194af6f358')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_60fb612fe63240194af6f358')->references('id')->on('tl_poll_results_poll_results')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -48,7 +50,8 @@ return new class extends Migration
         });
         Schema::create('tl_poll_results_poll_results__solution_entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_poll_results_poll_results', 'id', 'fk_a06df90074cb5a7bf10f847a')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a06df90074cb5a7bf10f847a')->references('id')->on('tl_poll_results_poll_results')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

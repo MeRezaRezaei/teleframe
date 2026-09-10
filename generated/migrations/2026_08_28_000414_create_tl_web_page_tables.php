@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_web_page_web_page', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -45,7 +45,8 @@ return new class extends Migration
         });
         Schema::create('tl_web_page_web_page__attributes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_web_page_web_page', 'id', 'fk_dcf2b441846f196d0b0d621b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_dcf2b441846f196d0b0d621b')->references('id')->on('tl_web_page_web_page')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -53,7 +54,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_1fdd0685693ad36cee13bb76');
         });
         Schema::create('tl_web_page_web_page_empty', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();
@@ -76,7 +77,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_dd24607a400dba518a48798a');
         });
         Schema::create('tl_web_page_web_page_pending', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('flags')->nullable();

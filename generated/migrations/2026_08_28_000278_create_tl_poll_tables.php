@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_poll_poll', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -39,7 +39,8 @@ return new class extends Migration
         });
         Schema::create('tl_poll_poll__answers', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_poll_poll', 'id', 'fk_4883bac870c92b34d3e89a0d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4883bac870c92b34d3e89a0d')->references('id')->on('tl_poll_poll')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -48,7 +49,8 @@ return new class extends Migration
         });
         Schema::create('tl_poll_poll__countries_iso2', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_poll_poll', 'id', 'fk_9242247b0e370bccaf35f287')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9242247b0e370bccaf35f287')->references('id')->on('tl_poll_poll')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');

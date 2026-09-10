@@ -22,7 +22,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_9cbf19ab0b118ed1b39f44db');
             $table->index('account_id', 'ix_69e9abc28bfaf62aa5b3912c');
-            $table->unique(['account_id'], 'ux_fa70500720a2695417aa');
         });
         Schema::create('tl_input_rich_file_input_rich_file_photo', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -35,7 +34,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_eca6b584c6a16129119b5a66');
             $table->index('account_id', 'ix_b7bdd7dec24d6f9543f0a8f8');
-            $table->unique(['account_id'], 'ux_00b37f6bbf758ad834fe');
         });
     }
 

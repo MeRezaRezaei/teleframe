@@ -43,7 +43,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_payment_form_payment_form__additional_methods', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_payment_form_payment_form', 'id', 'fk_c9ea9b2d91e4a26c8b8a0c5b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c9ea9b2d91e4a26c8b8a0c5b')->references('id')->on('tl_payments_payment_form_payment_form')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -52,7 +53,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_payment_form_payment_form__saved_credentials', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_payment_form_payment_form', 'id', 'fk_6c17033c68add14fea1a64b3')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_6c17033c68add14fea1a64b3')->references('id')->on('tl_payments_payment_form_payment_form')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -61,7 +63,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_payment_form_payment_form__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_payment_form_payment_form', 'id', 'fk_5f3661d55d53e7215121141f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5f3661d55d53e7215121141f')->references('id')->on('tl_payments_payment_form_payment_form')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -103,7 +106,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_payment_form_payment_form_stars__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_payment_form_payment_form_stars', 'id', 'fk_1737ce34c194d155319b69cc')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1737ce34c194d155319b69cc')->references('id')->on('tl_payments_payment_form_payment_form_stars')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

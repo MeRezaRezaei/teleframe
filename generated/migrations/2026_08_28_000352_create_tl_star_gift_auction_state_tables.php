@@ -31,7 +31,8 @@ return new class extends Migration
         });
         Schema::create('tl_star_gift_auction_state_star_gift_auction__bb6c7ebe1d9b', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_star_gift_auction_state_star_gift_auction_state', 'id', 'fk_5287408118fba9d20435143d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5287408118fba9d20435143d')->references('id')->on('tl_star_gift_auction_state_star_gift_auction_state')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +41,8 @@ return new class extends Migration
         });
         Schema::create('tl_star_gift_auction_state_star_gift_auction__3f263c3c4430', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_star_gift_auction_state_star_gift_auction_state', 'id', 'fk_810dd8a94fa8e4c20b5de638')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_810dd8a94fa8e4c20b5de638')->references('id')->on('tl_star_gift_auction_state_star_gift_auction_state')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -49,7 +51,8 @@ return new class extends Migration
         });
         Schema::create('tl_star_gift_auction_state_star_gift_auction_state__rounds', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_star_gift_auction_state_star_gift_auction_state', 'id', 'fk_e81916d876bcf17f9a039cd6')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_e81916d876bcf17f9a039cd6')->references('id')->on('tl_star_gift_auction_state_star_gift_auction_state')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

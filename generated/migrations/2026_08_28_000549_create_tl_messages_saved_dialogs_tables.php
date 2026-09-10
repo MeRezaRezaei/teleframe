@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_saved_dialogs_saved_dialogs__dialogs', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_saved_dialogs_saved_dialogs', 'id', 'fk_ec2d2d4d77a2afe6f62336c9')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_ec2d2d4d77a2afe6f62336c9')->references('id')->on('tl_messages_saved_dialogs_saved_dialogs')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_saved_dialogs_saved_dialogs__messages', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_saved_dialogs_saved_dialogs', 'id', 'fk_4954b6f29b01cc1f864d2168')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4954b6f29b01cc1f864d2168')->references('id')->on('tl_messages_saved_dialogs_saved_dialogs')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_saved_dialogs_saved_dialogs__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_saved_dialogs_saved_dialogs', 'id', 'fk_a7dd771b6c3f80dd26c6eda4')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a7dd771b6c3f80dd26c6eda4')->references('id')->on('tl_messages_saved_dialogs_saved_dialogs')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -49,7 +52,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_saved_dialogs_saved_dialogs__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_saved_dialogs_saved_dialogs', 'id', 'fk_dcfc3f8d55d4e420fb3e0894')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_dcfc3f8d55d4e420fb3e0894')->references('id')->on('tl_messages_saved_dialogs_saved_dialogs')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -78,7 +82,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_saved_dialogs_saved_dialogs_slice__dialogs', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_saved_dialogs_saved_dialogs_slice', 'id', 'fk_34d39d57857e97eaa612976d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_34d39d57857e97eaa612976d')->references('id')->on('tl_messages_saved_dialogs_saved_dialogs_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -87,7 +92,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_saved_dialogs_saved_dialogs_slice__messages', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_saved_dialogs_saved_dialogs_slice', 'id', 'fk_9dc25a7e7858535ec4803c78')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9dc25a7e7858535ec4803c78')->references('id')->on('tl_messages_saved_dialogs_saved_dialogs_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -96,7 +102,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_saved_dialogs_saved_dialogs_slice__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_saved_dialogs_saved_dialogs_slice', 'id', 'fk_724a35b85eb495d460cfe089')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_724a35b85eb495d460cfe089')->references('id')->on('tl_messages_saved_dialogs_saved_dialogs_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -105,7 +112,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_saved_dialogs_saved_dialogs_slice__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_saved_dialogs_saved_dialogs_slice', 'id', 'fk_25a6be7decfaa0b14671ce5c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_25a6be7decfaa0b14671ce5c')->references('id')->on('tl_messages_saved_dialogs_saved_dialogs_slice')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

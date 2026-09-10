@@ -37,7 +37,8 @@ return new class extends Migration
         });
         Schema::create('tl_secure_required_type_secure_required_type_one_of__types', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_secure_required_type_secure_required_type_one_of', 'id', 'fk_5fd9de3884c2c89f53679d65')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5fd9de3884c2c89f53679d65')->references('id')->on('tl_secure_required_type_secure_required_type_one_of')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

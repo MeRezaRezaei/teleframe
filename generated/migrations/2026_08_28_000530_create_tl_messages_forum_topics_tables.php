@@ -26,7 +26,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_forum_topics_forum_topics__topics', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_forum_topics_forum_topics', 'id', 'fk_da0c717711462051bd6e3d4c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_da0c717711462051bd6e3d4c')->references('id')->on('tl_messages_forum_topics_forum_topics')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -35,7 +36,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_forum_topics_forum_topics__messages', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_forum_topics_forum_topics', 'id', 'fk_a2103b7473eeba0f820a9458')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a2103b7473eeba0f820a9458')->references('id')->on('tl_messages_forum_topics_forum_topics')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -44,7 +46,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_forum_topics_forum_topics__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_forum_topics_forum_topics', 'id', 'fk_669b507222efd5fd76930e92')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_669b507222efd5fd76930e92')->references('id')->on('tl_messages_forum_topics_forum_topics')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -53,7 +56,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_forum_topics_forum_topics__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_forum_topics_forum_topics', 'id', 'fk_0f9bfeab0f2492dfc26adfff')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0f9bfeab0f2492dfc26adfff')->references('id')->on('tl_messages_forum_topics_forum_topics')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

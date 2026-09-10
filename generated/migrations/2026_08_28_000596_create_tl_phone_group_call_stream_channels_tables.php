@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_group_call_stream_channels_group_cal_34013b05c8fd', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_group_call_stream_channels_group_cal_7df01b0705a4', 'id', 'fk_b4bd054b62474ca871bc4d26')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b4bd054b62474ca871bc4d26')->references('id')->on('tl_phone_group_call_stream_channels_group_cal_7df01b0705a4')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

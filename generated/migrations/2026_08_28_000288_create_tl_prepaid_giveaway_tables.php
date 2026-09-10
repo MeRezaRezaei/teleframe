@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_prepaid_giveaway_prepaid_giveaway', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_29c8ccccc1e4f7a27838a2ae');
         });
         Schema::create('tl_prepaid_giveaway_prepaid_stars_giveaway', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();

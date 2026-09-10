@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_stats_public_forwards_public_forwards__forwards', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stats_public_forwards_public_forwards', 'id', 'fk_ec86ca2a577a67827a32f967')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_ec86ca2a577a67827a32f967')->references('id')->on('tl_stats_public_forwards_public_forwards')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -34,7 +35,8 @@ return new class extends Migration
         });
         Schema::create('tl_stats_public_forwards_public_forwards__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stats_public_forwards_public_forwards', 'id', 'fk_736ed7c27acae3237a990cba')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_736ed7c27acae3237a990cba')->references('id')->on('tl_stats_public_forwards_public_forwards')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -43,7 +45,8 @@ return new class extends Migration
         });
         Schema::create('tl_stats_public_forwards_public_forwards__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_stats_public_forwards_public_forwards', 'id', 'fk_13ecff5f2e41776f8b184e2b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_13ecff5f2e41776f8b184e2b')->references('id')->on('tl_stats_public_forwards_public_forwards')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -37,7 +37,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_chat_invite_join_result_chat_invi_8cf578081a5f', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_chat_invite_join_result_chat_invi_dacd8245b982', 'id', 'fk_9f0d101ec896373685bfac39')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9f0d101ec896373685bfac39')->references('id')->on('tl_messages_chat_invite_join_result_chat_invi_dacd8245b982')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

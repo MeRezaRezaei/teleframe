@@ -88,7 +88,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_block_page_block_blockquote_blocks__blocks', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_block_page_block_blockquote_blocks', 'id', 'fk_63db4303d021c32fa56e93ef')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_63db4303d021c32fa56e93ef')->references('id')->on('tl_page_block_page_block_blockquote_blocks')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -119,7 +120,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_block_page_block_collage__items', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_block_page_block_collage', 'id', 'fk_43f8c23d381fac67724d5c60')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_43f8c23d381fac67724d5c60')->references('id')->on('tl_page_block_page_block_collage')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -152,7 +154,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_block_page_block_details__blocks', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_block_page_block_details', 'id', 'fk_b42759df86a2c3a1d71cfb37')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b42759df86a2c3a1d71cfb37')->references('id')->on('tl_page_block_page_block_details')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -208,7 +211,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_block_page_block_embed_post__blocks', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_block_page_block_embed_post', 'id', 'fk_4c9113ab215c42acad28c275')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4c9113ab215c42acad28c275')->references('id')->on('tl_page_block_page_block_embed_post')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -325,7 +329,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_block_page_block_list__items', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_block_page_block_list', 'id', 'fk_416b66c97fe5ccb5b43762b7')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_416b66c97fe5ccb5b43762b7')->references('id')->on('tl_page_block_page_block_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -373,7 +378,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_block_page_block_ordered_list__items', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_block_page_block_ordered_list', 'id', 'fk_3d26448ed5f16c7b8fdb31f8')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_3d26448ed5f16c7b8fdb31f8')->references('id')->on('tl_page_block_page_block_ordered_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -447,7 +453,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_block_page_block_related_articles__articles', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_block_page_block_related_articles', 'id', 'fk_f774068623669c014a3beef6')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f774068623669c014a3beef6')->references('id')->on('tl_page_block_page_block_related_articles')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -467,7 +474,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_block_page_block_slideshow__items', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_block_page_block_slideshow', 'id', 'fk_69260a249dfd567da51c934b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_69260a249dfd567da51c934b')->references('id')->on('tl_page_block_page_block_slideshow')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -512,7 +520,8 @@ return new class extends Migration
         });
         Schema::create('tl_page_block_page_block_table__rows', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_page_block_page_block_table', 'id', 'fk_9b236b6cb3b74c8112e3ce3b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9b236b6cb3b74c8112e3ce3b')->references('id')->on('tl_page_block_page_block_table')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

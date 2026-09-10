@@ -28,7 +28,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_search_results_calendar_search_re_7e53ac3da76d', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_search_results_calendar_search_re_b1534ec0e56f', 'id', 'fk_364cfdd1b62291392d787c47')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_364cfdd1b62291392d787c47')->references('id')->on('tl_messages_search_results_calendar_search_re_b1534ec0e56f')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -37,7 +38,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_search_results_calendar_search_re_d6395a6e2c2c', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_search_results_calendar_search_re_b1534ec0e56f', 'id', 'fk_66c8ae006f4305b57a723cda')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_66c8ae006f4305b57a723cda')->references('id')->on('tl_messages_search_results_calendar_search_re_b1534ec0e56f')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -46,7 +48,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_search_results_calendar_search_re_34cf508acbb5', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_search_results_calendar_search_re_b1534ec0e56f', 'id', 'fk_fcfa5652d1b1be3348da35eb')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fcfa5652d1b1be3348da35eb')->references('id')->on('tl_messages_search_results_calendar_search_re_b1534ec0e56f')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -55,7 +58,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_search_results_calendar_search_re_571d121050fb', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_search_results_calendar_search_re_b1534ec0e56f', 'id', 'fk_5a05b37cae2196593847611e')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5a05b37cae2196593847611e')->references('id')->on('tl_messages_search_results_calendar_search_re_b1534ec0e56f')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -40,7 +40,8 @@ return new class extends Migration
         });
         Schema::create('tl_privacy_rule_privacy_value_allow_chat_part_30f33e023df6', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_privacy_rule_privacy_value_allow_chat_participants', 'id', 'fk_b5df6cd88a17a3a6519b0b1d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b5df6cd88a17a3a6519b0b1d')->references('id')->on('tl_privacy_rule_privacy_value_allow_chat_participants')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -85,7 +86,8 @@ return new class extends Migration
         });
         Schema::create('tl_privacy_rule_privacy_value_allow_users__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_privacy_rule_privacy_value_allow_users', 'id', 'fk_62467aa215ed17bb76c89d55')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_62467aa215ed17bb76c89d55')->references('id')->on('tl_privacy_rule_privacy_value_allow_users')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -121,7 +123,8 @@ return new class extends Migration
         });
         Schema::create('tl_privacy_rule_privacy_value_disallow_chat_p_e44ae86ddb9b', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_privacy_rule_privacy_value_disallow_chat_participants', 'id', 'fk_4c6de447aff1f25b37fe9404')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_4c6de447aff1f25b37fe9404')->references('id')->on('tl_privacy_rule_privacy_value_disallow_chat_participants')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -148,7 +151,8 @@ return new class extends Migration
         });
         Schema::create('tl_privacy_rule_privacy_value_disallow_users__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_privacy_rule_privacy_value_disallow_users', 'id', 'fk_7be75b6595010236680f4fe7')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_7be75b6595010236680f4fe7')->references('id')->on('tl_privacy_rule_privacy_value_disallow_users')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');

@@ -26,7 +26,8 @@ return new class extends Migration
         });
         Schema::create('tl_attach_menu_bot_icon_attach_menu_bot_icon__colors', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_attach_menu_bot_icon_attach_menu_bot_icon', 'id', 'fk_9c178c84ecdd94cc64601d40')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9c178c84ecdd94cc64601d40')->references('id')->on('tl_attach_menu_bot_icon_attach_menu_bot_icon')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -31,7 +31,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_affb0e79df8b65bae737b223');
             $table->index('account_id', 'ix_a01a3d7bbbd30d2a6e24c504');
-            $table->unique(['account_id'], 'ux_2a008044caa2d07ac0d3');
         });
         Schema::create('tl_input_bot_inline_result_input_bot_inline_r_ddd2d6c152ff', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -50,7 +49,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_0e3035b5fd6aa5ffd9844f93');
             $table->index('account_id', 'ix_19ed3fc70c4db417c1300f5c');
-            $table->unique(['account_id'], 'ux_a5ddfa66ed2237a835a9');
         });
         Schema::create('tl_input_bot_inline_result_input_bot_inline_result_game', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -64,7 +62,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_2e03ac79e8122ae701c50827');
             $table->index('account_id', 'ix_3724d0b654035c2df50613a4');
-            $table->unique(['account_id'], 'ux_4a97f05ab019a6c179c7');
         });
         Schema::create('tl_input_bot_inline_result_input_bot_inline_result_photo', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -80,7 +77,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_3bfc97b3a785ea17e700febe');
             $table->index('account_id', 'ix_9dfa91c7fbd83cbe0f0650c1');
-            $table->unique(['account_id'], 'ux_4b401c5bb8edd050ec2a');
         });
     }
 

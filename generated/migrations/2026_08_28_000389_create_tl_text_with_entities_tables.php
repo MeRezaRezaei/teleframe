@@ -23,7 +23,8 @@ return new class extends Migration
         });
         Schema::create('tl_text_with_entities_text_with_entities__entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_text_with_entities_text_with_entities', 'id', 'fk_be40811dbbcf3673d4b87ddd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_be40811dbbcf3673d4b87ddd')->references('id')->on('tl_text_with_entities_text_with_entities')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_group_call_group_call__participants', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_group_call_group_call', 'id', 'fk_aa18cd39ad1af15588db0e74')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_aa18cd39ad1af15588db0e74')->references('id')->on('tl_phone_group_call_group_call')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -34,7 +35,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_group_call_group_call__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_group_call_group_call', 'id', 'fk_278b6f49ebda54a4ded95b99')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_278b6f49ebda54a4ded95b99')->references('id')->on('tl_phone_group_call_group_call')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -43,7 +45,8 @@ return new class extends Migration
         });
         Schema::create('tl_phone_group_call_group_call__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_phone_group_call_group_call', 'id', 'fk_5a5d5df7c55576b5ae8f00ce')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5a5d5df7c55576b5ae8f00ce')->references('id')->on('tl_phone_group_call_group_call')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

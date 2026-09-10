@@ -27,7 +27,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_7ec2dc1c700446f281295e9a');
             $table->index('account_id', 'ix_84620fc0b5021cde5f1e2dfc');
-            $table->unique(['account_id'], 'ux_105ecc6344e8b65ce373');
         });
     }
 

@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_bots_access_settings_access_settings__add_users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_bots_access_settings_access_settings', 'id', 'fk_ead67179853c5b73ac4e3131')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_ead67179853c5b73ac4e3131')->references('id')->on('tl_bots_access_settings_access_settings')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

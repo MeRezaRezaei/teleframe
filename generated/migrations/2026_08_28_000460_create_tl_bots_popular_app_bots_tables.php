@@ -24,7 +24,8 @@ return new class extends Migration
         });
         Schema::create('tl_bots_popular_app_bots_popular_app_bots__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_bots_popular_app_bots_popular_app_bots', 'id', 'fk_df233f86c3788cf03b985d79')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_df233f86c3788cf03b985d79')->references('id')->on('tl_bots_popular_app_bots_popular_app_bots')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

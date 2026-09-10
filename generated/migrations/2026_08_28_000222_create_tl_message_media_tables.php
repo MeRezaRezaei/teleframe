@@ -63,7 +63,8 @@ return new class extends Migration
         });
         Schema::create('tl_message_media_message_media_document__alt_documents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_message_media_message_media_document', 'id', 'fk_d5124c02e16ace5f6c181a87')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_d5124c02e16ace5f6c181a87')->references('id')->on('tl_message_media_message_media_document')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -135,7 +136,8 @@ return new class extends Migration
         });
         Schema::create('tl_message_media_message_media_giveaway__channels', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_message_media_message_media_giveaway', 'id', 'fk_c18e49124b1c34eb1857f35b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_c18e49124b1c34eb1857f35b')->references('id')->on('tl_message_media_message_media_giveaway')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -144,7 +146,8 @@ return new class extends Migration
         });
         Schema::create('tl_message_media_message_media_giveaway__countries_iso2', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_message_media_message_media_giveaway', 'id', 'fk_a279df1e8015d163345923c2')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a279df1e8015d163345923c2')->references('id')->on('tl_message_media_message_media_giveaway')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');
@@ -175,7 +178,8 @@ return new class extends Migration
         });
         Schema::create('tl_message_media_message_media_giveaway_results__winners', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_message_media_message_media_giveaway_results', 'id', 'fk_1c202c6465e066ba44f4b21d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1c202c6465e066ba44f4b21d')->references('id')->on('tl_message_media_message_media_giveaway_results')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');
@@ -216,7 +220,8 @@ return new class extends Migration
         });
         Schema::create('tl_message_media_message_media_paid_media__extended_media', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_message_media_message_media_paid_media', 'id', 'fk_5cf583b491ccfd6b3e743867')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5cf583b491ccfd6b3e743867')->references('id')->on('tl_message_media_message_media_paid_media')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -271,7 +276,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_ace6e1496347cdd15e76314a');
             $table->index('account_id', 'ix_26ededdb836316359e346337');
-            $table->unique(['peer', 'account_id'], 'ux_3ba71b91a66f7d3a21eb');
         });
         Schema::create('tl_message_media_message_media_to_do', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -287,7 +291,8 @@ return new class extends Migration
         });
         Schema::create('tl_message_media_message_media_to_do__completions', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_message_media_message_media_to_do', 'id', 'fk_2c945a922c020f8808235f0a')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2c945a922c020f8808235f0a')->references('id')->on('tl_message_media_message_media_to_do')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

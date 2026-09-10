@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tl_input_file_location_input_document_file_location', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_d1aeb88bfb5f92ffe1a72eb5');
         });
         Schema::create('tl_input_file_location_input_encrypted_file_location', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -81,7 +81,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_dfb512f3f425d3aea5f94240');
         });
         Schema::create('tl_input_file_location_input_photo_file_location', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -94,7 +94,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_6de3c74253b0deeca2621545');
         });
         Schema::create('tl_input_file_location_input_photo_legacy_file_location', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();
@@ -110,7 +110,7 @@ return new class extends Migration
             $table->index('account_id', 'ix_f8790a7a486788b7d5f11318');
         });
         Schema::create('tl_input_file_location_input_secure_file_location', function (Blueprint $table) {
-            $table->bigInteger('id')->primary();
+            $table->bigIncrements('id');
             $table->bigInteger('constructor_id');
             $table->string('constructor_name', 96);
             $table->bigInteger('tl_id')->nullable();

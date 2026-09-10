@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_j_s_o_n_value_json_array__value', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_j_s_o_n_value_json_array', 'id', 'fk_b82d136f398dcad7d4b810ea')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b82d136f398dcad7d4b810ea')->references('id')->on('tl_j_s_o_n_value_json_array')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -70,7 +71,8 @@ return new class extends Migration
         });
         Schema::create('tl_j_s_o_n_value_json_object__value', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_j_s_o_n_value_json_object', 'id', 'fk_f80a9cd59d9f573eecb1f3fd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f80a9cd59d9f573eecb1f3fd')->references('id')->on('tl_j_s_o_n_value_json_object')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

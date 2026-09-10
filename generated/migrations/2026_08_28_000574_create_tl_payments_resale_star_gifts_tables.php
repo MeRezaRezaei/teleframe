@@ -26,7 +26,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_resale_star_gifts_resale_star_gifts__gifts', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_resale_star_gifts_resale_star_gifts', 'id', 'fk_05a48d52a3fe7c611597742c')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_05a48d52a3fe7c611597742c')->references('id')->on('tl_payments_resale_star_gifts_resale_star_gifts')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -35,7 +36,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_resale_star_gifts_resale_star_gif_3aab68d26831', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_resale_star_gifts_resale_star_gifts', 'id', 'fk_fa9b3755701b685592f32324')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fa9b3755701b685592f32324')->references('id')->on('tl_payments_resale_star_gifts_resale_star_gifts')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -44,7 +46,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_resale_star_gifts_resale_star_gifts__chats', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_resale_star_gifts_resale_star_gifts', 'id', 'fk_67f260a04d0aac1f59466819')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_67f260a04d0aac1f59466819')->references('id')->on('tl_payments_resale_star_gifts_resale_star_gifts')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -53,7 +56,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_resale_star_gifts_resale_star_gifts__counters', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_resale_star_gifts_resale_star_gifts', 'id', 'fk_a6f6e09ada9bbb05f68ff6bd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_a6f6e09ada9bbb05f68ff6bd')->references('id')->on('tl_payments_resale_star_gifts_resale_star_gifts')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -62,7 +66,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_resale_star_gifts_resale_star_gifts__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_resale_star_gifts_resale_star_gifts', 'id', 'fk_0175b5330f1b45a22aff6392')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_0175b5330f1b45a22aff6392')->references('id')->on('tl_payments_resale_star_gifts_resale_star_gifts')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

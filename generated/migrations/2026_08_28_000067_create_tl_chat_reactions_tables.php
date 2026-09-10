@@ -42,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_chat_reactions_chat_reactions_some__reactions', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_chat_reactions_chat_reactions_some', 'id', 'fk_2a3ae60b4d29bdb62a5c291b')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_2a3ae60b4d29bdb62a5c291b')->references('id')->on('tl_chat_reactions_chat_reactions_some')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

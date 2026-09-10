@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_star_gift_auction_acquired_gifts__7d5c2644ce05', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_star_gift_auction_acquired_gifts__3ef8dccf2514', 'id', 'fk_b934bff7b22343edacbaef3f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_b934bff7b22343edacbaef3f')->references('id')->on('tl_payments_star_gift_auction_acquired_gifts__3ef8dccf2514')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_star_gift_auction_acquired_gifts__239c224337a5', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_star_gift_auction_acquired_gifts__3ef8dccf2514', 'id', 'fk_ed86acbaaec4a33ca53d52af')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_ed86acbaaec4a33ca53d52af')->references('id')->on('tl_payments_star_gift_auction_acquired_gifts__3ef8dccf2514')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -40,7 +42,8 @@ return new class extends Migration
         });
         Schema::create('tl_payments_star_gift_auction_acquired_gifts__cd07c7958d0f', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_payments_star_gift_auction_acquired_gifts__3ef8dccf2514', 'id', 'fk_beae103a23046d73da4aa1f8')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_beae103a23046d73da4aa1f8')->references('id')->on('tl_payments_star_gift_auction_acquired_gifts__3ef8dccf2514')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

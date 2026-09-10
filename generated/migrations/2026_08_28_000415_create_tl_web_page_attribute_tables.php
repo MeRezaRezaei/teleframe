@@ -45,7 +45,8 @@ return new class extends Migration
         });
         Schema::create('tl_web_page_attribute_web_page_attribute_star_17202adcc3bb', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_web_page_attribute_web_page_attribute_star_0f76dd30baaf', 'id', 'fk_80e4a29e2a00dd0e728f9e6d')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_80e4a29e2a00dd0e728f9e6d')->references('id')->on('tl_web_page_attribute_web_page_attribute_star_0f76dd30baaf')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -66,7 +67,8 @@ return new class extends Migration
         });
         Schema::create('tl_web_page_attribute_web_page_attribute_stic_5d4fa9f0c49f', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_web_page_attribute_web_page_attribute_sticker_set', 'id', 'fk_e32ad3bb7fb5d19029354dee')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_e32ad3bb7fb5d19029354dee')->references('id')->on('tl_web_page_attribute_web_page_attribute_sticker_set')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -87,7 +89,6 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_e8178bc6b25c904c64a41201');
             $table->index('account_id', 'ix_a8f8b416919a15e1b22e93ae');
-            $table->unique(['peer', 'account_id'], 'ux_12061f5b04cf78fe45dd');
         });
         Schema::create('tl_web_page_attribute_web_page_attribute_theme', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -103,7 +104,8 @@ return new class extends Migration
         });
         Schema::create('tl_web_page_attribute_web_page_attribute_theme__documents', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_web_page_attribute_web_page_attribute_theme', 'id', 'fk_8b5a537eedfb29c153e6bee7')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_8b5a537eedfb29c153e6bee7')->references('id')->on('tl_web_page_attribute_web_page_attribute_theme')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

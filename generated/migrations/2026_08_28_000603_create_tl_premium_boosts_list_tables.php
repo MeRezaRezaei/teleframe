@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_premium_boosts_list_boosts_list__boosts', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_premium_boosts_list_boosts_list', 'id', 'fk_06ad729a8baae3b2e92955ee')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_06ad729a8baae3b2e92955ee')->references('id')->on('tl_premium_boosts_list_boosts_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -34,7 +35,8 @@ return new class extends Migration
         });
         Schema::create('tl_premium_boosts_list_boosts_list__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_premium_boosts_list_boosts_list', 'id', 'fk_fbae52ccb794d474c55c3283')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_fbae52ccb794d474c55c3283')->references('id')->on('tl_premium_boosts_list_boosts_list')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

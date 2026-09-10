@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_web_authorizations_web_authorizati_1c5ab83167e4', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_web_authorizations_web_authorizations', 'id', 'fk_02f2f2d9aacbe2275ed64d99')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_02f2f2d9aacbe2275ed64d99')->references('id')->on('tl_account_web_authorizations_web_authorizations')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
@@ -31,7 +32,8 @@ return new class extends Migration
         });
         Schema::create('tl_account_web_authorizations_web_authorizations__users', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_account_web_authorizations_web_authorizations', 'id', 'fk_61e93dc56dbe3e8c4520a163')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_61e93dc56dbe3e8c4520a163')->references('id')->on('tl_account_web_authorizations_web_authorizations')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

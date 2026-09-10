@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_messages_sticker_set_install_result_sticke_5c07fbe66093', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_messages_sticker_set_install_result_sticke_41df7d9fd353', 'id', 'fk_f375077086f4c915119f7edc')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f375077086f4c915119f7edc')->references('id')->on('tl_messages_sticker_set_install_result_sticke_41df7d9fd353')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

@@ -40,7 +40,8 @@ return new class extends Migration
         });
         Schema::create('tl_sponsored_message_sponsored_message__entities', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_sponsored_message_sponsored_message', 'id', 'fk_9bf391fb34953f41687bd87f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_9bf391fb34953f41687bd87f')->references('id')->on('tl_sponsored_message_sponsored_message')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

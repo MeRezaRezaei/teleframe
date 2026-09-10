@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_emoji_group_emoji_group__emoticons', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_emoji_group_emoji_group', 'id', 'fk_5403c54fe0c848ab7afdcc65')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_5403c54fe0c848ab7afdcc65')->references('id')->on('tl_emoji_group_emoji_group')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');
@@ -46,7 +47,8 @@ return new class extends Migration
         });
         Schema::create('tl_emoji_group_emoji_group_greeting__emoticons', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_emoji_group_emoji_group_greeting', 'id', 'fk_f9f5d47877f4788523758345')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_f9f5d47877f4788523758345')->references('id')->on('tl_emoji_group_emoji_group_greeting')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');

@@ -22,7 +22,8 @@ return new class extends Migration
         });
         Schema::create('tl_msgs_state_req_msgs_state_req__msg_ids', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_msgs_state_req_msgs_state_req', 'id', 'fk_1777dc5b747d61e454ec733f')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_1777dc5b747d61e454ec733f')->references('id')->on('tl_msgs_state_req_msgs_state_req')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->bigInteger('value')->nullable();
             $table->bigInteger('account_id');

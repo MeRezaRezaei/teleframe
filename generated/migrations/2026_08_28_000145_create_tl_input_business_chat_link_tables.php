@@ -25,7 +25,8 @@ return new class extends Migration
         });
         Schema::create('tl_input_business_chat_link_input_business_ch_2c7a8d471020', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_input_business_chat_link_input_business_chat_link', 'id', 'fk_bdad726611dfcf74b1ea50a8')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bdad726611dfcf74b1ea50a8')->references('id')->on('tl_input_business_chat_link_input_business_chat_link')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');

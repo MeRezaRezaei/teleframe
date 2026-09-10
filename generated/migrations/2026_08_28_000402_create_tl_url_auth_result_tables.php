@@ -56,7 +56,8 @@ return new class extends Migration
         });
         Schema::create('tl_url_auth_result_url_auth_result_request__match_codes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_url_auth_result_url_auth_result_request', 'id', 'fk_bac33b8e64c9e15801a9b8d1')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_bac33b8e64c9e15801a9b8d1')->references('id')->on('tl_url_auth_result_url_auth_result_request')->cascadeOnDelete();
             $table->bigInteger('idx');
         $table->text('value')->nullable();
             $table->bigInteger('account_id');

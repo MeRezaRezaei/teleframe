@@ -21,11 +21,11 @@ return new class extends Migration
             $table->timestamps();
             $table->index('constructor_id', 'ix_4abda5cbf198cacf40775256');
             $table->index('account_id', 'ix_8a096a4e2f9ac7a0cb79b2ec');
-            $table->unique(['account_id'], 'ux_6fb37e76797c491db56e');
         });
         Schema::create('tl_shipping_option_shipping_option__prices', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('parent_id')->constrained('tl_shipping_option_shipping_option', 'id', 'fk_e7e26fbbf9a0b46b30c380cd')->cascadeOnDelete();
+            $table->bigInteger('parent_id');
+            $table->foreign('parent_id', 'fk_e7e26fbbf9a0b46b30c380cd')->references('id')->on('tl_shipping_option_shipping_option')->cascadeOnDelete();
             $table->bigInteger('idx');
             $table->bigInteger('value_id')->nullable();
             $table->bigInteger('account_id');
