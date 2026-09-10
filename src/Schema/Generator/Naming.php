@@ -34,17 +34,6 @@ final class Naming
         return substr($name, 0, 45) . '_' . substr(sha1($name), 0, 12);
     }
 
-    public static function anchorTable(string $tlType): string
-    {
-        return self::fit('tl_' . self::snake($tlType));
-    }
-
-    public static function instanceTable(string $tlType, string $ctorName): string
-    {
-        $ctor = self::dedupeNamespace($tlType, $ctorName);
-        return self::fit('tl_' . self::snake($tlType) . '_' . self::snake($ctor));
-    }
-
     /** Drop the ctor namespace when it repeats the type namespace: (messages.Dialogs, messages.dialogsSlice) → dialogsSlice */
     public static function dedupeNamespace(string $tlType, string $ctorName): string
     {
@@ -56,9 +45,10 @@ final class Naming
         return $ctorName;
     }
 
-    public static function childTable(string $instanceTable, string $param): string
+    public static function constructorTable(string $tlType, string $ctorName): string
     {
-        return self::fit($instanceTable . '__' . self::snake($param));
+        $ctor = self::dedupeNamespace($tlType, $ctorName);
+        return self::fit('tl_' . self::snake($tlType) . '_' . self::snake($ctor));
     }
 
     public static function column(string $param): string
@@ -106,7 +96,7 @@ final class Naming
             'bytes' => 'binary',
             '#' => 'bigint',
             'true' => 'boolean',
-            default => 'uuid', // ref
+            default => 'bigint', // ref — Telegram native ID (not a UUID)
         };
     }
 
@@ -121,7 +111,7 @@ final class Naming
             'bytes' => 'string',
             '#' => 'int',
             'true' => 'bool',
-            default => 'string', // ref uuid as string
+            default => 'int', // ref — Telegram native ID
         };
     }
 
