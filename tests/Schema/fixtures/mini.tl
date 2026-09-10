@@ -7,4 +7,5 @@ userEmpty#d3bc4b7a id:long = User;
 userStatusEmpty#9d05049 = UserStatus;
 userStatusOnline#edb93949 expires:int = UserStatus;
 messages.messages#1d73e7ea messages:Vector<Message> topics:Vector<ForumTopic> chats:Vector<Chat> users:Vector<User> = messages.Messages;
+message#a8d78486 id:int peer_id:Peer = Message;
 msgs_state_info#04deb57d req_msg_id:long info:string = MsgsStateInfo;
