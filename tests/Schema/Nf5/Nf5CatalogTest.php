@@ -8,6 +8,7 @@ use MeRezaRezaei\Teleframe\Schema\Generator\TlParser;
 use MeRezaRezaei\Teleframe\Schema\Nf5\Nf5Catalog;
 use MeRezaRezaei\Teleframe\Schema\Nf5\Nf5SchemaException;
 use MeRezaRezaei\Teleframe\Tests\Schema\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class Nf5CatalogTest extends TestCase
 {
@@ -44,5 +45,63 @@ final class Nf5CatalogTest extends TestCase
         Nf5Catalog::fromEntries([
             'tf_bad' => ['tl' => 'X', 'ctors' => ['x'], 'base' => [['id', 'BIGINT NULL']], 'bools' => [], 'children' => []],
         ]);
+    }
+
+    #[DataProvider('bannedShapeProvider')]
+    public function test_invariants_reject_banned_json_blob_binary_shapes(string $shape): void
+    {
+        $this->expectException(Nf5SchemaException::class);
+        Nf5Catalog::fromEntries([
+            'tf_bad' => ['tl' => 'X', 'ctors' => ['x'], 'base' => [['payload', $shape]], 'bools' => [], 'children' => []],
+        ]);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function bannedShapeProvider(): array
+    {
+        return [
+            'JSON NOT NULL'    => ['JSON NOT NULL'],
+            'BLOB NOT NULL'    => ['BLOB NOT NULL'],
+            'VARBINARY NOT NULL' => ['VARBINARY(255) NOT NULL'],
+            'json lowercase'   => ['json NOT NULL'],
+            'blob lowercase'   => ['blob NOT NULL'],
+        ];
+    }
+
+    public function test_invariants_accept_peer_first_table(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        $catalog = Nf5Catalog::fromEntries([
+            'tf_dialogs' => [
+                'tl'       => 'Dialog',
+                'ctors'    => ['dialog'],
+                'base'     => [
+                    ['peer', 'peer_type TINYINT + peer_id BIGINT'],
+                ],
+                'bools'    => [],
+                'children' => [],
+            ],
+        ]);
+
+        // assertInvariants() is void; if it throws the test fails automatically
+        $catalog->assertInvariants();
+    }
+
+    public function test_invariants_reject_neither_id_nor_peer_first_column(): void
+    {
+        $this->expectException(Nf5SchemaException::class);
+        $catalog = Nf5Catalog::fromEntries([
+            'tf_bad' => [
+                'tl'       => 'X',
+                'ctors'    => ['x'],
+                'base'     => [
+                    ['title', 'TEXT NOT NULL'],
+                ],
+                'bools'    => [],
+                'children' => [],
+            ],
+        ]);
+        $catalog->assertInvariants();
     }
 }
