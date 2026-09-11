@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Schema\Nf5;
+namespace MeRezaRezaei\Teleframe\Schema\Mirror;
 
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
 
-final class Nf5Catalog
+final class MirrorCatalog
 {
-    /** @var array<string, Nf5TableEntry> */
+    /** @var array<string, MirrorTableEntry> */
     private array $tables = [];
 
     /** @var array<string, string> tl type => tf table */
@@ -19,7 +19,7 @@ final class Nf5Catalog
     {
         $self = new self();
         foreach ($entries as $tfName => $e) {
-            $entry = new Nf5TableEntry($tfName, $e['tl'], $e['ctors'], $e['base'], $e['bools'], $e['children']);
+            $entry = new MirrorTableEntry($tfName, $e['tl'], $e['ctors'], $e['base'], $e['bools'], $e['children']);
             $self->tables[$tfName] = $entry;
             $self->tlIndex[$e['tl']] = $tfName;
             $self->assertEntryInvariants($entry);
@@ -31,10 +31,10 @@ final class Nf5Catalog
     {
         $json = file_get_contents($jsonPath);
         if ($json === false) {
-            throw new Nf5SchemaException("Cannot read catalog: {$jsonPath}");
+            throw new MirrorSchemaException("Cannot read catalog: {$jsonPath}");
         }
         $entries = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-        $entries = (new Nf5CtorSplitter($scheme))->apply($entries);
+        $entries = (new MirrorCtorSplitter($scheme))->apply($entries);
         return self::fromEntries($entries);
     }
 
@@ -44,9 +44,9 @@ final class Nf5Catalog
         return array_keys($this->tables);
     }
 
-    public function table(string $tfName): Nf5TableEntry
+    public function table(string $tfName): MirrorTableEntry
     {
-        return $this->tables[$tfName] ?? throw new Nf5SchemaException("Unknown mirror table: {$tfName}");
+        return $this->tables[$tfName] ?? throw new MirrorSchemaException("Unknown mirror table: {$tfName}");
     }
 
     public function has(string $tfName): bool
@@ -54,7 +54,7 @@ final class Nf5Catalog
         return isset($this->tables[$tfName]);
     }
 
-    public function tableForTlType(string $tlType): ?Nf5TableEntry
+    public function tableForTlType(string $tlType): ?MirrorTableEntry
     {
         return isset($this->tlIndex[$tlType]) ? $this->tables[$this->tlIndex[$tlType]] : null;
     }
@@ -64,24 +64,24 @@ final class Nf5Catalog
         foreach ($this->tables as $name => $entry) {
             // Ruling B: peer-first tables (e.g. tf_dialogs) are valid — only reject neither-id-nor-peer
             if ($entry->base !== [] && !in_array($entry->base[0][0], ['id', 'peer'], true)) {
-                throw new Nf5SchemaException("{$name}: first base column must be 'id' or 'peer'");
+                throw new MirrorSchemaException("{$name}: first base column must be 'id' or 'peer'");
             }
         }
     }
 
-    private function assertEntryInvariants(Nf5TableEntry $e): void
+    private function assertEntryInvariants(MirrorTableEntry $e): void
     {
         if ($e->ctors === []) {
-            throw new Nf5SchemaException("{$e->tfName}: ctors must be non-empty");
+            throw new MirrorSchemaException("{$e->tfName}: ctors must be non-empty");
         }
         foreach ([...$e->base, ...$e->children] as [$name, $shape]) {
             // zero-NULL: ban nullable marker (but 'NOT NULL' is the canonical non-nullable form)
             if (str_contains($shape, 'NULL') && !str_contains($shape, 'NOT NULL')) {
-                throw new Nf5SchemaException("{$e->tfName}.{$name}: nullable shape '{$shape}'");
+                throw new MirrorSchemaException("{$e->tfName}.{$name}: nullable shape '{$shape}'");
             }
             foreach (['json', 'blob', 'binary'] as $banned) {
                 if (str_contains(strtolower($shape), $banned)) {
-                    throw new Nf5SchemaException("{$e->tfName}.{$name}: banned shape '{$shape}'");
+                    throw new MirrorSchemaException("{$e->tfName}.{$name}: banned shape '{$shape}'");
                 }
             }
         }

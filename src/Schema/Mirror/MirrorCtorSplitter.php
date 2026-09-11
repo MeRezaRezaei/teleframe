@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Schema\Nf5;
+namespace MeRezaRezaei\Teleframe\Schema\Mirror;
 
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlConstructor;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
@@ -13,7 +13,7 @@ use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
  * entry merges them; this splitter mechanically re-derives tf_messages_service
  * from the Layer-227 wire ctor so the split survives regeneration.
  */
-final class Nf5CtorSplitter
+final class MirrorCtorSplitter
 {
     private const MESSAGE_TYPE = 'Message';
     private const SPLIT_CTOR = 'messageService';

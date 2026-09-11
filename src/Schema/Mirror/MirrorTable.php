@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Schema\Nf5;
+namespace MeRezaRezaei\Teleframe\Schema\Mirror;
 
-use MeRezaRezaei\Teleframe\Schema\Nf5\Ddl\Nf5Column;
+use MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumn;
 
 /**
  * Resolved DDL graph node — one per mirror or synthesized table.
  *
- * Each Nf5Table carries its full child subtree (children are themselves
- * Nf5Table instances) so the caller can walk the graph top-down.
+ * Each MirrorTable carries its full child subtree (children are themselves
+ * MirrorTable instances) so the caller can walk the graph top-down.
  */
-final class Nf5Table
+final class MirrorTable
 {
     /**
      * @param string              $tfName          Mirror table name (e.g. 'tf_users')
@@ -21,8 +21,8 @@ final class Nf5Table
      * @param bool                $positioned      True for 1:N vector children (includes a 'position' column)
      * @param string              $parentTf        Parent table name (empty for top-level parents)
      * @param list<string>        $keyColumns      Primary key column names inherited from the parent
-     * @param list<Nf5Column>     $columns         All columns including PK, discriminator, base, and bools
-     * @param list<Nf5Table>      $children        Nested child tables
+     * @param list<MirrorColumn>     $columns         All columns including PK, discriminator, base, and bools
+     * @param list<MirrorTable>      $children        Nested child tables
      * @param string              $constructor     Discriminator column name (empty if single ctor)
      * @param list<array{kind:string, name:string}> $peerColumns  Peer-typed columns (type/id pairs)
      * @param list<string>        $hexColumns      Column names stored as hex (bytes fields)

@@ -127,6 +127,10 @@ final class SmokeRedis implements RedisConnectionContract
     }
 
     public function llen(string $key): int { return count($this->streams[$key] ?? []); }
+
+    public function hget(string $key, string $field): ?string { return $this->hashes[$key][$field] ?? null; }
+
+    public function expire(string $key, int $seconds): bool { return true; }
 }
 
 /**

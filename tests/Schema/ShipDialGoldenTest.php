@@ -8,16 +8,14 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Task 4 golden gate: the curated migration dial. `php bin/regenerate --ship`
- * copies ONLY the per-type migration files whose TL namespace is on the dial
- * (config teleframe.ship_namespaces, default auth/messages/users/
- * channels/updates/help/contacts) from the full generated/ mirror into
- * migrations/ at the package root — byte-identical copies (global sequence
- * numbers preserved), never re-derived — for the provider's
+ * copies the tf_* per-type migration files from the full generated/ mirror
+ * into migrations/ at the package root — byte-identical copies (global
+ * sequence numbers preserved), never re-derived — for the provider's
  * loadMigrationsFrom publish surface.
  *
- * Verified against the real v227 generated set: the dial selects 113 files;
- * payments/phone/stickers namespaces genuinely exist in generated/ and stay
- * unshipped; `create_tl_users_*` satisfies the create_tl_user* pin.
+ * Verified against the real v227 generated set: 13 tf_* mirror migrations are
+ * shipped; app-owned migrations (user_bindings, telegram_apps, telegram_accounts)
+ * live alongside but have no generated/ source.
  */
 final class ShipDialGoldenTest extends TestCase
 {
@@ -38,50 +36,37 @@ final class ShipDialGoldenTest extends TestCase
         '2026_09_09_000201_create_telegram_accounts_table.php',
     ];
 
-    public function test_shipped_subset_count_under_two_hundred(): void
+    public function test_shipped_subset_count(): void
     {
         $files = self::migrationFiles(self::SHIP_DIR);
-        self::assertGreaterThan(80, $files, 'curated dial unexpectedly small');
-        self::assertLessThan(200, $files, 'curated dial must stay under 200 migrations');
+        self::assertGreaterThanOrEqual(13, $files, 'curated dial must have at least 13 tf_* migrations');
+        self::assertLessThanOrEqual(20, $files, 'curated dial must stay under 20 migrations total');
     }
 
-    public function test_shipped_subset_contains_core_namespace_migrations(): void
+    public function test_shipped_subset_contains_core_tf_migrations(): void
     {
         $names = self::migrationNames(self::SHIP_DIR);
-        self::assertContains('2026_08_28_000633_create_tl_users_users_tables.php', $names);
-        foreach (['create_tl_users_', 'create_tl_auth_', 'create_tl_messages_'] as $prefix) {
+        foreach (['create_tf_users_table', 'create_tf_chats_table', 'create_tf_messages_table'] as $stem) {
             self::assertContains(true, array_map(
-                static fn (string $n): bool => str_starts_with($n, '2026_08_28_') && str_contains($n, $prefix),
+                static fn (string $n): bool => str_contains($n, $stem),
                 $names,
-            ), "no shipped migration matches {$prefix}*");
+            ), "no shipped migration matches {$stem}");
         }
     }
 
-    public function test_off_dial_namespaces_stay_in_generated_only(): void
+    public function test_all_generated_tf_migrations_are_shipped(): void
     {
         $shipped = self::migrationNames(self::SHIP_DIR);
-        // Real generated-set namespace filenames (v227): payments.*, phone.*,
-        // stickers.* — none of these may ship under the default dial. Prefix-
-        // anchored at the namespace position, so e.g. messages.*Stickers*
-        // types (on-dial, different namespace segment) do not false-positive.
-        $offDial = ['create_tl_payments_', 'create_tl_phone_', 'create_tl_stickers_'];
-        foreach ($offDial as $prefix) {
-            self::assertContains(true, array_map(
-                static fn (string $n): bool => str_contains($n, $prefix),
-                self::migrationNames(self::GENERATED_DIR),
-            ), "sanity: {$prefix}* must exist in the full generated set"
-                . ' (otherwise this assertion pins nothing)');
-            foreach ($shipped as $name) {
-                self::assertStringNotContainsString($prefix, $name, "off-dial migration shipped: {$name}");
-            }
+        $generated = self::migrationNames(self::GENERATED_DIR);
+        // Every generated tf_* file must appear in the shipped set
+        foreach ($generated as $genName) {
+            self::assertContains($genName, $shipped, "generated migration {$genName} not shipped");
         }
     }
 
     public function test_root_namespace_and_special_files_do_not_ship(): void
     {
         $names = self::migrationNames(self::SHIP_DIR);
-        self::assertNotContains('2026_08_28_000403_create_tl_user_table.php', $names); // root User
-        self::assertNotContains('2026_08_28_000401_create_tl_updates_table.php', $names); // root Updates
         self::assertSame([], array_filter($names, static fn (string $n): bool =>
             str_contains($n, 'create_tl_route_tables') || str_contains($n, 'add_tl_foreign_keys')));
     }

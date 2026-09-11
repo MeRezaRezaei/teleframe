@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Schema\Nf5;
+namespace MeRezaRezaei\Teleframe\Schema\Mirror;
 
 use MeRezaRezaei\Teleframe\Schema\Generator\CodeWriter;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Ddl\Nf5Column;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Ddl\Nf5ColumnType;
+use MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumn;
+use MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumnType;
 
-final class Nf5ModelWriter
+final class MirrorModelWriter
 {
     public function __construct(private readonly string $outDir) {}
 
-    /** @param list<Nf5Table> $tables @return list<string> */
+    /** @param list<MirrorTable> $tables @return list<string> */
     public function writeAll(array $tables): array
     {
         @mkdir($this->outDir.'/Models/Mirror', 0777, true);
@@ -26,7 +26,7 @@ final class Nf5ModelWriter
         return $paths;
     }
 
-    private function writeTable(Nf5Table $table): string
+    private function writeTable(MirrorTable $table): string
     {
         $class   = $this->className($table->tfName);
         $base    = $table->parentTf === '' ? 'TfMirrorModel' : 'TfChildModel'; // T6a: parent flag is always true
@@ -63,15 +63,15 @@ final class Nf5ModelWriter
     }
 
     /** @return list<array{string,string}> cast column => type */
-    private function casts(Nf5Table $table): array
+    private function casts(MirrorTable $table): array
     {
         $casts = [];
         foreach ($table->columns as $col) {
-            if ($col->type === Nf5ColumnType::Boolean) {
+            if ($col->type === MirrorColumnType::Boolean) {
                 $casts[] = [$col->name, 'boolean'];
-            } elseif ($col->type === Nf5ColumnType::BigInt || $col->type === Nf5ColumnType::Integer) {
+            } elseif ($col->type === MirrorColumnType::BigInt || $col->type === MirrorColumnType::Integer) {
                 $casts[] = [$col->name, 'integer'];
-            } elseif ($col->type === Nf5ColumnType::Double) {
+            } elseif ($col->type === MirrorColumnType::Double) {
                 $casts[] = [$col->name, 'float'];
             }
         }

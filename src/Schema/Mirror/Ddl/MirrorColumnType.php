@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Schema\Nf5\Ddl;
+namespace MeRezaRezaei\Teleframe\Schema\Mirror\Ddl;
 
-enum Nf5ColumnType: string
+enum MirrorColumnType: string
 {
     case BigInt   = 'bigint';
     case Integer  = 'integer';

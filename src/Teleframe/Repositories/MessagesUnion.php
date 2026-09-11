@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Union across tf_messages and tf_messages_service for a single peer — the
- * two tables share the same columns by construction (Nf5CtorSplitter), and
+ * two tables share the same columns by construction (MirrorCtorSplitter), and
  * Telegram guarantees disjoint id spaces, so UNION ALL cannot duplicate.
  */
 final class MessagesUnion

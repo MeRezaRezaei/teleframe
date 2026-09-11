@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Schema\Nf5;
+namespace MeRezaRezaei\Teleframe\Schema\Mirror;
 
 use MeRezaRezaei\Teleframe\Schema\Generator\CodeWriter;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Ddl\Nf5Column;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Ddl\Nf5ColumnType;
+use MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumn;
+use MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumnType;
 
-final class Nf5MigrationWriter
+final class MirrorMigrationWriter
 {
     public function __construct(private readonly string $outDir) {}
 
-    /** @param list<Nf5Table> $parents */
+    /** @param list<MirrorTable> $parents */
     public function writeAll(array $parents, string $dateStamp = '2026_09_11'): array
     {
         @mkdir($this->outDir, 0777, true);
@@ -47,7 +47,7 @@ final class Nf5MigrationWriter
     }
 
     /** @param list<string> $up @param list<string> $down @param array $allFks collected FK defs @param array<string,true> $emitted tracks already-created tables */
-    private function emitTable(Nf5Table $table, array &$up, array &$down, array &$allFks, array &$emitted): void
+    private function emitTable(MirrorTable $table, array &$up, array &$down, array &$allFks, array &$emitted): void
     {
         $tbl = $table->tfName;
         // Skip tables already emitted by an earlier parent's migration
@@ -81,18 +81,18 @@ final class Nf5MigrationWriter
         }
     }
 
-    private function columnDef(Nf5Column $col): string
+    private function columnDef(MirrorColumn $col): string
     {
         $name = $col->name;
         return match ($col->type) {
-            Nf5ColumnType::BigInt  => "\$table->bigInteger('{$name}')->unsigned();",
-            Nf5ColumnType::Integer => "\$table->integer('{$name}')->unsigned();",
-            Nf5ColumnType::Boolean => "\$table->boolean('{$name}')->default(false);",
-            Nf5ColumnType::String  => $col->length > 0
+            MirrorColumnType::BigInt  => "\$table->bigInteger('{$name}')->unsigned();",
+            MirrorColumnType::Integer => "\$table->integer('{$name}')->unsigned();",
+            MirrorColumnType::Boolean => "\$table->boolean('{$name}')->default(false);",
+            MirrorColumnType::String  => $col->length > 0
                                       ? "\$table->string('{$name}', {$col->length});"
                                       : "\$table->text('{$name}');",
-            Nf5ColumnType::TinyInt => "\$table->unsignedTinyInteger('{$name}');",
-            Nf5ColumnType::Double  => "\$table->double('{$name}');",
+            MirrorColumnType::TinyInt => "\$table->unsignedTinyInteger('{$name}');",
+            MirrorColumnType::Double  => "\$table->double('{$name}');",
         };
     }
 

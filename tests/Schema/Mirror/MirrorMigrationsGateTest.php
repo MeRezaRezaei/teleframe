@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Tests\Schema\Nf5;
+namespace MeRezaRezaei\Teleframe\Tests\Schema\Mirror;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;

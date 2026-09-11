@@ -6,11 +6,11 @@ namespace MeRezaRezaei\Teleframe\Laravel\Console;
 
 use Illuminate\Console\Command;
 use MeRezaRezaei\Teleframe\Schema\Generator\TlParser;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Nf5Catalog;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Nf5MigrationWriter;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Nf5FactoryWriter;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Nf5ModelWriter;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Nf5TableResolver;
+use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorCatalog;
+use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorMigrationWriter;
+use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorFactoryWriter;
+use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorModelWriter;
+use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorTableResolver;
 
 final class TeleframeMirrorCommand extends Command
 {
@@ -29,8 +29,8 @@ final class TeleframeMirrorCommand extends Command
         $catalogPath = base_path('docs/superpowers/specs/2026-09-11-telegram-mirror-catalog.json');
 
         $scheme  = TlParser::parseFile($tl);
-        $catalog = Nf5Catalog::load($catalogPath, $scheme);
-        $resolver = new Nf5TableResolver($catalog, $scheme);
+        $catalog = MirrorCatalog::load($catalogPath, $scheme);
+        $resolver = new MirrorTableResolver($catalog, $scheme);
 
         $stage = (int) $this->option('stage');
         $parents = $stage === 0
@@ -41,12 +41,12 @@ final class TeleframeMirrorCommand extends Command
             return self::FAILURE;
         }
 
-        $migs = (new Nf5MigrationWriter($out.'/migrations/mirror'))->writeAll($parents);
-        $mods = (new Nf5ModelWriter($out))->writeAll($parents);
+        $migs = (new MirrorMigrationWriter($out.'/migrations/mirror'))->writeAll($parents);
+        $mods = (new MirrorModelWriter($out))->writeAll($parents);
 
         $facts = [];
         if ($stage >= 2) {
-            $facts = (new Nf5FactoryWriter($out))->writeAll($parents);
+            $facts = (new MirrorFactoryWriter($out))->writeAll($parents);
         }
 
         $this->info(sprintf('Mirror generated: %d migrations, %d models, %d factories.', count($migs), count($mods), count($facts)));

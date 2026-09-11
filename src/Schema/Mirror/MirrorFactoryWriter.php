@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Schema\Nf5;
+namespace MeRezaRezaei\Teleframe\Schema\Mirror;
 
 use MeRezaRezaei\Teleframe\Schema\Generator\CodeWriter;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Ddl\Nf5ColumnType;
+use MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumnType;
 
-final class Nf5FactoryWriter
+final class MirrorFactoryWriter
 {
     public function __construct(private readonly string $outDir) {}
 
-    /** @param list<Nf5Table> $tables @return list<string> */
+    /** @param list<MirrorTable> $tables @return list<string> */
     public function writeAll(array $tables): array
     {
         @mkdir($this->outDir.'/Factories/Mirror', 0777, true);
@@ -25,7 +25,7 @@ final class Nf5FactoryWriter
         return $paths;
     }
 
-    private function writeTable(Nf5Table $table): string
+    private function writeTable(MirrorTable $table): string
     {
         $class = $this->className($table->tfName);
         $model = 'MeRezaRezaei\Teleframe\Schema\Generated\Models\Mirror\\'.$class;
@@ -56,15 +56,15 @@ final class Nf5FactoryWriter
         return $path;
     }
 
-    private function fakerFor(\MeRezaRezaei\Teleframe\Schema\Nf5\Ddl\Nf5Column $col): string
+    private function fakerFor(\MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumn $col): string
     {
         return match ($col->type) {
-            Nf5ColumnType::BigInt  => "            '{$col->name}' => fake()->unique()->randomNumber(8),",
-            Nf5ColumnType::Integer => "            '{$col->name}' => fake()->numberBetween(0, 2147483647),",
-            Nf5ColumnType::Boolean => "            '{$col->name}' => fake()->boolean(),",
-            Nf5ColumnType::String  => "            '{$col->name}' => fake()->word(),",
-            Nf5ColumnType::TinyInt => "            '{$col->name}' => fake()->numberBetween(1, 3),",
-            Nf5ColumnType::Double  => "            '{$col->name}' => fake()->randomFloat(6, -90, 90),",
+            MirrorColumnType::BigInt  => "            '{$col->name}' => fake()->unique()->randomNumber(8),",
+            MirrorColumnType::Integer => "            '{$col->name}' => fake()->numberBetween(0, 2147483647),",
+            MirrorColumnType::Boolean => "            '{$col->name}' => fake()->boolean(),",
+            MirrorColumnType::String  => "            '{$col->name}' => fake()->word(),",
+            MirrorColumnType::TinyInt => "            '{$col->name}' => fake()->numberBetween(1, 3),",
+            MirrorColumnType::Double  => "            '{$col->name}' => fake()->randomFloat(6, -90, 90),",
         };
     }
 

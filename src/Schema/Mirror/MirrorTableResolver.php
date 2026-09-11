@@ -2,34 +2,34 @@
 
 declare(strict_types=1);
 
-namespace MeRezaRezaei\Teleframe\Schema\Nf5;
+namespace MeRezaRezaei\Teleframe\Schema\Mirror;
 
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlConstructor;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlParam;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlType;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Ddl\Nf5Column;
-use MeRezaRezaei\Teleframe\Schema\Nf5\Ddl\Nf5ColumnType;
+use MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumn;
+use MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumnType;
 
 /**
  * Builds the full DDL graph from catalog + TL scheme.
  *
  * Given a list of parent table names, walks the catalog children,
- * decomposes every FK→Target and 1:N child into child Nf5Table nodes,
+ * decomposes every FK→Target and 1:N child into child MirrorTable nodes,
  * resolves vector elements from the TL scheme, and returns a deterministic
- * ordered list of parent Nf5Table objects — each containing its full child subtree.
+ * ordered list of parent MirrorTable objects — each containing its full child subtree.
  */
-final class Nf5TableResolver
+final class MirrorTableResolver
 {
-    /** Collected Nf5Table instances keyed by tfName, in resolution order. */
+    /** Collected MirrorTable instances keyed by tfName, in resolution order. */
     private array $tables = [];
 
     public function __construct(
-        private readonly Nf5Catalog $catalog,
+        private readonly MirrorCatalog $catalog,
         private readonly TlScheme $scheme,
     ) {}
 
-    /** @return list<Nf5Table> */
+    /** @return list<MirrorTable> */
     public function resolveAll(array $parentTfNames): array
     {
         $this->tables = [];
@@ -41,11 +41,11 @@ final class Nf5TableResolver
     }
 
     /**
-     * Resolve a catalog entry to an Nf5Table with all children nested.
+     * Resolve a catalog entry to an MirrorTable with all children nested.
      *
      * @param array{keyColumns: list<string>, parentTf: string}|null $parentContext inherited key from the referrer
      */
-    private function resolveTable(string $tfName, ?array $parentContext, bool $forceParent = false): Nf5Table
+    private function resolveTable(string $tfName, ?array $parentContext, bool $forceParent = false): MirrorTable
     {
         if (isset($this->tables[$tfName])) {
             return $this->tables[$tfName];
@@ -67,7 +67,7 @@ final class Nf5TableResolver
             }
         }
 
-        $table = new Nf5Table(
+        $table = new MirrorTable(
             tfName: $tfName,
             tlType: $entry->tlType,
             parent: $isParent,
@@ -91,7 +91,7 @@ final class Nf5TableResolver
      * T4d: peer-first check BEFORE empty-base check.
      * T4e: zero-regex — singularizeParentTf replaces preg_replace.
      */
-    private function deriveKeyColumns(Nf5TableEntry $entry): array
+    private function deriveKeyColumns(MirrorTableEntry $entry): array
     {
         // T4d: check peer first (F2)
         if ($entry->base !== [] && $entry->base[0][0] === 'peer') {
@@ -128,7 +128,7 @@ final class Nf5TableResolver
     /**
      * @param list<string> $parentKeyCols
      */
-    private function resolveChildField(string $parentTf, string $fieldName, string $shape, array $parentKeyCols): ?Nf5Table
+    private function resolveChildField(string $parentTf, string $fieldName, string $shape, array $parentKeyCols): ?MirrorTable
     {
         if (str_starts_with($shape, 'FK→')) {
             // FK→ is 5 bytes in UTF-8 (2 ASCII + 3 for U+2192)
@@ -142,7 +142,7 @@ final class Nf5TableResolver
         // parentTf already includes 'tf_' prefix, so child is just parentTf_fieldName
         $childTfName = "{$parentTf}_{$fieldName}";
         $columns = $this->makeChildPkCols($parentKeyCols);
-        $resolved = Nf5FieldDecomposer::fromShape($shape, $fieldName);
+        $resolved = MirrorFieldDecomposer::fromShape($shape, $fieldName);
         if ($resolved === null) {
             return null;
         }
@@ -153,7 +153,7 @@ final class Nf5TableResolver
     /**
      * @param list<string> $parentKeyCols
      */
-    private function resolveFkTarget(string $parentTf, string $fieldName, string $targetType, array $parentKeyCols): ?Nf5Table
+    private function resolveFkTarget(string $parentTf, string $fieldName, string $targetType, array $parentKeyCols): ?MirrorTable
     {
         $mirror = $this->catalog->tableForTlType($targetType);
         // T4b: mirror tables with non-empty base are always parents.
@@ -176,8 +176,8 @@ final class Nf5TableResolver
         $childTfName = ($mirror !== null) ? $mirror->tfName : "{$parentTf}_{$fieldName}";
         $columns = $this->makeChildPkCols($parentKeyCols);
         foreach ($minimalCtor->params() as $param) {
-            $shape = Nf5FieldDecomposer::shapeForParam($param);
-            $cols = Nf5FieldDecomposer::fromShape($shape, $param->name, $param->baseType() === 'bytes');
+            $shape = MirrorFieldDecomposer::shapeForParam($param);
+            $cols = MirrorFieldDecomposer::fromShape($shape, $param->name, $param->baseType() === 'bytes');
             if ($cols !== null) {
                 $columns = array_merge($columns, $cols);
             }
@@ -191,7 +191,7 @@ final class Nf5TableResolver
      *
      * @param list<string> $parentKeyCols
      */
-    private function resolveVectorChild(string $parentTf, string $fieldName, array $parentKeyCols): ?Nf5Table
+    private function resolveVectorChild(string $parentTf, string $fieldName, array $parentKeyCols): ?MirrorTable
     {
         $parentEntry = $this->catalog->table($parentTf);
         $tlType = $this->scheme->types()[$parentEntry->tlType] ?? null;
@@ -215,10 +215,10 @@ final class Nf5TableResolver
         // parentTf already includes 'tf_' prefix
         $childTfName = "{$parentTf}_{$fieldName}";
         $columns = $this->makeChildPkCols($parentKeyCols);
-        $columns[] = new Nf5Column('position', Nf5ColumnType::TinyInt);
+        $columns[] = new MirrorColumn('position', MirrorColumnType::TinyInt);
         foreach ($minimalCtor->params() as $param) {
-            $shape = Nf5FieldDecomposer::shapeForParam($param);
-            $cols = Nf5FieldDecomposer::fromShape($shape, $param->name, $param->baseType() === 'bytes');
+            $shape = MirrorFieldDecomposer::shapeForParam($param);
+            $cols = MirrorFieldDecomposer::fromShape($shape, $param->name, $param->baseType() === 'bytes');
             if ($cols !== null) {
                 $columns = array_merge($columns, $cols);
             }
@@ -263,19 +263,19 @@ final class Nf5TableResolver
 
     /**
      * @param list<string> $parentKeyCols
-     * @return list<Nf5Column>
+     * @return list<MirrorColumn>
      */
     private function makeChildPkCols(array $parentKeyCols): array
     {
-        $cols = [new Nf5Column('account_id', Nf5ColumnType::BigInt)];
+        $cols = [new MirrorColumn('account_id', MirrorColumnType::BigInt)];
         foreach ($parentKeyCols as $col) {
-            $cols[] = new Nf5Column($col, Nf5ColumnType::BigInt);
+            $cols[] = new MirrorColumn($col, MirrorColumnType::BigInt);
         }
         return $cols;
     }
 
     /**
-     * @param list<Nf5Column> $columns
+     * @param list<MirrorColumn> $columns
      */
     private function makeChildTable(
         string $tfName,
@@ -284,8 +284,8 @@ final class Nf5TableResolver
         array $columns,
         bool $positioned,
         string $parentTf,
-    ): Nf5Table {
-        return new Nf5Table(
+    ): MirrorTable {
+        return new MirrorTable(
             tfName: $tfName,
             tlType: '',
             parent: true, // child tables are standalone DDL-creatable
@@ -305,66 +305,66 @@ final class Nf5TableResolver
      * Build columns for a parent table from its catalog entry.
      *
      * @param list<string> $keyCols
-     * @return list<Nf5Column>
+     * @return list<MirrorColumn>
      */
-    private function buildColumns(Nf5TableEntry $entry, array $keyCols, string $constructor): array
+    private function buildColumns(MirrorTableEntry $entry, array $keyCols, string $constructor): array
     {
         $columns = [];
-        $columns[] = new Nf5Column('account_id', Nf5ColumnType::BigInt);
+        $columns[] = new MirrorColumn('account_id', MirrorColumnType::BigInt);
         foreach ($keyCols as $col) {
-            $columns[] = new Nf5Column($col, Nf5ColumnType::BigInt);
+            $columns[] = new MirrorColumn($col, MirrorColumnType::BigInt);
         }
         if ($constructor !== '') {
-            $columns[] = new Nf5Column($constructor, Nf5ColumnType::String);
+            $columns[] = new MirrorColumn($constructor, MirrorColumnType::String);
         }
         foreach ($entry->base as [$name, $shape]) {
             if (in_array($name, $keyCols, true)) {
                 continue;
             }
-            $resolved = Nf5FieldDecomposer::fromShape($shape, $name);
+            $resolved = MirrorFieldDecomposer::fromShape($shape, $name);
             if ($resolved !== null) {
                 $columns = array_merge($columns, $resolved);
             }
         }
         foreach ($entry->bools as $bool) {
-            $columns[] = new Nf5Column($bool, Nf5ColumnType::Boolean);
+            $columns[] = new MirrorColumn($bool, MirrorColumnType::Boolean);
         }
         return $columns;
     }
 
     /**
-     * @param list<Nf5Column> $columns
+     * @param list<MirrorColumn> $columns
      * @return list<array{kind:string, name:string}>
      */
     private function findPeerCols(array $columns): array
     {
         return array_values(array_map(
-            fn (Nf5Column $c) => ['name' => $c->name, 'kind' => str_ends_with($c->name, '_type') ? 'type' : 'id'],
-            array_filter($columns, static fn (Nf5Column $c) => $c->peer),
+            fn (MirrorColumn $c) => ['name' => $c->name, 'kind' => str_ends_with($c->name, '_type') ? 'type' : 'id'],
+            array_filter($columns, static fn (MirrorColumn $c) => $c->peer),
         ));
     }
 
     /**
-     * @param list<Nf5Column> $columns
+     * @param list<MirrorColumn> $columns
      * @return list<string>
      */
     private function findHexCols(array $columns): array
     {
         return array_map(
-            static fn (Nf5Column $c) => $c->name,
-            array_filter($columns, static fn (Nf5Column $c) => $c->hex),
+            static fn (MirrorColumn $c) => $c->name,
+            array_filter($columns, static fn (MirrorColumn $c) => $c->hex),
         );
     }
 
     /**
-     * @param list<Nf5Column> $columns
+     * @param list<MirrorColumn> $columns
      * @return list<string>
      */
     private function findBoolCols(array $columns): array
     {
         return array_map(
-            static fn (Nf5Column $c) => $c->name,
-            array_filter($columns, static fn (Nf5Column $c) => $c->type === Nf5ColumnType::Boolean),
+            static fn (MirrorColumn $c) => $c->name,
+            array_filter($columns, static fn (MirrorColumn $c) => $c->type === MirrorColumnType::Boolean),
         );
     }
 }
