@@ -7,7 +7,7 @@ namespace MeRezaRezaei\Teleframe\Schema\Generator;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
 
 /**
- * Emits Laravel factories for constructor instance models (deterministic,
+ * Emits Laravel factories for domain table models (deterministic,
  * param-index-based values — no randomness, reproducible tests).
  */
 final class FactoryGenerator
@@ -20,52 +20,70 @@ final class FactoryGenerator
         $files = [];
         $classes = [];
 
+        // Collect which TL types map to each domain
+        $domainTypes = [];
         $types = $scheme->types();
         ksort($types);
         foreach ($types as $type) {
             if ($type->name === 'Vector t' || $type->constructors() === []) {
                 continue;
             }
-            $ctors = $type->constructors();
-            ksort($ctors);
-            foreach ($ctors as $ctor) {
-                $modelClass = Naming::ctorModel($type->name, $ctor->name);
-                $factoryClass = $modelClass . 'Factory';
-                $classes[] = $factoryClass;
-
-                $idx = 0;
-                $def = [];
-                foreach ($ctor->params() as $param) {
-                    if ($param->isFiller || $param->kind() === 'generic' || $param->kind() === 'vector') {
-                        continue;
-                    }
-                    $idx++;
-                    $col = Naming::column($param->name);
-                    $def[] = "            '{$col}' => " . $this->value($param, $idx) . ',';
-                }
-
-                $body = [
-                    '/** Factory for ' . $modelClass . ' (' . $ctor->name . '). */',
-                    'final class ' . $factoryClass . ' extends Factory',
-                    '{',
-                    '    /** @var class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\\' . $modelClass . '> */',
-                    '    protected $model = \\' . ModelGenerator::modelFqcn($modelClass) . '::class;',
-                    '',
-                    '    /** @return array<string, mixed> */',
-                    '    public function definition(): array',
-                    '    {',
-                    '        return [',
-                    ...$def,
-                    '        ];',
-                    '    }',
-                    '}',
-                ];
-                $files[$factoryClass . '.php'] = CodeWriter::phpFile(self::NS, [
-                    'use Illuminate\Database\Eloquent\Factories\Factory;',
-                    '',
-                    ...$body,
-                ]);
+            $classification = Naming::classifyType($type->name);
+            if ($classification === null) {
+                continue;
             }
+            $domain = $classification['domain'];
+            $domainTypes[$domain][] = $type;
+        }
+
+        // One factory per domain model
+        ksort($domainTypes);
+        foreach ($domainTypes as $domain => $domainTypeList) {
+            $modelClass = Naming::domainModel($domain);
+            $factoryClass = $modelClass . 'Factory';
+            $classes[] = $factoryClass;
+
+            // Gather all params from all constructors of all types in this domain
+            $colDefs = [];
+            $idx = 0;
+            foreach ($domainTypeList as $type) {
+                foreach ($type->constructors() as $ctor) {
+                    foreach ($ctor->params() as $param) {
+                        if ($param->isFiller || $param->kind() === 'generic' || $param->kind() === 'vector') {
+                            continue;
+                        }
+                        $idx++;
+                        $col = Naming::column($param->name);
+                        if (!isset($colDefs[$col])) {
+                            $colDefs[$col] = "            '{$col}' => " . $this->value($param, $idx) . ',';
+                        }
+                    }
+                    // Use first constructor's params only (they define the domain's columns)
+                    break;
+                }
+            }
+
+            $body = [
+                '/** Factory for ' . $modelClass . ' (domain: ' . $domain . '). */',
+                'final class ' . $factoryClass . ' extends Factory',
+                '{',
+                '    /** @var class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\\' . $modelClass . '> */',
+                '    protected $model = \\' . ModelGenerator::modelFqcn($modelClass) . '::class;',
+                '',
+                '    /** @return array<string, mixed> */',
+                '    public function definition(): array',
+                '    {',
+                '        return [',
+                ...array_values($colDefs),
+                '        ];',
+                '    }',
+                '}',
+            ];
+            $files[$factoryClass . '.php'] = CodeWriter::phpFile(self::NS, [
+                'use Illuminate\Database\Eloquent\Factories\Factory;',
+                '',
+                ...$body,
+            ]);
         }
 
         Naming::assertUnique($classes, 'factory class');
@@ -82,7 +100,6 @@ final class FactoryGenerator
             return (string) $idx;
         }
         if ($param->kind() === 'ref') {
-            // Fake Telegram ID: positive for user refs, negative for chat refs
             return (string) (1000 + $idx);
         }
         return match ($param->baseType()) {

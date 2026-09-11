@@ -47,7 +47,7 @@ final class SubscriptionsTest extends TestCase
             self::assertSame(11, $u->accountId);
         });
 
-        $stored = new UpdateStored(new \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUser(), 11);
+        $stored = new UpdateStored(new \MeRezaRezaei\Teleframe\Schema\Generated\Models\TfUser(), 11);
         $handler = new UpdateStoredHandler($this->dispatcher);
         $handler($stored);
 
@@ -78,7 +78,7 @@ final class SubscriptionsTest extends TestCase
         $sink = new HandlerSink($this->dispatcher);
         $sink->handle(['_' => 'updateNewMessage'], (string) 1);
         (new UpdateStoredHandler($this->dispatcher))(
-            new UpdateStored(new \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUser(), 1),
+            new UpdateStored(new \MeRezaRezaei\Teleframe\Schema\Generated\Models\TfUser(), 1),
         );
 
         self::assertSame(2, $this->fired);

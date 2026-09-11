@@ -74,4 +74,14 @@ interface RedisConnectionContract
      * @return int<0, max>
      */
     public function llen(string $key): int;
+
+    /**
+     * @return string|null The value, or null when the field does not exist.
+     */
+    public function hget(string $key, string $field): ?string;
+
+    /**
+     * Set a time-to-live on a key (seconds). Returns true on success.
+     */
+    public function expire(string $key, int $seconds): bool;
 }

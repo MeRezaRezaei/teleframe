@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Trait for models that hold a peer-long column (bigint, canonical
  * Telegram peer long).  Provides generic col-parameterized helpers
- * for filtering and resolving the peer to its anchor model.
+ * for filtering and resolving the peer to its domain model.
  */
 trait PeerResolution
 {
@@ -47,7 +47,7 @@ trait PeerResolution
     }
 
     /**
-     * Decode the peer-long value in $col and query the matching anchor
+     * Decode the peer-long value in $col and query the matching domain
      * model for the current account scope.
      *
      * When $classMap is provided it overrides the default FQCN mapping,
@@ -81,21 +81,20 @@ trait PeerResolution
         $instance = new $fqcn();
 
         return $instance->newQuery()
-            ->where($instance->qualifyColumn('tl_id'), $decoded['id'])
+            ->where($instance->qualifyColumn('id'), $decoded['id'])
             ->first();
     }
 
     /**
-     * Default FQCN map — the canonical id lives on the ctor INSTANCE
-     * models (tl_id is an instance-table column; anchors have no tl_id),
-     * so resolution targets the persona constructor's instance. Tests
-     * supply their own via the $classMap seam.
+     * Default FQCN map — points to domain table models (one model per
+     * domain, not per constructor). Resolution uses the `id` column
+     * which is the Telegram native ID on global-ID domain tables.
      *
      * @var array{user: class-string<Model>, chat: class-string<Model>, channel: class-string<Model>}
      */
     private const PEER_FQCN_MAP = [
-        'user'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUser',
-        'chat'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChat',
-        'channel' => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChannel',
+        'user'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TfUser',
+        'chat'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TfChat',
+        'channel' => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TfChannel',
     ];
 }

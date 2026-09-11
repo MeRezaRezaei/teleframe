@@ -5,179 +5,71 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Ingest;
 
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChannel;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChannelForbidden;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChat;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChatEmpty;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChatChatForbidden;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUser;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUserEmpty;
-use MeRezaRezaei\Teleframe\Schema\Generator\Naming;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannel;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
 
 /**
- * Referenced-entity aggregation (plan Task 5): resolve the anchor for a
- * user/chat/channel by (tenant, telegram id) with its CURRENT instance
- * loaded as the `currentInstance` relation — the anchor's latest
- * constructor (its discriminator follows constructor transitions, e.g.
- * user → userEmpty), skipping instances flagged deleted (e.g. User.deleted,
- * flags.5). Null when the tenant never saw the entity or its current
- * instance is deleted.
+ * Referenced-entity aggregation: resolve the domain model for a
+ * user/chat/channel by (tenant, telegram id).
  *
- * Identities live on the instance tables (per-constructor), so resolution
- * walks the constructor family of the namespace, then pins the anchor
- * through its account_id — no global lookups by telegram id (tenancy
- * contract).
+ * In the TDLib-style schema, each entity domain has ONE table (tf_users,
+ * tf_chats, tf_channels) with the Telegram native ID as PK (or part of
+ * the composite PK). Resolution is a simple lookup by (id, account_id).
  */
 final class EntityAggregator
 {
-    /**
-     * @var list<class-string<TlAnchorModel>>
-     */
-    private const USER_INSTANCES = [TlUserUser::class, TlUserUserEmpty::class];
-
-    /**
-     * Channels are Chat-namespace anchors in TL truth (channel and
-     * channelForbidden construct Chat) — chat() and channel() resolve the
-     * same truth, channel() only being the intent-revealing spelling.
-     *
-     * @var list<class-string<TlAnchorModel>>
-     */
-    private const CHAT_INSTANCES = [
-        TlChatChat::class,
-        TlChatChatEmpty::class,
-        TlChatChatForbidden::class,
-        TlChatChannel::class,
-        TlChatChannelForbidden::class,
-    ];
-
-    /** @var array<string, int>|null instance table => constructor id (lazy) */
-    private static ?array $constructorIds = null;
-
     public function user(int $accountId, int $tgId): ?TlUser
     {
-        return $this->lookupAnchor(TlUser::class, self::USER_INSTANCES, $accountId, $tgId);
+        return TlUser::query()
+            ->where('id', $tgId)
+            ->where('account_id', $accountId)
+            ->first();
     }
 
     public function chat(int $accountId, int $tgId): ?TlChat
     {
-        return $this->lookupAnchor(TlChat::class, self::CHAT_INSTANCES, $accountId, $tgId);
+        return TlChat::query()
+            ->where('id', $tgId)
+            ->where('account_id', $accountId)
+            ->first();
     }
 
     /**
-     * Channel-facing alias of chat(): same Chat-namespace anchors (TL
-     * truth — channel/channelForbidden construct Chat).
+     * Channel-facing alias: channels have their own domain table.
      */
-    public function channel(int $accountId, int $tgId): ?TlChat
+    public function channel(int $accountId, int $tgId): ?TlChannel
     {
-        return $this->lookupAnchor(TlChat::class, self::CHAT_INSTANCES, $accountId, $tgId);
+        return TlChannel::query()
+            ->where('id', $tgId)
+            ->where('account_id', $accountId)
+            ->first();
     }
 
     /**
-     * Anchor for (tenant, telegram id) with the CURRENT instance attached
-     * as `currentInstance` — or null when absent (unknown id, other
-     * tenant, or the current instance is deleted).
+     * Resolve a peer-long value to its domain model.
      *
-     * @template TAnchor of TlAnchorModel
-     *
-     * @param class-string<TAnchor> $anchorClass
-     * @param list<class-string<TlAnchorModel>> $instanceClasses
-     *
-     * @return TAnchor|null
+     * @param class-string<TlAnchorModel>|null $modelClass Override the default model class
      */
-    private function lookupAnchor(string $anchorClass, array $instanceClasses, int $accountId, int $tgId): ?object
+    public function resolvePeer(int $accountId, int $peerLong, ?string $modelClass = null): ?TlAnchorModel
     {
-        /** @var TAnchor|null $anchor */
-        $anchor = null;
-        foreach ($instanceClasses as $instanceClass) {
-            $ids = $instanceClass::query()->where('tl_id', $tgId)->pluck('id')->all();
-            if ($ids === []) {
-                continue;
-            }
+        $decoded = PeerIdTool::decode($peerLong);
 
-            // Global-ID types (User, Chat — id:long → Telegram ID IS the
-            // PK) are shared across accounts. Scoped types (Message, etc.)
-            // are per-tenant: filter by account_id.
-            $table = (new $instanceClass())->getTable();
-            $isScoped = str_starts_with($table, 'tl_message_');
-            $q = $anchorClass::query()->whereIn('id', $ids);
-            if ($isScoped) {
-                $q->where('account_id', $accountId);
-            }
-            $anchor ??= $q->first();
-        }
+        $class = match ($decoded['kind']) {
+            'user' => $modelClass ?? TlUser::class,
+            'chat' => $modelClass ?? TlChat::class,
+            'channel' => $modelClass ?? TlChannel::class,
+            default => null,
+        };
 
-        if ($anchor === null) {
+        if ($class === null || !class_exists($class)) {
             return null;
         }
 
-        $current = $this->currentInstance(
-            $instanceClasses,
-            (int) $anchor->getKey(),
-            (int) $anchor->getAttribute('constructor_id'),
-        );
-
-        // An anchor without a resolvable current instance (deleted) is
-        // not an addressable entity.
-        return $current === null ? null : $anchor->setRelation('currentInstance', $current);
-    }
-
-    /**
-     * The CURRENT instance among the anchor's constructor family rows (an
-     * anchor can carry one row per constructor table — shared PKs, e.g.
-     * user + userEmpty after an upstream deletion): the row matching the
-     * anchor's constructor discriminator (the latest constructor ingested)
-     * when it is not deleted, else the latest non-deleted row by timestamp.
-     *
-     * @param list<class-string<TlAnchorModel>> $instanceClasses
-     */
-    private function currentInstance(array $instanceClasses, int $anchorId, int $anchorConstructorId): ?TlAnchorModel
-    {
-        $best = null;
-        $bestTs = null;
-        foreach ($instanceClasses as $instanceClass) {
-            /** @var TlAnchorModel|null $candidate */
-            $candidate = $instanceClass::query()->find($anchorId);
-            if ($candidate === null) {
-                continue;
-            }
-            if ((bool) $candidate->getAttribute('deleted')) {
-                continue; // deleted-flagged instances never resolve as current
-            }
-            if (self::constructorIdFor($instanceClass) === $anchorConstructorId) {
-                return $candidate; // the anchor's current constructor wins
-            }
-            $at = $candidate->getAttribute('updated_at');
-            $ts = $at instanceof \DateTimeInterface ? $at->getTimestamp() : 0;
-            if ($bestTs === null || $ts > $bestTs) {
-                $best = $candidate;
-                $bestTs = $ts;
-            }
-        }
-
-        return $best;
-    }
-
-    /**
-     * Constructor id behind an instance model, via the shared metamodel
-     * (constructor tables are per-constructor; Naming::constructorTable is the
-     * generator's own mapping, so this cannot drift).
-     *
-     * @param class-string<TlAnchorModel> $instanceClass
-     */
-    private static function constructorIdFor(string $instanceClass): ?int
-    {
-        if (self::$constructorIds === null) {
-            $map = [];
-            foreach (UpdateIngestor::constructors() as $name => $ctor) {
-                $map[Naming::constructorTable($ctor->resultType, $name)] = $ctor->id;
-            }
-            self::$constructorIds = $map;
-        }
-
-        $table = (new $instanceClass())->getTable();
-
-        return self::$constructorIds[$table] ?? null;
+        return $class::query()
+            ->where('id', $decoded['id'])
+            ->where('account_id', $accountId)
+            ->first();
     }
 }

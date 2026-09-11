@@ -6,7 +6,6 @@ namespace MeRezaRezaei\Teleframe\Tests\Schema;
 
 use PHPUnit\Framework\TestCase;
 use MeRezaRezaei\Teleframe\Schema\Generator\FactoryGenerator;
-use MeRezaRezaei\Teleframe\Schema\Generator\ModelGenerator;
 use MeRezaRezaei\Teleframe\Schema\Generator\TlParser;
 
 final class FactoryGeneratorTest extends TestCase
@@ -18,21 +17,30 @@ final class FactoryGeneratorTest extends TestCase
         return (new FactoryGenerator())->generate($scheme);
     }
 
-    public function test_factory_for_ctor_model(): void
+    public function test_factory_for_domain_model(): void
     {
         $files = self::generate();
-        self::assertArrayHasKey('TlUserUserEmptyFactory.php', $files);
-        $f = $files['TlUserUserEmptyFactory.php'];
-        self::assertStringContainsString('final class TlUserUserEmptyFactory extends Factory', $f);
-        self::assertStringContainsString("protected \$model = \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUserEmpty::class;", $f);
+        self::assertArrayHasKey('TlUserFactory.php', $files);
+        $f = $files['TlUserFactory.php'];
+        self::assertStringContainsString('final class TlUserFactory extends Factory', $f);
+        self::assertStringContainsString("protected \$model = \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser::class;", $f);
         self::assertStringContainsString("'tl_id' => 1001,", $f);
     }
 
-    public function test_model_has_factory_wiring(): void
+    public function test_message_factory_exists(): void
     {
-        $scheme = TlParser::parseFile(__DIR__ . '/fixtures/mini.tl', 0, strict: true);
-        $models = (new ModelGenerator())->generate($scheme);
-        self::assertStringContainsString('use HasFactory, HasTlChildren;', $models['TlUserUserEmpty.php']);
+        $files = self::generate();
+        self::assertArrayHasKey('TlMessageFactory.php', $files);
+        $f = $files['TlMessageFactory.php'];
+        self::assertStringContainsString('final class TlMessageFactory extends Factory', $f);
+        self::assertStringContainsString("protected \$model = \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessage::class;", $f);
+    }
+
+    public function test_no_per_constructor_factories(): void
+    {
+        $files = self::generate();
+        self::assertArrayNotHasKey('TlUserUserEmptyFactory.php', $files);
+        self::assertArrayNotHasKey('TlMessageMessageFactory.php', $files);
     }
 
     public function test_deterministic(): void

@@ -79,7 +79,7 @@ final class NamingTest extends TestCase
     public function test_vector_db_type_throws(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('child table');
+        $this->expectExceptionMessage('tl_data JSONB');
         Naming::dbType(new TlParam('p', 'Vector<UserStatus>'));
     }
 

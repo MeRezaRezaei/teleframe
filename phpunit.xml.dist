@@ -58,5 +58,8 @@
         <testsuite name="MiniApp">
             <directory>tests/MiniApp</directory>
         </testsuite>
+        <testsuite name="Realtime">
+            <directory>tests/Realtime</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

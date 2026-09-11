@@ -30,6 +30,7 @@ final class ServiceProviderTest extends TestbenchTestCase
         self::assertContains('api_id', $keys);
         self::assertContains('dc_id', $keys);
         self::assertContains('logging', $keys);
+        self::assertContains('realtime', $keys);
     }
 
     public function testLoggerInterfaceDefaultsToSilentNullLogger(): void

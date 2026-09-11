@@ -86,6 +86,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Realtime (Centrifugo projection — Phase 4)
+    |--------------------------------------------------------------------------
+    | url = Centrifugo HTTP API endpoint (e.g. http://localhost:8000/api).
+    | apikey = API key for the publish call; secret = signing secret (only
+    | needed if Centrifugo is configured to verify JWT signatures on
+    | publishes). Leave url empty to keep the projection silent (the
+    | UpdateStored → Centrifugo listener is then not registered).
+    */
+    'realtime' => [
+        'url' => env('TELEFRAME_CENTRIFUGO_URL', ''),
+        'apikey' => env('TELEFRAME_CENTRIFUGO_APIKEY', ''),
+        'secret' => env('TELEFRAME_CENTRIFUGO_SECRET', ''),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Logging (PSR-3 seam)
     |--------------------------------------------------------------------------
     | FQCN of a PSR-3 logger class (default '' → Psr\Log\NullLogger, i.e. the

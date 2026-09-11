@@ -18,6 +18,8 @@ use MeRezaRezaei\Teleframe\Handler\UpdateDispatcher;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
+use MeRezaRezaei\Teleframe\Realtime\ChannelNames;
+use MeRezaRezaei\Teleframe\Realtime\HttpCentrifugoBridge;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use MeRezaRezaei\Teleframe\Schema\Generator\TeleframeSchemeLoader;
 use MeRezaRezaei\Teleframe\Teleclient;
@@ -147,6 +149,24 @@ final class PlainPhpLoadTest extends TestCase
 
         self::assertSame(1, $fired);
         self::assertCount(1, $result['dispatched']);
+    }
+
+    public function test_channel_names_produces_correct_shapes(): void
+    {
+        self::assertSame('account:42:updates', ChannelNames::accountUpdates(42));
+        self::assertSame('account:7:messages:99', ChannelNames::accountMessages(7, 99));
+    }
+
+    public function test_http_centrifugo_bridge_constructs_without_laravel(): void
+    {
+        $bridge = new HttpCentrifugoBridge('http://localhost:8000/api', 'key', 'secret');
+
+        self::assertInstanceOf(HttpCentrifugoBridge::class, $bridge);
+    }
+
+    public function test_centrifugo_bridge_interface_exists(): void
+    {
+        self::assertTrue(interface_exists(\MeRezaRezaei\Teleframe\Realtime\CentrifugoBridge::class));
     }
 
     public function test_teleframe_facade_constructs_without_laravel(): void

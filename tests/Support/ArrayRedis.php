@@ -158,6 +158,18 @@ final class ArrayRedis implements RedisConnectionContract
         return 0;
     }
 
+    public function hget(string $key, string $field): ?string
+    {
+        return $this->hashes[$key][$field] ?? null;
+    }
+
+    public function expire(string $key, int $seconds): bool
+    {
+        // No-op in-memory: TTL semantics are not modeled in the double.
+        // Keys live until explicitly deleted via del().
+        return array_key_exists($key, $this->streams) || array_key_exists($key, $this->hashes);
+    }
+
     /**
      * @return list<array{0: string, 1: array<string, string>}> Entry id => field pairs, in insertion order.
      */

@@ -130,6 +130,18 @@ final class LaravelRedisAdapter implements RedisConnectionContract
         };
     }
 
+    public function hget(string $key, string $field): ?string
+    {
+        $val = $this->connection->command('hget', [$key, $field]);
+
+        return $val !== false ? (string) $val : null;
+    }
+
+    public function expire(string $key, int $seconds): bool
+    {
+        return (bool) $this->connection->command('expire', [$key, $seconds]);
+    }
+
     private function isPredis(): bool
     {
         return $this->connection instanceof PredisConnection;

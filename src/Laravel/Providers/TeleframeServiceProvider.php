@@ -30,7 +30,10 @@ use MeRezaRezaei\Teleframe\Laravel\Console\BackupCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\IngestCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Http\Middleware\VerifyMiniAppInitData;
+use MeRezaRezaei\Teleframe\Laravel\Realtime\UpdateStoredCentrifugoListener;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
+use MeRezaRezaei\Teleframe\Realtime\CentrifugoBridge;
+use MeRezaRezaei\Teleframe\Realtime\HttpCentrifugoBridge;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountContext;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
@@ -219,6 +222,25 @@ class TeleframeServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(TeleframeAuthService::class);
+
+        // Realtime projection (Phase 4): when teleframe.realtime.url is set,
+        // every stored update fan-outs to the per-account Centrifugo
+        // channels. Unconfigured → no binding; the listener below is not
+        // registered and the mirror stays silent (no external side effects).
+        /** @var ConfigRepository $config */
+        $config = $this->app->make('config');
+        if ((string) $config->get('teleframe.realtime.url', '') !== '') {
+            $this->app->singleton(CentrifugoBridge::class, static function ($app): CentrifugoBridge {
+                /** @var ConfigRepository $config */
+                $config = $app->make('config');
+
+                return new HttpCentrifugoBridge(
+                    (string) $config->get('teleframe.realtime.url', ''),
+                    (string) $config->get('teleframe.realtime.apikey', ''),
+                    (string) $config->get('teleframe.realtime.secret', ''),
+                );
+            });
+        }
     }
 
     public function boot(): void
@@ -270,6 +292,13 @@ class TeleframeServiceProvider extends ServiceProvider
             /** @var EventDispatcher $events */
             $events = $this->app['events'];
             $events->listen(UpdateStored::class, UpdateStoredHandler::class);
+
+            // Realtime projection (Phase 4): per-account Centrifugo fan-out,
+            // registered only when the realtime url is configured so an
+            // unconfigured mirror stays silent (no external side effects).
+            if ((string) $this->app->make('config')->get('teleframe.realtime.url', '') !== '') {
+                $events->listen(UpdateStored::class, UpdateStoredCentrifugoListener::class);
+            }
         }
     }
 }

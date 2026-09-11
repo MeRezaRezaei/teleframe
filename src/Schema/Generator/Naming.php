@@ -8,7 +8,10 @@ use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlParam;
 use RuntimeException;
 
 /**
- * Bijective, prefix-free TL ↔ PHP/SQL name mapping (spec §4.7).
+ * TL ↔ PHP/SQL name mapping for the TDLib-style domain table schema.
+ *
+ * Domain tables use simple, readable names (tf_users, tf_messages, etc.)
+ * with no hash suffixes or repeated-word collisions.
  */
 final class Naming
 {
@@ -25,71 +28,210 @@ final class Naming
         'variadic', 'when', 'window', 'with',
     ];
 
-    /** PG identifier limit is 63 bytes; long names are shortened with a stable hash tail. */
-    public static function fit(string $name): string
+    /**
+     * TL type name → domain table name.
+     *
+     * Maps core Telegram entity types to their domain table.
+     * Returns null for types that don't map to a persisted table
+     * (API response wrappers, primitives, MTProto internals).
+     *
+     * @var array<string, string> TL type name => domain name (without tf_ prefix)
+     */
+    private const TYPE_TO_DOMAIN = [
+        // Core entities
+        'User'                  => 'users',
+        'Chat'                  => 'chats',
+        'Channel'               => 'channels',
+        'Message'               => 'messages',
+        'MessageService'        => 'messages',
+        'Dialog'                => 'dialogs',
+        'Document'              => 'documents',
+        'Photo'                 => 'photos',
+        'StickerSet'            => 'sticker_sets',
+        'StoryItem'             => 'stories',
+        'WallPaper'             => 'wallpapers',
+        'WallPaperSolid'        => 'wallpapers',
+        'ChannelParticipant'    => 'channel_participants',
+        // Update namespace
+        'Update'                => 'updates',
+    ];
+
+    /**
+     * Namespace prefix → domain table name.
+     *
+     * Types whose name starts with this prefix (before the dot) map to the domain.
+     *
+     * @var array<string, string>
+     */
+    private const NAMESPACE_TO_DOMAIN = [
+        'updates'   => 'updates',
+        'stories'   => 'stories',
+    ];
+
+    /**
+     * Classification result for a TL type.
+     *
+     * @return array{domain: string, is_entity: bool}|null
+     */
+    public static function classifyType(string $tlType): ?array
     {
-        if (strlen($name) <= 58) {
-            return $name;
+        // Exact name match
+        if (isset(self::TYPE_TO_DOMAIN[$tlType])) {
+            $domain = self::TYPE_TO_DOMAIN[$tlType];
+            return ['domain' => $domain, 'is_entity' => true];
         }
-        return substr($name, 0, 45) . '_' . substr(sha1($name), 0, 12);
+
+        // Namespace prefix match
+        $dotPos = strrpos($tlType, '.');
+        if ($dotPos !== false) {
+            $namespace = substr($tlType, 0, $dotPos);
+            if (isset(self::NAMESPACE_TO_DOMAIN[$namespace])) {
+                return ['domain' => self::NAMESPACE_TO_DOMAIN[$namespace], 'is_entity' => false];
+            }
+        }
+
+        return null;
     }
 
-    /** Drop the ctor namespace when it repeats the type namespace: (messages.Dialogs, messages.dialogsSlice) → dialogsSlice */
-    public static function dedupeNamespace(string $tlType, string $ctorName): string
+    /**
+     * Whether a TL type should be treated as a persisted entity
+     * (gets its own row in a domain table) vs ephemeral (no table).
+     */
+    public static function isPersistedType(string $tlType): bool
     {
-        $typeNs = str_contains($tlType, '.') ? substr($tlType, 0, (int) strrpos($tlType, '.')) : null;
-        $ctorNs = str_contains($ctorName, '.') ? substr($ctorName, 0, (int) strrpos($ctorName, '.')) : null;
-        if ($typeNs !== null && $ctorNs === $typeNs) {
-            return substr($ctorName, (int) strrpos($ctorName, '.') + 1);
+        return isset(self::TYPE_TO_DOMAIN[$tlType]);
+    }
+
+    /**
+     * Get the domain name for a TL type, or null if it's ephemeral.
+     */
+    public static function domainForType(string $tlType): ?string
+    {
+        $classification = self::classifyType($tlType);
+        return $classification['domain'] ?? null;
+    }
+
+    /**
+     * Domain table name: 'users' → 'tf_users'.
+     */
+    public static function domainTable(string $domain): string
+    {
+        return 'tf_' . $domain;
+    }
+
+    /**
+     * Model class name for a domain: 'users' → 'TlUser', 'messages' → 'TlMessage'.
+     */
+    public static function domainModel(string $domain): string
+    {
+        return 'Tl' . ucfirst(rtrim($domain, 's'));
+    }
+
+    /**
+     * Full FQCN for a domain model class.
+     */
+    public static function domainModelFqcn(string $domain): string
+    {
+        return 'MeRezaRezaei\\Teleframe\\Schema\\Generated\\Models\\' . self::domainModel($domain);
+    }
+
+    /**
+     * Legacy alias: model name for a TL type (used by PeerResolution etc.).
+     */
+    public static function model(string $tlType): string
+    {
+        return 'Tl' . self::pascal($tlType);
+    }
+
+    // ── Per-constructor naming (legacy, used by old generators) ──────
+
+    /**
+     * Per-constructor table name: ('User', 'user') → 'tl_user_user'.
+     * Strips the type's namespace prefix from the ctor name.
+     */
+    public static function constructorTable(string $tlType, string $ctorName): string
+    {
+        $typeSnake = self::snake($tlType);
+        $ctorName = self::stripTypePrefix($tlType, $ctorName);
+        $ctorSnake = self::snake($ctorName);
+        return 'tl_' . $typeSnake . '_' . $ctorSnake;
+    }
+
+    /**
+     * Child table for a vector column: ('tl_user_user', 'statuses') → 'tl_user_user__statuses'.
+     */
+    public static function childTable(string $parentTable, string $column): string
+    {
+        return $parentTable . '__' . $column;
+    }
+
+    /**
+     * Per-constructor model class: ('User', 'user') → 'TlUserUser'.
+     */
+    public static function ctorModel(string $tlType, string $ctorName): string
+    {
+        $ctorName = self::stripTypePrefix($tlType, $ctorName);
+        return 'Tl' . self::pascal($tlType) . self::pascal($ctorName);
+    }
+
+    /**
+     * Per-constructor DTO class: 'user' → 'UserData', 'messages.sendMessage' → 'TlMessagesSendMessageData'.
+     */
+    public static function dataClass(string $ctorName): string
+    {
+        $pascal = self::pascal($ctorName);
+        return str_contains($ctorName, '.') ? 'Tl' . $pascal . 'Data' : $pascal . 'Data';
+    }
+
+    /**
+     * Abstract data class for a TL type: 'User' → 'TlUserAbstractData'.
+     */
+    public static function abstractDataClass(string $tlType): string
+    {
+        return 'Tl' . self::pascal($tlType) . 'AbstractData';
+    }
+
+    /**
+     * Per-constructor DTO class name: ('User', 'user') → 'TlUserUserData'.
+     */
+    public static function ctorDto(string $tlType, string $ctorName): string
+    {
+        $ctorName = self::stripTypePrefix($tlType, $ctorName);
+        return 'Tl' . self::pascal($tlType) . self::pascal($ctorName) . 'Data';
+    }
+
+    /**
+     * Strip the type's namespace prefix from the ctor name.
+     * e.g., ('messages.Dialogs', 'messages.dialogsSlice') → 'dialogsSlice'.
+     */
+    private static function stripTypePrefix(string $tlType, string $ctorName): string
+    {
+        $dotPos = strrpos($tlType, '.');
+        if ($dotPos !== false) {
+            $prefix = substr($tlType, 0, $dotPos + 1);
+            if (str_starts_with($ctorName, $prefix)) {
+                return substr($ctorName, strlen($prefix));
+            }
         }
         return $ctorName;
     }
 
-    public static function constructorTable(string $tlType, string $ctorName): string
-    {
-        $ctor = self::dedupeNamespace($tlType, $ctorName);
-        return self::fit('tl_' . self::snake($tlType) . '_' . self::snake($ctor));
-    }
-
-    public static function childTable(string $parentTable, string $param): string
-    {
-        return self::fit($parentTable . '__' . self::snake($param));
-    }
-
+    /**
+     * Column name for a TL param: escapes reserved words with tl_ prefix.
+     */
     public static function column(string $param): string
     {
         $snake = self::snake($param);
         return in_array($snake, self::RESERVED, true) ? 'tl_' . $snake : $snake;
     }
 
-    public static function model(string $tlType): string
-    {
-        return 'Tl' . self::pascal($tlType);
-    }
-
-    public static function ctorModel(string $tlType, string $ctorName): string
-    {
-        return 'Tl' . self::pascal($tlType) . self::pascal(self::dedupeNamespace($tlType, $ctorName));
-    }
-
-    public static function dataClass(string $ctorOrMethodName): string
-    {
-        $pascal = self::pascal($ctorOrMethodName);
-        return str_contains($ctorOrMethodName, '.')
-            ? 'Tl' . $pascal . 'Data'
-            : $pascal . 'Data';
-    }
-
-    public static function abstractDataClass(string $tlType): string
-    {
-        return 'Tl' . self::pascal($tlType) . 'AbstractData';
-    }
-
-    /** Postgres column type for a scalar/nat/true/ref param (vectors: child tables). */
+    /**
+     * Postgres column type for a scalar/nat/true/ref param.
+     */
     public static function dbType(TlParam $p, bool $precision = false): string
     {
         if ($p->kind() === 'vector' || $p->kind() === 'generic') {
-            throw new \InvalidArgumentException('param "' . $p->name . '" is a vector/generic — use a child table, not a column');
+            throw new \InvalidArgumentException('param "' . $p->name . '" is a vector/generic — use tl_data JSONB, not a column');
         }
         return match ($p->baseType()) {
             'int' => 'integer',
@@ -101,7 +243,7 @@ final class Naming
             'bytes' => 'binary',
             '#' => 'bigint',
             'true' => 'boolean',
-            default => 'bigint', // ref — Telegram native ID (not a UUID)
+            default => 'bigint',
         };
     }
 
@@ -116,13 +258,13 @@ final class Naming
             'bytes' => 'string',
             '#' => 'int',
             'true' => 'bool',
-            default => 'int', // ref — Telegram native ID
+            default => 'int',
         };
     }
 
     /**
      * @param list<string> $names
-     * @throws RuntimeException on duplicates (spec §7.3 V3)
+     * @throws RuntimeException on duplicates
      */
     public static function assertUnique(array $names, string $kind): void
     {
@@ -159,7 +301,7 @@ final class Naming
         return $out;
     }
 
-    /** dotted/snake name → PascalCase path: 'messages.dialogsSlice', 'msgs_state_info' → 'MessagesDialogsSlice', 'MsgsStateInfo' */
+    /** dotted/snake name → PascalCase path */
     public static function pascal(string $dotted): string
     {
         $dotted = str_replace('_', '.', $dotted);

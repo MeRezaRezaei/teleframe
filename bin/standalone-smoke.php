@@ -43,6 +43,8 @@ use MeRezaRezaei\Teleframe\Ingest\RouteIdempotency;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use MeRezaRezaei\Teleframe\Schema\Generator\TeleframeSchemeLoader;
+use MeRezaRezaei\Teleframe\Realtime\ChannelNames;
+use MeRezaRezaei\Teleframe\Realtime\HttpCentrifugoBridge;
 use MeRezaRezaei\Teleframe\Teleclient;
 use MeRezaRezaei\Teleframe\Teleframe;
 use Psr\SimpleCache\CacheInterface;
@@ -337,6 +339,16 @@ $checks = [
 
         return $fired === 1;
     },
+    // Realtime (Phase 4)
+    'Realtime\ChannelNames accountUpdates format' => static fn (): bool =>
+        ChannelNames::accountUpdates(42) === 'account:42:updates',
+    'Realtime\ChannelNames accountMessages format' => static fn (): bool =>
+        ChannelNames::accountMessages(42, 99) === 'account:42:messages:99',
+    'Realtime\HttpCentrifugoBridge constructs' => static fn (): bool =>
+        new HttpCentrifugoBridge('http://localhost:8000/api', 'key', 'secret') instanceof HttpCentrifugoBridge,
+    'Realtime\CentrifugoBridge interface exists' => static fn (): bool =>
+        interface_exists(\MeRezaRezaei\Teleframe\Realtime\CentrifugoBridge::class),
+
     'Facade send writes the elimination registry; echo consumed by dispatcher' => static function (): bool {
         $registry = new HandlerRegistry();
         $sends = new InMemoryCache();

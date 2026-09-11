@@ -119,7 +119,7 @@ final class SchemaRegenerator
 
         $result = ['counts' => $counts, 'manifest' => $manifest];
         if ($this->shipNamespaces !== null) {
-            $result['ship'] = $this->shipMigrations($combined, $stats['tables'], $migFiles, $outputDir);
+            $result['ship'] = $this->shipMigrations($combined, $migFiles, $outputDir);
         }
         return $result;
     }
@@ -147,7 +147,7 @@ final class SchemaRegenerator
      *  --force to override). */
     private const MAX_CTOR_DRIFT_RATIO = 0.30;
 
-    private function shipMigrations(TlScheme $combined, array $tableMap, array $migFiles, string $outputDir): array
+    private function shipMigrations(TlScheme $combined, array $migFiles, string $outputDir): array
     {
         $dir = $outputDir . '/migrations';
         $preserved = [];
@@ -162,21 +162,10 @@ final class SchemaRegenerator
         self::removeTree($dir);
         mkdir($dir, 0775, true);
 
+        // Ship all domain table migrations + route table (TDLib-style: ~14 files total)
         $shipped = [];
-        foreach ($combined->types() as $type) {
-            if ($type->name === 'Vector t' || $type->constructors() === []) {
-                continue; // mirrors MigrationGenerator's file-emission loop
-            }
-            if (!in_array($type->namespace(), $this->shipNamespaces ?? [], true)) {
-                continue;
-            }
-            $ctors = $type->constructors();
-            ksort($ctors);
-            $firstCtor = reset($ctors);
-            $file = $tableMap[Naming::constructorTable($type->name, $firstCtor->name)] ?? null;
-            if ($file !== null && isset($migFiles[$file])) {
-                $shipped[$file] = $migFiles[$file];
-            }
+        foreach ($migFiles as $file => $content) {
+            $shipped[$file] = $content;
         }
         ksort($shipped);
         foreach ($shipped as $name => $content) {
