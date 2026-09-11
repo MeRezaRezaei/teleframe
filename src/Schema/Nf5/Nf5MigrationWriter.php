@@ -18,13 +18,14 @@ final class Nf5MigrationWriter
         @mkdir($this->outDir, 0777, true);
         $allFks = [];
         $paths  = [];
+        $emitted = [];
 
         foreach ($parents as $i => $parent) {
             $up   = [];
             $down = [];
-            $this->emitTable($parent, $up, $down, $allFks);
+            $this->emitTable($parent, $up, $down, $allFks, $emitted);
             foreach ($parent->children as $child) {
-                $this->emitTable($child, $up, $down, $allFks);
+                $this->emitTable($child, $up, $down, $allFks, $emitted);
             }
             $down[] = "Schema::dropIfExists('{$parent->tfName}');";
             $down[] = ''; // blank line before children drops
@@ -45,10 +46,15 @@ final class Nf5MigrationWriter
         return $paths;
     }
 
-    /** @param list<string> $up @param list<string> $down @param array $allFks collected FK defs */
-    private function emitTable(Nf5Table $table, array &$up, array &$down, array &$allFks): void
+    /** @param list<string> $up @param list<string> $down @param array $allFks collected FK defs @param array<string,true> $emitted tracks already-created tables */
+    private function emitTable(Nf5Table $table, array &$up, array &$down, array &$allFks, array &$emitted): void
     {
         $tbl = $table->tfName;
+        // Skip tables already emitted by an earlier parent's migration
+        if (isset($emitted[$tbl])) {
+            return;
+        }
+        $emitted[$tbl] = true;
         $up[] = "Schema::create('{$tbl}', function (Blueprint \$table) {";
         foreach ($table->columns as $col) {
             $up[] = $this->columnDef($col);
