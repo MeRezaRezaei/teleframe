@@ -1,0 +1,1701 @@
+{
+ "tf_attach_menu_bots": {
+  "tl": "AttachMenuBot",
+  "ctors": [
+   "attachMenuBot"
+  ],
+  "base": [
+   [
+    "bot_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "short_name",
+    "TEXT NOT NULL"
+   ],
+   [
+    "icons",
+    "1:N child"
+   ]
+  ],
+  "bools": [
+   "inactive",
+   "has_settings",
+   "request_write_access",
+   "show_in_attach_menu",
+   "show_in_side_menu",
+   "side_menu_disclaimer_needed"
+  ],
+  "children": [
+   [
+    "peer_types",
+    "1:N child"
+   ]
+  ]
+ },
+ "tf_bot_apps": {
+  "tl": "BotApp",
+  "ctors": [
+   "botAppNotModified",
+   "botApp"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "short_name",
+    "TEXT NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "description",
+    "TEXT NOT NULL"
+   ],
+   [
+    "photo",
+    "FK\u2192Photo"
+   ],
+   [
+    "hash",
+    "BIGINT NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "document",
+    "FK\u2192Document"
+   ]
+  ]
+ },
+ "tf_bot_infos": {
+  "tl": "BotInfo",
+  "ctors": [
+   "botInfo"
+  ],
+  "base": [],
+  "bools": [
+   "has_preview_medias"
+  ],
+  "children": [
+   [
+    "user_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "description",
+    "TEXT NOT NULL"
+   ],
+   [
+    "description_photo",
+    "FK\u2192Photo"
+   ],
+   [
+    "description_document",
+    "FK\u2192Document"
+   ],
+   [
+    "commands",
+    "1:N child"
+   ],
+   [
+    "menu_button",
+    "FK\u2192BotMenuButton"
+   ],
+   [
+    "privacy_policy_url",
+    "TEXT NOT NULL"
+   ],
+   [
+    "app_settings",
+    "FK\u2192BotAppSettings"
+   ],
+   [
+    "verifier_settings",
+    "FK\u2192BotVerifierSettings"
+   ]
+  ]
+ },
+ "tf_bot_inline_results": {
+  "tl": "BotInlineResult",
+  "ctors": [
+   "botInlineResult",
+   "botInlineMediaResult"
+  ],
+  "base": [
+   [
+    "id",
+    "TEXT NOT NULL"
+   ],
+   [
+    "type",
+    "TEXT NOT NULL"
+   ],
+   [
+    "send_message",
+    "FK\u2192BotInlineMessage"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "description",
+    "TEXT NOT NULL"
+   ],
+   [
+    "url",
+    "TEXT NOT NULL"
+   ],
+   [
+    "thumb",
+    "FK\u2192WebDocument"
+   ],
+   [
+    "content",
+    "FK\u2192WebDocument"
+   ]
+  ]
+ },
+ "tf_business_chat_links": {
+  "tl": "BusinessChatLink",
+  "ctors": [
+   "businessChatLink"
+  ],
+  "base": [
+   [
+    "link",
+    "TEXT NOT NULL"
+   ],
+   [
+    "message",
+    "TEXT NOT NULL"
+   ],
+   [
+    "views",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "entities",
+    "1:N child"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ]
+  ]
+ },
+ "tf_admin_log_events": {
+  "tl": "ChannelAdminLogEvent",
+  "ctors": [
+   "channelAdminLogEvent"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "user_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "action",
+    "FK\u2192ChannelAdminLogEventAction"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_channel_participants": {
+  "tl": "ChannelParticipant",
+  "ctors": [
+   "channelParticipant",
+   "channelParticipantSelf",
+   "channelParticipantCreator",
+   "channelParticipantAdmin",
+   "channelParticipantBanned",
+   "channelParticipantLeft"
+  ],
+  "base": [
+   [
+    "user_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "subscription_until_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "rank",
+    "TEXT NOT NULL"
+   ]
+  ]
+ },
+ "tf_chats": {
+  "tl": "Chat",
+  "ctors": [
+   "chatEmpty",
+   "chat",
+   "chatForbidden",
+   "channel",
+   "channelForbidden"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "photo",
+    "FK\u2192ChatPhoto"
+   ],
+   [
+    "participants_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "version",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [
+   "creator",
+   "left",
+   "deactivated",
+   "call_active",
+   "call_not_empty",
+   "noforwards"
+  ],
+  "children": [
+   [
+    "migrated_to",
+    "FK\u2192InputChannel"
+   ],
+   [
+    "admin_rights",
+    "FK\u2192ChatAdminRights"
+   ],
+   [
+    "default_banned_rights",
+    "FK\u2192ChatBannedRights"
+   ]
+  ]
+ },
+ "tf_dialogs": {
+  "tl": "Dialog",
+  "ctors": [
+   "dialog",
+   "dialogFolder"
+  ],
+  "base": [
+   [
+    "peer",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "top_message",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "read_inbox_max_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "read_outbox_max_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "unread_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "unread_mentions_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "unread_reactions_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "unread_poll_votes_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "notify_settings",
+    "FK\u2192PeerNotifySettings"
+   ]
+  ],
+  "bools": [
+   "pinned",
+   "unread_mark",
+   "view_forum_as_messages"
+  ],
+  "children": [
+   [
+    "pts",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "draft",
+    "FK\u2192DraftMessage"
+   ],
+   [
+    "folder_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "ttl_period",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_dialog_filters": {
+  "tl": "DialogFilter",
+  "ctors": [
+   "dialogFilter",
+   "dialogFilterDefault",
+   "dialogFilterChatlist"
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "title",
+    "FK\u2192TextWithEntities"
+   ],
+   [
+    "pinned_peers",
+    "1:N child"
+   ],
+   [
+    "include_peers",
+    "1:N child"
+   ],
+   [
+    "exclude_peers",
+    "1:N child"
+   ]
+  ],
+  "bools": [
+   "contacts",
+   "non_contacts",
+   "groups",
+   "broadcasts",
+   "bots",
+   "exclude_muted",
+   "exclude_read",
+   "exclude_archived",
+   "title_noanimate"
+  ],
+  "children": [
+   [
+    "emoticon",
+    "TEXT NOT NULL"
+   ],
+   [
+    "color",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_documents": {
+  "tl": "Document",
+  "ctors": [
+   "documentEmpty",
+   "document"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "file_reference",
+    "VARCHAR(255) NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "mime_type",
+    "TEXT NOT NULL"
+   ],
+   [
+    "size",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "dc_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "attributes",
+    "1:N child"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "thumbs",
+    "1:N child"
+   ],
+   [
+    "video_thumbs",
+    "1:N child"
+   ]
+  ]
+ },
+ "tf_encrypted_chats": {
+  "tl": "EncryptedChat",
+  "ctors": [
+   "encryptedChatEmpty",
+   "encryptedChatWaiting",
+   "encryptedChatRequested",
+   "encryptedChat",
+   "encryptedChatDiscarded"
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "admin_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "participant_id",
+    "BIGINT NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_folders": {
+  "tl": "Folder",
+  "ctors": [
+   "folder"
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ]
+  ],
+  "bools": [
+   "autofill_new_broadcasts",
+   "autofill_public_groups",
+   "autofill_new_correspondents"
+  ],
+  "children": [
+   [
+    "photo",
+    "FK\u2192ChatPhoto"
+   ]
+  ]
+ },
+ "tf_forum_topics": {
+  "tl": "ForumTopic",
+  "ctors": [
+   "forumTopicDeleted",
+   "forumTopic"
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_group_calls": {
+  "tl": "GroupCall",
+  "ctors": [
+   "groupCallDiscarded",
+   "groupCall"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "duration",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_messages": {
+  "tl": "Message",
+  "ctors": [
+   "messageEmpty",
+   "message",
+   "messageService"
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "peer_id",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "message",
+    "TEXT NOT NULL"
+   ]
+  ],
+  "bools": [
+   "out",
+   "mentioned",
+   "media_unread",
+   "silent",
+   "post",
+   "from_scheduled",
+   "legacy",
+   "edit_hide",
+   "pinned",
+   "noforwards",
+   "invert_media",
+   "offline",
+   "video_processing_pending",
+   "paid_suggested_post_stars",
+   "paid_suggested_post_ton"
+  ],
+  "children": [
+   [
+    "from_id",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "from_boosts_applied",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "from_rank",
+    "TEXT NOT NULL"
+   ],
+   [
+    "saved_peer_id",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "fwd_from",
+    "FK\u2192MessageFwdHeader"
+   ],
+   [
+    "via_bot_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "via_business_bot_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "guestchat_via_from",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "reply_to",
+    "FK\u2192MessageReplyHeader"
+   ],
+   [
+    "media",
+    "FK\u2192MessageMedia"
+   ],
+   [
+    "reply_markup",
+    "FK\u2192ReplyMarkup"
+   ],
+   [
+    "entities",
+    "1:N child"
+   ],
+   [
+    "views",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "forwards",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "replies",
+    "FK\u2192MessageReplies"
+   ],
+   [
+    "edit_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "post_author",
+    "TEXT NOT NULL"
+   ],
+   [
+    "grouped_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "reactions",
+    "FK\u2192MessageReactions"
+   ],
+   [
+    "restriction_reason",
+    "1:N child"
+   ],
+   [
+    "ttl_period",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "quick_reply_shortcut_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "effect",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "factcheck",
+    "FK\u2192FactCheck"
+   ],
+   [
+    "report_delivery_until_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "paid_message_stars",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "suggested_post",
+    "FK\u2192SuggestedPost"
+   ],
+   [
+    "schedule_repeat_period",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "summary_from_language",
+    "TEXT NOT NULL"
+   ],
+   [
+    "rich_message",
+    "FK\u2192RichMessage"
+   ]
+  ]
+ },
+ "tf_message_actions": {
+  "tl": "MessageAction",
+  "ctors": [
+   "messageActionEmpty",
+   "messageActionChatCreate",
+   "messageActionChatEditTitle",
+   "messageActionChatEditPhoto",
+   "messageActionChatDeletePhoto",
+   "messageActionChatAddUser",
+   "messageActionChatDeleteUser",
+   "messageActionChatJoinedByLink",
+   "messageActionChannelCreate",
+   "messageActionChatMigrateTo",
+   "messageActionChannelMigrateFrom",
+   "messageActionPinMessage",
+   "messageActionHistoryClear",
+   "messageActionGameScore",
+   "messageActionPaymentSentMe",
+   "messageActionPaymentSent",
+   "messageActionPhoneCall",
+   "messageActionScreenshotTaken",
+   "messageActionCustomAction",
+   "messageActionBotAllowed",
+   "messageActionSecureValuesSentMe",
+   "messageActionSecureValuesSent",
+   "messageActionContactSignUp",
+   "messageActionGeoProximityReached",
+   "messageActionGroupCall",
+   "messageActionInviteToGroupCall",
+   "messageActionSetMessagesTTL",
+   "messageActionGroupCallScheduled",
+   "messageActionSetChatTheme",
+   "messageActionChatJoinedByRequest",
+   "messageActionWebViewDataSentMe",
+   "messageActionWebViewDataSent",
+   "messageActionGiftPremium",
+   "messageActionTopicCreate",
+   "messageActionTopicEdit",
+   "messageActionSuggestProfilePhoto",
+   "messageActionRequestedPeer",
+   "messageActionSetChatWallPaper",
+   "messageActionGiftCode",
+   "messageActionGiveawayLaunch",
+   "messageActionGiveawayResults",
+   "messageActionBoostApply",
+   "messageActionRequestedPeerSentMe",
+   "messageActionPaymentRefunded",
+   "messageActionGiftStars",
+   "messageActionPrizeStars",
+   "messageActionStarGift",
+   "messageActionStarGiftUnique",
+   "messageActionPaidMessagesRefunded",
+   "messageActionPaidMessagesPrice",
+   "messageActionConferenceCall",
+   "messageActionTodoCompletions",
+   "messageActionTodoAppendTasks",
+   "messageActionSuggestedPostApproval",
+   "messageActionSuggestedPostSuccess",
+   "messageActionSuggestedPostRefund",
+   "messageActionGiftTon",
+   "messageActionSuggestBirthday",
+   "messageActionStarGiftPurchaseOffer",
+   "messageActionStarGiftPurchaseOfferDeclined",
+   "messageActionNewCreatorPending",
+   "messageActionChangeCreator",
+   "messageActionNoForwardsToggle",
+   "messageActionNoForwardsRequest",
+   "messageActionPollAppendAnswer",
+   "messageActionPollDeleteAnswer",
+   "messageActionManagedBotCreated"
+  ],
+  "base": [
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "users",
+    "1:N child"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_message_entities": {
+  "tl": "MessageEntity",
+  "ctors": [
+   "messageEntityUnknown",
+   "messageEntityMention",
+   "messageEntityHashtag",
+   "messageEntityBotCommand",
+   "messageEntityUrl",
+   "messageEntityEmail",
+   "messageEntityBold",
+   "messageEntityItalic",
+   "messageEntityCode",
+   "messageEntityPre",
+   "messageEntityTextUrl",
+   "messageEntityMentionName",
+   "inputMessageEntityMentionName",
+   "messageEntityPhone",
+   "messageEntityCashtag",
+   "messageEntityUnderline",
+   "messageEntityStrike",
+   "messageEntityBankCard",
+   "messageEntitySpoiler",
+   "messageEntityCustomEmoji",
+   "messageEntityBlockquote",
+   "messageEntityFormattedDate",
+   "messageEntityDiffInsert",
+   "messageEntityDiffReplace",
+   "messageEntityDiffDelete"
+  ],
+  "base": [
+   [
+    "offset",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "length",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_message_medias": {
+  "tl": "MessageMedia",
+  "ctors": [
+   "messageMediaEmpty",
+   "messageMediaPhoto",
+   "messageMediaGeo",
+   "messageMediaContact",
+   "messageMediaUnsupported",
+   "messageMediaDocument",
+   "messageMediaWebPage",
+   "messageMediaVenue",
+   "messageMediaGame",
+   "messageMediaInvoice",
+   "messageMediaGeoLive",
+   "messageMediaPoll",
+   "messageMediaDice",
+   "messageMediaStory",
+   "messageMediaGiveaway",
+   "messageMediaGiveawayResults",
+   "messageMediaPaidMedia",
+   "messageMediaToDo",
+   "messageMediaVideoStream"
+  ],
+  "base": [],
+  "bools": [
+   "spoiler",
+   "live_photo"
+  ],
+  "children": [
+   [
+    "photo",
+    "FK\u2192Photo"
+   ],
+   [
+    "ttl_seconds",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "video",
+    "FK\u2192Document"
+   ]
+  ]
+ },
+ "tf_phone_calls": {
+  "tl": "PhoneCall",
+  "ctors": [
+   "phoneCallEmpty",
+   "phoneCallWaiting",
+   "phoneCallRequested",
+   "phoneCallAccepted",
+   "phoneCall",
+   "phoneCallDiscarded"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "admin_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "participant_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "protocol",
+    "FK\u2192PhoneCallProtocol"
+   ]
+  ],
+  "bools": [
+   "video"
+  ],
+  "children": [
+   [
+    "receive_date",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_photos": {
+  "tl": "Photo",
+  "ctors": [
+   "photoEmpty",
+   "photo"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "file_reference",
+    "VARCHAR(255) NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "sizes",
+    "1:N child"
+   ],
+   [
+    "dc_id",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [
+   "has_stickers"
+  ],
+  "children": [
+   [
+    "video_sizes",
+    "1:N child"
+   ]
+  ]
+ },
+ "tf_quick_replies": {
+  "tl": "QuickReply",
+  "ctors": [
+   "quickReply"
+  ],
+  "base": [
+   [
+    "shortcut_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "shortcut",
+    "TEXT NOT NULL"
+   ],
+   [
+    "top_message",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "count",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_reactions": {
+  "tl": "Reaction",
+  "ctors": [
+   "reactionEmpty",
+   "reactionEmoji",
+   "reactionCustomEmoji",
+   "reactionPaid"
+  ],
+  "base": [
+   [
+    "emoticon",
+    "TEXT NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_saved_dialogs": {
+  "tl": "SavedDialog",
+  "ctors": [
+   "savedDialog",
+   "monoForumDialog"
+  ],
+  "base": [
+   [
+    "peer",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "top_message",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [
+   "pinned"
+  ],
+  "children": []
+ },
+ "tf_saved_reaction_tags": {
+  "tl": "SavedReactionTag",
+  "ctors": [
+   "savedReactionTag"
+  ],
+  "base": [
+   [
+    "reaction",
+    "FK\u2192Reaction"
+   ],
+   [
+    "count",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "title",
+    "TEXT NOT NULL"
+   ]
+  ]
+ },
+ "tf_saved_star_gifts": {
+  "tl": "SavedStarGift",
+  "ctors": [
+   "savedStarGift"
+  ],
+  "base": [
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "gift",
+    "FK\u2192StarGift"
+   ]
+  ],
+  "bools": [
+   "name_hidden",
+   "unsaved",
+   "refunded",
+   "can_upgrade",
+   "pinned_to_top",
+   "upgrade_separate"
+  ],
+  "children": [
+   [
+    "from_id",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "message",
+    "FK\u2192TextWithEntities"
+   ],
+   [
+    "msg_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "saved_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "convert_stars",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "upgrade_stars",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "can_export_at",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "transfer_stars",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "can_transfer_at",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "can_resell_at",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "collection_id",
+    "1:N child"
+   ],
+   [
+    "prepaid_upgrade_hash",
+    "TEXT NOT NULL"
+   ],
+   [
+    "drop_original_details_stars",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "gift_num",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "can_craft_at",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_stars_subscriptions": {
+  "tl": "StarsSubscription",
+  "ctors": [
+   "starsSubscription"
+  ],
+  "base": [
+   [
+    "id",
+    "TEXT NOT NULL"
+   ],
+   [
+    "peer",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "until_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "pricing",
+    "FK\u2192StarsSubscriptionPricing"
+   ]
+  ],
+  "bools": [
+   "canceled",
+   "can_refulfill",
+   "missing_balance",
+   "bot_canceled"
+  ],
+  "children": [
+   [
+    "chat_invite_hash",
+    "TEXT NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "photo",
+    "FK\u2192WebDocument"
+   ],
+   [
+    "invoice_slug",
+    "TEXT NOT NULL"
+   ]
+  ]
+ },
+ "tf_stars_transactions": {
+  "tl": "StarsTransaction",
+  "ctors": [
+   "starsTransaction"
+  ],
+  "base": [
+   [
+    "id",
+    "TEXT NOT NULL"
+   ],
+   [
+    "amount",
+    "FK\u2192StarsAmount"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "peer",
+    "FK\u2192StarsTransactionPeer"
+   ]
+  ],
+  "bools": [
+   "refund",
+   "pending",
+   "failed",
+   "gift",
+   "reaction",
+   "stargift_upgrade",
+   "business_transfer",
+   "stargift_resale",
+   "posts_search",
+   "stargift_prepaid_upgrade",
+   "stargift_drop_original_details",
+   "phonegroup_message",
+   "stargift_auction_bid",
+   "offer"
+  ],
+  "children": [
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "description",
+    "TEXT NOT NULL"
+   ],
+   [
+    "photo",
+    "FK\u2192WebDocument"
+   ],
+   [
+    "transaction_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "transaction_url",
+    "TEXT NOT NULL"
+   ],
+   [
+    "bot_payload",
+    "VARCHAR(255) NOT NULL"
+   ],
+   [
+    "msg_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "extended_media",
+    "1:N child"
+   ],
+   [
+    "subscription_period",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "giveaway_post_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "stargift",
+    "FK\u2192StarGift"
+   ],
+   [
+    "floodskip_number",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "starref_commission_permille",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "starref_peer",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "starref_amount",
+    "FK\u2192StarsAmount"
+   ],
+   [
+    "paid_messages",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "premium_gift_months",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "ads_proceeds_from_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "ads_proceeds_to_date",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_sticker_sets": {
+  "tl": "StickerSet",
+  "ctors": [
+   "stickerSet"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "short_name",
+    "TEXT NOT NULL"
+   ],
+   [
+    "count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "hash",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [
+   "archived",
+   "official",
+   "masks",
+   "emojis",
+   "text_color",
+   "channel_emoji_status",
+   "creator"
+  ],
+  "children": [
+   [
+    "installed_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "thumbs",
+    "1:N child"
+   ],
+   [
+    "thumb_dc_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "thumb_version",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "thumb_document_id",
+    "BIGINT NOT NULL"
+   ]
+  ]
+ },
+ "tf_story_items": {
+  "tl": "StoryItem",
+  "ctors": [
+   "storyItemDeleted",
+   "storyItemSkipped",
+   "storyItem"
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_themes": {
+  "tl": "Theme",
+  "ctors": [
+   "theme"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "slug",
+    "TEXT NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ]
+  ],
+  "bools": [
+   "creator",
+   "default",
+   "for_chat"
+  ],
+  "children": [
+   [
+    "document",
+    "FK\u2192Document"
+   ],
+   [
+    "settings",
+    "1:N child"
+   ],
+   [
+    "emoticon",
+    "TEXT NOT NULL"
+   ],
+   [
+    "installs_count",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_todo_items": {
+  "tl": "TodoItem",
+  "ctors": [
+   "todoItem"
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "title",
+    "FK\u2192TextWithEntities"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_todo_lists": {
+  "tl": "TodoList",
+  "ctors": [
+   "todoList"
+  ],
+  "base": [
+   [
+    "title",
+    "FK\u2192TextWithEntities"
+   ],
+   [
+    "list",
+    "1:N child"
+   ]
+  ],
+  "bools": [
+   "others_can_append",
+   "others_can_complete"
+  ],
+  "children": []
+ },
+ "tf_users": {
+  "tl": "User",
+  "ctors": [
+   "userEmpty",
+   "user"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ]
+  ],
+  "bools": [
+   "self",
+   "contact",
+   "mutual_contact",
+   "deleted",
+   "bot",
+   "bot_chat_history",
+   "bot_nochats",
+   "verified",
+   "restricted",
+   "min",
+   "bot_inline_geo",
+   "support",
+   "scam",
+   "apply_min_photo",
+   "fake",
+   "bot_attach_menu",
+   "premium",
+   "attach_menu_enabled",
+   "bot_can_edit",
+   "close_friend",
+   "stories_hidden",
+   "stories_unavailable",
+   "contact_require_premium",
+   "bot_business",
+   "bot_has_main_app",
+   "bot_forum_view",
+   "bot_forum_can_manage_topics",
+   "bot_can_manage_bots",
+   "bot_guestchat",
+   "bot_guard"
+  ],
+  "children": [
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "first_name",
+    "TEXT NOT NULL"
+   ],
+   [
+    "last_name",
+    "TEXT NOT NULL"
+   ],
+   [
+    "username",
+    "TEXT NOT NULL"
+   ],
+   [
+    "phone",
+    "TEXT NOT NULL"
+   ],
+   [
+    "photo",
+    "FK\u2192UserProfilePhoto"
+   ],
+   [
+    "status",
+    "FK\u2192UserStatus"
+   ],
+   [
+    "bot_info_version",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "restriction_reason",
+    "1:N child"
+   ],
+   [
+    "bot_inline_placeholder",
+    "TEXT NOT NULL"
+   ],
+   [
+    "lang_code",
+    "TEXT NOT NULL"
+   ],
+   [
+    "emoji_status",
+    "FK\u2192EmojiStatus"
+   ],
+   [
+    "usernames",
+    "1:N child"
+   ],
+   [
+    "stories_max_id",
+    "FK\u2192RecentStory"
+   ],
+   [
+    "color",
+    "FK\u2192PeerColor"
+   ],
+   [
+    "profile_color",
+    "FK\u2192PeerColor"
+   ],
+   [
+    "bot_active_users",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "bot_verification_icon",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "send_paid_messages_stars",
+    "BIGINT NOT NULL"
+   ]
+  ]
+ },
+ "tf_wallpapers": {
+  "tl": "WallPaper",
+  "ctors": [
+   "wallPaper",
+   "wallPaperNoFile"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "slug",
+    "TEXT NOT NULL"
+   ],
+   [
+    "document",
+    "FK\u2192Document"
+   ]
+  ],
+  "bools": [
+   "creator",
+   "default",
+   "pattern",
+   "dark"
+  ],
+  "children": [
+   [
+    "settings",
+    "FK\u2192WallPaperSettings"
+   ]
+  ]
+ },
+ "tf_web_pages": {
+  "tl": "WebPage",
+  "ctors": [
+   "webPageEmpty",
+   "webPagePending",
+   "webPage",
+   "webPageNotModified"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "url",
+    "TEXT NOT NULL"
+   ]
+  ]
+ }
+}
