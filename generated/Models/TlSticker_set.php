@@ -9,12 +9,12 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
-/** Domain model for chats (TL types: Chat). */
-final class TlChat extends TlAnchorModel
+/** Domain model for sticker_sets (TL types: StickerSet). */
+final class TlSticker_set extends TlAnchorModel
 {
     use AccountScoped;
 
-    protected $table = 'tf_chats';
+    protected $table = 'tf_sticker_sets';
 
     protected $guarded = [];
 }

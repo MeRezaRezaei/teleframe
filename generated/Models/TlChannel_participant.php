@@ -7,14 +7,15 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
-/** Domain model for chats (TL types: Chat). */
-final class TlChat extends TlAnchorModel
+/** Domain model for channel_participants (TL types: ChannelParticipant). */
+final class TlChannel_participant extends TlAnchorModel
 {
-    use AccountScoped;
+    use AccountScoped, PeerResolution;
 
-    protected $table = 'tf_chats';
+    protected $table = 'tf_channel_participants';
 
     protected $guarded = [];
 }

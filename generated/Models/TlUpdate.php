@@ -6,22 +6,16 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdatesUpdateShort;
 
-/** Anchor model for TL type Update (spec §4.1). */
+/** Domain model for updates (TL types: Update, updates.ChannelDifference, updates.Difference, updates.State). */
 final class TlUpdate extends TlAnchorModel
 {
-    use AccountScoped;
+    use AccountScoped, PeerResolution;
 
-    protected $table = 'tl_update_update_ai_compose_tones';
+    protected $table = 'tf_updates';
 
     protected $guarded = [];
-
-    public function updateUpdateShort(): HasMany
-    {
-        return $this->hasMany(TlUpdatesUpdateShort::class, 'update');
-    }
 }
