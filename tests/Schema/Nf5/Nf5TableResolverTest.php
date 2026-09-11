@@ -87,4 +87,49 @@ final class Nf5TableResolverTest extends TestCase
         $positionCol = array_filter($unames->columns, fn ($c) => $c->name === 'position');
         self::assertCount(1, $positionCol);
     }
+
+    public function test_keyColumns_content(): void
+    {
+        $catalog = $this->catalog();
+        $scheme  = TlParser::parseFile(__DIR__.'/../../../schema/sources/TL_telegram_v227.tl');
+        $resolver = new Nf5TableResolver($catalog, $scheme);
+        $parents = $resolver->resolveAll(['tf_users', 'tf_dialogs']);
+
+        // tf_users: non-empty base, first base entry is not 'peer' → id-based → keyColumns = ['id']
+        $users = $parents[0];
+        self::assertSame('tf_users', $users->tfName);
+        self::assertSame(['id'], $users->keyColumns);
+
+        // tf_dialogs: base starts with 'peer' → peer-based → keyColumns = ['peer_type', 'peer_id']
+        $dialogs = $parents[1];
+        self::assertSame('tf_dialogs', $dialogs->tfName);
+        self::assertSame(['peer_type', 'peer_id'], $dialogs->keyColumns);
+
+        // child of tf_dialogs inherits the parent's keyColumns
+        self::assertNotEmpty($dialogs->children);
+        $child = $dialogs->children[0];
+        self::assertSame(['peer_type', 'peer_id'], $child->keyColumns);
+    }
+
+    public function test_tagged_columns_populated(): void
+    {
+        $catalog = $this->catalog();
+        $scheme  = TlParser::parseFile(__DIR__.'/../../../schema/sources/TL_telegram_v227.tl');
+        $resolver = new Nf5TableResolver($catalog, $scheme);
+        $parents = $resolver->resolveAll(['tf_users', 'tf_dialogs']);
+
+        // tf_users: booleanColumns is list<string> — should contain catalog bools verbatim
+        $users = $parents[0];
+        self::assertNotEmpty($users->booleanColumns);
+        self::assertContains('self', $users->booleanColumns);
+        self::assertContains('deleted', $users->booleanColumns);
+        self::assertContains('bot', $users->booleanColumns);
+
+        // tf_dialogs: peerColumns should contain peer_type and peer_id
+        $dialogs = $parents[1];
+        self::assertNotEmpty($dialogs->peerColumns);
+        $peerNames = array_column($dialogs->peerColumns, 'name');
+        self::assertContains('peer_type', $peerNames);
+        self::assertContains('peer_id', $peerNames);
+    }
 }
