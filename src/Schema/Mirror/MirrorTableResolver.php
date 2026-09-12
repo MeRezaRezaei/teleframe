@@ -75,9 +75,12 @@ final class MirrorTableResolver
         // that is later expanded) terminates instead of recursing infinitely.
         $this->unionStack[] = $entry->tlType;
 
-        // Base and children entries are treated uniformly: scalar shapes become
-        // columns (base only); FK→ / 1:N child shapes become child tables.
-        foreach ([...$entry->base, ...$entry->children] as [$fieldName, $shape]) {
+        // Base scalar shapes become columns (buildBaseColumns); FK→ / 1:N child
+        // shapes become child tables. Every catalog CHILD entry is a fact table —
+        // including scalar children (optional fields declared as 1:1 facts),
+        // which must NOT be dropped: resolveChildField materializes them as
+        // `{parent}_{field}` tables so no declared param is lost.
+        foreach ($entry->base as [$fieldName, $shape]) {
             if ($keyCols !== [] && $this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
                 continue;
             }
@@ -86,6 +89,15 @@ final class MirrorTableResolver
                 if ($child !== null) {
                     $children[] = $child;
                 }
+            }
+        }
+        foreach ($entry->children as [$fieldName, $shape]) {
+            if ($keyCols !== [] && $this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
+                continue;
+            }
+            $child = $this->resolveChildField($tfName, $fieldName, $shape, $keyCols);
+            if ($child !== null && ! $this->hasChild($child->tfName, $children)) {
+                $children[] = $child;
             }
         }
 
@@ -117,11 +129,13 @@ final class MirrorTableResolver
      *  1. base[0] = 'id'     → ['id'] (tf_messages, tf_users, tf_todo_items, ...)
      *  2. base[0] = 'peer'   → the expanded peer discriminator columns
      *     (peer_type/peer_id — tf_dialogs, tf_folders, tf_saved_dialogs).
-     *  3. Any other base[0]  → the catalog entry has no self-identifying
-     *     natural key (tf_attach_menu_bots.bot_id, structural stores like
-     *     tf_todo_lists whose real identity is contextual): synthetic
-     *     `{singular}_id` from the table name.
-     *  4. Empty base         → synthetic `{singular}_id` (tf_message_medias,
+     *  3. base[0] ends in '_id' → the entry's natural key, used directly
+     *     (tf_attach_menu_bots.bot_id, tf_quick_replies.shortcut_id,
+     *     tf_channel_participants.user_id).
+     *  4. Any other base[0]   → no self-identifying natural key (structural
+     *     stores like tf_todo_lists whose real identity is contextual):
+     *     synthetic `{singular}_id` from the table name.
+     *  5. Empty base          → synthetic `{singular}_id` (tf_message_medias,
      *     tf_message_entities — union stores keyed by context, see spec §41).
      */
     private function deriveKeyColumns(MirrorTableEntry $entry): array
@@ -135,6 +149,12 @@ final class MirrorTableResolver
                         return array_map(static fn (MirrorColumn $c) => $c->name, $expanded);
                     }
                 }
+                return [$first[0]];
+            }
+            // T5e: a non-generic `*_id` base field (shortcut_id, bot_id, user_id)
+            // is the entry's natural key — always a real TL field. Use it directly
+            // instead of fabricating `{singular}_id`.
+            if (str_ends_with($first[0], '_id')) {
                 return [$first[0]];
             }
         }
