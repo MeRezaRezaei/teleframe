@@ -75,9 +75,9 @@ final class MirrorTableResolver
         // that is later expanded) terminates instead of recursing infinitely.
         $this->unionStack[] = $entry->tlType;
 
-        // Base and children entries are treated uniformly: scalar shapes become
-        // columns (base only); FK→ / 1:N child shapes become child tables.
-        foreach ([...$entry->base, ...$entry->children] as [$fieldName, $shape]) {
+        // Base entries: scalar shapes become parent columns; only FK→ / 1:N
+        // shapes become child tables.
+        foreach ($entry->base as [$fieldName, $shape]) {
             if ($keyCols !== [] && $this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
                 continue;
             }
@@ -86,6 +86,18 @@ final class MirrorTableResolver
                 if ($child !== null) {
                     $children[] = $child;
                 }
+            }
+        }
+        // Children entries: row existence = fact existence, so EVERY non-key
+        // shape becomes a child table — scalar/peer shapes as 1:1 fact tables
+        // (NF5 §12), FK→ / 1:N as reference/vector children.
+        foreach ($entry->children as [$fieldName, $shape]) {
+            if ($keyCols !== [] && $this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
+                continue;
+            }
+            $child = $this->resolveChildField($tfName, $fieldName, $shape, $keyCols);
+            if ($child !== null) {
+                $children[] = $child;
             }
         }
 
@@ -601,7 +613,7 @@ final class MirrorTableResolver
             if ($this->isFactShape($shape)) {
                 continue; // routed to child tables in resolveTable()
             }
-            $resolved = MirrorFieldDecomposer::fromShape($shape, $name);
+            $resolved = MirrorFieldDecomposer::fromShape($shape, $name, $this->isBytesBaseField($entry, $name));
             if ($resolved !== null) {
                 $columns = array_merge($columns, $resolved);
             }
@@ -610,6 +622,21 @@ final class MirrorTableResolver
             $columns[] = new MirrorColumn($bool, MirrorColumnType::Boolean);
         }
         return $columns;
+    }
+
+    /**
+     * True when a parent-table base field maps to a TL `bytes` param.
+     * Bytes fields are stored as hex-encoded VARCHAR/TEXT (NF5 §8) — the column
+     * must carry the hex marker so ingest encodes and the DDL/consumers know.
+     */
+    private function isBytesBaseField(MirrorTableEntry $entry, string $fieldName): bool
+    {
+        $tlType = $this->scheme->types()[$entry->tlType] ?? null;
+        if ($tlType === null) {
+            return false;
+        }
+        $param = $this->findParam($tlType->constructors(), $fieldName);
+        return $param !== null && $param->baseType() === 'bytes';
     }
 
     /**
