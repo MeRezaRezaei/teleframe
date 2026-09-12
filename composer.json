@@ -1,7 +1,7 @@
 {
     "name": "merezarezaei/teleframe",
     "description": "Unified Telegram engine and framework: MTProto 2.0 (user + bot), Bot HTTP API, Mini App auth, Passport KYC, consumer layer (ingest, bus, daemon, backfill, backup) and a one-class handler facade (Teleframe)",
-    "type": "project",
+    "type": "library",
     "license": "MIT",
     "keywords": [
         "telegram",
@@ -47,9 +47,7 @@
     "require-dev": {
         "chillerlan/php-qrcode": "^6.0",
         "fakerphp/faker": "^1.23",
-        "laravel/breeze": "^2.4",
         "laravel/pint": "^1.13",
-        "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.0",
         "orchestra/testbench": "^10.0 || ^11.0",
@@ -60,7 +58,6 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "app/",
             "MeRezaRezaei\\Teleframe\\Core\\": "src/Core/",
             "MeRezaRezaei\\Teleframe\\Bot\\": "src/Bot/",
             "MeRezaRezaei\\Teleframe\\Laravel\\": "src/Laravel/",
@@ -83,21 +80,6 @@
         "bin/teleframe"
     ],
     "scripts": {
-        "post-autoload-dump": [
-            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
-        ],
-        "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
-        ],
-        "post-root-package-install": [
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
-        ],
-        "post-create-project-cmd": [
-            "@php artisan key:generate --ansi",
-            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
-            "@php artisan migrate --graceful --ansi"
-        ],
         "test": "phpunit",
         "stan": "phpstan analyse -c phpstan.neon.dist",
         "verify": [
