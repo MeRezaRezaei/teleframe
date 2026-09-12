@@ -75,18 +75,24 @@ final class MirrorTableResolver
         // that is later expanded) terminates instead of recursing infinitely.
         $this->unionStack[] = $entry->tlType;
 
-        // Base and children entries are treated uniformly: scalar shapes become
-        // columns (base only); FK→ / 1:N child shapes become child tables.
-        foreach ([...$entry->base, ...$entry->children] as [$fieldName, $shape]) {
+        // Base and children entries are treated uniformly: FK→ / 1:N child
+        // shapes become child tables everywhere. Scalar base shapes become
+        // columns (built in buildBaseColumns above); scalar CHILD shapes become
+        // 1:1 child fact tables ({parent}_{field}, NF5 rule 2: row existence =
+        // fact existence, zero NULLs) so no declared fact is dropped.
+        foreach ($entry->base as [$fieldName, $shape]) {
             if ($keyCols !== [] && $this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
                 continue;
             }
             if ($this->isFactShape($shape)) {
-                $child = $this->resolveChildField($tfName, $fieldName, $shape, $keyCols);
-                if ($child !== null) {
-                    $children[] = $child;
-                }
+                $this->appendChild($tfName, $fieldName, $shape, $keyCols, $children);
             }
+        }
+        foreach ($entry->children as [$fieldName, $shape]) {
+            if ($keyCols !== [] && $this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
+                continue;
+            }
+            $this->appendChild($tfName, $fieldName, $shape, $keyCols, $children);
         }
 
         array_pop($this->unionStack);
@@ -205,6 +211,22 @@ final class MirrorTableResolver
     }
 
     /**
+     * Resolve a child field and append it to the parent's child list, skipping
+     * duplicates (same tfName = same parent+field already materialized).
+     *
+     * @param list<string> $parentKeyCols
+     * @param list<MirrorTable> $children
+     * @param-out list<MirrorTable> $children
+     */
+    private function appendChild(string $parentTf, string $fieldName, string $shape, array $parentKeyCols, array &$children): void
+    {
+        $child = $this->resolveChildField($parentTf, $fieldName, $shape, $parentKeyCols);
+        if ($child !== null && ! $this->hasChild($child->tfName, $children)) {
+            $children[] = $child;
+        }
+    }
+
+    /**
      * @param list<string> $parentKeyCols
      */
     private function resolveFkTarget(string $parentTf, string $fieldName, string $targetType, array $parentKeyCols): ?MirrorTable
@@ -228,7 +250,7 @@ final class MirrorTableResolver
         if ($tlType === null) {
             return null;
         }
-        $decomposed = $this->unionDecompose($childTfName, $tlType, $parentKeyCols, $parentTf);
+        $decomposed = $this->unionDecompose($childTfName, $tlType, $parentKeyCols, $parentTf, allowInputCtor: $this->catalog->has($parentTf));
 
         return $decomposed;
     }
@@ -282,7 +304,7 @@ final class MirrorTableResolver
             $columns[] = $this->scalarValueColumn($elementType);
             return $this->makeChildTable($childTfName, $parentKeyCols, $columns, positioned: true, parentTf: $parentTf);
         }
-        return $this->unionDecompose($childTfName, $elementTlType, $parentKeyCols, $parentTf, positioned: true);
+        return $this->unionDecompose($childTfName, $elementTlType, $parentKeyCols, $parentTf, positioned: true, allowInputCtor: $this->catalog->has($parentTf));
     }
 
     private function scalarValueColumn(string $elementType): MirrorColumn
@@ -319,6 +341,7 @@ final class MirrorTableResolver
         array $parentKeyCols,
         string $parentTf,
         bool $positioned = false,
+        bool $allowInputCtor = false,
     ): ?MirrorTable {
         // The `.tl` type graph is cyclic (RichText/Page/JSONValue recursion,
         // InputUser↔InputPeer request structs, MessageMedia→Poll→PollResults→…).
@@ -335,7 +358,7 @@ final class MirrorTableResolver
         // InputUser/InputPeer recursion they pull in.
         $ctors = array_values(array_filter(
             $tlType->constructors(),
-            static fn (TlConstructor $c): bool => ! str_starts_with($c->name, 'input'),
+            static fn (TlConstructor $c): bool => $allowInputCtor || ! str_starts_with($c->name, 'input'),
         ));
         if ($ctors === []) {
             return null;
