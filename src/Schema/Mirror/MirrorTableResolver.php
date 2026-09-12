@@ -81,7 +81,7 @@ final class MirrorTableResolver
         // existence. Scalar-shaped catalog children (tf_messages.views,
         // via_bot_id, from_rank, ...) must be mirrored, not dropped.
         foreach ($entry->base as [$fieldName, $shape]) {
-            if ($this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
+            if ($keyCols !== [] && $this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
                 continue;
             }
             if ($this->isFactShape($shape)) {
@@ -91,8 +91,11 @@ final class MirrorTableResolver
                 }
             }
         }
+// Children entries declare ANY shape (scalar, peer, FK→, 1:N). The
+        // catalog already marked them as facts, so every one becomes a child
+        // table — scalars/peers become single-column holds, never dropped.
         foreach ($entry->children as [$fieldName, $shape]) {
-            if ($this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
+            if ($keyCols !== [] && $this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
                 continue;
             }
             $child = $this->resolveChildField($tfName, $fieldName, $shape, $keyCols);
@@ -424,14 +427,14 @@ final class MirrorTableResolver
                         break;
                     }
                     $nested = $this->resolveFkTarget($childTfName, $param->name, $param->baseType(), $parentKeyCols);
-                    if ($nested !== null && ! $this->hasChild($nested->tfName, $children)) {
-                        $children[] = $nested;
+                    if ($nested !== null) {
+                        $this->mergeChild($nested, $children);
                     }
                     break;
                 case 'vector':
                     $nested = $this->resolveVectorFromType($tlType, $childTfName, $param->name, $parentKeyCols);
-                    if ($nested !== null && ! $this->hasChild($nested->tfName, $children)) {
-                        $children[] = $nested;
+                    if ($nested !== null) {
+                        $this->mergeChild($nested, $children);
                     }
                     break;
                 default:
@@ -461,15 +464,31 @@ final class MirrorTableResolver
         return false;
     }
 
-    /** True when a child table with the same tfName (same parent + field) already exists. */
-    private function hasChild(string $tfName, array $children): bool
+    /**
+     * Append a nested child table, deduplicating by tfName.
+     *
+     * A union type can expose the same field name both as a bare ref (one ctor)
+     * and as a Vector (another ctor) — e.g. MessageMedia.extended_media is a
+     * single MessageExtendedMedia on messageMediaInvoice and a
+     * Vector<MessageExtendedMedia> on messageMediaPaidMedia. The vector form
+     * carries the `position` ordinal and must win over the 1:1 form, so a
+     * positioned replacement supersedes an existing non-positioned sibling.
+     *
+     * @param list<MirrorTable> $children
+     * @param-out list<MirrorTable> $children
+     */
+    private function mergeChild(MirrorTable $nested, array &$children): void
     {
-        foreach ($children as $child) {
-            if ($child->tfName === $tfName) {
-                return true;
+        foreach ($children as $i => $child) {
+            if ($child->tfName !== $nested->tfName) {
+                continue;
             }
+            if ($nested->positioned && ! $child->positioned) {
+                $children[$i] = $nested;
+            }
+            return;
         }
-        return false;
+        $children[] = $nested;
     }
 
     /**
