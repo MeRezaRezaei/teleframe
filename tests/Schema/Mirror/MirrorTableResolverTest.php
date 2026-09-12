@@ -111,6 +111,61 @@ final class MirrorTableResolverTest extends TestCase
         self::assertSame(['peer_type', 'peer_id'], $child->keyColumns);
     }
 
+    public function test_scalar_catalog_children_materialize_as_fact_tables(): void
+    {
+        $catalog = $this->catalog();
+        $scheme  = TlParser::parseFile(__DIR__.'/../../../schema/sources/TL_telegram_v227.tl');
+        $resolver = new MirrorTableResolver($catalog, $scheme);
+        $parents = $resolver->resolveAll(['tf_bot_infos', 'tf_bot_inline_results', 'tf_business_chat_links']);
+
+        // Optional fields declared as scalar (non-FK, non-vector) children must
+        // become 1:1 child fact tables — NOT be silently dropped.
+        $expected = [
+            'tf_bot_infos' => ['tf_bot_infos_user_id', 'tf_bot_infos_description', 'tf_bot_infos_privacy_policy_url'],
+            'tf_bot_inline_results' => ['tf_bot_inline_results_title', 'tf_bot_inline_results_description', 'tf_bot_inline_results_url'],
+            'tf_business_chat_links' => ['tf_business_chat_links_title'],
+        ];
+        foreach ($parents as $parent) {
+            $childNames = array_map(fn ($c) => $c->tfName, $parent->children);
+            foreach ($expected[$parent->tfName] as $wanted) {
+                self::assertContains($wanted, $childNames, "scalar child {$wanted} of {$parent->tfName}");
+            }
+        }
+        // Scalar children carry the parent key + the declared scalar column only.
+        $infos = $parents[0];
+        $userId = $infos->children[array_search('tf_bot_infos_user_id', array_map(fn ($c) => $c->tfName, $infos->children))];
+        self::assertSame(['bot_info_id'], $userId->keyColumns);
+        $cols = array_column($userId->columns, 'name');
+        self::assertSame(['account_id', 'bot_info_id', 'user_id'], $cols);
+    }
+
+    public function test_natural_id_base_fields_become_keys_not_synthetic(): void
+    {
+        $catalog = $this->catalog();
+        $scheme  = TlParser::parseFile(__DIR__.'/../../../schema/sources/TL_telegram_v227.tl');
+        $resolver = new MirrorTableResolver($catalog, $scheme);
+
+        // base[0] ending in `_id` (shortcut_id, bot_id, user_id) is a real TL
+        // natural key. Using it as PK must replace the fabricated {singular}_id.
+        $expectedKeys = [
+            'tf_attach_menu_bots'     => ['bot_id'],
+            'tf_channel_participants' => ['user_id'],
+            'tf_quick_replies'        => ['shortcut_id'],
+        ];
+        $fabricated = [
+            'tf_attach_menu_bots'     => 'attach_menu_bot_id',
+            'tf_channel_participants' => 'channel_participant_id',
+            'tf_quick_replies'        => 'quick_replie_id',
+        ];
+        foreach ($expectedKeys as $tf => $expected) {
+            $t = $resolver->resolveAll([$tf])[0];
+            self::assertSame($expected, $t->keyColumns, "natural key for {$tf}");
+            $colNames = array_column($t->columns, 'name');
+            self::assertContains($expected[0], $colNames, "natural key column present in {$tf}");
+            self::assertNotContains($fabricated[$tf], $colNames, "fabricated column removed from {$tf}");
+        }
+    }
+
     public function test_tagged_columns_populated(): void
     {
         $catalog = $this->catalog();
