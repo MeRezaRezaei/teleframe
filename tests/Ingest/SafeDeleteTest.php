@@ -6,12 +6,10 @@ namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Schema;
 use MeRezaRezaei\Teleframe\Ingest\Events\MessagesDeleted;
 use MeRezaRezaei\Teleframe\Ingest\SafeDelete;
-use MeRezaRezaei\Teleframe\Tests\Schema\TestCase;
 
-class SafeDeleteTest extends TestCase
+class SafeDeleteTest extends IngestTestCase
 {
     private SafeDelete $safeDelete;
 
@@ -19,19 +17,8 @@ class SafeDeleteTest extends TestCase
     {
         parent::setUp();
 
-        // Create tf_messages table if it doesn't exist in the test DB
-        if (!Schema::hasTable('tf_messages')) {
-            Schema::create('tf_messages', function ($table) {
-                $table->bigIncrements('id');
-                $table->bigInteger('message_id');
-                $table->bigInteger('peer_id');
-                $table->bigInteger('account_id');
-                $table->bigInteger('constructor_id');
-                $table->text('tl_data');
-                $table->timestamps();
-            });
-        }
-
+        // tf_messages comes from the migrated real DDL (IngestTestCase):
+        // bigInteger id PK (no autoincrement — supply explicitly) + date NOT NULL.
         Event::fake([MessagesDeleted::class]);
         $this->safeDelete = new SafeDelete(app('events'));
     }
@@ -39,9 +26,9 @@ class SafeDeleteTest extends TestCase
     public function test_delete_messages_removes_matching_rows(): void
     {
         DB::table('tf_messages')->insert([
-            ['peer_id' => 1001, 'message_id' => 10, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'created_at' => now()],
-            ['peer_id' => 1001, 'message_id' => 20, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'created_at' => now()],
-            ['peer_id' => 1001, 'message_id' => 30, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'created_at' => now()],
+            ['id' => 1, 'peer_id' => 1001, 'message_id' => 10, 'account_id' => 1, 'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}', 'created_at' => now()],
+            ['id' => 2, 'peer_id' => 1001, 'message_id' => 20, 'account_id' => 1, 'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}', 'created_at' => now()],
+            ['id' => 3, 'peer_id' => 1001, 'message_id' => 30, 'account_id' => 1, 'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}', 'created_at' => now()],
         ]);
 
         $deleted = $this->safeDelete->deleteMessages(1, [10, 20]);
@@ -55,7 +42,7 @@ class SafeDeleteTest extends TestCase
     public function test_delete_messages_fires_event(): void
     {
         DB::table('tf_messages')->insert([
-            ['peer_id' => 2001, 'message_id' => 5, 'account_id' => 2, 'constructor_id' => 0, 'tl_data' => '{}', 'created_at' => now()],
+            ['id' => 1, 'peer_id' => 2001, 'message_id' => 5, 'account_id' => 2, 'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}', 'created_at' => now()],
         ]);
 
         $this->safeDelete->deleteMessages(2, [5]);

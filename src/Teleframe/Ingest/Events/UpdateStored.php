@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Ingest\Events;
 
-use Illuminate\Database\Eloquent\Model;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /**
  * Fired after an ingested update's root transaction commits (roadmap
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 final class UpdateStored
 {
     public function __construct(
-        public readonly Model $model,
+        public readonly TlAnchorModel $model,
         public readonly int $accountId,
     ) {
     }

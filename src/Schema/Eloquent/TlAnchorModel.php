@@ -15,8 +15,17 @@ use Illuminate\Database\Eloquent\Model;
  */
 abstract class TlAnchorModel extends Model
 {
-    /** @var bool Eloquent auto-increment (Telegram IDs are integers) */
-    public $incrementing = true;
+    /**
+     * No DB autoincrement anywhere on the domain surface: global-ID tables
+     * carry the Telegram native ID as (part of) the PK, surrogate-ID tables
+     * (messages, updates, ...) take sqlite-rowid / app-assigned ids. Leaving
+     * this true makes Eloquent overwrite an explicitly filled native id with
+     * the connection's lastInsertId() after insert (sqlite composite PKs
+     * report 1), so the returned model disagrees with its own DB row.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
 
     /** @var string PK type for Eloquent */
     protected $keyType = 'int';

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Tests\Ingest\Queries;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use MeRezaRezaei\Teleframe\Ingest\Queries\MessageQuery;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessage;
 
@@ -20,27 +19,13 @@ class MessageQueryTest extends \MeRezaRezaei\Teleframe\Tests\Ingest\IngestTestCa
     {
         parent::setUp();
 
-        // Create the tf_messages table for query builder tests.
-        // The real tl_message_message uses tl_id/not message_id — this table
-        // represents the planned domain table from the spec.
-        if (!Schema::hasTable('tf_messages')) {
-            Schema::create('tf_messages', function ($table) {
-                $table->bigIncrements('id');
-                $table->bigInteger('constructor_id');
-                $table->bigInteger('account_id');
-                $table->bigInteger('peer_id');
-                $table->bigInteger('message_id');
-                $table->text('tl_data');
-                $table->text('message_text')->nullable();
-                $table->timestamps();
-            });
-        }
-
+        // tf_messages comes from the migrated real DDL (IngestTestCase):
+        // bigInteger id PK (no autoincrement — supply explicitly) + date NOT NULL.
         DB::table('tf_messages')->insert([
-            ['peer_id' => 1001, 'message_id' => 1, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'message_text' => 'hello', 'created_at' => now()->subHour(2)],
-            ['peer_id' => 1001, 'message_id' => 2, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'message_text' => 'world', 'created_at' => now()->subMinute(30)],
-            ['peer_id' => 1001, 'message_id' => 3, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'message_text' => 'latest', 'created_at' => now()],
-            ['peer_id' => 1001, 'message_id' => 1, 'account_id' => 2, 'constructor_id' => 0, 'tl_data' => '{}', 'message_text' => 'other', 'created_at' => now()],
+            ['id' => 1, 'peer_id' => 1001, 'message_id' => 1, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'message_text' => 'hello', 'date' => now()->subHour(2)->timestamp, 'created_at' => now()->subHour(2)],
+            ['id' => 2, 'peer_id' => 1001, 'message_id' => 2, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'message_text' => 'world', 'date' => now()->subMinute(30)->timestamp, 'created_at' => now()->subMinute(30)],
+            ['id' => 3, 'peer_id' => 1001, 'message_id' => 3, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'message_text' => 'latest', 'date' => now()->timestamp, 'created_at' => now()],
+            ['id' => 4, 'peer_id' => 1001, 'message_id' => 1, 'account_id' => 2, 'constructor_id' => 0, 'tl_data' => '{}', 'message_text' => 'other', 'date' => now()->timestamp, 'created_at' => now()],
         ]);
     }
 

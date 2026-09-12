@@ -18,7 +18,7 @@ final class PortSmokeTest extends TestCase
         foreach ($classes as $c) {
             $this->assertTrue(class_exists($prefix . $c), $c);
         }
-        $this->assertTrue(trait_exists($prefix . 'Eloquent\\HasTlChildren'));
+        // HasTlChildren was consolidated into TlAnchorModel by design — no trait assert.
     }
 
     public function testPortedModifiersPreserved(): void

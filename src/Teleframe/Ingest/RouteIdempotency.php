@@ -46,7 +46,7 @@ final class RouteIdempotency
     public static function migrationPaths(): array
     {
         return [
-            dirname(__DIR__, 3) . '/generated/migrations/2026_08_28_900633_create_tl_route_tables.php',
+            dirname(__DIR__, 3) . '/generated/migrations/2026_08_28_000013_create_tf_routes_table.php',
         ];
     }
 

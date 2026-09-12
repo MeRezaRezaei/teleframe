@@ -26,7 +26,7 @@ final class SchemaRegeneratorTest extends TestCase
         self::assertFileExists($out . '/generated/migrations');
         self::assertFileExists($out . '/generated/Models/TlUser.php');
         self::assertFileExists($out . '/generated/Data/Types/TlUserAbstractData.php');
-        self::assertFileExists($out . '/generated/Factories/TlUserUserEmptyFactory.php');
+        self::assertFileExists($out . '/generated/Factories/TlUserFactory.php');
         self::assertSame(6, $result['counts']['constructors'] + $result['counts']['methods'] - $result['counts']['methods'] - 0 - 0 - 0 - 0);
         self::assertGreaterThan(0, $result['counts']['tables']);
         $manifest = json_decode((string) file_get_contents($out . '/generated/schema-manifest.json'), true);

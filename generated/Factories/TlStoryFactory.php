@@ -8,11 +8,11 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/** Factory for TlStorie (domain: stories). */
-final class TlStorieFactory extends Factory
+/** Factory for TlStory (domain: stories). */
+final class TlStoryFactory extends Factory
 {
-    /** @var class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStorie> */
-    protected $model = \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStorie::class;
+    /** @var class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStory> */
+    protected $model = \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStory::class;
 
     /** @return array<string, mixed> */
     public function definition(): array

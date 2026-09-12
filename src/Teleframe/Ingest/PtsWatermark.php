@@ -35,7 +35,7 @@ final class PtsWatermark
         }
 
         return [
-            'pts'  => (int) ($raw['pts'] ?? 0),
+            'pts'  => (int) $raw['pts'],
             'date' => (int) ($raw['date'] ?? 0),
             'qts'  => (int) ($raw['qts'] ?? 0),
             'seq'  => (int) ($raw['seq'] ?? 0),

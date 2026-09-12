@@ -28,12 +28,20 @@ final class FactoryGenerator
             if ($type->name === 'Vector t' || $type->constructors() === []) {
                 continue;
             }
-            $classification = Naming::classifyType($type->name);
-            if ($classification === null) {
+            $domainsForType = [];
+            foreach ($type->constructors() as $ctor) {
+                $classification = Naming::classifyConstructor($ctor->name, $type->name);
+                if ($classification === null) {
+                    continue;
+                }
+                $domainsForType[$classification['domain']] = true;
+            }
+            if ($domainsForType === []) {
                 continue;
             }
-            $domain = $classification['domain'];
-            $domainTypes[$domain][] = $type;
+            foreach (array_keys($domainsForType) as $domain) {
+                $domainTypes[$domain][] = $type;
+            }
         }
 
         // One factory per domain model

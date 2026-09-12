@@ -55,8 +55,8 @@ final class BackfillCommandTest extends IngestTestCase
 
         $this->artisan('teleframe:backfill', ['--account' => 7, '--peer' => ['chat']])->assertExitCode(0);
 
-        self::assertSame(1, DB::table('tl_message_message')->where('account_id', 7)->count(), 'message anchor landed');
-        self::assertSame(1, DB::table('tl_message_message')->where('tl_id', 30)->count(), 'message instance landed');
+        self::assertSame(1, DB::table('tf_messages')->where('account_id', 7)->count(), 'message row landed');
+        self::assertSame(1, DB::table('tf_messages')->where('message_id', 30)->count(), 'message id landed');
     }
 
     public function test_budget_stop_leaves_the_peer_queued_for_the_next_run(): void

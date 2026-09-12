@@ -6,7 +6,7 @@ namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 
 use MeRezaRezaei\Teleframe\Ingest\RouteIdempotency;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUser;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
 use MeRezaRezaei\Teleframe\Teleclient;
 
 /**
@@ -52,11 +52,14 @@ final class TeleclientTest extends IngestTestCase
             'username' => 'RezaRezaei',
         ], self::ACCOUNT);
 
-        self::assertInstanceOf(TlUserUser::class, $root);
+        // Domain surface: one TlUser row keyed by the native Telegram id.
+        self::assertInstanceOf(TlUser::class, $root);
+        self::assertSame(self::USER_ID, (int) $root->id);
 
         $user = $client->user(self::ACCOUNT, self::USER_ID);
         self::assertNotNull($user);
-        self::assertSame('Reza', $user->currentInstance->first_name);
+        self::assertSame('Reza', $user->first_name);
+        self::assertSame('RezaRezaei', $user->username);
     }
 
     public function test_delegates_response_ingest(): void
@@ -84,6 +87,6 @@ final class TeleclientTest extends IngestTestCase
 
         self::assertNotNull($first);
         self::assertNotNull($second);
-        self::assertSame((string) $first->id, (string) $second->id);
+        self::assertSame((string) $first->getKey(), (string) $second->getKey());
     }
 }

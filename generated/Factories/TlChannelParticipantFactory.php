@@ -8,11 +8,11 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/** Factory for TlChannel_participant (domain: channel_participants). */
-final class TlChannel_participantFactory extends Factory
+/** Factory for TlChannelParticipant (domain: channel_participants). */
+final class TlChannelParticipantFactory extends Factory
 {
-    /** @var class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannel_participant> */
-    protected $model = \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannel_participant::class;
+    /** @var class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelParticipant> */
+    protected $model = \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannelParticipant::class;
 
     /** @return array<string, mixed> */
     public function definition(): array

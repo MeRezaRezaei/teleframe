@@ -13,9 +13,9 @@ use PHPUnit\Framework\TestCase;
  * must produce byte-identical manifests (and trees), matching the
  * committed manifest hash pin.
  *
- * Count bands (owner's real fork run, verified 2026-08-28, layer 227):
- * 1685 constructors / 799 methods / 635 migrations / 2928 models /
- * 3116 dtos / 3678 tables — bands bracket with drift headroom.
+ * Count bands (TDLib-style domain truth, verified 2026-09-11, layer 227):
+ * 1685 constructors / 799 methods / 13 migrations / 11 models /
+ * 3116 dtos / 11 factories / 763 tables — bands bracket with drift headroom.
  * Full regeneration takes well under a second, so the double-run runs
  * the FULL schema set (no subset flag needed).
  */
@@ -25,7 +25,7 @@ final class RegenerationGoldenTest extends TestCase
     private const MANIFEST = self::PACKAGE_ROOT . '/generated/schema-manifest.json';
 
     /** sha256 of the committed generated/schema-manifest.json (full-run pin). */
-    private const COMMITTED_MANIFEST_SHA256 = '9d06c7da0ba9bbaef558aea1bdd4a7ae3b448c9494a4d05675f9bf340e319786';
+    private const COMMITTED_MANIFEST_SHA256 = '430d477cfade0ee230caa2520f7c1ad57ecf6be48191dc3b48f188d50a3dfd44';
 
     public function test_committed_manifest_exists_and_pins_layer_227(): void
     {
@@ -46,8 +46,8 @@ final class RegenerationGoldenTest extends TestCase
         self::assertLessThan(2500, $counts['constructors']);
         self::assertGreaterThan(750, $counts['methods']);
         self::assertLessThan(950, $counts['methods']);
-        self::assertGreaterThan(3000, $counts['tables']);
-        self::assertLessThan(4200, $counts['tables']);
+        self::assertGreaterThan(700, $counts['tables']);
+        self::assertLessThan(850, $counts['tables']);
     }
 
     public function test_committed_artifact_files_within_bands_and_marked_generated(): void
@@ -57,13 +57,14 @@ final class RegenerationGoldenTest extends TestCase
         $dtos = self::phpFiles(self::PACKAGE_ROOT . '/generated/Data');
         $factories = self::phpFiles(self::PACKAGE_ROOT . '/generated/Factories');
 
-        self::assertGreaterThan(500, count($migrations), 'migrations lower bound');
-        self::assertLessThan(800, count($migrations), 'migrations upper bound');
-        self::assertGreaterThan(2500, count($models), 'models lower bound');
-        self::assertLessThan(3500, count($models), 'models upper bound');
+        self::assertGreaterThan(10, count($migrations), 'migrations lower bound');
+        self::assertLessThan(20, count($migrations), 'migrations upper bound');
+        self::assertGreaterThan(8, count($models), 'models lower bound');
+        self::assertLessThan(20, count($models), 'models upper bound');
         self::assertGreaterThan(2800, count($dtos), 'dtos lower bound');
-        self::assertLessThan(3600, count($dtos), 'dtos upper bound');
-        self::assertGreaterThan(1500, count($factories), 'factories lower bound');
+        self::assertLessThan(3400, count($dtos), 'dtos upper bound');
+        self::assertGreaterThan(8, count($factories), 'factories lower bound');
+        self::assertLessThan(20, count($factories), 'factories upper bound');
 
         foreach ([$migrations, $models, $dtos, $factories] as $files) {
             foreach ($files as $path) {
@@ -80,11 +81,11 @@ final class RegenerationGoldenTest extends TestCase
     {
         self::assertFileExists(self::PACKAGE_ROOT . '/generated/Models/TlUser.php');
         self::assertStringContainsString(
-            "protected \$table = 'tl_user_user';",
+            "protected \$table = 'tf_users';",
             (string) file_get_contents(self::PACKAGE_ROOT . '/generated/Models/TlUser.php'),
         );
         $manifest = json_decode((string) file_get_contents(self::MANIFEST), true);
-        self::assertArrayHasKey('tl_user_user', $manifest['tables']);
+        self::assertArrayHasKey('tf_users', $manifest['tables']);
     }
 
     /**
@@ -124,7 +125,7 @@ final class RegenerationGoldenTest extends TestCase
             $filesA = self::relativeHashes($outA . '/generated');
             $filesB = self::relativeHashes($outB . '/generated');
             self::assertSame($filesA, $filesB);
-            self::assertGreaterThan(8000, count($filesA));
+            self::assertGreaterThan(3000, count($filesA));
         } finally {
             exec('rm -rf ' . escapeshellarg($outA) . ' ' . escapeshellarg($outB));
         }

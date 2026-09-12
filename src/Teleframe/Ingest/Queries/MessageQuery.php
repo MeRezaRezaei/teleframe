@@ -39,7 +39,10 @@ final class MessageQuery extends Builder
      */
     public function recent(int $limit = 20): self
     {
-        return $this->orderByDesc('message_id')->limit($limit);
+        /** @var self $builder */
+        $builder = $this->orderByDesc('message_id')->limit($limit);
+
+        return $builder;
     }
 
     /** Messages newer than a unix timestamp. */
@@ -54,9 +57,12 @@ final class MessageQuery extends Builder
      */
     public function beforeId(int $messageId, int $limit = 50): self
     {
-        return $this->where('message_id', '<', $messageId)
+        /** @var self $builder */
+        $builder = $this->where('message_id', '<', $messageId)
             ->orderByDesc('message_id')
             ->limit($limit);
+
+        return $builder;
     }
 
     /**
@@ -64,8 +70,11 @@ final class MessageQuery extends Builder
      */
     public function afterId(int $messageId, int $limit = 50): self
     {
-        return $this->where('message_id', '>', $messageId)
+        /** @var self $builder */
+        $builder = $this->where('message_id', '>', $messageId)
             ->orderBy('message_id')
             ->limit($limit);
+
+        return $builder;
     }
 }

@@ -93,8 +93,8 @@ trait PeerResolution
      * @var array{user: class-string<Model>, chat: class-string<Model>, channel: class-string<Model>}
      */
     private const PEER_FQCN_MAP = [
-        'user'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TfUser',
-        'chat'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TfChat',
-        'channel' => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TfChannel',
+        'user'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser',
+        'chat'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat',
+        'channel' => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannel',
     ];
 }

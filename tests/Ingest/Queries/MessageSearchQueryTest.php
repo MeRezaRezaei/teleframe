@@ -5,44 +5,33 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Tests\Ingest\Queries;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use MeRezaRezaei\Teleframe\Ingest\Queries\MessageSearchQuery;
+use MeRezaRezaei\Teleframe\Tests\Ingest\IngestTestCase;
 
-class MessageSearchQueryTest extends \MeRezaRezaei\Teleframe\Tests\Schema\TestCase
+class MessageSearchQueryTest extends IngestTestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
 
-        if (!Schema::hasTable('tf_messages')) {
-            Schema::create('tf_messages', function ($table) {
-                $table->bigIncrements('id');
-                $table->bigInteger('constructor_id');
-                $table->bigInteger('account_id');
-                $table->bigInteger('peer_id');
-                $table->bigInteger('message_id');
-                $table->text('tl_data');
-                $table->text('message_text')->nullable();
-                $table->timestamps();
-            });
-        }
-
+        // tf_messages comes from the migrated real DDL (IngestTestCase):
+        // bigInteger id PK + message_id/peer_id/date NOT NULL + tl_data.
         DB::table('tf_messages')->insert([
             [
-                'peer_id' => 1001, 'message_id' => 1, 'account_id' => 1,
-                'constructor_id' => 0, 'tl_data' => '{}',
+                'id' => 1, 'peer_id' => 1001, 'message_id' => 1, 'account_id' => 1,
+                'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}',
                 'message_text' => 'hello world',
                 'created_at' => now(),
             ],
             [
-                'peer_id' => 1001, 'message_id' => 2, 'account_id' => 1,
-                'constructor_id' => 0, 'tl_data' => '{}',
+                'id' => 2, 'peer_id' => 1001, 'message_id' => 2, 'account_id' => 1,
+                'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}',
                 'message_text' => 'the quick brown fox',
                 'created_at' => now(),
             ],
             [
-                'peer_id' => 1001, 'message_id' => 3, 'account_id' => 1,
-                'constructor_id' => 0, 'tl_data' => '{}',
+                'id' => 3, 'peer_id' => 1001, 'message_id' => 3, 'account_id' => 1,
+                'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}',
                 'message_text' => 'hello there friend',
                 'created_at' => now(),
             ],
@@ -58,8 +47,8 @@ class MessageSearchQueryTest extends \MeRezaRezaei\Teleframe\Tests\Schema\TestCa
     public function test_search_scopes_to_account(): void
     {
         DB::table('tf_messages')->insert([
-            'peer_id' => 1001, 'message_id' => 10, 'account_id' => 2,
-            'constructor_id' => 0, 'tl_data' => '{}',
+            'id' => 10, 'peer_id' => 1001, 'message_id' => 10, 'account_id' => 2,
+            'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}',
             'message_text' => 'hello from other account',
             'created_at' => now(),
         ]);

@@ -10,7 +10,7 @@ use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /** Domain model for sticker_sets (TL types: StickerSet). */
-final class TlSticker_set extends TlAnchorModel
+final class TlStickerSet extends TlAnchorModel
 {
     use AccountScoped;
 

@@ -98,21 +98,21 @@ final class PeerResolutionTest extends TestCase
             $t->bigInteger('id');
             $t->bigInteger('account_id');
             $t->bigInteger('tl_id');
-            $t->primary(['id']);
+            $t->primary(['id', 'account_id']);
         });
 
         Schema::create('fake_tl_chats', static function (Blueprint $t): void {
             $t->bigInteger('id');
             $t->bigInteger('account_id');
             $t->bigInteger('tl_id');
-            $t->primary(['id']);
+            $t->primary(['id', 'account_id']);
         });
 
         Schema::create('fake_tl_channels', static function (Blueprint $t): void {
             $t->bigInteger('id');
             $t->bigInteger('account_id');
             $t->bigInteger('tl_id');
-            $t->primary(['id']);
+            $t->primary(['id', 'account_id']);
         });
     }
 
@@ -199,10 +199,10 @@ final class PeerResolutionTest extends TestCase
 
     public function test_resolve_peer_model_returns_chat_for_current_account(): void
     {
-        // Seed FakeTlChat rows for two accounts
+        // Seed FakeTlChat rows for two accounts (id = native Telegram ID on domain tables)
         FakeTlChat::insert([
-            ['id' => 100, 'account_id' => 1, 'tl_id' => 7],
-            ['id' => 200, 'account_id' => 8, 'tl_id' => 7],
+            ['id' => 7, 'account_id' => 1, 'tl_id' => 7],
+            ['id' => 7, 'account_id' => 8, 'tl_id' => 7],
         ]);
 
         // PeerHolder pointing to chat 7
@@ -240,9 +240,9 @@ final class PeerResolutionTest extends TestCase
 
     public function test_resolve_peer_model_is_isolated_per_account(): void
     {
-        // FakeTlChat row only for account 8
+        // FakeTlChat row only for account 8 (id = native Telegram ID)
         FakeTlChat::insert([
-            ['id' => 100, 'account_id' => 8, 'tl_id' => 42],
+            ['id' => 42, 'account_id' => 8, 'tl_id' => 42],
         ]);
 
         PeerHolder::insert([
@@ -261,7 +261,7 @@ final class PeerResolutionTest extends TestCase
     public function test_resolve_peer_model_returns_user_via_decoder(): void
     {
         FakeTlUser::insert([
-            ['id' => 50, 'account_id' => 1, 'tl_id' => 777],
+            ['id' => 777, 'account_id' => 1, 'tl_id' => 777],
         ]);
 
         PeerHolder::insert([
@@ -280,7 +280,7 @@ final class PeerResolutionTest extends TestCase
     public function test_resolve_peer_model_returns_channel(): void
     {
         FakeTlChannel::insert([
-            ['id' => 200, 'account_id' => 1, 'tl_id' => 55],
+            ['id' => 55, 'account_id' => 1, 'tl_id' => 55],
         ]);
 
         PeerHolder::insert([

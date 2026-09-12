@@ -8,11 +8,11 @@ namespace MeRezaRezaei\Teleframe\Schema\Generated\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/** Factory for TlSticker_set (domain: sticker_sets). */
-final class TlSticker_setFactory extends Factory
+/** Factory for TlStickerSet (domain: sticker_sets). */
+final class TlStickerSetFactory extends Factory
 {
-    /** @var class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSticker_set> */
-    protected $model = \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlSticker_set::class;
+    /** @var class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStickerSet> */
+    protected $model = \MeRezaRezaei\Teleframe\Schema\Generated\Models\TlStickerSet::class;
 
     /** @return array<string, mixed> */
     public function definition(): array

@@ -33,7 +33,7 @@ final class MessageSearchQuery
         $builder = DB::table('tf_messages')
             ->where('account_id', $accountId)
             ->whereRaw('search_vector @@ plainto_tsquery(\'english\', ?)', [$query])
-            ->select('*', DB::raw("ts_rank(search_vector, plainto_tsquery('english', ?)) AS rank", [$query]))
+            ->select('*')->selectRaw("ts_rank(search_vector, plainto_tsquery('english', ?)) AS rank", [$query])
             ->orderByDesc('rank')
             ->limit($limit);
 

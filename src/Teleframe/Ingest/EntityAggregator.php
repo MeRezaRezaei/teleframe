@@ -20,11 +20,17 @@ use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
  */
 final class EntityAggregator
 {
+    /**
+     * Deleted users do not resolve: a row whose latest ingested
+     * constructor carries the deleted flag is upstream-gone, so it
+     * behaves as absent (per-constructor-era contract preserved).
+     */
     public function user(int $accountId, int $tgId): ?TlUser
     {
         return TlUser::query()
             ->where('id', $tgId)
             ->where('account_id', $accountId)
+            ->where('is_deleted', false)
             ->first();
     }
 
@@ -59,11 +65,10 @@ final class EntityAggregator
         $class = match ($decoded['kind']) {
             'user' => $modelClass ?? TlUser::class,
             'chat' => $modelClass ?? TlChat::class,
-            'channel' => $modelClass ?? TlChannel::class,
-            default => null,
+            default => $modelClass ?? TlChannel::class,
         };
 
-        if ($class === null || !class_exists($class)) {
+        if (!class_exists($class)) {
             return null;
         }
 

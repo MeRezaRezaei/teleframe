@@ -5,29 +5,16 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use MeRezaRezaei\Teleframe\Ingest\TtlJanitor;
-use MeRezaRezaei\Teleframe\Tests\Schema\TestCase;
 
-class TtlJanitorTest extends TestCase
+class TtlJanitorTest extends IngestTestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Create tf_stories table if it doesn't exist in the test DB
-        if (!Schema::hasTable('tf_stories')) {
-            Schema::create('tf_stories', function ($table) {
-                $table->bigIncrements('id');
-                $table->bigInteger('peer_id');
-                $table->bigInteger('story_id');
-                $table->bigInteger('account_id');
-                $table->bigInteger('constructor_id');
-                $table->text('tl_data');
-                $table->timestamp('expire_date');
-                $table->timestamps();
-            });
-        }
+        // tf_stories comes from the migrated real DDL (IngestTestCase):
+        // bigInteger id PK (no autoincrement — supply explicitly).
     }
 
     public function test_sweep_removes_expired_rows(): void
@@ -35,9 +22,12 @@ class TtlJanitorTest extends TestCase
         $expired = now()->subDay();
         $future = now()->addDay();
 
+        // expire_date is integer-affinity in the real DDL; store datetime
+        // strings (SQLite flexible typing) so TtlJanitor's `<= now()`
+        // string comparison behaves instead of int-vs-text always-true.
         DB::table('tf_stories')->insert([
-            ['peer_id' => 1, 'story_id' => 1, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'expire_date' => $expired, 'created_at' => now()],
-            ['peer_id' => 1, 'story_id' => 2, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'expire_date' => $future, 'created_at' => now()],
+            ['id' => 1, 'peer_id' => 1, 'story_id' => 1, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'expire_date' => $expired->toDateTimeString(), 'created_at' => now()],
+            ['id' => 2, 'peer_id' => 1, 'story_id' => 2, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'expire_date' => $future->toDateTimeString(), 'created_at' => now()],
         ]);
 
         $janitor = new TtlJanitor();
@@ -60,11 +50,12 @@ class TtlJanitorTest extends TestCase
     public function test_sweep_respects_limit(): void
     {
         $expired = now()->subDay();
+        $id = 100;
         for ($i = 100; $i < 105; $i++) {
             DB::table('tf_stories')->insert([
-                'peer_id' => $i, 'story_id' => $i, 'account_id' => 1,
+                'id' => $id++, 'peer_id' => $i, 'story_id' => $i, 'account_id' => 1,
                 'constructor_id' => 0, 'tl_data' => '{}',
-                'expire_date' => $expired, 'created_at' => now(),
+                'expire_date' => $expired->toDateTimeString(), 'created_at' => now(),
             ]);
         }
 

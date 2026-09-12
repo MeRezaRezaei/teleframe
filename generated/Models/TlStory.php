@@ -10,12 +10,12 @@ use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerResolution;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
-/** Domain model for channel_participants (TL types: ChannelParticipant). */
-final class TlChannel_participant extends TlAnchorModel
+/** Domain model for stories (TL types: StoryItem, stories.Albums, stories.AllStories, stories.CanSendStoryCount, stories.FoundStories, stories.PeerStories, stories.Stories, stories.StoryReactionsList, stories.StoryViews, stories.StoryViewsList). */
+final class TlStory extends TlAnchorModel
 {
     use AccountScoped, PeerResolution;
 
-    protected $table = 'tf_channel_participants';
+    protected $table = 'tf_stories';
 
     protected $guarded = [];
 }

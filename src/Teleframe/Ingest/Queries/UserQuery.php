@@ -26,7 +26,10 @@ final class UserQuery extends Builder
     /** Find by exact username (case-insensitive via Postgres ILIKE). */
     public function byUsername(string $username): self
     {
-        return $this->whereRaw('LOWER(username) = LOWER(?)', [$username]);
+        /** @var self $builder */
+        $builder = $this->whereRaw('LOWER(username) = LOWER(?)', [$username]);
+
+        return $builder;
     }
 
     /** Find by phone number. */

@@ -120,11 +120,71 @@ final class Naming
     }
 
     /**
+     * Constructor names that belong to a different domain than their
+     * result type declares (wire reality: channel/channelForbidden are
+     * `= Chat;` ctors, but the spec §5 table routes them to tf_channels).
+     *
+     * @var array<string, string> ctor name => domain name (without tf_ prefix)
+     */
+    private const CTOR_DOMAIN_OVERRIDES = [
+        'channel'          => 'channels',
+        'channelForbidden' => 'channels',
+    ];
+
+    /**
+     * Classify a constructor to its domain: ctor-name overrides win,
+     * then the result-type rules in classifyType().
+     *
+     * @return array{domain: string, is_entity: bool}|null
+     */
+    public static function classifyConstructor(string $ctorName, string $resultType): ?array
+    {
+        if (isset(self::CTOR_DOMAIN_OVERRIDES[$ctorName])) {
+            $domain = self::CTOR_DOMAIN_OVERRIDES[$ctorName];
+            return ['domain' => $domain, 'is_entity' => true];
+        }
+
+        return self::classifyType($resultType);
+    }
+
+    /**
+     * Domain name → singular Studly model suffix: 'users' → 'User',
+     * 'sticker_sets' → 'StickerSet', 'stories' → 'Story', ... Explicit
+     * map because naive rtrim/plural-strip mangles stories/sticker_sets.
+     *
+     * @var array<string, string>
+     */
+    private const DOMAIN_MODEL_NAMES = [
+        'users'                => 'User',
+        'chats'                => 'Chat',
+        'channels'             => 'Channel',
+        'messages'             => 'Message',
+        'dialogs'              => 'Dialog',
+        'updates'              => 'Update',
+        'documents'            => 'Document',
+        'photos'               => 'Photo',
+        'sticker_sets'         => 'StickerSet',
+        'stories'              => 'Story',
+        'wallpapers'           => 'Wallpaper',
+        'channel_participants' => 'ChannelParticipant',
+    ];
+
+    /**
      * Model class name for a domain: 'users' → 'TlUser', 'messages' → 'TlMessage'.
      */
     public static function domainModel(string $domain): string
     {
-        return 'Tl' . ucfirst(rtrim($domain, 's'));
+        if (isset(self::DOMAIN_MODEL_NAMES[$domain])) {
+            return 'Tl' . self::DOMAIN_MODEL_NAMES[$domain];
+        }
+
+        // Fallback for unknown domains: strip one trailing 's', StudlyCase.
+        $singular = str_ends_with($domain, 's') ? substr($domain, 0, -1) : $domain;
+        $studly = implode('', array_map(
+            static fn (string $s): string => ucfirst($s),
+            explode('_', $singular),
+        ));
+        return 'Tl' . $studly;
     }
 
     /**

@@ -47,7 +47,7 @@ final class Teleclient
      * @param array<string, mixed> $params
      * @param array<string, mixed> $response
      */
-    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TlAnchorModel
+    public function ingestResponse(string $method, array $params, array $response, int $accountId): TlAnchorModel
     {
         return $this->ingestor->ingestResponse($method, $params, $response, $accountId);
     }

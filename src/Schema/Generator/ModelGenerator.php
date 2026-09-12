@@ -46,12 +46,20 @@ final class ModelGenerator
             if ($type->name === 'Vector t' || $type->constructors() === []) {
                 continue;
             }
-            $classification = Naming::classifyType($type->name);
-            if ($classification === null) {
-                continue; // ephemeral — no model
+            $domainTypesForType = [];
+            foreach ($type->constructors() as $ctor) {
+                $classification = Naming::classifyConstructor($ctor->name, $type->name);
+                if ($classification === null) {
+                    continue; // ephemeral — no model
+                }
+                $domainTypesForType[$classification['domain']] = true;
             }
-            $domain = $classification['domain'];
-            $domainTypes[$domain][] = $type->name;
+            if ($domainTypesForType === []) {
+                continue; // fully ephemeral type — no model
+            }
+            foreach (array_keys($domainTypesForType) as $domain) {
+                $domainTypes[$domain][] = $type->name;
+            }
         }
 
         // Emit one model per domain
@@ -67,11 +75,17 @@ final class ModelGenerator
                 $uses[] = 'PeerResolution';
             }
 
-            // Collect constructor_id values for type-aware helpers
+            // Collect constructor_id values for type-aware helpers — only
+            // ctors that actually route to this domain (channel ctors live
+            // under the Chat TL type but belong to the channels domain).
             $ctorIds = [];
             foreach ($typeNames as $typeName) {
                 $type = $types[$typeName];
                 foreach ($type->constructors() as $ctor) {
+                    $classification = Naming::classifyConstructor($ctor->name, $typeName);
+                    if (($classification['domain'] ?? null) !== $domain) {
+                        continue;
+                    }
                     $ctorIds[$ctor->name] = sprintf('%08x', $ctor->id);
                 }
             }

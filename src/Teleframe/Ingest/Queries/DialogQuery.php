@@ -26,8 +26,11 @@ final class DialogQuery extends Builder
     /** Pinned dialogs first, then by top_message_id descending. */
     public function ordered(): self
     {
-        return $this->orderByDesc('is_pinned')
+        /** @var self $builder */
+        $builder = $this->orderByDesc('is_pinned')
             ->orderByDesc('top_message_id');
+
+        return $builder;
     }
 
     /** Only pinned dialogs. */

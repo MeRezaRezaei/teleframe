@@ -9,7 +9,7 @@ use MeRezaRezaei\Teleframe\Bus\RedisStreamSink;
 use MeRezaRezaei\Teleframe\Bus\RouteTable;
 use MeRezaRezaei\Teleframe\Bus\StreamSchema;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUserUser;
+use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
 use MeRezaRezaei\Teleframe\Teleclient;
 use MeRezaRezaei\Teleframe\Tests\Ingest\IngestTestCase;
 use MeRezaRezaei\Teleframe\Tests\Support\ArrayRedis;
@@ -78,7 +78,7 @@ final class IngestConsumerTest extends IngestTestCase
         $client = $this->app->make(Teleclient::class);
         $user = $client->user(self::ACCOUNT, self::USER_ID);
         self::assertNotNull($user);
-        self::assertSame('Reza', $user->currentInstance->first_name);
+        self::assertSame('Reza', $user->first_name);
 
         // Forwarded entry kept the original payload untouched
         $targets = $this->redis->streamEntries('tg:target:messages');
@@ -124,7 +124,7 @@ final class IngestConsumerTest extends IngestTestCase
         self::assertSame([], $this->redis->streamEntries(StreamSchema::DL));
 
         $client = $this->app->make(Teleclient::class);
-        self::assertSame('Reza', $client->user(self::ACCOUNT, self::USER_ID)?->currentInstance?->first_name);
+        self::assertSame('Reza', $client->user(self::ACCOUNT, self::USER_ID)?->first_name);
 
         // Cycle 2: retry throws again — still pending, still no dead-letter
         self::assertSame(['processed' => 0, 'forwarded' => 0], $this->consumer->consumeOnce());
@@ -214,7 +214,7 @@ final class IngestConsumerTest extends IngestTestCase
 
         $consumer->consumeOnce();
 
-        self::assertSame([[TlUserUser::class, self::ACCOUNT]], $seen);
+        self::assertSame([[TlUser::class, self::ACCOUNT]], $seen);
     }
 
 

@@ -47,6 +47,35 @@ final class UpdateIngestor
     ];
 
     /**
+     * TL param name aliases for extraction: domain column key => TL param
+     * names to try when the key itself is absent from the payload (TL
+     * wire names differ from domain column names: id→message_id,
+     * message→message_text). The `is_*` boolean columns fall back to
+     * their bare TL flag name (is_out→out) via the generic rule below.
+     *
+     * @var array<string, list<string>>
+     */
+    private const EXTRACT_PARAM_ALIASES = [
+        'message_id'   => ['id'],
+        'story_id'     => ['id'],
+        'message_text' => ['message'],
+        // Users domain: TL flag-only bools (self/contact/deleted/bot/...)
+        // arrive as bare keys, while domain columns are is_*-prefixed.
+        'is_bot'       => ['bot'],
+        'is_self'      => ['self'],
+        'is_contact'   => ['contact'],
+        'is_premium'   => ['premium'],
+        'is_deleted'   => ['deleted'],
+        // Channels domain: same bare-key convention for TL flag bools.
+        'is_broadcast' => ['broadcast'],
+        'is_megagroup' => ['megagroup'],
+        'is_verified'  => ['verified'],
+        'is_restricted' => ['restricted'],
+        'is_left'      => ['left'],
+        'is_forum'     => ['forum'],
+    ];
+
+    /**
      * Conflict target for upsert per domain.
      *
      * @var array<string, list<string>>
@@ -78,15 +107,9 @@ final class UpdateIngestor
     public function __construct(
         ?RouteIdempotency $routes = null,
         private readonly ?Dispatcher $events = null,
-        private readonly ?\Closure $now = null, // @phpstan-ignore-line used by now()
+        private readonly ?\Closure $now = null,
     ) {
         $this->routes = $routes ?? new RouteIdempotency(now: $now);
-    }
-
-    /** Framework-free clock (Laravel now() helper is unavailable in plain PHP). */
-    private function now(): \DateTimeImmutable
-    {
-        return $this->now !== null ? ($this->now)() : new \DateTimeImmutable();
     }
 
     /**
@@ -194,14 +217,30 @@ final class UpdateIngestor
 
         $root = DB::transaction(function () use ($nodes, $accountId, &$written): TlAnchorModel {
             foreach (array_reverse($nodes) as $node) {
-                $written[$node['path']] = $this->writeNode(
+                $model = $this->writeNode(
                     $node['constructor'],
                     $node['payload'],
                     $accountId,
                 );
+                if ($model !== null) {
+                    $written[$node['path']] = $model;
+                }
             }
 
-            return $written[$nodes[0]['path']]; // walker yields the root first
+            if (isset($written[$nodes[0]['path']])) {
+                return $written[$nodes[0]['path']]; // walker yields the root first
+            }
+
+            // The root node is an ephemeral envelope (e.g. messages.Messages):
+            // return the first persisted descendant instead.
+            $first = reset($written);
+            if ($first === false) {
+                throw new \InvalidArgumentException(
+                    'UpdateIngestor: payload carries no persistable domain node — nothing to ingest',
+                );
+            }
+
+            return $first;
         });
 
         $this->events?->dispatch(new UpdateStored($root, $accountId));
@@ -215,7 +254,7 @@ final class UpdateIngestor
      * @param array<string, mixed> $params
      * @param array<string, mixed> $response
      */
-    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TlAnchorModel
+    public function ingestResponse(string $method, array $params, array $response, int $accountId): TlAnchorModel
     {
         if (RouteIdempotency::isUpdatePayload($response)) {
             return $this->ingest($response, $accountId);
@@ -229,12 +268,20 @@ final class UpdateIngestor
         $key = RouteIdempotency::keyFor($method, $params);
         $storedId = $this->routes->storedId($method, $key, $accountId);
         if ($storedId !== null) {
-            return $this->storedInstance((string) ($response['_'] ?? ''), $storedId);
+            // Envelope ctors (messages.messages, users.users, ...) persist
+            // only their descendants, so no stored instance resolves — fall
+            // back to an idempotent re-ingest (upsert-stable) instead of
+            // returning null for a seen route.
+            return $this->storedInstance((string) ($response['_'] ?? ''), $storedId)
+                ?? $this->ingest($response, $accountId);
         }
 
         $root = $this->ingest($response, $accountId);
 
-        if (!DB::table($table)->where('id', (int) $root->getKey())->exists()) {
+        // Surrogate-key roots (messages, updates: null key on sqlite) have
+        // nothing stable to point the route at — marking id 0 would collide
+        // across distinct keys, so only native-id roots mark routes.
+        if ($root->getKey() !== null && !DB::table($table)->where('id', (int) $root->getKey())->exists()) {
             $this->routes->mark($method, $key, $accountId, (int) $root->getKey());
         }
 
@@ -251,7 +298,7 @@ final class UpdateIngestor
         }
 
         $ctor = self::constructor($constructor);
-        $classification = Naming::classifyType($ctor->resultType);
+        $classification = Naming::classifyConstructor($constructor, $ctor->resultType);
         if ($classification === null) {
             return null;
         }
@@ -274,13 +321,14 @@ final class UpdateIngestor
         string $name,
         array $payload,
         int $accountId,
-    ): TlAnchorModel {
+    ): ?TlAnchorModel {
         $ctor = self::constructor($name);
-        $classification = Naming::classifyType($ctor->resultType);
+        $classification = Naming::classifyConstructor($name, $ctor->resultType);
         if ($classification === null) {
-            throw new \InvalidArgumentException(
-                "UpdateIngestor: TL type '{$ctor->resultType}' has no domain classification — cannot ingest",
-            );
+            // Ephemeral envelope (e.g. messages.Messages): its children were
+            // walked and persisted as domain rows; nothing to store for the
+            // envelope itself.
+            return null;
         }
 
         $domain = $classification['domain'];
@@ -306,7 +354,7 @@ final class UpdateIngestor
         ], $columns);
 
         // For global-ID types, set the id column from the payload
-        $idValue = $this->extractGlobalId($ctor, $columns);
+        $idValue = $this->extractGlobalId($ctor, $columns, $payload);
         if ($idValue !== null) {
             $fill['id'] = $idValue;
         }
@@ -367,14 +415,34 @@ final class UpdateIngestor
             $paramByField[$p->name] = $p;
         }
 
-        foreach ($extractCols as $paramName) {
-            $col = Naming::column($paramName);
-            $value = $payload[$paramName] ?? null;
+        foreach ($extractCols as $colKey) {
+            $col = Naming::column($colKey);
+            $tlName = $colKey;
+            $value = $payload[$colKey] ?? null;
+
+            if ($value === null) {
+                foreach (self::EXTRACT_PARAM_ALIASES[$colKey] ?? [] as $alias) {
+                    if (array_key_exists($alias, $payload) && $payload[$alias] !== null) {
+                        $tlName = $alias;
+                        $value = $payload[$alias];
+                        break;
+                    }
+                }
+            }
+
+            if ($value === null && str_starts_with($colKey, 'is_')) {
+                $bare = substr($colKey, 3);
+                if (array_key_exists($bare, $payload) && $payload[$bare] !== null) {
+                    $tlName = $bare;
+                    $value = $payload[$bare];
+                }
+            }
+
             if ($value === null) {
                 continue;
             }
 
-            $param = $paramByField[$paramName] ?? null;
+            $param = $paramByField[$tlName] ?? $paramByField[$colKey] ?? null;
             if ($param === null) {
                 continue;
             }
@@ -413,11 +481,11 @@ final class UpdateIngestor
      * Extract the global ID (Telegram native ID) from the payload.
      * Returns null for scoped-ID types.
      */
-    private function extractGlobalId(TlConstructor $ctor, array $columns): ?int
+    private function extractGlobalId(TlConstructor $ctor, array $columns, array $payload): ?int
     {
         foreach ($ctor->params() as $p) {
             if ($p->kind() === 'scalar' && $p->name === 'id' && $p->baseType() === 'long') {
-                $val = $columns['id'] ?? null;
+                $val = $columns['id'] ?? $payload['id'] ?? null;
                 return $val !== null ? (int) $val : null;
             }
         }
