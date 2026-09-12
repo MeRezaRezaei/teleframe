@@ -77,7 +77,14 @@ final class MirrorMigrationWriter
         if ($table->parentTf !== '') {
             $parentTbl = $table->parentTf;
             $fkCols = array_merge(['account_id'], $table->keyColumns);
-            $allFks[] = [$tbl, $fkCols, $parentTbl, $fkCols];
+            $allFks[] = [$tbl, $fkCols, $parentTbl, $fkCols, false];
+        }
+        // Reference FK to another parent (e.g. tf_users_photo.photo_id → tf_photos).
+        // Object references are ON DELETE RESTRICT: the referenced row must exist.
+        if ($table->fkOn !== null && $table->fkCols !== []) {
+            $fromCols = array_map(fn ($c) => $c, $table->fkCols);
+            $toCols   = $table->fkToCols !== [] ? $table->fkToCols : $table->fkCols;
+            $allFks[] = [$tbl, $fromCols, $table->fkOn, $toCols, $table->fkRestrict];
         }
     }
 
@@ -96,18 +103,28 @@ final class MirrorMigrationWriter
         };
     }
 
-    /** @param array<array{string, list<string>, string, list<string>}> $fks */
+    /**
+     * @param array<array{string, list<string>, string, list<string>, bool}> $fks
+     *   each: [fromTable, fromCols, toTable, toCols, restrict]
+     */
     private function writeFks(array $fks, string $dateStamp): string
     {
         $up   = [];
         $down = [];
-        foreach ($fks as [$fromTable, $fromCols, $toTable, $toCols]) {
-            $hash  = substr(sha1("{$fromTable}:{$toTable}:".implode(',', $fromCols)), 0, 16);
+        $seen = [];
+        foreach ($fks as [$fromTable, $fromCols, $toTable, $toCols, $restrict]) {
+            $key = "{$fromTable}:{$toTable}:".implode(',', $fromCols);
+            if (isset($seen[$key])) {
+                continue; // identical parent→child cascades surface from multiple contexts — emit once
+            }
+            $seen[$key] = true;
+            $hash  = substr(sha1($key), 0, 16);
             $fkName = "fk_{$fromTable}_{$toTable}_{$hash}";
             $from = implode(', ', array_map(fn ($c) => "'{$c}'", $fromCols));
             $to   = implode(', ', array_map(fn ($c) => "'{$c}'", $toCols));
+            $onDelete = $restrict ? 'restrict' : 'cascade';
             $up[]   = "Schema::table('{$fromTable}', function (Blueprint \$table) {";
-            $up[]   = "\$table->foreign([{$from}])->references([{$to}])->on('{$toTable}')->onDelete('cascade');";
+            $up[]   = "\$table->foreign([{$from}])->references([{$to}])->on('{$toTable}')->onDelete('{$onDelete}');";
             $up[]   = "});";
             $up[]   = '';
             $down[] = "Schema::table('{$fromTable}', function (Blueprint \$table) {";

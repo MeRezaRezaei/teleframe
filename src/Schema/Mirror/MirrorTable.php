@@ -27,6 +27,10 @@ final class MirrorTable
      * @param list<array{kind:string, name:string}> $peerColumns  Peer-typed columns (type/id pairs)
      * @param list<string>        $hexColumns      Column names stored as hex (bytes fields)
      * @param list<string>        $booleanColumns  Column names of boolean type
+     * @param string|null         $fkOn            Target parent table for a reference FK (empty = cascade to parentTf)
+     * @param list<string>        $fkCols          Local column names forming the FK to $fkOn
+     * @param list<string>        $fkToCols        Referenced column names on $fkOn (default = $fkCols)
+     * @param bool                $fkRestrict      True = ON DELETE RESTRICT (object reference); false = CASCADE (parent child)
      */
     public function __construct(
         public readonly string $tfName,
@@ -41,5 +45,9 @@ final class MirrorTable
         public readonly array $peerColumns,
         public readonly array $hexColumns,
         public readonly array $booleanColumns,
+        public readonly ?string $fkOn = null,
+        public readonly array $fkCols = [],
+        public readonly array $fkToCols = [],
+        public readonly bool $fkRestrict = false,
     ) {}
 }
