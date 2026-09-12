@@ -75,13 +75,13 @@ final class MirrorTableResolver
         // that is later expanded) terminates instead of recursing infinitely.
         $this->unionStack[] = $entry->tlType;
 
-        // Base scalar shapes become columns (buildBaseColumns); FK→ / 1:N child
-        // shapes become child tables. Every catalog CHILD entry is a fact table —
-        // including scalar children (optional fields declared as 1:1 facts),
-        // which must NOT be dropped: resolveChildField materializes them as
-        // `{parent}_{field}` tables so no declared param is lost.
+// Base entries: scalar/peer shapes become parent columns (buildBaseColumns);
+        // FK→ / 1:N fact shapes become child tables. Children entries: EVERY shape
+        // (scalar, peer, FK→, 1:N) becomes a child table — row existence = fact
+        // existence. Scalar-shaped catalog children (tf_messages.views,
+        // via_bot_id, from_rank, ...) must be mirrored, not dropped.
         foreach ($entry->base as [$fieldName, $shape]) {
-            if ($keyCols !== [] && $this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
+            if ($this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
                 continue;
             }
             if ($this->isFactShape($shape)) {
@@ -92,7 +92,7 @@ final class MirrorTableResolver
             }
         }
         foreach ($entry->children as [$fieldName, $shape]) {
-            if ($keyCols !== [] && $this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
+            if ($this->shapeExpandsIntoKeyCols($shape, $fieldName, $keyCols)) {
                 continue;
             }
             $child = $this->resolveChildField($tfName, $fieldName, $shape, $keyCols);

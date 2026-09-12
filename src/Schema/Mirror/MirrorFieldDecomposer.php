@@ -79,7 +79,7 @@ final class MirrorFieldDecomposer
             }
         }
         if ($shape === 'TEXT NOT NULL') {
-            return new MirrorColumn($field, MirrorColumnType::String);
+            return new MirrorColumn($field, MirrorColumnType::String, hex: $hex);
         }
         if (str_contains($shape, 'DOUBLE')) {
             return new MirrorColumn($field, MirrorColumnType::Double);
