@@ -662,7 +662,7 @@ final class MirrorTableResolver
             if ($this->isFactShape($shape)) {
                 continue; // routed to child tables in resolveTable()
             }
-            $resolved = MirrorFieldDecomposer::fromShape($shape, $name);
+            $resolved = MirrorFieldDecomposer::fromShape($shape, $name, $this->isBytesBaseField($entry, $name));
             if ($resolved !== null) {
                 $columns = array_merge($columns, $resolved);
             }
@@ -671,6 +671,21 @@ final class MirrorTableResolver
             $columns[] = new MirrorColumn($bool, MirrorColumnType::Boolean);
         }
         return $columns;
+    }
+
+    /**
+     * True when a parent-table base field maps to a TL `bytes` param.
+     * Bytes fields are stored as hex-encoded VARCHAR/TEXT (NF5 §8) — the column
+     * must carry the hex marker so ingest encodes and the DDL/consumers know.
+     */
+    private function isBytesBaseField(MirrorTableEntry $entry, string $fieldName): bool
+    {
+        $tlType = $this->scheme->types()[$entry->tlType] ?? null;
+        if ($tlType === null) {
+            return false;
+        }
+        $param = $this->findParam($tlType->constructors(), $fieldName);
+        return $param !== null && $param->baseType() === 'bytes';
     }
 
     /**

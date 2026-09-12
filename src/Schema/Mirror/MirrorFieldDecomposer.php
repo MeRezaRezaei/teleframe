@@ -75,7 +75,7 @@ final class MirrorFieldDecomposer
             $lenStr = substr($shape, $parenPos + 1, $closeParen - $parenPos - 1);
             $length = (int) $lenStr;
             if ($length > 0) {
-                return new MirrorColumn($field, MirrorColumnType::String, $length);
+                return new MirrorColumn($field, MirrorColumnType::String, $length, hex: $hex);
             }
         }
         if ($shape === 'TEXT NOT NULL') {
