@@ -241,23 +241,32 @@ String-limit catalog (§3) lives in one place (the `FieldMapper` config) so
 
 ## 8. Execution order (next phase, WIP=1)
 
-1. **`FieldMapper`** — §2 map as config + string-limit §3 catalog (`REVIEW`
-   markers collected).
-2. **`TlScheme` field typing** — CONFIRMED: `TlParser` preserves every raw
-   token; `TlParam` exposes `name` (`flags.3`), `type` (`string`) and `raw`
-   (`flags.3?string`) — the extractor derives nullable flags from `raw` without
-   touching the parser.
-3. **`DomainManifest`** — the 12 domain tables + updates vs. ctor set
-   (measured in `.tl`: `user` 12, `chat` 26, `channel` 75, `message` 128,
-   `dialog` 8, `update` 167, `document` 10, `photo` 8, `story` 12,
-   `channelParticipant` 14; `stickerSet` 5; `wallpaper*` none — wallpapers
-   persist under `document`/`photo`), each gated by the classified-ctor rule
-   §4.1 of the mirror spec.
-4. **Emitter → `schema/ddl/*.sql`** + migrations projection; delete
-   `ddl*()`/`routeMigration()` table-flood; adopt 4.2 natural PKs.
-5. **Fillgenerated models/factories** for the new columns.
-6. **Gates (§7)** + commit. Live-verify string limits against Telegram docs for
-   every `REVIEW` marker before shipping.
+Execution status (2026-09-12, committed `e15c2a00`):
+
+1. **`FieldMapper`** — ✅ DONE, shipped as
+   `src/Schema/Generator/SqlDdl/TypeMapper.php` (§2 map) +
+   `StringLimits.php` (§3 varchar catalog; unprovable bounds → `VARCHAR(255)`
+   and surfaced on the `REVIEW` list for §8.6 live-verification).
+2. **`TlScheme` field typing** — ✅ CONFIRMED (no emitter-side hacking of the
+   parser): `TlParser` preserves every raw token; `TlParam` exposes `name`
+   (`flags.3`), `type` (`string`) and `raw` (`flags.3?string`) — nullable
+   flags are derived from `raw` at emit time.
+3. **`DomainManifest`** — ✅ DONE, shipped as
+   `src/Schema/Generator/SqlDdl/DomainManifest.php` (12 domain tables + the
+   serial update log), gated by the classified-ctor rule §4.1.
+4. **Emitter → `schema/ddl/*.sql`** — ✅ first half done: `SqlDdlEmitter`
+   emits 12 per-domain PG files, wired into `SchemaRegenerator::regenerate()`,
+   committed with the manifest-drift gate. ⏸ Second half (delete the
+   hand-written `MigrationGenerator::ddl*()`/`routeMigration()` table-flood,
+   project migrations as DDL) is runtime surgery — deferred (see §10).
+5. **Fill generated models/factories** — ✅ done in the prior
+   TDLib-style-schema phase (commit `0a1828a`; factories/dfc models renamed);
+   the emitter's promoted columns match those shipped model casts.
+6. **Gates (§7) + commit** — ✅ all green, verified independently
+   (see §10): `composer verify` 1084 tests / phpstan 0 / idempotence,
+   smoke exit 0, `TELEFRAME_PG=1 tests/Pg` OK, regeneration byte-identical.
+   `REVIEW` string-limit markers: ticketed for live verification against
+   Telegram docs before the emission of the migrations-projection half.
 
 ---
 
@@ -290,8 +299,29 @@ Emitter implemented and shipped:
 - `composer verify`: 1084 tests / phpstan 0 errors / regeneration idempotence.
   `bin/standalone-smoke.php` exit 0. `TELEFRAME_PG=1 tests/Pg` 7 OK (830).
 
-Follow-up (`§8.4` second half, not done here): delete the hand-written
-`MigrationGenerator::ddl*()`/`routeMigration()` table-flood and make the Laravel
-migrations a projection of the emitted DDL, adopting the §4.2 natural PKs in the
-migration bodies. Deferred as runtime surgery (RouteIdempotency `getKey()`,
-message_text/search_vector ingest, Eloquent timestamps must stay consistent).
+Follow-up task (`§8.4` second half, tracked, not done here): delete the
+hand-written `MigrationGenerator::ddl*()`/`routeMigration()` table-flood and
+make the Laravel migrations a projection of the emitted DDL, adopting the §4.2
+natural PKs in the migration bodies. Deferred as runtime surgery
+(RouteIdempotency `getKey()`, message_text/search_vector ingest, Eloquent
+timestamps must stay consistent).
+
+**Independent verification (2026-09-12, post-commit `e15c2a00`):** a
+`verification` subagent re-ran every §7 gate against the committed tree:
+`composer verify` exit 0 (1084 tests / 14100 assertions / 6 skips — all 6
+pre-existing environmental: 1 mini-fixture, 4× redis-NOAUTH, 1× live-credential
+opt-in), smoke exit 0, PG 17.11-backed tests OK (collation-version warnings
+only), regeneration re-run → manifest `474e85f319f3` with `schema/ddl` and
+`generated/` byte-IDENTICAL, drift probes A–E pass, post-regen `git status`
+clean. PASS.
+
+**Stray `tests/Feature` removal:** the raw `vendor/bin/phpunit tests/`
+invocation failed to load (`Tests\TestCase` not found) because of 7 dead
+Laravel-Breeze scaffold files (commit `ef9fd566`) referencing a `Tests\TestCase`
+base that never existed in this repo. The suite config (`phpunit.xml.dist`)
+already excluded `tests/Feature` — the canonical gate never loaded them. Removed
+the dead scaffold so the directory-glob invocation loads again (root cause of a
+raw run was only these files). Note: `phpunit tests/` still surfaces 4
+pre-existing `tests/Vault` errors (VaultCommandTest needs an artisan-kernel
+bootstrap; `tests/Vault` is also outside the suite allow-list) — pre-existing,
+outside the defined gates, untouched here.
