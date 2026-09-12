@@ -40,7 +40,6 @@ class TfChat extends TfModel
     /** Messages in this chat. */
     public function messages(): HasMany
     {
-        return $this->hasMany(TfMessage::class, 'peer_id', 'id')
-            ->where('peer_type', 'peerChat');
+        return $this->hasMany(TfMessage::class, 'peer_id', 'id');
     }
 }

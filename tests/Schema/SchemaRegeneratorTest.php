@@ -10,6 +10,13 @@ use MeRezaRezaei\Teleframe\Schema\Generator\TlRegenerateException;
 
 final class SchemaRegeneratorTest extends TestCase
 {
+    private const PACKAGE_ROOT = __DIR__ . '/../..';
+
+    /** Full committed .tl set — the only scheme that can host the mirror
+     *  manifest (the SQL-extraction emitter validates every promoted column
+     *  against classified ctors and rejects mini schemes as drift). */
+    private const SOURCES = self::PACKAGE_ROOT . '/schema/sources';
+
     private function tmpDir(string $tag): string
     {
         $dir = sys_get_temp_dir() . '/tlgen-' . $tag . '-' . uniqid();
@@ -20,14 +27,14 @@ final class SchemaRegeneratorTest extends TestCase
     public function test_regenerate_writes_outputs_and_manifest(): void
     {
         $out = $this->tmpDir('out');
-        $result = (new SchemaRegenerator())->regenerate(__DIR__ . '/fixtures', $out);
+        $result = (new SchemaRegenerator())->regenerate(self::SOURCES, $out);
 
         self::assertFileExists($out . '/generated/schema-manifest.json');
         self::assertFileExists($out . '/generated/migrations');
         self::assertFileExists($out . '/generated/Models/TlUser.php');
         self::assertFileExists($out . '/generated/Data/Types/TlUserAbstractData.php');
         self::assertFileExists($out . '/generated/Factories/TlUserFactory.php');
-        self::assertSame(6, $result['counts']['constructors'] + $result['counts']['methods'] - $result['counts']['methods'] - 0 - 0 - 0 - 0);
+        self::assertGreaterThan(1000, $result['counts']['constructors']);
         self::assertGreaterThan(0, $result['counts']['tables']);
         $manifest = json_decode((string) file_get_contents($out . '/generated/schema-manifest.json'), true);
         self::assertSame($result['manifest']['hash'], $manifest['hash']);
@@ -37,8 +44,8 @@ final class SchemaRegeneratorTest extends TestCase
     {
         $a = $this->tmpDir('a');
         $b = $this->tmpDir('b');
-        (new SchemaRegenerator())->regenerate(__DIR__ . '/fixtures', $a);
-        (new SchemaRegenerator())->regenerate(__DIR__ . '/fixtures', $b);
+        (new SchemaRegenerator())->regenerate(self::SOURCES, $a);
+        (new SchemaRegenerator())->regenerate(self::SOURCES, $b);
         self::assertSame(
             sha1_file($a . '/generated/schema-manifest.json'),
             sha1_file($b . '/generated/schema-manifest.json'),
@@ -69,7 +76,7 @@ final class SchemaRegeneratorTest extends TestCase
 
         (new SchemaRegenerator())
             ->shipNamespaces(['messages'])
-            ->regenerate(__DIR__ . '/fixtures', $out);
+            ->regenerate(self::SOURCES, $out);
 
         self::assertFileDoesNotExist($out . '/generated/Models/deep/Stale.php');
         self::assertFileDoesNotExist($out . '/generated/Models/deep');
@@ -87,13 +94,13 @@ final class SchemaRegeneratorTest extends TestCase
 
         $engine = new SchemaRegenerator();
         try {
-            $engine->regenerate(__DIR__ . '/fixtures', $out);
+            $engine->regenerate(self::SOURCES, $out);
             self::fail('expected TlRegenerateException');
         } catch (TlRegenerateException $e) {
             self::assertStringContainsString('30%', $e->getMessage());
         }
 
-        $result = $engine->force(true)->regenerate(__DIR__ . '/fixtures', $out);
+        $result = $engine->force(true)->regenerate(self::SOURCES, $out);
         self::assertGreaterThan(0, $result['counts']['constructors']);
     }
 }

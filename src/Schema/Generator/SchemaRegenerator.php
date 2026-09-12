@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generator;
 
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
+use MeRezaRezaei\Teleframe\Schema\Generator\SqlDdl\SqlDdlEmitter;
 use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -94,12 +95,16 @@ final class SchemaRegenerator
         $modelFiles = (new ModelGenerator())->generate($combined);
         $dtoFiles = (new DtoGenerator())->generate($combined);
         $factoryFiles = (new FactoryGenerator())->generate($combined);
+        // Exact-schema track (SQL-extraction plan §8.4): one PG DDL file per
+        // domain table, validated against the .tl at emit time.
+        $ddlFiles = (new SqlDdlEmitter())->generate($combined);
 
         $this->wipe($outputDir);
         $this->writeAll($outputDir . '/generated/migrations', $migFiles);
         $this->writeAll($outputDir . '/generated/Models', $modelFiles);
         $this->writeAll($outputDir . '/generated/Data', $dtoFiles);
         $this->writeAll($outputDir . '/generated/Factories', $factoryFiles);
+        $this->writeAll($outputDir . '/schema/ddl', $ddlFiles);
 
         $stats = $mig->stats();
         $counts['tables'] = count($stats['tables']);
@@ -234,6 +239,7 @@ final class SchemaRegenerator
         foreach (['migrations', 'Models', 'Data', 'Factories'] as $dir) {
             self::removeTree($outputDir . '/generated/' . $dir);
         }
+        self::removeTree($outputDir . '/schema/ddl');
         $manifest = $outputDir . '/generated/schema-manifest.json';
         if (is_file($manifest)) {
             unlink($manifest);

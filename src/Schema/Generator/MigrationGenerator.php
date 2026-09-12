@@ -23,28 +23,29 @@ final class MigrationGenerator
     /** @var array<string, string> table => migration filename */
     private array $tableMap = [];
     private string $currentFile = '';
-    private string $currentTable = '';
 
     /**
-     * Domain table definitions: ordered list of domain => DDL builder.
+     * Domain table definitions: ordered list of domain => static builder
+     * method name. Each builder returns the PHP Blueprint lines for
+     * Schema::create(). Methods are dispatched in generate() to keep them
+     * reachable-verified by phpstan (dynamic self::$method() marks every
+     * listed builder used while still flagging genuinely-dead methods).
      *
-     * Each entry returns the PHP Blueprint lines for Schema::create().
-     *
-     * @var array<string, callable(): list<string>>
+     * @var array<string, string>
      */
-    private const DOMAIN_TABLES = [
-        'users'                 => [self::class, 'ddlUsers'],
-        'chats'                 => [self::class, 'ddlChats'],
-        'channels'              => [self::class, 'ddlChannels'],
-        'messages'              => [self::class, 'ddlMessages'],
-        'dialogs'               => [self::class, 'ddlDialogs'],
-        'updates'               => [self::class, 'ddlUpdates'],
-        'documents'             => [self::class, 'ddlDocuments'],
-        'photos'                => [self::class, 'ddlPhotos'],
-        'sticker_sets'          => [self::class, 'ddlStickerSets'],
-        'stories'               => [self::class, 'ddlStories'],
-        'wallpapers'            => [self::class, 'ddlWallpapers'],
-        'channel_participants'  => [self::class, 'ddlChannelParticipants'],
+    private const DOMAIN_BUILDERS = [
+        'users'                 => 'ddlUsers',
+        'chats'                 => 'ddlChats',
+        'channels'              => 'ddlChannels',
+        'messages'              => 'ddlMessages',
+        'dialogs'               => 'ddlDialogs',
+        'updates'               => 'ddlUpdates',
+        'documents'             => 'ddlDocuments',
+        'photos'                => 'ddlPhotos',
+        'sticker_sets'          => 'ddlStickerSets',
+        'stories'               => 'ddlStories',
+        'wallpapers'            => 'ddlWallpapers',
+        'channel_participants'  => 'ddlChannelParticipants',
     ];
 
     /** @return array<string,string> filename => content */
@@ -55,13 +56,12 @@ final class MigrationGenerator
 
         // Emit one migration per domain table
         $seq = 0;
-        foreach (self::DOMAIN_TABLES as $domain => $ddlBuilder) {
+        foreach (self::DOMAIN_BUILDERS as $domain => $method) {
             $seq++;
             $table = Naming::domainTable($domain);
-            $this->currentTable = $table;
             $this->currentFile = sprintf('%s_%06d_create_%s_table.php', self::DATE_TOKEN, $seq, $table);
             $this->tableMap[$table] = $this->currentFile;
-            $files[$this->currentFile] = $this->domainMigration($domain, $table, $ddlBuilder);
+            $files[$this->currentFile] = $this->domainMigration($table, self::$method());
         }
 
         // Route table migration
@@ -79,21 +79,13 @@ final class MigrationGenerator
         return ['tables' => $this->tableMap, 'fk_count' => 0];
     }
 
-    /**
-     * Index names the PG way: content-addressed to avoid collisions.
-     */
-    private function indexLine(string $col): string
-    {
-        return "    \$table->index('{$col}', 'ix_" . substr(sha1($this->currentTable . ':' . $col), 0, 24) . "');";
-    }
-
-    private function domainMigration(string $domain, string $table, callable $ddlBuilder): string
+    private function domainMigration(string $table, array $lines): string
     {
         $up = [];
         $down = [];
 
         $up[] = "Schema::create('{$table}', function (Blueprint \$table) {";
-        foreach ($ddlBuilder() as $line) {
+        foreach ($lines as $line) {
             $up[] = $line;
         }
         $up[] = "});";
@@ -378,7 +370,6 @@ final class MigrationGenerator
                 continue;
             }
             $route = 'tl_route_' . Naming::snake($method->name);
-            $this->currentTable = $route;
             $this->tableMap[$route] = $this->currentFile;
             $up[] = "Schema::create('{$route}', function (Blueprint \$table) {";
             $up[] = "    \$table->bigIncrements('id');";

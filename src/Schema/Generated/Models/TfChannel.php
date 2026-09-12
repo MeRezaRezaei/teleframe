@@ -48,8 +48,7 @@ class TfChannel extends TfModel
     /** Messages in this channel/supergroup. */
     public function messages(): HasMany
     {
-        return $this->hasMany(TfMessage::class, 'peer_id', 'id')
-            ->where('peer_type', 'peerChannel');
+        return $this->hasMany(TfMessage::class, 'peer_id', 'id');
     }
 
     /** Participants of this channel. */

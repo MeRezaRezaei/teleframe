@@ -90,7 +90,7 @@ trait PeerResolution
      * domain, not per constructor). Resolution uses the `id` column
      * which is the Telegram native ID on global-ID domain tables.
      *
-     * @var array{user: class-string<Model>, chat: class-string<Model>, channel: class-string<Model>}
+     * @var array{user: class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser>, chat: class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat>, channel: class-string<\MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannel>}
      */
     private const PEER_FQCN_MAP = [
         'user'    => 'MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser',
