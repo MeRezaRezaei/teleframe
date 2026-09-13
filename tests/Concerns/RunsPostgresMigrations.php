@@ -197,7 +197,7 @@ trait RunsPostgresMigrations
         $this->artisan('migrate', [
             '--force' => true,
             '--realpath' => true,
-            '--path' => [dirname(__DIR__, 2) . '/generated/migrations'],
+            '--path' => [dirname(__DIR__, 2) . '/src/Schema/Generated/migrations'],
         ]);
     }
 

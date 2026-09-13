@@ -62,8 +62,7 @@
             "MeRezaRezaei\\Teleframe\\Bot\\": "src/Bot/",
             "MeRezaRezaei\\Teleframe\\Laravel\\": "src/Laravel/",
             "MeRezaRezaei\\Teleframe\\Schema\\": "src/Schema/",
-            "MeRezaRezaei\\Teleframe\\": "src/Teleframe/",
-            "MeRezaRezaei\\Teleframe\\Schema\\Generated\\": "generated/"
+            "MeRezaRezaei\\Teleframe\\": "src/Teleframe/"
         }
     },
     "autoload-dev": {

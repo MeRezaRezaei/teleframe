@@ -14,15 +14,17 @@ use PHPUnit\Framework\TestCase;
  * committed manifest hash pin.
  *
  * Count bands (TDLib-style domain truth, verified 2026-09-11, layer 227):
- * 1685 constructors / 799 methods / 13 migrations / 11 models /
- * 3116 dtos / 11 factories / 763 tables — bands bracket with drift headroom.
+ * 1685 constructors / 799 methods / 13 migrations / models = regenerator
+ * (Tl*, 12) + committed mirror models (Tf*, 12) = 24 /
+ * 3116 dtos / 12 factories / 763 tables — bands bracket with drift headroom.
  * Full regeneration takes well under a second, so the double-run runs
  * the FULL schema set (no subset flag needed).
  */
 final class RegenerationGoldenTest extends TestCase
 {
-    private const PACKAGE_ROOT = __DIR__ . '/../..';
-    private const MANIFEST = self::PACKAGE_ROOT . '/generated/schema-manifest.json';
+    private const PACKAGE_ROOT = __DIR__.'/../..';
+
+    private const MANIFEST = self::PACKAGE_ROOT.'/src/Schema/Generated/schema-manifest.json';
 
     /** sha256 of the committed generated/schema-manifest.json (full-run pin). */
     private const COMMITTED_MANIFEST_SHA256 = '430d477cfade0ee230caa2520f7c1ad57ecf6be48191dc3b48f188d50a3dfd44';
@@ -52,15 +54,15 @@ final class RegenerationGoldenTest extends TestCase
 
     public function test_committed_artifact_files_within_bands_and_marked_generated(): void
     {
-        $migrations = self::phpFiles(self::PACKAGE_ROOT . '/generated/migrations');
-        $models = self::phpFiles(self::PACKAGE_ROOT . '/generated/Models');
-        $dtos = self::phpFiles(self::PACKAGE_ROOT . '/generated/Data');
-        $factories = self::phpFiles(self::PACKAGE_ROOT . '/generated/Factories');
+        $migrations = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/migrations');
+        $models = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/Models');
+        $dtos = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/Data');
+        $factories = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/Factories');
 
         self::assertGreaterThan(10, count($migrations), 'migrations lower bound');
         self::assertLessThan(20, count($migrations), 'migrations upper bound');
-        self::assertGreaterThan(8, count($models), 'models lower bound');
-        self::assertLessThan(20, count($models), 'models upper bound');
+        self::assertGreaterThan(15, count($models), 'models lower bound');
+        self::assertLessThan(30, count($models), 'models upper bound');
         self::assertGreaterThan(2800, count($dtos), 'dtos lower bound');
         self::assertLessThan(3400, count($dtos), 'dtos upper bound');
         self::assertGreaterThan(8, count($factories), 'factories lower bound');
@@ -79,10 +81,10 @@ final class RegenerationGoldenTest extends TestCase
 
     public function test_anchor_model_and_migration_present(): void
     {
-        self::assertFileExists(self::PACKAGE_ROOT . '/generated/Models/TlUser.php');
+        self::assertFileExists(self::PACKAGE_ROOT.'/src/Schema/Generated/Models/TlUser.php');
         self::assertStringContainsString(
             "protected \$table = 'tf_users';",
-            (string) file_get_contents(self::PACKAGE_ROOT . '/generated/Models/TlUser.php'),
+            (string) file_get_contents(self::PACKAGE_ROOT.'/src/Schema/Generated/Models/TlUser.php'),
         );
         $manifest = json_decode((string) file_get_contents(self::MANIFEST), true);
         self::assertArrayHasKey('tf_users', $manifest['tables']);
@@ -95,14 +97,14 @@ final class RegenerationGoldenTest extends TestCase
      */
     public function test_regeneration_is_deterministic_and_matches_committed_pin(): void
     {
-        $bin = self::PACKAGE_ROOT . '/bin/regenerate';
+        $bin = self::PACKAGE_ROOT.'/bin/regenerate';
         self::assertFileExists($bin);
 
-        $outA = sys_get_temp_dir() . '/tl-golden-a-' . getmypid();
-        $outB = sys_get_temp_dir() . '/tl-golden-b-' . getmypid();
+        $outA = sys_get_temp_dir().'/tl-golden-a-'.getmypid();
+        $outB = sys_get_temp_dir().'/tl-golden-b-'.getmypid();
 
         $run = static function (string $out) use ($bin): void {
-            $cmd = sprintf('%s %s %s 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg($bin), escapeshellarg('--out=' . $out));
+            $cmd = sprintf('%s %s %s 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg($bin), escapeshellarg('--out='.$out));
             $proc = proc_open($cmd, [1 => ['pipe', 'w']], $pipes);
             self::assertIsResource($proc);
             fclose($pipes[1]);
@@ -113,8 +115,8 @@ final class RegenerationGoldenTest extends TestCase
             $run($outA);
             $run($outB);
 
-            $hashA = hash_file('sha256', $outA . '/generated/schema-manifest.json');
-            $hashB = hash_file('sha256', $outB . '/generated/schema-manifest.json');
+            $hashA = hash_file('sha256', $outA.'/src/Schema/Generated/schema-manifest.json');
+            $hashB = hash_file('sha256', $outB.'/src/Schema/Generated/schema-manifest.json');
             self::assertSame($hashA, $hashB, 'two consecutive runs differ');
 
             $committed = hash_file('sha256', self::MANIFEST);
@@ -122,12 +124,12 @@ final class RegenerationGoldenTest extends TestCase
             self::assertSame(self::COMMITTED_MANIFEST_SHA256, $committed, 'committed manifest pin drifted');
 
             // Whole-tree byte equality between the two runs.
-            $filesA = self::relativeHashes($outA . '/generated');
-            $filesB = self::relativeHashes($outB . '/generated');
+            $filesA = self::relativeHashes($outA.'/src/Schema/Generated');
+            $filesB = self::relativeHashes($outB.'/src/Schema/Generated');
             self::assertSame($filesA, $filesB);
             self::assertGreaterThan(3000, count($filesA));
         } finally {
-            exec('rm -rf ' . escapeshellarg($outA) . ' ' . escapeshellarg($outB));
+            exec('rm -rf '.escapeshellarg($outA).' '.escapeshellarg($outB));
         }
     }
 
@@ -143,6 +145,7 @@ final class RegenerationGoldenTest extends TestCase
             }
         }
         sort($all);
+
         return $all;
     }
 
@@ -157,6 +160,7 @@ final class RegenerationGoldenTest extends TestCase
             }
         }
         ksort($out);
+
         return $out;
     }
 }

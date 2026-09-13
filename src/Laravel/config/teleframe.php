@@ -18,7 +18,7 @@ use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
  * - ship_namespaces (list<string>): curated migration dial — TL namespaces
  *   whose per-type migrations are copied into migrations/ at the package
  *   root by `php bin/regenerate --ship` (the provider publishes them via
- *   loadMigrationsFrom). The full layer mirror always stays in generated/.
+ *   loadMigrationsFrom). The full layer mirror always stays in src/Schema/Generated/.
  *   Comma-separated env override, e.g.
  *   TELEFRAME_SHIP_NAMESPACES="auth,messages,users".
  * - bus (merged in Task 1; StreamSchema drives the consts in Task 3):
@@ -61,7 +61,7 @@ return [
     */
     'api_id' => env('TELEGRAM_API_ID'),
     'api_hash' => env('TELEGRAM_API_HASH'),
-    'dc_id' => (int)env('TELEGRAM_DC_ID', 2),
+    'dc_id' => (int) env('TELEGRAM_DC_ID', 2),
     'live_mode' => env('TELEFRAME_LIVE', false),
 
     /*

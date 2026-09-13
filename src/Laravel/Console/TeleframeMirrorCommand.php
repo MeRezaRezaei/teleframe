@@ -16,7 +16,7 @@ final class TeleframeMirrorCommand extends Command
 {
     protected $signature = 'teleframe:mirror
         {--stage=1 : 0=proof (5 parents) | 1=all | 2=+factories | 3=+union queries}
-        {--out= : output dir (default = repo generated/)}';
+        {--out= : output dir (default = repo src/Schema/Generated)}';
 
     protected $description = 'Generate the NF5 relational mirror (migrations + models) from the committed catalog';
 
@@ -24,7 +24,7 @@ final class TeleframeMirrorCommand extends Command
 
     public function handle(): int
     {
-        $out = $this->option('out') ?: base_path('generated');
+        $out = $this->option('out') ?: base_path('src/Schema/Generated');
         $tl  = base_path('schema/sources/TL_telegram_v227.tl');
         $catalogPath = base_path('docs/superpowers/specs/2026-09-11-telegram-mirror-catalog.json');
 

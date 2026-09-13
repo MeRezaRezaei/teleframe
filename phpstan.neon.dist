@@ -5,6 +5,8 @@ parameters:
     level: 5
     paths:
         - src
+    excludePaths:
+        - src/Schema/Generated/**
     disallowedFunctionCalls:
         -
             function: 'preg_*'

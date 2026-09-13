@@ -1,4 +1,5 @@
 <?php
+// GENERATED — do not edit; run artisan teleframe:regenerate
 
 declare(strict_types=1);
 

@@ -15,9 +15,9 @@ declare(strict_types=1);
 // Usage: php bin/regenerate [--force] [--schemas=DIR] [--out=DIR] [--ship]
 //   --force    bypass the ±30% constructor-count sanity gate
 //   --schemas  .tl sources dir (default: package schema/sources/ mirror)
-//   --out      output dir; artifacts land in <out>/generated/ (default: package root)
+//   --out      output dir; artifacts land in <out>/src/Schema/Generated/ (default: package root)
 //   --ship     also copy the curated dial's namespace migrations to <out>/migrations/
-//              (dial: config teleframe.ship_namespaces; full set stays in generated/)
+//              (dial: config teleframe.ship_namespaces; full set stays in src/Schema/Generated/)
 
 require __DIR__ . '/../vendor/autoload.php';
 

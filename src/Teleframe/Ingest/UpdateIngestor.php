@@ -121,7 +121,7 @@ final class UpdateIngestor
     {
         $root = dirname(__DIR__, 3);
         $manifest = json_decode(
-            (string) file_get_contents($root . '/generated/schema-manifest.json'),
+            (string) file_get_contents($root . '/src/Schema/Generated/schema-manifest.json'),
             true,
         );
         $tables = is_array($manifest) ? ($manifest['tables'] ?? []) : [];
@@ -129,7 +129,7 @@ final class UpdateIngestor
         $paths = [];
         foreach ($tables as $table => $file) {
             if (str_starts_with($table, 'tf_') && !str_starts_with($table, 'tl_route_')) {
-                $paths[] = $root . '/generated/migrations/' . $file;
+                $paths[] = $root . '/migrations/' . $file;
             }
         }
         sort($paths);

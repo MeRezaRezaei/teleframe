@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generator;
 
+use FilesystemIterator;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
 use MeRezaRezaei\Teleframe\Schema\Generator\SqlDdl\SqlDdlEmitter;
-use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -29,6 +29,7 @@ final class SchemaRegenerator
     public function force(bool $force = true): self
     {
         $this->force = $force;
+
         return $this;
     }
 
@@ -36,6 +37,7 @@ final class SchemaRegenerator
     public function shipNamespaces(?array $namespaces): self
     {
         $this->shipNamespaces = $namespaces;
+
         return $this;
     }
 
@@ -47,10 +49,10 @@ final class SchemaRegenerator
     public function loadScheme(?string $sourcesDir = null): TlScheme
     {
         $dir = $sourcesDir ?? TeleframeSchemeLoader::defaultSourcesDir();
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             throw new TlRegenerateException("teleframe schema sources dir not found: {$dir}");
         }
-        $files = glob(rtrim($dir, '/') . '/*.tl');
+        $files = glob(rtrim($dir, '/').'/*.tl');
         if ($files === false) {
             throw new TlRegenerateException("failed to read scheme dir: {$dir}");
         }
@@ -58,6 +60,7 @@ final class SchemaRegenerator
         if ($files === []) {
             throw new TlRegenerateException("no .tl scheme files in {$dir}");
         }
+
         return $this->parseAll($files);
     }
 
@@ -66,15 +69,15 @@ final class SchemaRegenerator
      */
     public function regenerate(string $schemasDir, string $outputDir): array
     {
-        if (!is_dir($schemasDir)) {
+        if (! is_dir($schemasDir)) {
             throw new TlRegenerateException("schemas dir not found: {$schemasDir}");
         }
 
-        $files = glob(rtrim($schemasDir, '/') . '/*.tl');
+        $files = glob(rtrim($schemasDir, '/').'/*.tl');
         if ($files === false) {
             throw new TlRegenerateException("failed to read schemas dir: {$schemasDir}");
         }
-        $tdl = glob(rtrim($schemasDir, '/') . '/*.tdl');
+        $tdl = glob(rtrim($schemasDir, '/').'/*.tdl');
         if ($tdl === false) {
             throw new TlRegenerateException("failed to read schemas dir: {$schemasDir}");
         }
@@ -90,21 +93,21 @@ final class SchemaRegenerator
 
         $this->gate($combined, $outputDir);
 
-        $mig = new MigrationGenerator();
+        $mig = new MigrationGenerator;
         $migFiles = $mig->generate($combined);
-        $modelFiles = (new ModelGenerator())->generate($combined);
-        $dtoFiles = (new DtoGenerator())->generate($combined);
-        $factoryFiles = (new FactoryGenerator())->generate($combined);
+        $modelFiles = (new ModelGenerator)->generate($combined);
+        $dtoFiles = (new DtoGenerator)->generate($combined);
+        $factoryFiles = (new FactoryGenerator)->generate($combined);
         // Exact-schema track (SQL-extraction plan §8.4): one PG DDL file per
         // domain table, validated against the .tl at emit time.
-        $ddlFiles = (new SqlDdlEmitter())->generate($combined);
+        $ddlFiles = (new SqlDdlEmitter)->generate($combined);
 
         $this->wipe($outputDir);
-        $this->writeAll($outputDir . '/generated/migrations', $migFiles);
-        $this->writeAll($outputDir . '/generated/Models', $modelFiles);
-        $this->writeAll($outputDir . '/generated/Data', $dtoFiles);
-        $this->writeAll($outputDir . '/generated/Factories', $factoryFiles);
-        $this->writeAll($outputDir . '/schema/ddl', $ddlFiles);
+        $this->writeAll($outputDir.'/src/Schema/Generated/migrations', $migFiles);
+        $this->writeAll($outputDir.'/src/Schema/Generated/Models', $modelFiles);
+        $this->writeAll($outputDir.'/src/Schema/Generated/Data', $dtoFiles);
+        $this->writeAll($outputDir.'/src/Schema/Generated/Factories', $factoryFiles);
+        $this->writeAll($outputDir.'/schema/ddl', $ddlFiles);
 
         $stats = $mig->stats();
         $counts['tables'] = count($stats['tables']);
@@ -119,13 +122,14 @@ final class SchemaRegenerator
         );
         $manifest['sources'] = array_map('basename', $files);
         $manifest['hash'] = Manifest::hash($manifest);
-        file_put_contents($outputDir . '/generated/schema-manifest.json',
-            json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
+        file_put_contents($outputDir.'/src/Schema/Generated/schema-manifest.json',
+            json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n");
 
         $result = ['counts' => $counts, 'manifest' => $manifest];
         if ($this->shipNamespaces !== null) {
             $result['ship'] = $this->shipMigrations($combined, $migFiles, $outputDir);
         }
+
         return $result;
     }
 
@@ -137,10 +141,10 @@ final class SchemaRegenerator
      * membership is read from the scheme (TlType::namespace()), never
      * parsed back out of filenames — root-namespace types (User, Chat,
      * Updates, ...) and the cross-namespace route/FK monolith files stay
-     * in the full generated/ set only.
+     * in the full src/Schema/Generated/ set only.
      *
-     * @param array<string,string> $tableMap constructor/child/route table => migration filename
-     * @param array<string,string> $migFiles migration filename => content
+     * @param  array<string,string>  $tableMap  constructor/child/route table => migration filename
+     * @param  array<string,string>  $migFiles  migration filename => content
      * @return array{namespaces:list<string>,count:int,dir:string}
      */
     /** Ship-exempt migrations the owning app checks in (ShipDialGoldenTest
@@ -154,10 +158,10 @@ final class SchemaRegenerator
 
     private function shipMigrations(TlScheme $combined, array $migFiles, string $outputDir): array
     {
-        $dir = $outputDir . '/migrations';
+        $dir = $outputDir.'/migrations';
         $preserved = [];
         if (is_dir($dir)) {
-            foreach (glob($dir . '/*.php') as $file) {
+            foreach (glob($dir.'/*.php') as $file) {
                 $name = basename($file);
                 if (in_array($name, self::APP_OWNED_MIGRATIONS, true)) {
                     $preserved[$name] = file_get_contents($file);
@@ -174,11 +178,12 @@ final class SchemaRegenerator
         }
         ksort($shipped);
         foreach ($shipped as $name => $content) {
-            file_put_contents($dir . '/' . $name, $content);
+            file_put_contents($dir.'/'.$name, $content);
         }
         foreach ($preserved as $name => $content) {
-            file_put_contents($dir . '/' . $name, $content);
+            file_put_contents($dir.'/'.$name, $content);
         }
+
         return ['namespaces' => $this->shipNamespaces ?? [], 'count' => count($shipped), 'dir' => $dir];
     }
 
@@ -209,13 +214,14 @@ final class SchemaRegenerator
                 $combined->crcMismatches[$name] = $mm;
             }
         }
+
         return $combined;
     }
 
     private function gate(TlScheme $combined, string $outputDir): void
     {
-        $manifestPath = $outputDir . '/generated/schema-manifest.json';
-        if ($this->force || !is_file($manifestPath)) {
+        $manifestPath = $outputDir.'/src/Schema/Generated/schema-manifest.json';
+        if ($this->force || ! is_file($manifestPath)) {
             return;
         }
         $prev = json_decode((string) file_get_contents($manifestPath), true);
@@ -237,15 +243,15 @@ final class SchemaRegenerator
     private function wipe(string $outputDir): void
     {
         foreach (['migrations', 'Models', 'Data', 'Factories'] as $dir) {
-            self::removeTree($outputDir . '/generated/' . $dir);
+            self::removeTree($outputDir.'/src/Schema/Generated/'.$dir);
         }
-        self::removeTree($outputDir . '/schema/ddl');
-        $manifest = $outputDir . '/generated/schema-manifest.json';
+        self::removeTree($outputDir.'/schema/ddl');
+        $manifest = $outputDir.'/src/Schema/Generated/schema-manifest.json';
         if (is_file($manifest)) {
             unlink($manifest);
         }
-        if (!is_dir($outputDir . '/generated')) {
-            mkdir($outputDir . '/generated', 0775, true);
+        if (! is_dir($outputDir.'/src/Schema/Generated')) {
+            mkdir($outputDir.'/src/Schema/Generated', 0775, true);
         }
     }
 
@@ -258,7 +264,7 @@ final class SchemaRegenerator
      */
     private static function removeTree(string $dir): void
     {
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             return;
         }
         $items = new RecursiveIteratorIterator(
@@ -266,7 +272,7 @@ final class SchemaRegenerator
             RecursiveIteratorIterator::CHILD_FIRST,
         );
         foreach ($items as $item) {
-            if ($item->isLink() || !$item->isDir()) {
+            if ($item->isLink() || ! $item->isDir()) {
                 unlink($item->getPathname());
             } else {
                 rmdir($item->getPathname());
@@ -279,7 +285,7 @@ final class SchemaRegenerator
     private function writeAll(string $dir, array $files): void
     {
         foreach ($files as $name => $content) {
-            $path = $dir . '/' . $name;
+            $path = $dir.'/'.$name;
             @mkdir(dirname($path), 0775, true);
             file_put_contents($path, $content);
         }

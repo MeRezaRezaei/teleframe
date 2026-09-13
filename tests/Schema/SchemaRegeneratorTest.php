@@ -29,14 +29,14 @@ final class SchemaRegeneratorTest extends TestCase
         $out = $this->tmpDir('out');
         $result = (new SchemaRegenerator())->regenerate(self::SOURCES, $out);
 
-        self::assertFileExists($out . '/generated/schema-manifest.json');
-        self::assertFileExists($out . '/generated/migrations');
-        self::assertFileExists($out . '/generated/Models/TlUser.php');
-        self::assertFileExists($out . '/generated/Data/Types/TlUserAbstractData.php');
-        self::assertFileExists($out . '/generated/Factories/TlUserFactory.php');
+        self::assertFileExists($out . '/src/Schema/Generated/schema-manifest.json');
+        self::assertFileExists($out . '/src/Schema/Generated/migrations');
+        self::assertFileExists($out . '/src/Schema/Generated/Models/TlUser.php');
+        self::assertFileExists($out . '/src/Schema/Generated/Data/Types/TlUserAbstractData.php');
+        self::assertFileExists($out . '/src/Schema/Generated/Factories/TlUserFactory.php');
         self::assertGreaterThan(1000, $result['counts']['constructors']);
         self::assertGreaterThan(0, $result['counts']['tables']);
-        $manifest = json_decode((string) file_get_contents($out . '/generated/schema-manifest.json'), true);
+        $manifest = json_decode((string) file_get_contents($out . '/src/Schema/Generated/schema-manifest.json'), true);
         self::assertSame($result['manifest']['hash'], $manifest['hash']);
     }
 
@@ -47,17 +47,17 @@ final class SchemaRegeneratorTest extends TestCase
         (new SchemaRegenerator())->regenerate(self::SOURCES, $a);
         (new SchemaRegenerator())->regenerate(self::SOURCES, $b);
         self::assertSame(
-            sha1_file($a . '/generated/schema-manifest.json'),
-            sha1_file($b . '/generated/schema-manifest.json'),
+            sha1_file($a . '/src/Schema/Generated/schema-manifest.json'),
+            sha1_file($b . '/src/Schema/Generated/schema-manifest.json'),
         );
-        $ita = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($a . '/generated', \FilesystemIterator::SKIP_DOTS));
+        $ita = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($a . '/src/Schema/Generated', \FilesystemIterator::SKIP_DOTS));
         $count = 0;
         foreach ($ita as $fa) {
             if (!$fa->isFile()) {
                 continue;
             }
-            $rel = substr($fa->getPathname(), strlen($a . '/generated'));
-            self::assertSame(sha1_file($fa->getPathname()), sha1_file($b . '/generated' . $rel), "differs: {$rel}");
+            $rel = substr($fa->getPathname(), strlen($a . '/src/Schema/Generated'));
+            self::assertSame(sha1_file($fa->getPathname()), sha1_file($b . '/src/Schema/Generated' . $rel), "differs: {$rel}");
             $count++;
         }
         self::assertGreaterThan(10, $count);
@@ -69,8 +69,8 @@ final class SchemaRegeneratorTest extends TestCase
         // files in nested generated trees (and shipped migrations/) must
         // not survive a regeneration.
         $out = $this->tmpDir('wipe');
-        mkdir($out . '/generated/Models/deep', 0777, true);
-        file_put_contents($out . '/generated/Models/deep/Stale.php', '<?php // stale');
+        mkdir($out . '/src/Schema/Generated/Models/deep', 0777, true);
+        file_put_contents($out . '/src/Schema/Generated/Models/deep/Stale.php', '<?php // stale');
         mkdir($out . '/migrations', 0777, true);
         file_put_contents($out . '/migrations/stale.php', '<?php // stale');
 
@@ -78,17 +78,17 @@ final class SchemaRegeneratorTest extends TestCase
             ->shipNamespaces(['messages'])
             ->regenerate(self::SOURCES, $out);
 
-        self::assertFileDoesNotExist($out . '/generated/Models/deep/Stale.php');
-        self::assertFileDoesNotExist($out . '/generated/Models/deep');
+        self::assertFileDoesNotExist($out . '/src/Schema/Generated/Models/deep/Stale.php');
+        self::assertFileDoesNotExist($out . '/src/Schema/Generated/Models/deep');
         self::assertFileDoesNotExist($out . '/migrations/stale.php');
-        self::assertFileExists($out . '/generated/Models/TlUser.php');
+        self::assertFileExists($out . '/src/Schema/Generated/Models/TlUser.php');
     }
 
     public function test_count_gate_blocks_and_force_bypasses(): void
     {
         $out = $this->tmpDir('gate');
-        mkdir($out . '/generated', 0777, true);
-        file_put_contents($out . '/generated/schema-manifest.json', json_encode([
+        mkdir($out . '/src/Schema/Generated', 0777, true);
+        file_put_contents($out . '/src/Schema/Generated/schema-manifest.json', json_encode([
             'counts' => ['constructors' => 10000],
         ]));
 
