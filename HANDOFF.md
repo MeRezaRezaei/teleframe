@@ -25,7 +25,7 @@ This repo merged two former projects into one package:
 - `composer verify` = phpunit (1086 tests, 17815 assertions) + phpstan level 5 (paths: `src`, excl. `src/Schema/Generated/**`) + `bin/standalone-smoke.php`.
 - Golden determinism: `tests/Schema/RegenerationGoldenTest` pins `src/Schema/Generated/schema-manifest.json` sha256 `430d477cfade0ee230caa2520f7c1ad57ecf6be48191dc3b48f188d50a3dfd44`. A fresh `bin/regenerate` must reproduce bytes; if output changes, bump the pin + committed manifest together.
 - PG/Ship golden tests (`RunsPostgresMigrations`, `ShipDialGoldenTest`) are opt-in / temp-dir and need a real Postgres or a regenerated set — not part of default `composer verify`.
-- The curated migration dial lives at root `migrations/` (13 `tf_*` ship-dial copies + app-owned hand-authored ones); full mirror is `src/Schema/Generated/migrations/`.
+- The curated migration dial lives at `src/Laravel/Migrations/` inside the package (13 `tf_*` ship-dial copies + app-owned hand-authored ones); full mirror is `src/Schema/Generated/migrations/`.
 
 ## Working-tree hygiene expected
 - `.gitignore`: `vendor/`, `.env`, `composer.lock`, `.phpunit.*`, `.superpowers/`, `.openclaude/`, `.opencode/`, `bootstrap/cache/`, `schema/audit-report.md`, `MadelineProto.log`, `packages/*/vendor/`.
@@ -33,5 +33,11 @@ This repo merged two former projects into one package:
 - Do not recreate root-level `generated/`; it was removed (empty leftover).
 
 ## Open items / not verified here
+- **Root cleanup (chore/package-cleanup):** `migrations/` → `src/Laravel/Migrations/`
+  (provider/ingest/route/regenerator/tests retargeted); `.env.example` →
+  `examples/.env.example`; `skills/telegram-schema-update` → `docs/skills/`.
+  `laravel/framework` stays in `require` (decisive: `src/Teleframe/Stage/StageFormRequest.php`
+  extends `Illuminate\Foundation\Http\FormRequest`, which only ships inside the framework).
+  Gates green at commit time (phpunit 1086 / phpstan 0 / smoke 33).
 - Worktrees from the old `teleframe-psr3` were not carried over (`.openclaude/worktrees/agent-*`, `/tmp/teleframe-head-baseline`, `/tmp/wt-phase1`) — verify they are irrelevant before pruning anything.
 - Deep MTProto internals remain future work (see `AGENTS.md` known-gaps); method-level wire coverage for every TL method is the next extension area.

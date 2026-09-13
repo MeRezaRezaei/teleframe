@@ -29,10 +29,10 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        $apps = require dirname(__DIR__, 2) . '/migrations/2026_09_09_000200_create_telegram_apps_table.php';
+        $apps = require dirname(__DIR__, 2) . '/src/Laravel/Migrations/2026_09_09_000200_create_telegram_apps_table.php';
         $apps->up();
 
-        $accounts = require dirname(__DIR__, 2) . '/migrations/2026_09_09_000201_create_telegram_accounts_table.php';
+        $accounts = require dirname(__DIR__, 2) . '/src/Laravel/Migrations/2026_09_09_000201_create_telegram_accounts_table.php';
         $accounts->up();
     }
 }

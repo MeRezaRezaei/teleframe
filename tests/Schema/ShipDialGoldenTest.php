@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 /**
  * Task 4 golden gate: the curated migration dial. `php bin/regenerate --ship`
  * copies the tf_* per-type migration files from the full generated mirror
- * (src/Schema/Generated/migrations) into migrations/ at the package root —
- * byte-identical copies (global sequence numbers preserved), never re-derived —
- * for the provider's loadMigrationsFrom publish surface.
+ * (src/Schema/Generated/migrations) into src/Laravel/Migrations inside the
+ * package — byte-identical copies (global sequence numbers preserved), never
+ * re-derived — for the provider's loadMigrationsFrom publish surface.
  *
  * Verified against the real v227 generated set: 13 tf_* mirror migrations are
  * shipped; app-owned migrations (user_bindings, telegram_apps, telegram_accounts)
@@ -21,12 +21,12 @@ final class ShipDialGoldenTest extends TestCase
 {
     private const PACKAGE_ROOT = __DIR__.'/../..';
 
-    private const SHIP_DIR = self::PACKAGE_ROOT.'/migrations';
+    private const SHIP_DIR = self::PACKAGE_ROOT.'/src/Laravel/Migrations';
 
     private const GENERATED_DIR = self::PACKAGE_ROOT.'/src/Schema/Generated/migrations';
 
     /**
-     * App-owned migrations under migrations/ that are hand-authored (Phase 5b
+     * App-owned migrations under src/Laravel/Migrations/ that are hand-authored (Phase 5b
      * identity bindings) and therefore have NO generated source and are NOT
      * reproduced by `bin/regenerate --ship` (the dial only copies TL per-type
      * migrations). Exempted from the two regenerate-reproduction golden
@@ -104,7 +104,7 @@ final class ShipDialGoldenTest extends TestCase
         self::assertSame(0, proc_close($proc), 'bin/regenerate --ship failed');
 
         try {
-            $fresh = self::migrationNames($out.'/migrations');
+            $fresh = self::migrationNames($out.'/src/Laravel/Migrations');
             $committed = array_values(array_diff(self::migrationNames(self::SHIP_DIR), self::APP_OWNED_MIGRATIONS));
             sort($fresh);
             sort($committed);
@@ -117,7 +117,7 @@ final class ShipDialGoldenTest extends TestCase
     public function test_provider_registers_publishable_migration_path(): void
     {
         $source = (string) file_get_contents(self::PACKAGE_ROOT.'/src/Laravel/Providers/TeleframeServiceProvider.php');
-        self::assertStringContainsString("loadMigrationsFrom(dirname(__DIR__, 3) . '/migrations')", $source);
+        self::assertStringContainsString("loadMigrationsFrom(dirname(__DIR__) . '/Migrations')", $source);
     }
 
     /** @return int count of *.php migration files in dir */

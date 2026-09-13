@@ -37,7 +37,7 @@ abstract class TestCase extends BaseTestCase
             $table->timestamps();
         });
 
-        $migration = require dirname(__DIR__, 2) . '/migrations/2026_09_08_000100_create_tl_user_bindings_table.php';
+        $migration = require dirname(__DIR__, 2) . '/src/Laravel/Migrations/2026_09_08_000100_create_tl_user_bindings_table.php';
         $migration->up();
     }
 }

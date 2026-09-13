@@ -114,7 +114,7 @@ final class FullMirrorPgTest extends PgTestCase
 
         // Zero FKs on the tf_* domain tables (spec §8: fk_count 0).
         // The telegram_accounts → telegram_apps userland link in
-        // migrations/ carries the only FK in the schema.
+        // src/Schema/Generated/migrations carries the only FK in the schema.
         $fkTables = array_map(
             static fn (object $row): string => $row->tbl,
             DB::select(

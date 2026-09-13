@@ -27,8 +27,8 @@ Carry `@generated` markers; overwritten by the schema pipeline:
 
 - `schema/methods-*.json`, `schema/sources/*.tl` — update via
   `php artisan teleframe:schema-update` (diff + regenerate + stamp, NO migrate).
-- `generated/**` (models, data, factories) + `migrations/` — `php artisan
-  teleframe:regenerate [--ship]` / `php bin/regenerate`.
+- `generated/**` (models, data, factories) + `src/Laravel/Migrations/` (curated
+  ship dial) — `php artisan teleframe:regenerate [--ship]` / `php bin/regenerate`.
 - `src/{Core,Bot}/Methods/Generated/*.php` — regenerate after editing
   `schema/config/curated-methods.json`.
 - `src/Schema/skills/telegram-methods/*.md` — generated from the catalog

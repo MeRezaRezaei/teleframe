@@ -29,7 +29,7 @@ Telegram power for Laravel apps — Bot HTTP API, native MTProto 2.0 for users *
 
 ## For AI agents
 
-- [../skills/](../skills/) — per-method reference files for the curated MTProto/Bot-API method catalog (schema-accurate, machine-readable)
+- [../src/Schema/skills/telegram-methods/](../src/Schema/skills/telegram-methods/) — per-method reference files for the curated MTProto/Bot-API method catalog (schema-accurate, machine-readable)
 
 ## Changelog
 

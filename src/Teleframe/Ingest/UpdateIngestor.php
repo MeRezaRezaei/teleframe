@@ -129,7 +129,7 @@ final class UpdateIngestor
         $paths = [];
         foreach ($tables as $table => $file) {
             if (str_starts_with($table, 'tf_') && !str_starts_with($table, 'tl_route_')) {
-                $paths[] = $root . '/migrations/' . $file;
+                $paths[] = $root . '/src/Laravel/Migrations/' . $file;
             }
         }
         sort($paths);
@@ -144,7 +144,7 @@ final class UpdateIngestor
     public static function migrationPaths(): array
     {
         return array_merge(
-            [dirname(__DIR__, 3) . '/migrations'],
+            [dirname(__DIR__, 2) . '/Laravel/Migrations'],
             self::entityMigrationPaths(),
         );
     }

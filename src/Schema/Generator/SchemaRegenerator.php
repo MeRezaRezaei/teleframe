@@ -18,12 +18,12 @@ use RecursiveIteratorIterator;
  */
 final class SchemaRegenerator
 {
-    /** Curated migration dial default (plan Task 4): TL namespaces shipped to migrations/. */
+    /** Curated migration dial default (plan Task 4): TL namespaces shipped to src/Laravel/Migrations/. */
     public const DEFAULT_SHIP_NAMESPACES = ['auth', 'messages', 'users', 'channels', 'updates', 'help', 'contacts'];
 
     private bool $force = false;
 
-    /** @var list<string>|null null = do not ship; list = copy these namespaces' migrations to <out>/migrations */
+    /** @var list<string>|null null = do not ship; list = copy these namespaces' migrations to <out>/src/Laravel/Migrations */
     private ?array $shipNamespaces = null;
 
     public function force(bool $force = true): self
@@ -136,12 +136,12 @@ final class SchemaRegenerator
     /**
      * Curated migration dial (plan Task 4): copy the per-type migration
      * files whose TL type namespace is on the dial from the freshly
-     * generated full set into <out>/migrations (byte-identical copies —
-     * the publishable surface; provider loadMigrationsFrom). Namespace
-     * membership is read from the scheme (TlType::namespace()), never
-     * parsed back out of filenames — root-namespace types (User, Chat,
-     * Updates, ...) and the cross-namespace route/FK monolith files stay
-     * in the full src/Schema/Generated/ set only.
+     * generated full set into <out>/src/Laravel/Migrations (byte-identical
+     * copies — the publishable surface; provider loadMigrationsFrom).
+     * Namespace membership is read from the scheme (TlType::namespace()),
+     * never parsed back out of filenames — root-namespace types (User,
+     * Chat, Updates, ...) and the cross-namespace route/FK monolith files
+     * stay in the full src/Schema/Generated/ set only.
      *
      * @param  array<string,string>  $tableMap  constructor/child/route table => migration filename
      * @param  array<string,string>  $migFiles  migration filename => content
@@ -158,7 +158,7 @@ final class SchemaRegenerator
 
     private function shipMigrations(TlScheme $combined, array $migFiles, string $outputDir): array
     {
-        $dir = $outputDir.'/migrations';
+        $dir = $outputDir.'/src/Laravel/Migrations';
         $preserved = [];
         if (is_dir($dir)) {
             foreach (glob($dir.'/*.php') as $file) {

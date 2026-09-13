@@ -66,13 +66,13 @@ final class SchemaRegeneratorTest extends TestCase
     public function test_regenerate_wipes_stale_outputs(): void
     {
         // Night W4: the wipe path is a shell-free recursive delete; stale
-        // files in nested generated trees (and shipped migrations/) must
-        // not survive a regeneration.
+        // files in nested generated trees (and shipped src/Laravel/Migrations)
+        // must not survive a regeneration.
         $out = $this->tmpDir('wipe');
         mkdir($out . '/src/Schema/Generated/Models/deep', 0777, true);
         file_put_contents($out . '/src/Schema/Generated/Models/deep/Stale.php', '<?php // stale');
-        mkdir($out . '/migrations', 0777, true);
-        file_put_contents($out . '/migrations/stale.php', '<?php // stale');
+        mkdir($out . '/src/Laravel/Migrations', 0777, true);
+        file_put_contents($out . '/src/Laravel/Migrations/stale.php', '<?php // stale');
 
         (new SchemaRegenerator())
             ->shipNamespaces(['messages'])
@@ -80,7 +80,7 @@ final class SchemaRegeneratorTest extends TestCase
 
         self::assertFileDoesNotExist($out . '/src/Schema/Generated/Models/deep/Stale.php');
         self::assertFileDoesNotExist($out . '/src/Schema/Generated/Models/deep');
-        self::assertFileDoesNotExist($out . '/migrations/stale.php');
+        self::assertFileDoesNotExist($out . '/src/Laravel/Migrations/stale.php');
         self::assertFileExists($out . '/src/Schema/Generated/Models/TlUser.php');
     }
 

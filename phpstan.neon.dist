@@ -6,7 +6,11 @@ parameters:
     paths:
         - src
     excludePaths:
+        # Generated/shipped artifacts: the full mirror (src/Schema/Generated)
+        # and the curated dial copies (src/Laravel/Migrations) both carry
+        # schema-DSL schema() builder calls phpstan can't see statically.
         - src/Schema/Generated/**
+        - src/Laravel/Migrations/**
     disallowedFunctionCalls:
         -
             function: 'preg_*'

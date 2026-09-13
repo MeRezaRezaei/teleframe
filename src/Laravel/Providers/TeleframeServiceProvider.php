@@ -273,7 +273,7 @@ class TeleframeServiceProvider extends ServiceProvider
                 DaemonCommand::class,
             ]);
 
-            $this->loadMigrationsFrom(dirname(__DIR__, 3) . '/migrations');
+            $this->loadMigrationsFrom(dirname(__DIR__) . '/Migrations');
         }
 
         if (isset($this->app['router'])) {

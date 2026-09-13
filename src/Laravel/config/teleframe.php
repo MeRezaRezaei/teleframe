@@ -16,9 +16,9 @@ use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
  *   TL_telegram_v227.tl + TL_mtproto_v1.tl + TL_secret.tl, MIT). Set this
  *   only to pin a different checkout.
  * - ship_namespaces (list<string>): curated migration dial — TL namespaces
- *   whose per-type migrations are copied into migrations/ at the package
- *   root by `php bin/regenerate --ship` (the provider publishes them via
- *   loadMigrationsFrom). The full layer mirror always stays in src/Schema/Generated/.
+ *   whose per-type migrations are copied into src/Laravel/Migrations/ inside
+ *   the package by `php bin/regenerate --ship` (the provider publishes them
+ *   via loadMigrationsFrom). The full layer mirror always stays in src/Schema/Generated/.
  *   Comma-separated env override, e.g.
  *   TELEFRAME_SHIP_NAMESPACES="auth,messages,users".
  * - bus (merged in Task 1; StreamSchema drives the consts in Task 3):

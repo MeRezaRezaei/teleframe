@@ -16,7 +16,7 @@ declare(strict_types=1);
 //   --force    bypass the ±30% constructor-count sanity gate
 //   --schemas  .tl sources dir (default: package schema/sources/ mirror)
 //   --out      output dir; artifacts land in <out>/src/Schema/Generated/ (default: package root)
-//   --ship     also copy the curated dial's namespace migrations to <out>/migrations/
+//   --ship     also copy the curated dial's namespace migrations to <out>/src/Laravel/Migrations/
 //              (dial: config teleframe.ship_namespaces; full set stays in src/Schema/Generated/)
 
 require __DIR__ . '/../vendor/autoload.php';

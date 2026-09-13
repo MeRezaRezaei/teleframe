@@ -75,7 +75,7 @@ abstract class PgTestCase extends TestCase
 
     /**
      * Migrate the TDLib domain set (UpdateIngestor::migrationPaths():
-     * shipped migrations/ dir + the 12 tf_* domain tables) on pg.
+     * shipped src/Laravel/Migrations/ dir + the 12 tf_* domain tables) on pg.
      * Idempotent within a class schema: repeat runs are no-ops.
      */
     protected function migrateDomainSet(): void

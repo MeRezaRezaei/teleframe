@@ -16,7 +16,7 @@ final class RegenerateCommand extends Command
         {--force : Bypass the ±30% constructor-count sanity gate}
         {--schemas= : Scheme directory (default: package schema/sources/ mirror)}
         {--out= : Output directory (default: package root)}
-        {--ship : Also publish the curated migration subset to <out>/migrations (dial: config teleframe.ship_namespaces)}';
+        {--ship : Also publish the curated migration subset to <out>/src/Laravel/Migrations (dial: config teleframe.ship_namespaces)}';
 
     protected $description = 'Regenerate migrations/models/DTOs/factories from tracked TL schemes';
 
