@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Mirror;
 
 use MeRezaRezaei\Teleframe\Schema\Generator\CodeWriter;
-use MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumn;
 use MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumnType;
 
 final class MirrorModelWriter
@@ -17,28 +16,40 @@ final class MirrorModelWriter
     {
         @mkdir($this->outDir.'/Models/Mirror', 0777, true);
         $paths = [];
+        $written = [];
         foreach ($tables as $table) {
-            $paths[] = $this->writeTable($table);
-            foreach ($table->children as $child) {
-                $paths[] = $this->writeTable($child);
-            }
+            $this->collectTables($table, $paths, $written);
         }
+
         return $paths;
+    }
+
+    /** Recursively collect the subtree's model paths (deduped by tfName). */
+    private function collectTables(MirrorTable $table, array &$paths, array &$written): void
+    {
+        if (isset($written[$table->tfName])) {
+            return;
+        }
+        $written[$table->tfName] = true;
+        $paths[] = $this->writeTable($table);
+        foreach ($table->children as $child) {
+            $this->collectTables($child, $paths, $written);
+        }
     }
 
     private function writeTable(MirrorTable $table): string
     {
-        $class   = $this->className($table->tfName);
-        $base    = $table->parentTf === '' ? 'TfMirrorModel' : 'TfChildModel'; // T6a: parent flag is always true
-        $body    = [];
-        $body[]  = "use MeRezaRezaei\\Teleframe\\Schema\\Eloquent\\AccountScoped;";
-        $body[]  = "use MeRezaRezaei\\Teleframe\\Schema\\Eloquent\\{$base};";
-        $body[]  = '';
-        $body[]  = "final class {$class} extends {$base}";
-        $body[]  = '{';
-        $body[]  = '    use AccountScoped;';
-        $body[]  = '';
-        $body[]  = "    protected \$table = '{$table->tfName}';";
+        $class = $this->className($table->tfName);
+        $base = $table->parentTf === '' ? 'TfMirrorModel' : 'TfChildModel'; // T6a: parent flag is always true
+        $body = [];
+        $body[] = 'use MeRezaRezaei\\Teleframe\\Schema\\Eloquent\\AccountScoped;';
+        $body[] = "use MeRezaRezaei\\Teleframe\\Schema\\Eloquent\\{$base};";
+        $body[] = '';
+        $body[] = "final class {$class} extends {$base}";
+        $body[] = '{';
+        $body[] = '    use AccountScoped;';
+        $body[] = '';
+        $body[] = "    protected \$table = '{$table->tfName}';";
         if ($table->parentTf !== '') { // T6a: children get parent_id PK
             $body[] = "    protected \$primaryKey = 'parent_id';";
         }
@@ -59,6 +70,7 @@ final class MirrorModelWriter
             'MeRezaRezaei\Teleframe\Schema\Generated\Models\Mirror',
             $body,
         ));
+
         return $path;
     }
 
@@ -75,6 +87,7 @@ final class MirrorModelWriter
                 $casts[] = [$col->name, 'float'];
             }
         }
+
         return $casts;
     }
 
@@ -90,12 +103,13 @@ final class MirrorModelWriter
         $suffixes = ['Entities' => 'Entity', 'Medias' => 'Media', 'Actions' => 'Action'];
         foreach ($suffixes as $from => $to) {
             if (str_ends_with($out, $from)) {
-                return substr($out, 0, -strlen($from)) . $to;
+                return substr($out, 0, -strlen($from)).$to;
             }
         }
-        if (str_ends_with($out, 's') && !str_ends_with($out, 'ss')) {
+        if (str_ends_with($out, 's') && ! str_ends_with($out, 'ss')) {
             $out = substr($out, 0, -1);
         }
+
         return $out;
     }
 }
