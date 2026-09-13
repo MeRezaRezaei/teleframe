@@ -35,6 +35,31 @@ final class MirrorFactoryWriterTest extends TestCase
         }
     }
 
+    // T6f: factories must mirror models — the full catalog subtree, one
+    // factory per distinct table, deduped across shared catalog targets.
+    public function test_full_catalog_factories_match_models_and_are_deduped(): void
+    {
+        $scheme  = TlParser::parseFile(__DIR__.'/../../../schema/sources/TL_telegram_v227.tl');
+        $catalog = MirrorCatalog::load(__DIR__.'/../../../docs/superpowers/specs/2026-09-11-telegram-mirror-catalog.json', $scheme);
+        $resolver = new MirrorTableResolver($catalog, $scheme);
+        $parents = $resolver->resolveAll($catalog->tableNames());
+        $outDir  = sys_get_temp_dir().'/tf5fact_'.uniqid();
+        try {
+            $modelPaths = (new MirrorModelWriter($outDir))->writeAll($parents);
+            $factoryPaths = (new MirrorFactoryWriter($outDir))->writeAll($parents);
+            self::assertNotEmpty($modelPaths);
+            self::assertSame(count($modelPaths), count($factoryPaths));
+            // One file per distinct class name on disk — never two tables clobbering one file.
+            self::assertSame(count($modelPaths), count(array_unique($modelPaths, SORT_REGULAR)));
+            self::assertSame(count($factoryPaths), count(array_unique($factoryPaths, SORT_REGULAR)));
+            foreach ($factoryPaths as $path) {
+                self::assertFileExists($path);
+            }
+        } finally {
+            $this->rrmdir($outDir);
+        }
+    }
+
     private function rrmdir(string $dir): void
     {
         if (!is_dir($dir)) {

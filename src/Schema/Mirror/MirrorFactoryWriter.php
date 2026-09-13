@@ -15,19 +15,53 @@ final class MirrorFactoryWriter
     public function writeAll(array $tables): array
     {
         @mkdir($this->outDir.'/Factories/Mirror', 0777, true);
+        $classNames = MirrorClassName::map($this->collectTfNames($tables));
         $paths = [];
+        $written = [];
         foreach ($tables as $table) {
-            $paths[] = $this->writeTable($table);
-            foreach ($table->children as $child) {
-                $paths[] = $this->writeTable($child);
-            }
+            $this->collectTables($table, $paths, $written, $classNames);
         }
         return $paths;
     }
 
-    private function writeTable(MirrorTable $table): string
+    /** @return list<string> every tfName reachable from the given parents */
+    private function collectTfNames(array $tables): array
     {
-        $class = $this->className($table->tfName);
+        $names = [];
+        $seen = [];
+        $walk = function (MirrorTable $table) use (&$walk, &$names, &$seen): void {
+            if (isset($seen[$table->tfName])) {
+                return;
+            }
+            $seen[$table->tfName] = true;
+            $names[] = $table->tfName;
+            foreach ($table->children as $child) {
+                $walk($child);
+            }
+        };
+        foreach ($tables as $table) {
+            $walk($table);
+        }
+
+        return $names;
+    }
+
+    /** Recursively collect the subtree's factory paths (deduped by tfName). */
+    private function collectTables(MirrorTable $table, array &$paths, array &$written, array $classNames): void
+    {
+        if (isset($written[$table->tfName])) {
+            return;
+        }
+        $written[$table->tfName] = true;
+        $paths[] = $this->writeTable($table, $classNames);
+        foreach ($table->children as $child) {
+            $this->collectTables($child, $paths, $written, $classNames);
+        }
+    }
+
+    private function writeTable(MirrorTable $table, array $classNames): string
+    {
+        $class = $classNames[$table->tfName];
         $model = 'MeRezaRezaei\Teleframe\Schema\Generated\Models\Mirror\\'.$class;
         $body  = [];
         $body[] = "use {$model};";
@@ -66,25 +100,5 @@ final class MirrorFactoryWriter
             MirrorColumnType::TinyInt => "            '{$col->name}' => fake()->numberBetween(1, 3),",
             MirrorColumnType::Double  => "            '{$col->name}' => fake()->randomFloat(6, -90, 90),",
         };
-    }
-
-    private function className(string $tfName): string
-    {
-        $parts = explode('_', $tfName);
-        $out = '';
-        foreach ($parts as $part) {
-            $out .= ucfirst($part);
-        }
-        // T6d: map known plurals BEFORE stripping trailing 's'
-        $suffixes = ['Entities' => 'Entity', 'Medias' => 'Media', 'Actions' => 'Action'];
-        foreach ($suffixes as $from => $to) {
-            if (str_ends_with($out, $from)) {
-                return substr($out, 0, -strlen($from)) . $to;
-            }
-        }
-        if (str_ends_with($out, 's') && !str_ends_with($out, 'ss')) {
-            $out = substr($out, 0, -1);
-        }
-        return $out;
     }
 }
