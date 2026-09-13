@@ -8,6 +8,7 @@ composer.lock
 .openclaude/
 .opencode/
 schema/audit-report.md
+schema/ddl/
 MadelineProto.log
 
 # monorepo: per-package vendor + caches

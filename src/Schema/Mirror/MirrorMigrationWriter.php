@@ -12,13 +12,14 @@ final class MirrorMigrationWriter
 {
     public function __construct(private readonly string $outDir) {}
 
-    /** @param list<MirrorTable> $parents */
-    public function writeAll(array $parents, string $dateStamp = '2026_09_11'): array
+    /** @param list<MirrorTable> $parents @param array<string, string>|null $tableMap out-param: tf table => migration filename */
+    public function writeAll(array $parents, string $dateStamp = '2026_09_11', ?array &$tableMap = null): array
     {
         @mkdir($this->outDir, 0777, true);
         $allFks = [];
         $paths = [];
         $emitted = [];
+        $map = [];
 
         foreach ($parents as $i => $parent) {
             $up = [];
@@ -40,6 +41,14 @@ final class MirrorMigrationWriter
             $path = $this->outDir.DIRECTORY_SEPARATOR.$filename;
             file_put_contents($path, CodeWriter::migrationFile($up, $down));
             $paths[] = $path;
+            foreach ($tables as $table) {
+                $map[$table->tfName] = $filename;
+            }
+        }
+
+        if ($tableMap !== null) {
+            ksort($map);
+            $tableMap = $map;
         }
 
         if ($allFks !== []) {
