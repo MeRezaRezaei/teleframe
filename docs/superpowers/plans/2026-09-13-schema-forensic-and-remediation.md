@@ -89,6 +89,25 @@ Sept 11 merge. The repo looks like an agent that keeps re-designing instead of f
 
 ---
 
+## Findings update (2026-09-13) — first remediation step shipped
+
+Post-writing verification corrected one P1 assumption and fixed the real gap:
+
+- **The catalog is NOT ~4% complete.** All 37 documented roots are in the committed
+  `telegram-mirror-catalog.json`. The resolver produces the **full 694 walk-node / 400
+  distinct-table tree** the family extractions document (verified: `resolveAll()` tree =
+  694 nodes, 400 distinct; per-root trees match the docs e.g. `tf_documents` → all 6 children
+  incl. `mask_coords`/`thumbs_sizes`/`background_colors`).
+- **The actual defect was emission depth.** `MirrorMigrationWriter`/`MirrorModelWriter`
+  emitted only parent + depth-1 children, dropping grandchildren. Fix `9a24218b`: writers now
+  recursively collect the whole subtree, dedup across shared catalog targets, and skip parents
+  fully consumed as an earlier attachment. Result: **400 distinct tables in migrations, 400
+  mirror models**, byte-deterministic across runs, `tests/Schema/Mirror` 46 green,
+  `composer verify` + `standalone-smoke` green.
+- P1 gap rescoped to: transcribe the per-root **column/flag refinements** the extraction docs
+  carry that the catalog's `base`/`bools` lists may lack (e.g. `tf_bot_infos` fact children),
+  and reconcile `tf_factoryWriter` output — emission is no longer the blocker.
+
 ## Remediation plan
 
 **Goal:** NF5 mirror becomes the single, shipped, Postgres-truth schema; every competing
