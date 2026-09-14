@@ -23,6 +23,7 @@ use MeRezaRezaei\Teleframe\Handler\Subscriptions\UpdateStoredHandler;
 use MeRezaRezaei\Teleframe\Handler\UpdateDispatcher;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
+use MeRezaRezaei\Teleframe\Ingest\UpdateRoutingCache;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackfillCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\DaemonCommand;
@@ -194,9 +195,26 @@ class TeleframeServiceProvider extends ServiceProvider
                 ? $app->make(CacheInterface::class)
                 : null;
 
+            // Redis-2 hot-reload routing cache is best-effort at the seam:
+            // hosts with a working bus redis get real-time listen/ignore
+            // control; hosts without one fall back to DB-only routing (the
+            // UpdateRouter cache-miss path -- behavior identical). A missing
+            // or misconfigured redis must never break the ingest seam itself;
+            // the bus surfaces misconfiguration loudly elsewhere.
+            $routingCache = null;
+            try {
+                $routingCache = new UpdateRoutingCache(
+                    $app->make(RedisConnectionContract::class),
+                    $app->make('db')->connection(),
+                );
+            } catch (\RuntimeException) {
+                $routingCache = null;
+            }
+
             return MirrorIngesterFactory::build(
                 $app->make(\Illuminate\Contracts\Events\Dispatcher::class),
                 $sends,
+                $routingCache,
             );
         });
 

@@ -6,9 +6,12 @@ namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use MeRezaRezaei\Teleframe\Bus\RedisConnectionContract;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
+use MeRezaRezaei\Teleframe\Ingest\UpdateRoutingCache;
 use MeRezaRezaei\Teleframe\Laravel\Console\DaemonCommand;
 use MeRezaRezaei\Teleframe\Laravel\Providers\TeleframeServiceProvider;
+use MeRezaRezaei\Teleframe\Tests\Support\ArrayRedis;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
 /**
@@ -87,6 +90,57 @@ final class MirrorIngesterSeamTest extends TestbenchTestCase
             $ingester(['_' => 'noSuchConstructor', 'id' => 9], 42);
 
             self::assertSame(0, DB::table('tf_messages')->count(), 'unknown ctor → nothing stored, no throw');
+        } finally {
+            $this->rrmdir($out);
+        }
+    }
+
+    public function test_hot_path_reads_redis_two_not_the_db(): void
+    {
+        $out = $this->migrateMirror();
+        try {
+            $this->artisan('migrate', [
+                '--path' => dirname(__DIR__, 2).'/src/Laravel/Migrations/2026_09_14_000001_create_tg_update_routing_table.php',
+                '--realpath' => true,
+            ])->assertExitCode(0);
+
+            // The DB says store_only — the emit gate must NOT open for this peer.
+            DB::table('tg_update_routing')->insert([
+                'account_id' => 42,
+                'peer_type' => 3,
+                'peer_id' => 900,
+                'mode' => 'store_only',
+            ]);
+
+            // Redis two says act_on — the hot path (daemon, no restart) wins.
+            $redis = new ArrayRedis;
+            $redis->hset(
+                UpdateRoutingCache::KEY.':42',
+                '3:900',
+                'act_on',
+            );
+            $this->app->instance(RedisConnectionContract::class, $redis);
+
+            $seen = [];
+            Event::listen(UpdateStored::class, static function (UpdateStored $event) use (&$seen): void {
+                $seen[] = $event->model;
+            });
+
+            $ingester = $this->app->make(DaemonCommand::MIRROR_INGESTER_KEY);
+            $ingester([
+                '_' => 'message',
+                'id' => 11,
+                'peer_id' => ['_' => 'peerChannel', 'channel_id' => 900],
+                'date' => 1726000000,
+                'message' => 'redis two wins',
+                'out' => false,
+            ], 42);
+
+            self::assertCount(1, $seen, 'Redis-2 act_on overrides the DB store_only — real-time control, no restart');
+            self::assertSame(
+                'redis two wins',
+                (string) $seen[0]->getAttribute('message'),
+            );
         } finally {
             $this->rrmdir($out);
         }

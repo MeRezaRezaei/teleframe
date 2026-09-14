@@ -10,6 +10,7 @@ use MeRezaRezaei\Teleframe\Ingest\MirrorUpdateIngester;
 use MeRezaRezaei\Teleframe\Ingest\RoutingEventGateway;
 use MeRezaRezaei\Teleframe\Ingest\SelfOriginatedClassifier;
 use MeRezaRezaei\Teleframe\Ingest\UpdateRouter;
+use MeRezaRezaei\Teleframe\Ingest\UpdateRoutingCache;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerShapeTool;
 use MeRezaRezaei\Teleframe\Schema\Generator\TlParser;
 use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorCatalog;
@@ -39,15 +40,18 @@ final class MirrorIngesterFactory
     /** @var array<string, string>|null tf table => model FQCN, built once */
     private static ?array $modelIndex = null;
 
-    public static function build(?Dispatcher $events = null, ?CacheInterface $sends = null): callable
-    {
+    public static function build(
+        ?Dispatcher $events = null,
+        ?CacheInterface $sends = null,
+        ?UpdateRoutingCache $routingCache = null,
+    ): callable {
         $tl = base_path('schema/sources/TL_telegram_v227.tl');
         $catalogPath = base_path('docs/superpowers/specs/2026-09-11-telegram-mirror-catalog.json');
 
         $scheme = TlParser::parseFile($tl);
         $catalog = MirrorCatalog::load($catalogPath, $scheme);
         $resolver = new MirrorTableResolver($catalog, $scheme);
-        $router = new UpdateRouter(DB::connection());
+        $router = new UpdateRouter(DB::connection(), $routingCache);
 
         $ingester = new MirrorUpdateIngester(
             new MirrorFactDecomposer($resolver, $catalog),

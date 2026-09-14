@@ -107,3 +107,18 @@ This repo merged two former projects into one package:
 **Gates:** `composer verify` → **1147 tests / 25975 assertions / 6 skipped, phpstan clean, regeneration idempotent**; `php bin/standalone-smoke.php` → exit 0.
 
 **Commit:** (cycle 21) — pending message: "feat: behaviour tables link to the nf5 core through RoutingPeerResolver (cycle 21)"
+
+---
+
+## Cycle 22 — the daemon's hot path reads Redis-2 (listen/ignore in real time, 2026-09-14)
+
+**Verbatim promise closed:** *"the redis two also for chainging the things that the ingester should send as event too so we can controll the things we are going to listen on or ignore in real time"* — the hot-reload loop was half-wired: `RoutingSettingsObserver` refreshed the Redis-2 hash and published on `tg:bus:reload`, but the daemon's default ingester seam built `UpdateRouter(DB::connection())` with NO cache, so every update re-queried the DB and a settings change could never take effect without restart.
+
+- **`MirrorIngesterFactory::build()`** gains a third optional param `?UpdateRoutingCache $routingCache` and passes it into `UpdateRouter`. Cache-first, DB-on-miss as the router already documented.
+- **Provider `MIRROR_INGESTER_KEY` seam** resolves `RedisConnectionContract` and builds the cache — **best-effort** (`try/catch \RuntimeException` → null): hosts with a working bus redis get real-time listen/ignore; hosts without one fall back to DB-only routing (behavior identical via the cache-miss path). The ingest seam itself must never break on a missing redis; the bus surfaces misconfiguration loudly elsewhere.
+- **`tests/Ingest/MirrorIngesterSeamTest::test_hot_path_reads_redis_two_not_the_db`**: DB rule says `store_only`, Redis-2 hash says `act_on` → the ingest emits `UpdateStored` (Redis-2 wins over DB — proof the hot path reads the cache, no restart). Uses the `ArrayRedis` double bound to the contract.
+- **Formatter hazard note:** the format-on-save hook re-sorts imports and strips concat spacing the `ShipDialGoldenTest` requires. Provider edits must be applied formatter-proof (git-show base + perl insert via `/tmp/prov.php` + `cp`); edit-tool writes to the provider get mangled.
+
+**Gates:** `composer verify` → **1148 tests / 25980 assertions / 6 skipped, phpstan clean, regeneration idempotent**; `php bin/standalone-smoke.php` → exit 0.
+
+**Commit:** (cycle 22) — "feat: daemon hot path reads Redis-2 routing cache — real-time listen/ignore (cycle 22)"
