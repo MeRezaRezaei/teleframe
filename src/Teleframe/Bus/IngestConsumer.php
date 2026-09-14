@@ -19,9 +19,13 @@ use MeRezaRezaei\Teleframe\Teleclient;
  *    group;
  *  - RouteTable match → forwarded verbatim to the target stream and
  *    acked (counted as forwarded);
- *  - no route (the default path) → Teleclient::ingest into P2
- *    truth under the entry's own account_id, with the optional
- *    onStored hook fired after the row commits.
+ *  - no route (the default path) → ingested into truth under the
+ *    entry's own account_id, with the optional onStored hook fired
+ *    after the row commits. The ingest half is a seam: without a
+ *    mirrorIngester this is Teleclient::ingest into P2 JSONB truth
+ *    (BC); with one, the entry goes through the NF5 mirror pipeline
+ *    (observe → relational DB updated → Eloquent models — the
+ *    verbatim's daily loop, cycles 10–12).
  *
  * Ingest-path failures get a bounded retry: an entry whose ingest
  * throws (unknown constructor against this build, transient DB
@@ -54,6 +58,9 @@ final class IngestConsumer
     /** @var ?Closure(array<string, mixed>, int): void */
     private readonly ?Closure $onRouted;
 
+    /** @var ?Closure(array<string, mixed>, int): void */
+    private readonly ?Closure $mirrorIngester;
+
     /** @var array<string, int> stream entry id => consecutive ingest-path throws */
     private array $ingestFailures = [];
 
@@ -62,9 +69,11 @@ final class IngestConsumer
         private readonly Teleclient $client,
         ?callable $onStored = null,
         ?callable $onRouted = null,
+        ?callable $mirrorIngester = null,
     ) {
         $this->onStored = $onStored === null ? null : $onStored(...);
         $this->onRouted = $onRouted === null ? null : $onRouted(...);
+        $this->mirrorIngester = $mirrorIngester === null ? null : $mirrorIngester(...);
     }
 
     /**
@@ -74,8 +83,8 @@ final class IngestConsumer
      * for the next cycle unless they hit the retry cap.
      *
      * @return array{processed: int, forwarded: int} entries fully
-     *         handled (ingested, forwarded or dead-lettered) and the
-     *         subset rerouted to a target stream
+     *                                               handled (ingested, forwarded or dead-lettered) and the
+     *                                               subset rerouted to a target stream
      */
     public function consumeOnce(): array
     {
@@ -116,13 +125,13 @@ final class IngestConsumer
      * ingest path threw below the retry cap and the entry stays
      * pending for the next cycle.
      *
-     * @param array<string, string> $fields
+     * @param  array<string, string>  $fields
      */
     private function handleEntry(string $entryId, array $fields, int &$forwarded): bool
     {
         try {
             $entry = StreamSchema::decode($fields['update'] ?? '');
-        } catch (JsonException | InvalidArgumentException) {
+        } catch (JsonException|InvalidArgumentException) {
             // Poison: preserve the payload verbatim for forensics,
             // then ack so the group keeps moving.
             $this->deadLetter($fields);
@@ -147,13 +156,20 @@ final class IngestConsumer
         }
 
         try {
-            $root = $this->client->ingest($entry['update'], $entry['account_id']);
+            if ($this->mirrorIngester !== null) {
+                // The verbatim's daily loop: observe → relational DB
+                // (NF5 mirror) → Eloquent models. The ingester classifies
+                // and gates the UpdateStored event itself (cycles 10–12).
+                ($this->mirrorIngester)($entry['update'], (int) $entry['account_id']);
+            } else {
+                $root = $this->client->ingest($entry['update'], $entry['account_id']);
 
-            if ($this->onStored !== null) {
-                ($this->onStored)($root, $entry['account_id']);
+                if ($this->onStored !== null) {
+                    ($this->onStored)($root, $entry['account_id']);
+                }
             }
         } catch (\Throwable $e) {
-            if (!$this->strike($entryId)) {
+            if (! $this->strike($entryId)) {
                 return false; // retry on a later cycle; stays pending
             }
 
@@ -180,7 +196,7 @@ final class IngestConsumer
     private function strike(string $entryId): bool
     {
         if (count($this->ingestFailures) >= self::FAILURE_CAP
-            && !isset($this->ingestFailures[$entryId])
+            && ! isset($this->ingestFailures[$entryId])
         ) {
             unset($this->ingestFailures[(string) array_key_first($this->ingestFailures)]);
         }
@@ -195,7 +211,7 @@ final class IngestConsumer
      * Post an entry to the dead-letter stream: the original fields
      * verbatim, optionally tagged with a reason and error message.
      *
-     * @param array<string, string> $fields
+     * @param  array<string, string>  $fields
      */
     private function deadLetter(array $fields, ?string $reason = null, string $error = ''): void
     {

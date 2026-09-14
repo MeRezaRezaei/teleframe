@@ -35,7 +35,7 @@ final class IngestConsumerTest extends IngestTestCase
     {
         parent::setUp();
 
-        $this->redis = new ArrayRedis();
+        $this->redis = new ArrayRedis;
         $this->consumer = new IngestConsumer(
             $this->redis,
             $this->app->make(Teleclient::class),
@@ -217,7 +217,6 @@ final class IngestConsumerTest extends IngestTestCase
         self::assertSame([[TlUser::class, self::ACCOUNT]], $seen);
     }
 
-
     public function test_routed_entries_fan_into_the_on_routed_seam(): void
     {
         $table = new RouteTable($this->redis);
@@ -240,6 +239,32 @@ final class IngestConsumerTest extends IngestTestCase
         self::assertSame(['processed' => 1, 'forwarded' => 1], $stats);
         self::assertSame([['updateNewMessage', self::ACCOUNT]], $routed);
         self::assertCount(1, $this->redis->streamEntries('tg:target:messages'));
+    }
+
+    public function test_mirror_ingester_seam_replaces_the_legacy_default_path(): void
+    {
+        $sink = new RedisStreamSink($this->redis, self::ACCOUNT);
+        $mirrored = [];
+        $consumer = new IngestConsumer(
+            $this->redis,
+            $this->app->make(Teleclient::class),
+            null,
+            null,
+            static function (array $update, int $accountId) use (&$mirrored): void {
+                $mirrored[] = [$update['_'], $accountId];
+            },
+        );
+
+        $sink->handle($this->userUpdate(), (string) self::ACCOUNT);
+        $stats = $consumer->consumeOnce();
+
+        self::assertSame(['processed' => 1, 'forwarded' => 0], $stats);
+        self::assertSame([['user', self::ACCOUNT]], $mirrored, 'mirror seam received the update — not the legacy ingest path');
+
+        // The legacy path would have written the P2 user row; the seam
+        // defers entirely to the ingester (mirror pipeline), so no P2 row.
+        $client = $this->app->make(Teleclient::class);
+        self::assertNull($client->user(self::ACCOUNT, self::USER_ID));
     }
 
     /**

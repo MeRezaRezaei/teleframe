@@ -32,6 +32,9 @@ use MeRezaRezaei\Teleframe\Teleclient;
  */
 class DaemonCommand extends Command
 {
+    /** Container seam: callable(array<string,mixed>, int): void — the NF5 mirror ingester (verbatim daily loop). */
+    public const MIRROR_INGESTER_KEY = 'teleclient.ingest.mirror-ingester';
+
     protected $signature = 'teleframe:daemon
         {--once : Run one supervision cycle per account and exit}
         {--ingest-only : Skip polling, run only the ingest consumer loop}
@@ -45,7 +48,7 @@ class DaemonCommand extends Command
     {
         $accounts = config('teleframe.daemon.accounts', []);
 
-        if ($accounts === [] || !is_array($accounts)) {
+        if ($accounts === [] || ! is_array($accounts)) {
             $this->components->error('No daemon accounts configured. Add entries to config("teleframe.daemon.accounts").');
             $this->line('Example config:');
             $this->line("  'daemon' => ['accounts' => [['account_id' => 123456, 'session_string' => env('TELEGRAM_SESSION_123456')]]]");
@@ -80,6 +83,7 @@ class DaemonCommand extends Command
             $accountId = (int) ($config['account_id'] ?? 0);
             if ($accountId <= 0) {
                 $this->components->warn('Skipping account config with invalid account_id.');
+
                 continue;
             }
 
@@ -102,7 +106,7 @@ class DaemonCommand extends Command
                         return $entry['wrapper'];
                     }
                 }
-                throw new \RuntimeException('Worker not found for account ' . $config['account_id']);
+                throw new \RuntimeException('Worker not found for account '.$config['account_id']);
             },
         );
 
@@ -147,7 +151,8 @@ class DaemonCommand extends Command
         $worker = new AccountWorker($config);
 
         // Wrap AccountWorker to match WorkerInterface (run with stop hook)
-        $wrapper = new class ($worker, $sink) implements WorkerInterface {
+        $wrapper = new class($worker, $sink) implements WorkerInterface
+        {
             public function __construct(
                 private readonly AccountWorker $worker,
                 private readonly RedisStreamSink $sink,
@@ -173,11 +178,11 @@ class DaemonCommand extends Command
     {
         try {
             Redis::connection()->command('xgroup', ['CREATE', StreamSchema::STREAM, StreamSchema::GROUP, '0', 'MKSTREAM']);
-            $this->components->info('Consumer group "' . StreamSchema::GROUP . '" ready.');
+            $this->components->info('Consumer group "'.StreamSchema::GROUP.'" ready.');
         } catch (\Throwable $e) {
             // Group already exists — that's fine
-            if (!str_contains($e->getMessage(), 'BUSYGROUP')) {
-                $this->components->warn('Consumer group setup: ' . $e->getMessage());
+            if (! str_contains($e->getMessage(), 'BUSYGROUP')) {
+                $this->components->warn('Consumer group setup: '.$e->getMessage());
             }
         }
     }
@@ -189,7 +194,8 @@ class DaemonCommand extends Command
     {
         $adapter = new LaravelRedisAdapter(Redis::connection());
         $client = app(Teleclient::class);
-        $consumer = new IngestConsumer($adapter, $client);
+        $mirror = app()->bound(self::MIRROR_INGESTER_KEY) ? app(self::MIRROR_INGESTER_KEY) : null;
+        $consumer = new IngestConsumer($adapter, $client, null, null, $mirror);
 
         if ($once) {
             $result = $consumer->consumeOnce();
@@ -201,7 +207,7 @@ class DaemonCommand extends Command
         $this->components->info('Starting ingest consumer loop (Ctrl+C to stop)...');
 
         $iterations = 0;
-        while (!$this->shouldStop) {
+        while (! $this->shouldStop) {
             $result = $consumer->consumeOnce();
             $iterations++;
 
@@ -221,7 +227,7 @@ class DaemonCommand extends Command
 
     private function installSignalHandlers(): void
     {
-        if (!function_exists('pcntl_signal') || !function_exists('pcntl_async_signals')) {
+        if (! function_exists('pcntl_signal') || ! function_exists('pcntl_async_signals')) {
             return;
         }
 
