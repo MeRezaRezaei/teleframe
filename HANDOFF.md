@@ -122,3 +122,54 @@ This repo merged two former projects into one package:
 **Gates:** `composer verify` → **1148 tests / 25980 assertions / 6 skipped, phpstan clean, regeneration idempotent**; `php bin/standalone-smoke.php` → exit 0.
 
 **Commit:** (cycle 22) — "feat: daemon hot path reads Redis-2 routing cache — real-time listen/ignore (cycle 22)"
+---
+
+- **Root cleanup (chore/package-cleanup):** `migrations/` → `src/Laravel/Migrations/`
+  (provider/ingest/route/regenerator/tests retargeted); `.env.example` →
+  `examples/.env.example`; `skills/telegram-schema-update` → `docs/skills/`.
+  `laravel/framework` stays in `require` (decisive: `src/Teleframe/Stage/StageFormRequest.php`
+  extends `Illuminate\Foundation\Http\FormRequest`, which only ships inside the framework).
+  Gates green at commit time (phpunit 1086 / phpstan 0 / smoke 33).
+- Worktrees from the old `teleframe-psr3` were not carried over (`.openclaude/worktrees/agent-*`, `/tmp/teleframe-head-baseline`, `/tmp/wt-phase1`) — verify they are irrelevant before pruning anything.
+- Deep MTProto internals remain future work (see `AGENTS.md` known-gaps); method-level wire coverage for every TL method is the next extension area.
+
+## Run — 2026-09-13 (run 7) — Factory + model writer reconciliation
+
+**Commit:** pending (to be `fix: dedupe mirror writer class names; emit full factory + model subtrees`)
+
+### What was done
+- Created `src/Schema/Mirror/MirrorClassName.php` — shared injective, deterministic tf-name → PHP class-name mapping. Greedy ascending order: singular table claims the bare name first; plural falls back to full PascalCase.
+- Rewired `MirrorModelWriter` and `MirrorFactoryWriter` to use `MirrorClassName::map()` instead of their private `className()` methods. Both writers now first collect all tfNames from the resolved subtree (deduped walk), compute the map, then write — guaranteeing 400 distinct model paths AND 400 distinct factory paths with class names agreeing between them.
+- Added `test_full_catalog_factories_match_models_and_are_deduped` to `MirrorFactoryWriterTest` (asserts model count == factory count; both path arrays fully unique; all files exist on disk).
+
+### Collision fix
+The blind trailing-'s' strip in the old `className()` produced identical class names for 3 table pairs (400 tfNames → 397 distinct). The shared `MirrorClassName::map()` resolves these deterministically:
+- `tf_users_username` → `TfUsersUsername` (singular claims first); `tf_users_usernames` → `TfUsersUsernames`.
+- `tf_bot_inline_results_..._buttons_peer_type` → `...PeerType`; `...peer_types` → `...PeerTypes`.
+- Same pattern for the `tf_messages_reply_markup_...` pair.
+
+### Gates
+- `vendor/bin/phpunit`: 1087 tests, 20997 assertions, 6 skipped (opt-in PG/ship), 0 failures.
+- `vendor/bin/phpstan analyse --no-progress`: [OK] No errors.
+- `php bin/standalone-smoke.php`: EXIT=0.
+- `tests/Schema/Mirror`: 47 tests, 5222 assertions, OK.
+- `php /tmp/nf5-diag.php`: 632/1620/790, 37 parents, 25 migrations, 400 models, deterministic.
+- `php /tmp/nf5-doccheck.php`: 139 documented child tables all present in migration output.
+
+### Next step
+- Commit this increment, then P1 is effectively complete (catalog matches extraction docs, emission covers 400/400 tables, class names injective). Verify with owner before marking P1 done in plan.
+- P2 = wire mirror pipeline into `bin/regenerate`; delete old MigrationGenerator + SqlDdlEmitter; ship dial → mirror migrations only.
+
+---
+
+## Cycle 23 — auto-register RoutingSettingsObserver (45254458, 2026-09-14)
+
+**Verbatim promise closed:** *"on change there is also the observer that listens to them and this time after updating it sends the update as an event to the defined event path"* — the observer existed and was unit-tested but was NOT registered on the Eloquent lifecycle, so a default install silently served stale rules from the cache-first `UpdateRouter`.
+
+- **`boot()`**: `UpdateRoutingRule::observe(RoutingSettingsObserver::class)` — every app (web + console), above the `runningInConsole()` block.
+- **`register()`**: best-effort observer singleton; missing bus redis -> null cache, the `RoutingSettingsChanged` event still fires, DB-backed routing stays correct. Observer cache made nullable/null-safe.
+- **Test**: `RoutingSettingsObserverTest::test_provider_registration_auto_fires_observer_on_eloquent_save` — a plain `save()` refreshes Redis-2 and emits the event with NO manual observer call (non-vacuous: fails without the registration).
+
+**Skeptic certification:** independent goal-verify agent, verdict **PROVEN** after this fix (prior verdict NOT PROVEN on the dead-observer gap).
+
+**Gates:** `composer verify` -> 1149 tests / 25986 assertions / 6 skipped, phpstan no errors, regeneration 247/247; `php bin/standalone-smoke.php` -> exit 0.
