@@ -7,11 +7,9 @@ namespace MeRezaRezaei\Teleframe\Core\MTProto;
 use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
 use MeRezaRezaei\Teleframe\Core\MTProto\Connection\EncryptedConnection;
 use MeRezaRezaei\Teleframe\Core\MTProto\Connection\PlainConnection;
-use MeRezaRezaei\Teleframe\Core\MTProto\Crypto\AesIge;
 use MeRezaRezaei\Teleframe\Core\MTProto\Crypto\AuthKeyFactory;
 use MeRezaRezaei\Teleframe\Core\MTProto\Crypto\PasswordCalculator;
 use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLEncoder;
-use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLSerializer;
 use MeRezaRezaei\Teleframe\Core\MTProto\Transport\FrameCodec;
 use MeRezaRezaei\Teleframe\Core\MTProto\Transport\StreamSocket;
 use RuntimeException;
@@ -44,8 +42,10 @@ class Client
     public const KEEPALIVE_IDLE_SECONDS = 45.0;
 
     protected ?array $proxyConfig = null;
+
     /** Tri-state: null = defer to config('teleframe.live_mode') at first use; true/false = explicit. */
     private ?bool $live = null;
+
     private ?EncryptedConnection $conn = null;
 
     public function __construct(
@@ -61,6 +61,7 @@ class Client
     {
         $this->session = $session;
         $this->close();
+
         return $this;
     }
 
@@ -72,11 +73,12 @@ class Client
     /**
      * Configure proxy for MTProto socket connections.
      *
-     * @param array{type?: string, host?: string, port?: int, username?: string, password?: string} $config
+     * @param  array{type?: string, host?: string, port?: int, username?: string, password?: string}  $config
      */
     public function setProxy(array $config): self
     {
         $this->proxyConfig = $config;
+
         return $this;
     }
 
@@ -103,6 +105,7 @@ class Client
     public function live(): static
     {
         $this->live = true;
+
         return $this;
     }
 
@@ -123,12 +126,12 @@ class Client
      */
     protected function resolveLiveDefault(): bool
     {
-        if (!function_exists('config')) {
+        if (! function_exists('config')) {
             return false;
         }
         try {
             return (bool) config('teleframe.live_mode');
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return false;
         }
     }
@@ -136,17 +139,18 @@ class Client
     /**
      * Executes a raw MTProto RPC method.
      *
-     * @param string $method MTProto method name (e.g. 'messages.sendMessage', 'users.getFullUser')
-     * @param array<string, mixed> $params
+     * @param  string  $method  MTProto method name (e.g. 'messages.sendMessage', 'users.getFullUser')
+     * @param  array<string, mixed>  $params
      * @return array<string, mixed>
+     *
      * @throws \InvalidArgumentException when the method name is unknown to TLRegistry
      * @throws RuntimeException on malformed params (pre-I/O; connection kept) or transport/protocol failures (connection evicted)
      */
     public function call(string $method, array $params = []): array
     {
-        if (!$this->isLive()) {
+        if (! $this->isLive()) {
             if ($this->session === null || empty($this->session->authKey)) {
-                throw new RuntimeException("Session AuthKey is required to make authenticated MTProto calls.");
+                throw new RuntimeException('Session AuthKey is required to make authenticated MTProto calls.');
             }
 
             // Mock result for unit test & execution pipeline
@@ -170,6 +174,7 @@ class Client
             if ($conn->idleSeconds() > self::KEEPALIVE_IDLE_SECONDS) {
                 $conn->ping(); // lazy keepalive: keep the socket past the ~60s server idle kill
             }
+
             return $conn->call($method, $params);
         } catch (TelegramException $e) {
             throw $e; // RPC-level error: the connection stays usable
@@ -190,8 +195,9 @@ class Client
      * invokeWithLayer + initConnection — and batches only the remainder;
      * steady-state connections send every request in one container.
      *
-     * @param array<string, array{method: string, params: array<string, mixed>}> $requests
+     * @param  array<string, array{method: string, params: array<string, mixed>}>  $requests
      * @return array<string, array<string, mixed>> key => decoded result, input order preserved
+     *
      * @throws \InvalidArgumentException when a method name is unknown to TLRegistry
      * @throws TelegramException on rpc_error
      * @throws RuntimeException on bounds violations/malformed params (pre-I/O; connection kept) or transport/protocol failures (connection evicted)
@@ -202,9 +208,9 @@ class Client
             return [];
         }
 
-        if (!$this->isLive()) {
+        if (! $this->isLive()) {
             if ($this->session === null || empty($this->session->authKey)) {
-                throw new RuntimeException("Session AuthKey is required to make authenticated MTProto calls.");
+                throw new RuntimeException('Session AuthKey is required to make authenticated MTProto calls.');
             }
 
             // Mock result for unit test & execution pipeline (same shape as call())
@@ -217,6 +223,7 @@ class Client
                     'dc_id' => $this->session->dcId,
                 ];
             }
+
             return $stub;
         }
 
@@ -238,13 +245,14 @@ class Client
                 $conn->ping(); // lazy keepalive before the batched round-trip
             }
 
-            if (!$conn->isInited()) {
+            if (! $conn->isInited()) {
                 // First-call semantics as today: the leading request establishes
                 // the layer via call()'s invokeWithLayer wrap; the rest ride one
                 // container. A single-request callMany degenerates to call().
                 $firstKey = array_key_first($bodies);
                 $results = [$firstKey => $conn->call($requests[$firstKey]['method'], $requests[$firstKey]['params'])];
                 unset($bodies[$firstKey]);
+
                 return $results + $conn->callBatch($bodies);
             }
 
@@ -275,6 +283,7 @@ class Client
         [$host, $port] = $this->resolveHost();
         $socket = null;
         $session = $this->ensureAuthKey($host, $port, $socket);
+
         return $this->conn = $this->connectEncrypted($session, $host, $port, $socket);
     }
 
@@ -313,13 +322,34 @@ class Client
 
         $plain = PlainConnection::connect($host, $port);
         try {
-            $session = $this->session = AuthKeyFactory::generate($plain, $this->session->dcId);
+            $generated = AuthKeyFactory::generate($plain, $this->session->dcId);
             $promotedSocket = $plain->socket; // keep the socket open: key is connection-bound until first use
-            return $session;
+
+            // Mutate the existing session object in place rather than swapping
+            // in the freshly generated one: callers hold a reference to their
+            // SessionData (e.g. TeleframeAuthService::sendCodeOnDc) and export
+            // it after the call returns — a replacement object would be lost
+            // and the next request would handshake a DIFFERENT auth key, which
+            // breaks auth.sendCode → auth.signIn (symptom: PHONE_CODE_EXPIRED).
+            $this->absorbGeneratedKey($generated);
+
+            return $this->session;
         } catch (Throwable $e) {
             $plain->close();
             throw $e;
         }
+    }
+
+    /**
+     * Copies freshly generated key material onto the EXISTING session object.
+     * Never replace the object: the auth key is only useful to the code that
+     * requested it (auth.sendCode mints its phone_code_hash against this key),
+     * so any later request must handshake zero times and reuse the same key.
+     */
+    protected function absorbGeneratedKey(SessionData $generated): void
+    {
+        $this->session->authKey = $generated->authKey;
+        $this->session->serverTimeDelta = $generated->serverTimeDelta;
     }
 
     /**
@@ -337,8 +367,9 @@ class Client
             $socket = StreamSocket::createConnection($host, $port);
             FrameCodec::writeInit($socket);
         } catch (RuntimeException $e) {
-            throw new RuntimeException("MTProto connect to {$host}:{$port} failed: " . $e->getMessage(), 0, $e);
+            throw new RuntimeException("MTProto connect to {$host}:{$port} failed: ".$e->getMessage(), 0, $e);
         }
+
         return new EncryptedConnection($session, $socket, $this->apiId);
     }
 
@@ -346,6 +377,7 @@ class Client
     protected function resolveHost(): array
     {
         $dcId = $this->session->dcId ?? 2;
+
         return [self::DC_IPS[$dcId] ?? self::DC_IPS[2], self::DEFAULT_PORT];
     }
 
@@ -366,8 +398,7 @@ class Client
     /**
      * Helper to compute 2FA SRP parameters when Telegram returns SESSION_PASSWORD_NEEDED.
      *
-     * @param array<string, mixed> $accountPassword
-     * @param string $password
+     * @param  array<string, mixed>  $accountPassword
      * @return array{srp_id: int, A: string, M1: string}
      */
     public function compute2faProof(array $accountPassword, string $password): array

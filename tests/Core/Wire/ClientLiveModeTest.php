@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 
 class ClientLiveModeTest extends TestCase
 {
-    public function testOfflineStubUnchangedByDefault(): void
+    public function test_offline_stub_unchanged_by_default(): void
     {
         $session = new SessionData(dcId: 2, authKey: random_bytes(256));
         $client = new Client(apiId: 1, apiHash: 'h', session: $session);
@@ -24,7 +24,7 @@ class ClientLiveModeTest extends TestCase
         $this->assertSame('help.getNearestDc', $res['method']);
     }
 
-    public function testResolveLiveDefaultIsFalseWithoutLaravelContainer(): void
+    public function test_resolve_live_default_is_false_without_laravel_container(): void
     {
         // config() only exists inside a Laravel app; the dev/test runtime here
         // has no container, so the config-if-available default resolves false.
@@ -34,7 +34,7 @@ class ClientLiveModeTest extends TestCase
         $this->assertFalse($resolve->invoke($client));
     }
 
-    public function testConstructorNullLiveWithNoConfigStaysOffline(): void
+    public function test_constructor_null_live_with_no_config_stays_offline(): void
     {
         $session = new SessionData(dcId: 2, authKey: random_bytes(256));
         $client = new Client(apiId: 1, apiHash: 'h', session: $session, live: null);
@@ -43,7 +43,7 @@ class ClientLiveModeTest extends TestCase
         $this->assertSame('rpc_result', $res['_']);
     }
 
-    public function testConstructorTrueForcesLiveWirePath(): void
+    public function test_constructor_true_forces_live_wire_path(): void
     {
         [$clientSock, $serverSock] = $this->socketPair();
         $authKey = random_bytes(256);
@@ -64,7 +64,7 @@ class ClientLiveModeTest extends TestCase
         fclose($serverSock);
     }
 
-    public function testLiveRequiresAuthKeyOrFailsFast(): void
+    public function test_live_requires_auth_key_or_fails_fast(): void
     {
         $session = new SessionData(dcId: 2, authKey: ''); // empty key forces handshake attempt
         $client = (new Client(apiId: 1, apiHash: 'h', session: $session))->live();
@@ -76,7 +76,7 @@ class ClientLiveModeTest extends TestCase
         $client->callToHost('127.0.0.1', 1); // port 1: connection refused
     }
 
-    public function testFailedCallToHostDoesNotCacheHalfState(): void
+    public function test_failed_call_to_host_does_not_cache_half_state(): void
     {
         $session = new SessionData(dcId: 2, authKey: '');
         $client = (new Client(apiId: 1, apiHash: 'h', session: $session))->live();
@@ -102,7 +102,7 @@ class ClientLiveModeTest extends TestCase
         $this->assertSame('', $session->authKey, 'failed handshake must not store a partial key');
     }
 
-    public function testLiveRuntimeExceptionEvictsCachedConnection(): void
+    public function test_live_runtime_exception_evicts_cached_connection(): void
     {
         [$clientSock, $serverSock] = $this->socketPair();
         $session = new SessionData(dcId: 2, authKey: random_bytes(256));
@@ -126,7 +126,7 @@ class ClientLiveModeTest extends TestCase
      * field -> TLEncoder RuntimeException) is a caller error, not a dead
      * connection: the cached connection must survive it and stay usable.
      */
-    public function testEncodeFailureKeepsCachedConnection(): void
+    public function test_encode_failure_keeps_cached_connection(): void
     {
         [$clientSock, $serverSock] = $this->socketPair();
         $authKey = random_bytes(256);
@@ -158,7 +158,64 @@ class ClientLiveModeTest extends TestCase
         fclose($serverSock);
     }
 
-    public function testLiveTelegramExceptionKeepsCachedConnection(): void
+    public function test_even_with_auth_key_public_setter_does_not_swap_session(): void
+    {
+        // Regression: auth.sendCode mints its phone_code_hash against the auth
+        // key of the requesting session. TeleframeAuthService parks the session
+        // exported AFTER the handshake; if ensureAuthKey swapped in a fresh
+        // SessionData object, the parked string would carry an empty key and
+        // auth.signIn would handshake a DIFFERENT key -> PHONE_CODE_EXPIRED.
+        // The pre-seeded-key path must therefore return the SAME object.
+
+        $original = new SessionData(dcId: 2, authKey: random_bytes(256));
+
+        $client = new class(apiId: 1, apiHash: 'h', session: $original) extends Client
+        {
+            public function exposeEnsureAuthKey(string $host, int $port): SessionData
+            {
+                $socket = null;
+
+                return $this->ensureAuthKey($host, $port, $socket);
+            }
+        };
+        $client->live();
+
+        $returned = $client->exposeEnsureAuthKey('127.0.0.1', 1);
+        $this->assertSame($original, $returned, 'pre-seeded key path must reuse, not replace, the session object');
+        $this->assertSame($original, $client->getSession());
+    }
+
+    public function test_absorb_generated_key_mutates_session_in_place(): void
+    {
+        // The handshake path may never swap the object either. This exercises
+        // only the mutation seam (absorbGeneratedKey): the caller's session
+        // reference must gain the key material, not be replaced by the
+        // generated object.
+
+        $original = new SessionData(dcId: 2, authKey: '');
+        $generated = new SessionData(
+            dcId: 2,
+            authKey: random_bytes(256),
+            serverTimeDelta: -42,
+        );
+
+        $client = new class(apiId: 1, apiHash: 'h', session: $original) extends Client
+        {
+            public function exposeAbsorb(SessionData $generated): void
+            {
+                $this->absorbGeneratedKey($generated);
+            }
+        };
+
+        $client->exposeAbsorb($generated);
+
+        $this->assertSame($original, $client->getSession(), 'session object identity must be preserved');
+        $this->assertSame($generated->authKey, $original->authKey, 'auth key must land on the caller session');
+        $this->assertSame(-42, $original->serverTimeDelta, 'time delta must land on the caller session');
+        $this->assertSame(256, strlen($original->authKey));
+    }
+
+    public function test_live_telegram_exception_keeps_cached_connection(): void
     {
         [$clientSock, $serverSock] = $this->socketPair();
         $authKey = random_bytes(256);
@@ -196,6 +253,7 @@ class ClientLiveModeTest extends TestCase
         $this->assertNotFalse($pair);
         stream_set_timeout($pair[0], 5);
         stream_set_timeout($pair[1], 5);
+
         return $pair;
     }
 
@@ -219,6 +277,7 @@ class ClientLiveModeTest extends TestCase
             $conn,
             ((time() + 290) << 32) & ~3
         );
+
         return $conn;
     }
 
@@ -245,6 +304,7 @@ class ClientLiveModeTest extends TestCase
     private static function pinnedConn(EncryptedConnection $conn): EncryptedConnection
     {
         (new \ReflectionProperty(EncryptedConnection::class, 'sessionId'))->setValue($conn, 0x5E5510A1);
+
         return $conn;
     }
 
@@ -257,6 +317,7 @@ class ClientLiveModeTest extends TestCase
     private static function connOf(Client $client): mixed
     {
         $prop = new \ReflectionProperty(Client::class, 'conn');
+
         return $prop->getValue($client);
     }
 }
