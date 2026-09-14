@@ -34,6 +34,7 @@ use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\TeleframeMirrorCommand;
 use MeRezaRezaei\Teleframe\Laravel\Http\Middleware\VerifyMiniAppInitData;
 use MeRezaRezaei\Teleframe\Laravel\Realtime\UpdateStoredCentrifugoListener;
+use MeRezaRezaei\Teleframe\Laravel\Services\RoutingPeerResolver;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use MeRezaRezaei\Teleframe\Realtime\CentrifugoBridge;
 use MeRezaRezaei\Teleframe\Realtime\HttpCentrifugoBridge;
@@ -99,6 +100,10 @@ class TeleframeServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(Teleframe::class, static fn ($app): Teleframe => new Teleframe($app));
+        $this->app->singleton(RoutingPeerResolver::class, static fn ($app): RoutingPeerResolver => new RoutingPeerResolver(
+            $app->make('db')->connection(),
+        ));
+
 
         $this->app->singleton(\MeRezaRezaei\Teleframe\Vault\Vault::class);
 

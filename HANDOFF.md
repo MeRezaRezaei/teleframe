@@ -93,3 +93,17 @@ This repo merged two former projects into one package:
 - Seam tests: wire peerChannel 3/900 in the stored row AND the emitted model;
   inputPeerUser variant → NOT NULL blocks the row (no silent 0/0).
 - Gates: 1143 tests / 25960 assertions / 6 skipped, phpstan 0, smoke 0.
+
+---
+
+## Cycle 21 — behaviour→core link: `RoutingPeerResolver` (2026-09-14)
+
+**Verbatim promise closed:** *"the core is the telegram nf5 databae the rest is going to only make new tables and link their data to the nf 5 core then we can identify the exact set of data and how we should treat them just becuase they are connectd to the facts that telegram is giving us"* — the behaviour table `tg_update_routing` stores peers as `(peer_type, peer_id)` but had NO way to reach the core facts behind them.
+
+- **`src/Laravel/Services/RoutingPeerResolver.php`**: behaviour→core seam. `coreTable(int $peerType)` maps `PeerShapeTool` enum 1→`tf_users`, 2/3→`tf_chats` (TL ctors chat/chatForbidden/channel/channelForbidden live in tf_chats). `resolve(UpdateRoutingRule)` returns the linked core fact row by `(account_id, id)`, or `null` when the fact hasn't been ingested yet (settings may precede the fact; the mirror creates it on first update) or the peer type is unknown.
+- **Provider wiring** (`TeleframeServiceProvider`): `RoutingPeerResolver` singleton bound off the app DB connection — hosts can `app(RoutingPeerResolver::class)`. Exactly 5 lines added (import + singleton block) without disturbing the ship-dial golden string. Note: the format-on-save hook re-sorts imports and strips the concat spacing the `ShipDialGoldenTest` requires — edits to the provider must go through a formatter-proof apply (git-show base + perl insert + cp), not the edit tool.
+- **`tests/Laravel/Services/RoutingPeerResolverTest.php`** (4 tests / 14 assertions, Testbench against migrated mirror): user rule → `tf_users` fact; channel rule → `tf_chats` fact w/ title; rule without core fact → null, never throws; unknown peer_type → null.
+
+**Gates:** `composer verify` → **1147 tests / 25975 assertions / 6 skipped, phpstan clean, regeneration idempotent**; `php bin/standalone-smoke.php` → exit 0.
+
+**Commit:** (cycle 21) — pending message: "feat: behaviour tables link to the nf5 core through RoutingPeerResolver (cycle 21)"
