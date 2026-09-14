@@ -11,6 +11,7 @@ use MeRezaRezaei\Teleframe\Ingest\MirrorUpdateIngester;
 use MeRezaRezaei\Teleframe\Ingest\RoutingEventGateway;
 use MeRezaRezaei\Teleframe\Ingest\SelfOriginatedClassifier;
 use MeRezaRezaei\Teleframe\Ingest\UpdateRouter;
+use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
 use MeRezaRezaei\Teleframe\Laravel\Providers\TeleframeServiceProvider;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\Mirror\TfMessage;
 use MeRezaRezaei\Teleframe\Schema\Generator\TlParser;
@@ -23,8 +24,9 @@ use Orchestra\Testbench\TestCase as TestbenchTestCase;
 /**
  * MirrorUpdateIngester — the verbatim's daily loop end to end: one update
  * through decompose → write → classify → gated event, against the migrated
- * relational DB. Own messages (out=true) store silently; others-people
- * messages emit UpdateStored.
+ * relational DB. Every fact is stored (first half of truth); only peers
+ * the settings marked act_on emit UpdateStored (second half — the app
+ * watches for specific updates).
  */
 final class MirrorUpdateIngesterTest extends TestbenchTestCase
 {
@@ -134,10 +136,21 @@ final class MirrorUpdateIngesterTest extends TestbenchTestCase
         ]);
     }
 
-    public function test_others_message_stores_and_emits(): void
+    public function test_others_message_stores_and_emits_when_peer_marked_act_on(): void
     {
         $out = $this->migrateMirror();
         try {
+            $this->artisan('migrate', [
+                '--path' => dirname(__DIR__, 2).'/src/Laravel/Migrations/2026_09_14_000001_create_tg_update_routing_table.php',
+                '--realpath' => true,
+            ])->assertExitCode(0);
+            DB::table('tg_update_routing')->insert([
+                'account_id' => 42,
+                'peer_type' => 2,
+                'peer_id' => 900,
+                'mode' => UpdateRoutingRule::MODE_ACT_ON,
+            ]);
+
             $payload = [
                 '_' => 'message',
                 'id' => 1,
@@ -152,9 +165,33 @@ final class MirrorUpdateIngesterTest extends TestbenchTestCase
             self::assertSame(1, $result['inserted'], 'the fact is stored');
             self::assertEmpty($result['clues']);
             self::assertEmpty($result['fkClues']);
-            self::assertTrue($result['emitted'], 'others-people fact → app input (UpdateStored)');
+            self::assertTrue($result['emitted'], 'peer marked act_on in settings → app input (UpdateStored)');
             self::assertCount(1, $this->dispatched);
             self::assertInstanceOf(UpdateStored::class, $this->dispatched[0]);
+        } finally {
+            $this->rrmdir($out);
+        }
+    }
+
+    public function test_others_message_without_rule_stores_but_stays_silent(): void
+    {
+        $out = $this->migrateMirror();
+        try {
+            $payload = [
+                '_' => 'message',
+                'id' => 3,
+                'peer_id' => ['_type' => 2, '_id' => 901],
+                'date' => 1726000002,
+                'message' => 'unmarked peer',
+                'out' => false,
+            ];
+
+            $result = $this->ingester->ingest(DB::connection(), 42, $payload, 'tf_messages', $this->hydrateMessage());
+
+            self::assertSame(1, $result['inserted'], 'the fact IS stored (first half of truth)');
+            self::assertFalse($result['emitted'], 'NO event — nobody marked this peer act_on (verbatim default)');
+            self::assertCount(0, $this->dispatched);
+            self::assertSame(1, DB::table('tf_messages')->where('account_id', 42)->where('id', 3)->count());
         } finally {
             $this->rrmdir($out);
         }

@@ -56,10 +56,10 @@ final class UpdateRouterTest extends TestbenchTestCase
         ])->assertExitCode(0);
     }
 
-    public function test_unclassified_peer_defaults_to_act_on(): void
+    public function test_unclassified_peer_defaults_to_store_only(): void
     {
         $mode = $this->router->mode(42, 2, 900);
-        self::assertSame(UpdateRoutingRule::MODE_ACT_ON, $mode, 'no rule → safe default: act on');
+        self::assertSame(UpdateRoutingRule::MODE_STORE_ONLY, $mode, 'no rule → store the fact, never act (verbatim default)');
     }
 
     public function test_store_only_peer_skips_events(): void
@@ -89,21 +89,21 @@ final class UpdateRouterTest extends TestbenchTestCase
         ]);
 
         $mode = $this->router->mode(99, 2, 900);
-        self::assertSame(UpdateRoutingRule::MODE_ACT_ON, $mode, 'different account → unaffected');
+        self::assertSame(UpdateRoutingRule::MODE_STORE_ONLY, $mode, 'different account → unaffected');
     }
 
     public function test_classify_extracts_peer_from_payload(): void
     {
         $payload = ['peer_id' => ['_type' => 2, '_id' => 900]];
         $mode = $this->router->classify(42, $payload);
-        self::assertSame(UpdateRoutingRule::MODE_ACT_ON, $mode, 'no rule → act on');
+        self::assertSame(UpdateRoutingRule::MODE_STORE_ONLY, $mode, 'no rule → store the fact silently');
     }
 
     public function test_classify_with_channel_id_fallback(): void
     {
         $payload = ['channel_id' => 55];
         $mode = $this->router->classify(42, $payload);
-        self::assertSame(UpdateRoutingRule::MODE_ACT_ON, $mode, 'channel_id → resolved, no rule → act on');
+        self::assertSame(UpdateRoutingRule::MODE_STORE_ONLY, $mode, 'channel_id → resolved, no rule → store silently');
     }
 
     public function test_classify_store_only_channel(): void

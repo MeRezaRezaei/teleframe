@@ -107,6 +107,14 @@ final class RoutingEventGatewayTest extends TestbenchTestCase
 
     public function test_act_on_peer_emits_update_stored(): void
     {
+        $this->migrateSettings();
+        DB::table('tg_update_routing')->insert([
+            'account_id' => 42,
+            'peer_type' => 2,
+            'peer_id' => 900,
+            'mode' => UpdateRoutingRule::MODE_ACT_ON,
+        ]);
+
         $model = $this->makeModel();
         $payload = ['peer_id' => ['_type' => 2, '_id' => 900]];
 
@@ -117,6 +125,17 @@ final class RoutingEventGatewayTest extends TestbenchTestCase
         self::assertInstanceOf(UpdateStored::class, $this->dispatched[0]);
         self::assertSame(42, $this->dispatched[0]->accountId);
         self::assertSame($model, $this->dispatched[0]->model);
+    }
+
+    public function test_unmarked_peer_stores_but_stays_silent(): void
+    {
+        $model = $this->makeModel();
+        $payload = ['peer_id' => ['_type' => 2, '_id' => 777]];
+
+        $dispatched = $this->gateway->emit(42, $payload, $model);
+
+        self::assertFalse($dispatched, 'no rule → store the fact, no event (verbatim default)');
+        self::assertCount(0, $this->dispatched, 'nothing marked → nothing emitted; acting is opt-in via settings');
     }
 
     public function test_store_only_peer_is_persisted_silently(): void

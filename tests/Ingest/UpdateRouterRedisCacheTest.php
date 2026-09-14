@@ -129,9 +129,9 @@ final class UpdateRouterRedisCacheTest extends TestbenchTestCase
             'DB-only path unchanged when no cache is provided'
         );
         self::assertSame(
-            UpdateRoutingRule::MODE_ACT_ON,
+            UpdateRoutingRule::MODE_STORE_ONLY,
             $router->mode(42, 1, 1),
-            'unknown peer → act_on default'
+            'unknown peer → store_only default (verbatim)'
         );
     }
 }

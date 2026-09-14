@@ -12,9 +12,10 @@ use MeRezaRezaei\Teleframe\Laravel\Providers\TeleframeServiceProvider;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
 /**
- * SelfOriginatedClassifier — the verbatim's group-2 default: a message we
- * sent (out=true) is a reflection of our behaviour, NOT an app input by
- * default. An explicit per-peer rule is the escape hatch.
+ * SelfOriginatedClassifier — the verbatim's fact classification:
+ * group 1 (out=false, facts from other people) is stored only; group 2
+ * (out=true, our behaviour reflected) is ALSO not an app input by default.
+ * An explicit per-peer act_on rule is the escape hatch for both.
  */
 final class SelfOriginatedClassifierTest extends TestbenchTestCase
 {
@@ -72,7 +73,7 @@ final class SelfOriginatedClassifierTest extends TestbenchTestCase
         );
     }
 
-    public function test_other_people_message_defaults_to_act_on(): void
+    public function test_other_people_message_defaults_to_store_only(): void
     {
         $payload = [
             '_' => 'message',
@@ -83,9 +84,9 @@ final class SelfOriginatedClassifierTest extends TestbenchTestCase
         $mode = $this->classifier->classify(42, $payload);
 
         self::assertSame(
-            UpdateRoutingRule::MODE_ACT_ON,
+            UpdateRoutingRule::MODE_STORE_ONLY,
             $mode,
-            'facts from other people are out of our control — an app input'
+            'facts from other people are out of our control — store only (verbatim)'
         );
     }
 

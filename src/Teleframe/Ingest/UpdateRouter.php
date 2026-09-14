@@ -23,8 +23,8 @@ use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
  * The verbatim's "two Redis" path: DB is source of truth, Redis holds the
  * hot-reloaded cache. This service answers from the Redis-2 cache first
  * (real-time listen/ignore control without a DB hit per update) and falls
- * back to the DB source of truth on a cache miss. All decisions fall back
- * to act_on (safe default: unknown sources are not silently silenced).
+ * back to the DB source of truth on a cache miss. The default for every
+ * unmarked fact is store_only — acting is opt-in via the settings.
  */
 final class UpdateRouter
 {
@@ -68,6 +68,11 @@ final class UpdateRouter
     /**
      * Determine the routing mode for a (account, peer) pair.
      *
+     * The verbatim's default is store_only — the app "watches for some
+     * specific updates" and acts only on the peers the settings mark
+     * act_on; every other fact (from other people OR our own reflection)
+     * is stored but never re-emitted as an event (loop prevention).
+     *
      * @return string UpdateRoutingRule::MODE_ACT_ON | UpdateRoutingRule::MODE_STORE_ONLY
      */
     public function mode(int $accountId, int $peerType, int $peerId): string
@@ -87,12 +92,13 @@ final class UpdateRouter
                 ->orderByDesc('priority')
                 ->first();
         } catch (\Exception $e) {
-            // Table not yet migrated — safe default: act on everything.
-            return UpdateRoutingRule::MODE_ACT_ON;
+            // Table not yet migrated — no settings yet: store every fact
+            // silently (never act on a peer nobody marked).
+            return UpdateRoutingRule::MODE_STORE_ONLY;
         }
 
         if ($rule === null) {
-            return UpdateRoutingRule::MODE_ACT_ON;
+            return UpdateRoutingRule::MODE_STORE_ONLY;
         }
 
         return $rule->mode;
@@ -103,8 +109,9 @@ final class UpdateRouter
      *
      * The peer lives in the update payload under 'peer_id' (most update types)
      * or 'channel_id' (channel-specific updates). If no peer is extractable,
-     * the update defaults to act_on (safe default: unknown sources are not
-     * silently silenced).
+     * the update defaults to store_only (the verbatim: nothing is an app
+     * input unless the settings marked it — unknown sources are stored,
+     * never acted on).
      *
      * @param  array<string, mixed>  $payload  decoded TL update
      */
@@ -122,7 +129,7 @@ final class UpdateRouter
         }
 
         if ($peerType === 0) {
-            return UpdateRoutingRule::MODE_ACT_ON;
+            return UpdateRoutingRule::MODE_STORE_ONLY;
         }
 
         return $this->mode($accountId, $peerType, $peerId);
