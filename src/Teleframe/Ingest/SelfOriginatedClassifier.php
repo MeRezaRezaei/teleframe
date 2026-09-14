@@ -6,6 +6,7 @@ namespace MeRezaRezaei\Teleframe\Ingest;
 
 use MeRezaRezaei\Teleframe\Handler\Middleware\EchoEliminator;
 use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerShapeTool;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -56,8 +57,9 @@ final class SelfOriginatedClassifier
             return $this->router->classify($accountId, $payload);
         }
 
-        $peerType = (int) ($payload['peer_id']['_type'] ?? 0);
-        $peerId = (int) ($payload['peer_id']['_id'] ?? 0);
+        [$peerType, $peerId] = is_array($payload['peer_id'] ?? null)
+            ? PeerShapeTool::normalize($payload['peer_id'])
+            : [0, 0];
 
         // Escape hatch: an explicit per-peer rule wins; the default for
         // self-originated facts is store_only (no re-input loop).

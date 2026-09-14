@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Mirror;
 
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerShapeTool;
 use MeRezaRezaei\Teleframe\Schema\Mirror\Ddl\MirrorColumn;
 
 /**
@@ -235,9 +236,12 @@ final class MirrorFactDecomposer
 
     /**
      * Fill one half of a peer pair. A peer column pair ({field}_type + {field}_id,
-     * both peer=true) reads from the single payload field {field} as an array:
-     * ['_type'|'type' => int, '_id'|'id' => int]. Each half writes only its own
-     * column so the (account_id, key) row stays complete.
+     * both peer=true) reads from the single payload field {field}: the wire
+     * ctor object (peerUser/peerChat/peerChannel + their id field — the TL
+     * wire shape) OR an already canonical pair ['_type'|'type' => int,
+     * '_id'|'id' => int]. PeerShapeTool normalizes both to the canonical
+     * _type/_id pair (spec enum 1=user 2=chat 3=channel). Each half writes
+     * only its own column so the (account_id, key) row stays complete.
      *
      * @param  array<string, mixed>  $payload
      * @param  array<string, int|string|null>  $row
@@ -257,9 +261,9 @@ final class MirrorFactDecomposer
             return;
         }
 
-        $row[$column->name] = $isType
-            ? (int) ($value['_type'] ?? $value['type'] ?? 0)
-            : (int) ($value['_id'] ?? $value['id'] ?? 0);
+        [$type, $id] = PeerShapeTool::normalize($value);
+
+        $row[$column->name] = $isType ? $type : $id;
     }
 
     /** @param list<string> $clues */

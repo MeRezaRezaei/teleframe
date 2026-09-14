@@ -94,7 +94,7 @@ final class UpdateRouterTest extends TestbenchTestCase
 
     public function test_classify_extracts_peer_from_payload(): void
     {
-        $payload = ['peer_id' => ['_type' => 2, '_id' => 900]];
+        $payload = ['peer_id' => ['_' => 'peerChannel', 'channel_id' => 900]];
         $mode = $this->router->classify(42, $payload);
         self::assertSame(UpdateRoutingRule::MODE_STORE_ONLY, $mode, 'no rule → store the fact silently');
     }
@@ -111,7 +111,7 @@ final class UpdateRouterTest extends TestbenchTestCase
         $this->migrateSettings();
         DB::table('tg_update_routing')->insert([
             'account_id' => 42,
-            'peer_type' => 2,
+            'peer_type' => 3, // spec enum: 1=user 2=chat 3=channel
             'peer_id' => 55,
             'mode' => UpdateRoutingRule::MODE_STORE_ONLY,
         ]);

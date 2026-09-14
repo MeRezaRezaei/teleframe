@@ -7,6 +7,7 @@ namespace MeRezaRezaei\Teleframe\Ingest;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
 use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerShapeTool;
 
 /**
  * Update router — the verbatim's loop-prevention classification layer.
@@ -108,30 +109,43 @@ final class UpdateRouter
      * Classify a decoded TL update's peer and return the routing decision.
      *
      * The peer lives in the update payload under 'peer_id' (most update types)
-     * or 'channel_id' (channel-specific updates). If no peer is extractable,
-     * the update defaults to store_only (the verbatim: nothing is an app
-     * input unless the settings marked it — unknown sources are stored,
-     * never acted on).
+     * or 'channel_id' (channel-specific updates). PeerShapeTool normalizes
+     * the wire ctor object (peerUser/peerChat/peerChannel + id field) to the
+     * canonical _type/_id pair (spec enum 1=user 2=chat 3=channel). If no
+     * peer is extractable, the update defaults to store_only (the verbatim:
+     * nothing is an app input unless the settings marked it — unknown sources
+     * are stored, never acted on).
      *
      * @param  array<string, mixed>  $payload  decoded TL update
      */
     public function classify(int $accountId, array $payload): string
     {
-        $peerType = (int) ($payload['peer_id']['_type'] ?? 0);
-        $peerId = (int) ($payload['peer_id']['_id'] ?? 0);
-
-        if ($peerType === 0 && $peerId === 0) {
-            $channelId = (int) ($payload['channel_id'] ?? 0);
-            if ($channelId !== 0) {
-                $peerType = 2; // Telegram peer_type enum: 2 = channel
-                $peerId = $channelId;
-            }
-        }
+        [$peerType, $peerId] = $this->peerPair($payload);
 
         if ($peerType === 0) {
             return UpdateRoutingRule::MODE_STORE_ONLY;
         }
 
         return $this->mode($accountId, $peerType, $peerId);
+    }
+
+    /**
+     * Extract the canonical [peer_type, peer_id] pair from a decoded update.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array{0: int, 1: int}
+     */
+    private function peerPair(array $payload): array
+    {
+        $peer = $payload['peer_id'] ?? [];
+        if (is_array($peer)) {
+            [$type, $id] = PeerShapeTool::normalize($peer);
+            if ($type !== 0) {
+                return [$type, $id];
+            }
+        }
+
+        // channel-specific updates carry the peer at top level
+        return PeerShapeTool::normalize($payload);
     }
 }
