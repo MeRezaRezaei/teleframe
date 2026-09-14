@@ -115,6 +115,66 @@ final class MirrorFactDecomposerTest extends TestCase
         self::assertStringContainsString('peer', $result['clues'][0]);
     }
 
+    public function test_scalar_child_fact_becomes_child_row_linked_by_parent_key(): void
+    {
+        $payload = [
+            '_' => 'message',
+            'id' => 55,
+            'peer_id' => ['_type' => 2, '_id' => 900],
+            'message' => 'hello',
+            'from_boosts_applied' => 2,
+            'views' => 10,
+        ];
+
+        $result = $this->decomposer->decompose('tf_messages', 42, $payload);
+        $rows = $result['rows'];
+        $clues = $result['clues'];
+
+        $views = $this->firstRowFor($rows, 'tf_messages_views');
+        self::assertNotNull($views, 'child fact row must be produced');
+        self::assertSame(42, $views['account_id']);
+        self::assertSame(55, $views['id'], 'parent key travels into the child row (FK link)');
+        self::assertSame(10, $views['views']);
+
+        $fromBoosts = $this->firstRowFor($rows, 'tf_messages_from_boosts_applied');
+        self::assertNotNull($fromBoosts);
+        self::assertSame(2, $fromBoosts['from_boosts_applied']);
+        self::assertEmpty($clues);
+    }
+
+    public function test_absent_child_fact_produces_no_row(): void
+    {
+        $payload = ['_' => 'message', 'id' => 56, 'peer_id' => ['_type' => 2, '_id' => 901], 'message' => 'no children'];
+
+        $result = $this->decomposer->decompose('tf_messages', 42, $payload);
+
+        $views = $this->firstRowFor($result['rows'], 'tf_messages_views');
+        self::assertNull($views, 'row existence = fact existence: absent child fact → no row');
+    }
+
+    public function test_vector_child_produces_positioned_rows(): void
+    {
+        $payload = [
+            '_' => 'message',
+            'id' => 57,
+            'peer_id' => ['_type' => 2, '_id' => 902],
+            'entities' => [
+                ['_' => 'messageEntityBold', 'offset' => 0, 'length' => 4],
+                ['_' => 'messageEntityItalic', 'offset' => 4, 'length' => 2],
+            ],
+        ];
+
+        $result = $this->decomposer->decompose('tf_messages', 42, $payload);
+
+        $entityRows = array_values(array_filter(
+            $result['rows'],
+            fn (array $entry) => $entry['table'] === 'tf_message_entities' || str_starts_with($entry['table'], 'tf_messages_entities'),
+        ));
+        self::assertNotEmpty($entityRows, 'vector entities must decompose into positioned child rows');
+        self::assertSame(0, $entityRows[0]['row']['position']);
+        self::assertSame(1, $entityRows[1]['row']['position']);
+    }
+
     public function test_rows_carry_only_known_columns(): void
     {
         $payload = ['_' => 'user', 'id' => 5, 'first_name' => 'X', 'bogus_field' => 'never'];

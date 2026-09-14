@@ -98,7 +98,139 @@ final class MirrorFactDecomposer
             }
         }
 
-        return ['rows' => [['table' => $tfName, 'row' => $row]], 'clues' => $clues];
+        return $this->decomposeChildren($tfName, $accountId, $row, $payload, $clues);
+    }
+
+    /**
+     * Decompose a parent row's children into child-table rows.
+     *
+     * Every child table of a parent is keyed by (account_id, parent keyColumns
+     * [+ position]) — the FK that links the child back to its parent. A child
+     * row can only be placed when its parent key exists; a payload field that
+     * carries a nested object/vector becomes child rows; a missing payload
+     * field means the fact is absent (row existence = fact existence).
+     *
+     * @param  int  $accountId  scoping key for every produced row
+     * @param  array<string, int|string|null>  $parentRow  the already-decomposed parent row
+     * @return array{
+     *     rows: list<array{table: string, row: array<string, int|string|null>}>,
+     *     clues: list<string>,
+     * }
+     */
+    public function decomposeChildren(string $tfName, int $accountId, array $parentRow, array $payload, array $carriedClues = []): array
+    {
+        $table = $this->resolver->resolveAll([$tfName])[0];
+        $rows = [['table' => $tfName, 'row' => $parentRow]];
+        $clues = $carriedClues;
+
+        foreach ($table->children as $child) {
+            if ($child->parentTf !== $tfName) {
+                continue; // shared catalog node (tf_message_medias, tf_chats, ...): own context, own key
+            }
+
+            $plain = (string) substr($child->tfName, strlen($tfName) + 1);
+            $value = $payload[$plain] ?? null;
+
+            if ($value === null) {
+                continue; // absent fact → no row (row existence = fact existence)
+            }
+
+            if ($child->positioned) {
+                // Vector children: every element becomes one positioned row.
+                if (! is_array($value) || array_is_list($value) === false && ! $this->isVectorList($value)) {
+                    $clues[] = "{$child->tfName}: positioned child expects a list payload for '{$plain}'";
+
+                    continue;
+                }
+                $items = $this->vectorItems($value);
+                foreach ($items as $position => $item) {
+                    $rows[] = [
+                        'table' => $child->tfName,
+                        'row' => $this->childRow($child, $accountId, $parentRow, $position, $item, $clues),
+                    ];
+                }
+
+                continue;
+            }
+
+            $rows[] = [
+                'table' => $child->tfName,
+                'row' => $this->childRow($child, $accountId, $parentRow, null, is_array($value) ? $value : [$plain => $value], $clues),
+            ];
+        }
+
+        return ['rows' => $rows, 'clues' => $clues];
+    }
+
+    /**
+     * @param  int|null  $position  set for positioned (vector) children
+     * @param  array<string, mixed>  $item  nested payload for this child
+     * @param  list<string>  $clues
+     * @return array<string, int|string|null>
+     */
+    private function childRow(MirrorTable $child, int $accountId, array $parentRow, ?int $position, array $item, array &$clues): array
+    {
+        $row = ['account_id' => $accountId];
+        if ($child->constructor !== '') {
+            $row['constructor'] = (string) ($item['_'] ?? $child->constructor);
+        }
+
+        foreach ($child->columns as $column) {
+            if ($column->name === 'account_id') {
+                continue;
+            }
+            if ($column->name === 'position') {
+                $row[$column->name] = $position;
+
+                continue;
+            }
+            if ($column->peer) {
+                $this->fillPeerHalf($column, $item, $row, $clues, $child->tfName);
+
+                continue;
+            }
+            if (in_array($column->name, $child->keyColumns, true)) {
+                // Parent key travels into the child row — the FK that links them.
+                if (array_key_exists($column->name, $parentRow)) {
+                    $row[$column->name] = $parentRow[$column->name];
+                } else {
+                    $clues[] = "{$child->tfName}: parent key column '{$column->name}' missing from parent row — cannot link FK";
+                }
+
+                continue;
+            }
+            if ($column->name === 'constructor') {
+                continue;
+            }
+            if (in_array($column->name, $child->booleanColumns, true)) {
+                $row[$column->name] = (int) (bool) ($item[$column->name] ?? false);
+
+                continue;
+            }
+            if (array_key_exists($column->name, $item)) {
+                $row[$column->name] = $this->castValue($item[$column->name], $column, $clues, $child->tfName, $column->name);
+            }
+        }
+
+        return $row;
+    }
+
+    /** A structurally-valid vector payload: list of arrays, or associative with numeric keys. */
+    private function isVectorList(array $value): bool
+    {
+        foreach (array_keys($value) as $k) {
+            if (! is_int($k)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** @return list<mixed> */
+    private function vectorItems(array $value): array
+    {
+        return array_values($value);
     }
 
     /**
