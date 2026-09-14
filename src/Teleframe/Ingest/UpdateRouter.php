@@ -21,14 +21,16 @@ use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
  * - store_only: store the fact but skip event emission (notify/log channels).
  *
  * The verbatim's "two Redis" path: DB is source of truth, Redis holds the
- * hot-reloaded cache. This service queries the DB directly — the Redis
- * caching layer is the next cycle. The pure classification logic is
- * exercised here and does not depend on Redis availability.
+ * hot-reloaded cache. This service answers from the Redis-2 cache first
+ * (real-time listen/ignore control without a DB hit per update) and falls
+ * back to the DB source of truth on a cache miss. All decisions fall back
+ * to act_on (safe default: unknown sources are not silently silenced).
  */
 final class UpdateRouter
 {
     public function __construct(
         private readonly ConnectionInterface $db,
+        private readonly ?UpdateRoutingCache $cache = null,
     ) {}
 
     /**
@@ -36,9 +38,19 @@ final class UpdateRouter
      * explicit rule exists. Unlike mode(), this has NO default — callers
      * that need to distinguish "explicitly store_only" from "no rule"
      * (e.g. the self-originated escape hatch) use this.
+     *
+     * Redis-2 cache first, then DB source of truth (a cache miss queries
+     * the DB exactly as before — behavior identical without the cache).
      */
     public function explicitMode(int $accountId, int $peerType, int $peerId): ?string
     {
+        if ($this->cache !== null) {
+            $cached = $this->cache->mode($accountId, $peerType, $peerId);
+            if ($cached !== null) {
+                return $cached;
+            }
+        }
+
         try {
             $rule = $this->db->table('tg_update_routing')
                 ->where('account_id', $accountId)
@@ -60,6 +72,13 @@ final class UpdateRouter
      */
     public function mode(int $accountId, int $peerType, int $peerId): string
     {
+        if ($this->cache !== null) {
+            $cached = $this->cache->mode($accountId, $peerType, $peerId);
+            if ($cached !== null) {
+                return $cached;
+            }
+        }
+
         try {
             $rule = $this->db->table('tg_update_routing')
                 ->where('account_id', $accountId)
