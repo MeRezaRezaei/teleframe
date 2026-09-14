@@ -28,6 +28,7 @@ use MeRezaRezaei\Teleframe\Laravel\Console\BackfillCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\DaemonCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackupCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\IngestCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\IngestGateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\TeleframeMirrorCommand;
 use MeRezaRezaei\Teleframe\Laravel\Http\Middleware\VerifyMiniAppInitData;
@@ -268,6 +269,7 @@ class TeleframeServiceProvider extends ServiceProvider
                 RegenerateCommand::class,
                 TeleframeMirrorCommand::class,
                 IngestCommand::class,
+                IngestGateCommand::class,
                 BackfillCommand::class,
                 BackupCommand::class,
                 DaemonCommand::class,
