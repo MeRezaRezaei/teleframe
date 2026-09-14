@@ -24,6 +24,13 @@ use Illuminate\Database\Eloquent\Model;
  * observer copies the rule to Redis and fires an event so the running
  * daemon refreshes its in-memory routing table without restart.
  */
+/**
+ * @property int $account_id
+ * @property int $peer_type
+ * @property int $peer_id
+ * @property string $mode
+ * @property int $priority
+ */
 final class UpdateRoutingRule extends Model
 {
     protected $table = 'tg_update_routing';
