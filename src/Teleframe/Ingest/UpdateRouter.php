@@ -32,6 +32,28 @@ final class UpdateRouter
     ) {}
 
     /**
+     * The stored rule mode for a (account, peer) pair, or null when no
+     * explicit rule exists. Unlike mode(), this has NO default — callers
+     * that need to distinguish "explicitly store_only" from "no rule"
+     * (e.g. the self-originated escape hatch) use this.
+     */
+    public function explicitMode(int $accountId, int $peerType, int $peerId): ?string
+    {
+        try {
+            $rule = $this->db->table('tg_update_routing')
+                ->where('account_id', $accountId)
+                ->where('peer_type', $peerType)
+                ->where('peer_id', $peerId)
+                ->orderByDesc('priority')
+                ->first();
+        } catch (\Exception) {
+            return null;
+        }
+
+        return $rule === null ? null : $rule->mode;
+    }
+
+    /**
      * Determine the routing mode for a (account, peer) pair.
      *
      * @return string UpdateRoutingRule::MODE_ACT_ON | UpdateRoutingRule::MODE_STORE_ONLY
