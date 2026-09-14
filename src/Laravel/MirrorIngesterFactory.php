@@ -10,6 +10,7 @@ use MeRezaRezaei\Teleframe\Ingest\MirrorUpdateIngester;
 use MeRezaRezaei\Teleframe\Ingest\RoutingEventGateway;
 use MeRezaRezaei\Teleframe\Ingest\SelfOriginatedClassifier;
 use MeRezaRezaei\Teleframe\Ingest\UpdateRouter;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerShapeTool;
 use MeRezaRezaei\Teleframe\Schema\Generator\TlParser;
 use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorCatalog;
 use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorFactDecomposer;
@@ -55,7 +56,7 @@ final class MirrorIngesterFactory
             new RoutingEventGateway($router, $events),
         );
 
-        return static function (array $update, int $accountId) use ($ingester, $catalog): void {
+        return static function (array $update, int $accountId) use ($ingester, $catalog, $resolver): void {
             $ctor = (string) ($update['_'] ?? '');
             $entry = $ctor === '' ? null : $catalog->tableForCtor($ctor);
             if ($entry === null) {
@@ -63,19 +64,67 @@ final class MirrorIngesterFactory
             }
 
             $modelClass = self::modelClassFor($entry->tfName);
+            $table = $resolver->resolveAll([$entry->tfName])[0];
 
             $ingester->ingest(
                 DB::connection(),
                 $accountId,
                 $update,
                 $entry->tfName,
-                static function (array $payload) use ($modelClass, $accountId) {
+                static function (array $payload) use ($modelClass, $accountId, $table) {
                     unset($payload['_']); // ctor marker is not a column
+                    $payload['account_id'] = $accountId;
 
-                    return (new $modelClass)->forceFill($payload + ['account_id' => $accountId]);
+                    // Peer fields arrive on the wire as a single object
+                    // (peerChannel#channel_id …); the model stores the canonical
+                    // _type/_id halves. Expand so the hydrated model — the
+                    // verbatim's query surface — carries the same peer shape
+                    // the mirror rows do. Missing/unresolvable peers are left
+                    // unset (the decomposer already surfaced the clue).
+                    $payload = self::expandPeers($payload, $table->peerColumns);
+
+                    return (new $modelClass)->forceFill($payload);
                 },
             );
         };
+    }
+
+    /**
+     * Expand peer-field half names (peer_id_type / peer_id_id) from the
+     * single payload field they encode (peer_id). Accepts the wire ctor
+     * object and the canonical _type/_id pair alike (PeerShapeTool), and
+     * drops the source array field so no stray attribute reaches the model.
+     *
+     * @param  array<string, mixed>  $payload
+     * @param  list<array{kind: 'type'|'id', name: string}>  $peerColumns
+     * @return array<string, mixed>
+     */
+    private static function expandPeers(array $payload, array $peerColumns): array
+    {
+        foreach ($peerColumns as $half) {
+            if ($half['kind'] !== 'type') {
+                continue; // the id half rides along with its type twin
+            }
+            $name = $half['name'];
+            if (! str_ends_with($name, '_type')) {
+                continue;
+            }
+            $field = substr($name, 0, -5);
+            $value = $payload[$field] ?? null;
+            if (! is_array($value)) {
+                continue; // decomposer already clues; model stays unset
+            }
+
+            [$type, $id] = PeerShapeTool::normalize($value);
+            if ($type === 0 && $id === 0) {
+                continue; // unresolvable — do not hydrate 0/0 into the model
+            }
+            $payload[$name] = $type;
+            $payload[substr($name, 0, -5).'_id'] = $id;
+            unset($payload[$field]);
+        }
+
+        return $payload;
     }
 
     /**
