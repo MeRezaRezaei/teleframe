@@ -82,3 +82,14 @@ This repo merged two former projects into one package:
   "whatever foreign key fails gives us a clue to the wrong path of ingesting".
 - New test: test_unresolvable_wire_peer_is_clue_not_silent_zero (3 shapes).
 - Gates: 1140 tests / 25945 assertions / 6 skipped, phpstan 0, smoke 0.
+
+## Cycle 20c — wire peers reach hydate models canonically (2f70b2a9, 2026-09-14)
+- Production seam (MirrorIngesterFactory) hydrated models from the raw wire payload —
+  peerChannel stayed a wire array / unset, so UpdateStored models had NO canonical
+  peer_id_type/peer_id_id even though the DB row was right.
+- New MirrorIngesterFactory::expandPeers(): expands each peer column pair from its
+  single payload field (wire ctor or canonical pair via PeerShapeTool), drops the
+  source array, leaving unresolvable peers unset (row blocked by NOT NULL + clue).
+- Seam tests: wire peerChannel 3/900 in the stored row AND the emitted model;
+  inputPeerUser variant → NOT NULL blocks the row (no silent 0/0).
+- Gates: 1143 tests / 25960 assertions / 6 skipped, phpstan 0, smoke 0.
