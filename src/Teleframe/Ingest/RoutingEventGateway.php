@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Ingest;
 
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Database\Eloquent\Model;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
 use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 
 /**
  * Routing event gateway — the verbatim's "store the final truth, do NOT
@@ -38,12 +38,17 @@ final class RoutingEventGateway
      * Store + conditionally emit. Returns whether the UpdateStored event
      * was dispatched (false = store_only peer, persisted silently).
      *
+     * A pre-decided mode (e.g. from SelfOriginatedClassifier, which also
+     * knows the out-flag group-2 default) short-circuits the per-peer
+     * router lookup so the classifier and gateway can never disagree.
+     *
      * @param  array<string, mixed>  $payload  decoded TL update
-     * @param  TlAnchorModel  $model  the persisted root model
+     * @param  Model  $model  the persisted root model
+     * @param  string|null  $decidedMode  UpdateRoutingRule::MODE_* decision, or null to ask the router
      */
-    public function emit(int $accountId, array $payload, TlAnchorModel $model): bool
+    public function emit(int $accountId, array $payload, Model $model, ?string $decidedMode = null): bool
     {
-        $mode = $this->router->classify($accountId, $payload);
+        $mode = $decidedMode ?? $this->router->classify($accountId, $payload);
 
         if ($mode === UpdateRoutingRule::MODE_STORE_ONLY) {
             return false;
