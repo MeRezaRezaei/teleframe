@@ -197,3 +197,33 @@ every successful phone login blew up at the final insert with
 
 **Gates:** `composer verify` → **1153 tests / 26002 assertions / 6 skipped, phpstan clean**.
 **Commit:** 93160702 "fix(vault): ship user_id column for telegram_accounts (schema drift)".
+
+---
+
+## Cycle 24b — real-account seed for live testing (host app, 2026-09-14)
+
+The host app (`teleframe-app`, not a git repo) now carries a seeded REAL Telegram
+account so the package can be tested against live Telegram with a known-good
+credential pair, reproducible from `.env`.
+
+- **Recovered the user's real session**: the earlier successful login (telegram
+  user 1724372757, dc 1, label "ana", app "us" api_id 2421776) failed only at the
+  final INSERT (missing `user_id`, fixed in cycle 24). `scripts/seed-recover.php`
+  decrypts that session blob + the app's api_hash via a bare
+  `Illuminate\Encryption\Encrypter` (APP_KEY from `.env`, no kernel boot) and
+  registers them as `TF_SEED_*` vars — prints only confirmation, never secrets.
+- **Seeder** (`teleframe-app/database/seeders/DatabaseSeeder.php`): idempotent
+  `updateOrCreate` ONLY, zero deletes. Admin user (`TF_ADMIN_*`), app keyed by
+  api_id (`TF_SEED_APP_LABEL/API_ID/API_HASH`, owner-scoped), account keyed by
+  app_id+label (`TF_SEED_ACCOUNT_LABEL/SESSION/DC_ID/TELEGRAM_USER_ID`, type user,
+  owner-scoped). No `TF_SEED_*` set ⇒ no-op beyond the admin user.
+- **Live verification** (`scripts/verify-seed.php`, framework-free PDO + bare
+  Encrypter + `TeleframeClient::user()`): one harmless read-only
+  `help.getNearestDc` → `{"_":"nearestDc","country":"DE","this_dc":1,"nearest_dc":2}`
+  — proves the seeded session works end-to-end against real Telegram.
+- **Safety protocol for the user's ONLY real account** (committed): never
+  `account.deleteAccount`/`delete`/`resetAuthorization`/`auth.logOut` or delete-app
+  APIs; never `migrate:fresh`/`db:wipe`/truncate on the live DB; verification stays
+  read-only; any write test (send message) goes only to own saved messages after
+  explicit user approval. Session is encrypted at rest; raw value exists only in
+  the app's gitignored `.env`.
