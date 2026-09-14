@@ -47,19 +47,20 @@ final class RoutingSettingsObserver
     {
         // After delete the row is gone — refresh the account's cache map
         // from whatever rules remain (the deleted one disappears from the
-        // hot path), then emit the change event.
+        // hot path), then emit the change event carrying the rule snapshot
+        // (Eloquent keeps attributes after delete).
         $this->cache->refresh((int) $rule->account_id);
-        $this->emit((int) $rule->account_id, (int) $rule->peer_type, (int) $rule->peer_id, 'deleted');
+        $this->emit($rule, 'deleted');
     }
 
     private function sync(UpdateRoutingRule $rule): void
     {
         $this->cache->refresh((int) $rule->account_id);
-        $this->emit((int) $rule->account_id, (int) $rule->peer_type, (int) $rule->peer_id, 'changed');
+        $this->emit($rule, 'changed');
     }
 
-    private function emit(int $accountId, int $peerType, int $peerId, string $change): void
+    private function emit(UpdateRoutingRule $rule, string $change): void
     {
-        $this->events?->dispatch(new RoutingSettingsChanged($accountId, $peerType, $peerId, $change));
+        $this->events?->dispatch(new RoutingSettingsChanged($rule, $change));
     }
 }

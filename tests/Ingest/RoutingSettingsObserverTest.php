@@ -127,9 +127,10 @@ final class RoutingSettingsObserverTest extends TestbenchTestCase
         );
         self::assertCount(1, $this->dispatched);
         self::assertInstanceOf(RoutingSettingsChanged::class, $this->dispatched[0]);
-        self::assertSame(42, $this->dispatched[0]->accountId);
-        self::assertSame(2, $this->dispatched[0]->peerType);
-        self::assertSame(900, $this->dispatched[0]->peerId);
+        self::assertSame(42, $this->dispatched[0]->accountId());
+        self::assertSame(2, $this->dispatched[0]->peerType());
+        self::assertSame(900, $this->dispatched[0]->peerId());
+        self::assertSame($rule, $this->dispatched[0]->rule, 'the hydrated model snapshot — "data in models to query"');
         self::assertSame('changed', $this->dispatched[0]->change);
     }
 
