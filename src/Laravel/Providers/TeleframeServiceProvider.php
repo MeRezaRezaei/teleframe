@@ -36,6 +36,8 @@ use MeRezaRezaei\Teleframe\Laravel\Console\TeleframeMirrorCommand;
 use MeRezaRezaei\Teleframe\Laravel\Http\Middleware\VerifyMiniAppInitData;
 use MeRezaRezaei\Teleframe\Laravel\Realtime\UpdateStoredCentrifugoListener;
 use MeRezaRezaei\Teleframe\Laravel\Services\RoutingPeerResolver;
+use MeRezaRezaei\Teleframe\Ingest\RoutingSettingsObserver;
+use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
 use MeRezaRezaei\Teleframe\Realtime\CentrifugoBridge;
 use MeRezaRezaei\Teleframe\Realtime\HttpCentrifugoBridge;
@@ -104,6 +106,26 @@ class TeleframeServiceProvider extends ServiceProvider
         $this->app->singleton(RoutingPeerResolver::class, static fn ($app): RoutingPeerResolver => new RoutingPeerResolver(
             $app->make('db')->connection(),
         ));
+
+        // Routing settings observer (verbatim's settings-change event loop):
+        // best-effort Redis-2 cache — a host with no working bus redis still
+        // gets the observer (and the RoutingSettingsChanged event) and keeps
+        // DB-backed routing correct; only the hot-path cache refresh is
+        // skipped. Registered on the UpdateRoutingRule Eloquent lifecycle in
+        // boot() so a default install never serves stale routing rules.
+        $this->app->singleton(RoutingSettingsObserver::class, static function ($app): RoutingSettingsObserver {
+            $cache = null;
+            try {
+                $cache = new UpdateRoutingCache(
+                    $app->make(RedisConnectionContract::class),
+                    $app->make('db')->connection(),
+                );
+            } catch (\RuntimeException) {
+                $cache = null;
+            }
+
+            return new RoutingSettingsObserver($cache, $app->make(EventDispatcher::class));
+        });
 
 
         $this->app->singleton(\MeRezaRezaei\Teleframe\Vault\Vault::class);
@@ -287,6 +309,12 @@ class TeleframeServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // The verbatim's settings-change loop: tg_update_routing changes
+        // refresh the Redis-2 hot-reload cache and emit RoutingSettingsChanged.
+        // Registered for every app (web + console) so a default install never
+        // serves stale routing rules from the cache-first UpdateRouter.
+        UpdateRoutingRule::observe(RoutingSettingsObserver::class);
+
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../config/teleframe.php' => config_path('teleframe.php'),

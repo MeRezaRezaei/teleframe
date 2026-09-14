@@ -25,11 +25,18 @@ use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
  * (2) dispatches RoutingSettingsChanged — the defined event path other
  * parts of the app listen on to react to listen/ignore reconfiguration
  * in real time.
+ *
+ * The cache is nullable by design: a host with no working bus redis still
+ * gets the observer (and therefore the RoutingSettingsChanged event), it
+ * just skips the hot-path cache refresh — the DB-backed UpdateRouter
+ * cache-miss path keeps routing correct. This is what lets
+ * TeleframeServiceProvider register the observer unconditionally without
+ * making a settings write depend on redis being up.
  */
 final class RoutingSettingsObserver
 {
     public function __construct(
-        private readonly UpdateRoutingCache $cache,
+        private readonly ?UpdateRoutingCache $cache = null,
         private readonly ?Dispatcher $events = null,
     ) {}
 
@@ -49,13 +56,13 @@ final class RoutingSettingsObserver
         // from whatever rules remain (the deleted one disappears from the
         // hot path), then emit the change event carrying the rule snapshot
         // (Eloquent keeps attributes after delete).
-        $this->cache->refresh((int) $rule->account_id);
+        $this->cache?->refresh((int) $rule->account_id);
         $this->emit($rule, 'deleted');
     }
 
     private function sync(UpdateRoutingRule $rule): void
     {
-        $this->cache->refresh((int) $rule->account_id);
+        $this->cache?->refresh((int) $rule->account_id);
         $this->emit($rule, 'changed');
     }
 

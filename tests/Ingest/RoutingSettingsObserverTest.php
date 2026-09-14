@@ -6,6 +6,8 @@ namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use MeRezaRezaei\Teleframe\Bus\RedisConnectionContract;
 use MeRezaRezaei\Teleframe\Ingest\Events\RoutingSettingsChanged;
 use MeRezaRezaei\Teleframe\Ingest\RoutingSettingsObserver;
 use MeRezaRezaei\Teleframe\Ingest\UpdateRoutingCache;
@@ -166,5 +168,49 @@ final class RoutingSettingsObserverTest extends TestbenchTestCase
 
         self::assertSame('deleted', $this->dispatched[0]->change);
         self::assertCount(1, $this->dispatched);
+    }
+
+    /**
+     * The provider registers the observer on UpdateRoutingRule's Eloquent
+     * lifecycle (boot()) — so a plain save() must refresh Redis-2 and emit
+     * RoutingSettingsChanged with NO manual observer call. This is the
+     * auto-wiring the verbatim's "observer that listens to them" requires:
+     * without it a default install silently serves stale routing rules from
+     * the cache-first UpdateRouter.
+     */
+    public function test_provider_registration_auto_fires_observer_on_eloquent_save(): void
+    {
+        $this->migrateSettings();
+
+        // Point the bus redis contract at the in-memory double BEFORE the
+        // provider-wired observer singleton is first resolved, so the
+        // automatically-registered observer refreshes this cache.
+        $this->app->instance(RedisConnectionContract::class, $this->redis);
+
+        $captured = [];
+        Event::listen(RoutingSettingsChanged::class, function (RoutingSettingsChanged $event) use (&$captured): void {
+            $captured[] = $event;
+        });
+
+        // NO manual observer call — this save must be intercepted by the
+        // observer the provider registered on the model lifecycle.
+        $rule = new UpdateRoutingRule([
+            'account_id' => 7,
+            'peer_type' => 2,
+            'peer_id' => 555,
+            'mode' => UpdateRoutingRule::MODE_STORE_ONLY,
+            'priority' => 0,
+        ]);
+        $rule->save();
+
+        self::assertSame(
+            UpdateRoutingRule::MODE_STORE_ONLY,
+            $this->redis->hget(UpdateRoutingCache::KEY.':7', '2:555'),
+            'a real Eloquent save refreshed Redis-2 with no manual observer call'
+        );
+        self::assertCount(1, $captured, 'RoutingSettingsChanged fired from the registered lifecycle hook');
+        self::assertSame(7, $captured[0]->accountId());
+        self::assertSame(2, $captured[0]->peerType());
+        self::assertSame(555, $captured[0]->peerId());
     }
 }
