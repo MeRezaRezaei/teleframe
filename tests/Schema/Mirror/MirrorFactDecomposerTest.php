@@ -187,6 +187,31 @@ final class MirrorFactDecomposerTest extends TestCase
         self::assertArrayNotHasKey('first_name', $userRow, 'unmirrored columns are dropped, not stored');
     }
 
+    public function test_unresolvable_wire_peer_is_clue_not_silent_zero(): void
+    {
+        // The wire can hand us a peer ctor the mirror cannot place (a field
+        // variant, an empty object, a bare int). The verbatim: whatever foreign
+        // key fails gives us a clue to the wrong path of ingesting. Writing
+        // peer_type=0/peer_id=0 would be the WRONG path made silent — it must
+        // surface as an ingest clue instead.
+        foreach ([
+            ['_' => 'inputPeerUser', 'user_id' => 900], // field variant, not a Fact-side ctor
+            [],
+            ['channel_id' => 0],
+        ] as $badPeer) {
+            $payload = ['_' => 'dialog', 'peer' => $badPeer, 'top_message' => 3];
+
+            $result = $this->decomposer->decompose('tf_dialogs', 42, $payload);
+            $dialogRow = $this->firstRowFor($result['rows'], 'tf_dialogs');
+
+            self::assertNotEmpty($result['clues'], 'unresolvable peer must be an ingest clue');
+            self::assertStringContainsString('peer', $result['clues'][0]);
+            self::assertNotNull($dialogRow);
+            self::assertSame(0, $dialogRow['peer_type'] ?? 0, 'no silent 0/0 — peer halves stay unset');
+            self::assertArrayNotHasKey('peer_id', $dialogRow, 'no silent peer_id=0 in the mirror');
+        }
+    }
+
     /** @return list<array{table:string, row:array<string, mixed>}> */
     private function firstRowFor(array $rows, string $tfName): ?array
     {

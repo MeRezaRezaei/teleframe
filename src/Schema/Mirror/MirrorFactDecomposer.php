@@ -263,6 +263,18 @@ final class MirrorFactDecomposer
 
         [$type, $id] = PeerShapeTool::normalize($value);
 
+        // Unresolvable peers surface as an ingest clue (one per pair, from the
+        // type half) — the "FK failed → wrong ingest path" signal — instead of
+        // silently writing 0/0 into the mirror. Peer ids are never 0 (PeerIdTool
+        // ranges: user > 0, chat < 0, channel << 0).
+        if ($type === 0 || $id === 0) {
+            if ($isType) {
+                $clues[] = "{$tfName}: peer '{$field}' not resolvable to a canonical peer — cannot place the fact";
+            }
+
+            return;
+        }
+
         $row[$column->name] = $isType ? $type : $id;
     }
 
