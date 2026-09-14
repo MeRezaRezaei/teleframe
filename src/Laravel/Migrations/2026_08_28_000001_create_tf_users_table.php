@@ -18,8 +18,8 @@ return new class extends Migration
             $table->bigInteger('access_hash')->nullable();
             $table->text('first_name')->nullable();
             $table->text('last_name')->nullable();
-            $table->text('username')->nullable();
-            $table->text('phone')->nullable();
+            $table->string('username', 191)->nullable();
+            $table->string('phone', 32)->nullable();
             $table->boolean('is_bot')->default(false);
             $table->boolean('is_self')->default(false);
             $table->boolean('is_contact')->default(false);
@@ -30,8 +30,8 @@ return new class extends Migration
             $table->jsonb('tl_data');
             $table->timestamps();
             $table->primary(['id', 'account_id']);
-            $table->index('username', 'ix_tf_users_username_partial')->where('username');
-            $table->index('phone', 'ix_tf_users_phone_partial')->where('phone');
+            $table->index('username', 'ix_tf_users_username');
+            $table->index('phone', 'ix_tf_users_phone');
             $table->index('account_id', 'ix_tf_users_account_id');
         });
     }

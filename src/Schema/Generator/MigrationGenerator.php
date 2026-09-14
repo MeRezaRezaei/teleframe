@@ -22,6 +22,7 @@ final class MigrationGenerator
 
     /** @var array<string, string> table => migration filename */
     private array $tableMap = [];
+
     private string $currentFile = '';
 
     /**
@@ -34,18 +35,18 @@ final class MigrationGenerator
      * @var array<string, string>
      */
     private const DOMAIN_BUILDERS = [
-        'users'                 => 'ddlUsers',
-        'chats'                 => 'ddlChats',
-        'channels'              => 'ddlChannels',
-        'messages'              => 'ddlMessages',
-        'dialogs'               => 'ddlDialogs',
-        'updates'               => 'ddlUpdates',
-        'documents'             => 'ddlDocuments',
-        'photos'                => 'ddlPhotos',
-        'sticker_sets'          => 'ddlStickerSets',
-        'stories'               => 'ddlStories',
-        'wallpapers'            => 'ddlWallpapers',
-        'channel_participants'  => 'ddlChannelParticipants',
+        'users' => 'ddlUsers',
+        'chats' => 'ddlChats',
+        'channels' => 'ddlChannels',
+        'messages' => 'ddlMessages',
+        'dialogs' => 'ddlDialogs',
+        'updates' => 'ddlUpdates',
+        'documents' => 'ddlDocuments',
+        'photos' => 'ddlPhotos',
+        'sticker_sets' => 'ddlStickerSets',
+        'stories' => 'ddlStories',
+        'wallpapers' => 'ddlWallpapers',
+        'channel_participants' => 'ddlChannelParticipants',
     ];
 
     /** @return array<string,string> filename => content */
@@ -88,7 +89,7 @@ final class MigrationGenerator
         foreach ($lines as $line) {
             $up[] = $line;
         }
-        $up[] = "});";
+        $up[] = '});';
         $down[] = "Schema::dropIfExists('{$table}');";
 
         return CodeWriter::migrationFile($up, array_reverse($down));
@@ -106,8 +107,8 @@ final class MigrationGenerator
             "    \$table->bigInteger('access_hash')->nullable();",
             "    \$table->text('first_name')->nullable();",
             "    \$table->text('last_name')->nullable();",
-            "    \$table->text('username')->nullable();",
-            "    \$table->text('phone')->nullable();",
+            "    \$table->string('username', 191)->nullable();",
+            "    \$table->string('phone', 32)->nullable();",
             "    \$table->boolean('is_bot')->default(false);",
             "    \$table->boolean('is_self')->default(false);",
             "    \$table->boolean('is_contact')->default(false);",
@@ -116,10 +117,10 @@ final class MigrationGenerator
             "    \$table->bigInteger('photo_id')->nullable();",
             "    \$table->text('status_type')->nullable();",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->primary(['id', 'account_id']);",
-            "    \$table->index('username', 'ix_tf_users_username_partial')->where('username');",
-            "    \$table->index('phone', 'ix_tf_users_phone_partial')->where('phone');",
+            "    \$table->index('username', 'ix_tf_users_username');",
+            "    \$table->index('phone', 'ix_tf_users_phone');",
             "    \$table->index('account_id', 'ix_tf_users_account_id');",
         ];
     }
@@ -138,7 +139,7 @@ final class MigrationGenerator
             "    \$table->boolean('is_deactivated')->default(false);",
             "    \$table->boolean('is_left')->default(false);",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->primary(['id', 'account_id']);",
             "    \$table->index('account_id', 'ix_tf_chats_account_id');",
         ];
@@ -153,7 +154,7 @@ final class MigrationGenerator
             "    \$table->bigInteger('account_id');",
             "    \$table->bigInteger('access_hash')->nullable();",
             "    \$table->text('title')->nullable();",
-            "    \$table->text('username')->nullable();",
+            "    \$table->string('username', 191)->nullable();",
             "    \$table->integer('date')->nullable();",
             "    \$table->integer('participants_count')->nullable();",
             "    \$table->boolean('is_broadcast')->default(false);",
@@ -164,9 +165,9 @@ final class MigrationGenerator
             "    \$table->boolean('is_forum')->default(false);",
             "    \$table->text('restriction_reason')->nullable();",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->primary(['id', 'account_id']);",
-            "    \$table->index('username', 'ix_tf_channels_username_partial')->where('username');",
+            "    \$table->index('username', 'ix_tf_channels_username');",
             "    \$table->index('account_id', 'ix_tf_channels_account_id');",
         ];
     }
@@ -191,10 +192,10 @@ final class MigrationGenerator
             "    \$table->text('media_type')->nullable();",
             "    \$table->integer('reply_to_msg_id')->nullable();",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->unique(['peer_id', 'message_id', 'account_id'], 'ux_tf_messages_scope');",
             "    \$table->index(['peer_id', 'date'], 'ix_tf_messages_peer_date');",
-            "    \$table->index('from_id', 'ix_tf_messages_from_id')->where('from_id');",
+            "    \$table->index('from_id', 'ix_tf_messages_from_id');",
             "    \$table->index('account_id', 'ix_tf_messages_account_id');",
         ];
     }
@@ -215,7 +216,7 @@ final class MigrationGenerator
             "    \$table->integer('folder_id')->default(0);",
             "    \$table->integer('pts')->nullable();",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->unique(['peer_id', 'account_id'], 'ux_tf_dialogs_scope');",
             "    \$table->index('account_id', 'ix_tf_dialogs_account_id');",
         ];
@@ -236,7 +237,7 @@ final class MigrationGenerator
             "    \$table->integer('pts_count')->nullable();",
             "    \$table->integer('date')->nullable();",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->index('account_id', 'ix_tf_updates_account_id');",
             "    \$table->index(['peer_id', 'account_id'], 'ix_tf_updates_peer_account');",
         ];
@@ -256,7 +257,7 @@ final class MigrationGenerator
             "    \$table->integer('dc_id')->nullable();",
             "    \$table->binary('file_reference')->nullable();",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->primary(['id', 'account_id']);",
             "    \$table->index('account_id', 'ix_tf_documents_account_id');",
         ];
@@ -275,7 +276,7 @@ final class MigrationGenerator
             "    \$table->boolean('has_stickers')->default(false);",
             "    \$table->binary('file_reference')->nullable();",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->primary(['id', 'account_id']);",
             "    \$table->index('account_id', 'ix_tf_photos_account_id');",
         ];
@@ -294,7 +295,7 @@ final class MigrationGenerator
             "    \$table->integer('count')->nullable();",
             "    \$table->jsonb('hashes')->nullable();",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->primary(['id', 'account_id']);",
             "    \$table->index('account_id', 'ix_tf_sticker_sets_account_id');",
         ];
@@ -314,7 +315,7 @@ final class MigrationGenerator
             "    \$table->integer('expire_date')->nullable();",
             "    \$table->text('caption')->nullable();",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->unique(['peer_id', 'story_id', 'account_id'], 'ux_tf_stories_scope');",
             "    \$table->index('account_id', 'ix_tf_stories_account_id');",
         ];
@@ -332,7 +333,7 @@ final class MigrationGenerator
             "    \$table->text('slug')->nullable();",
             "    \$table->bigInteger('document_id')->nullable();",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->primary(['id', 'account_id']);",
             "    \$table->index('account_id', 'ix_tf_wallpapers_account_id');",
         ];
@@ -350,7 +351,7 @@ final class MigrationGenerator
             "    \$table->bigInteger('account_id');",
             "    \$table->integer('date')->nullable();",
             "    \$table->jsonb('tl_data');",
-            "    \$table->timestamps();",
+            '    $table->timestamps();',
             "    \$table->unique(['channel_id', 'user_id', 'account_id'], 'ux_tf_ch_participants_scope');",
             "    \$table->index('account_id', 'ix_tf_ch_participants_account_id');",
         ];
@@ -369,15 +370,21 @@ final class MigrationGenerator
             if ($ret === 'X' || str_contains($ret, '<') || $ret === 'Vector t') {
                 continue;
             }
-            $route = 'tl_route_' . Naming::snake($method->name);
+            $route = 'tl_route_'.Naming::snake($method->name);
             $this->tableMap[$route] = $this->currentFile;
+            // MySQL identifiers cap at 64 chars; derive a deterministic short
+            // unique-index name (hash suffix keeps it collision-free) so the
+            // longest TL method names still migrate on MySQL.
+            $routeUx = 'ux_'.substr($route, 0, 50).'_'.substr(md5($route), 0, 4);
             $up[] = "Schema::create('{$route}', function (Blueprint \$table) {";
             $up[] = "    \$table->bigIncrements('id');";
-            $up[] = "    \$table->string('route_id', 36)->unique();";
-            $up[] = "    \$table->timestamps();";
-            $up[] = "});";
+            $up[] = "    \$table->string('route_id', 36);";
+            $up[] = "    \$table->unique('route_id', '{$routeUx}');";
+            $up[] = '    $table->timestamps();';
+            $up[] = '});';
             $down[] = "Schema::dropIfExists('{$route}');";
         }
+
         return CodeWriter::migrationFile($up, array_reverse($down));
     }
 }

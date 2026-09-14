@@ -17,7 +17,7 @@ return new class extends Migration
             $table->bigInteger('account_id');
             $table->bigInteger('access_hash')->nullable();
             $table->text('title')->nullable();
-            $table->text('username')->nullable();
+            $table->string('username', 191)->nullable();
             $table->integer('date')->nullable();
             $table->integer('participants_count')->nullable();
             $table->boolean('is_broadcast')->default(false);
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->jsonb('tl_data');
             $table->timestamps();
             $table->primary(['id', 'account_id']);
-            $table->index('username', 'ix_tf_channels_username_partial')->where('username');
+            $table->index('username', 'ix_tf_channels_username');
             $table->index('account_id', 'ix_tf_channels_account_id');
         });
     }

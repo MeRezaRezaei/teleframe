@@ -31,7 +31,7 @@ return new class extends Migration
             $table->timestamps();
             $table->unique(['peer_id', 'message_id', 'account_id'], 'ux_tf_messages_scope');
             $table->index(['peer_id', 'date'], 'ix_tf_messages_peer_date');
-            $table->index('from_id', 'ix_tf_messages_from_id')->where('from_id');
+            $table->index('from_id', 'ix_tf_messages_from_id');
             $table->index('account_id', 'ix_tf_messages_account_id');
         });
     }
