@@ -15,6 +15,7 @@ use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorCatalog;
 use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorFactDecomposer;
 use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorFactWriter;
 use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorTableResolver;
+use Psr\SimpleCache\CacheInterface;
 
 /**
  * Default mirror-ingester factory — the daemon's daily observer, wired.
@@ -37,7 +38,7 @@ final class MirrorIngesterFactory
     /** @var array<string, string>|null tf table => model FQCN, built once */
     private static ?array $modelIndex = null;
 
-    public static function build(?Dispatcher $events = null): callable
+    public static function build(?Dispatcher $events = null, ?CacheInterface $sends = null): callable
     {
         $tl = base_path('schema/sources/TL_telegram_v227.tl');
         $catalogPath = base_path('docs/superpowers/specs/2026-09-11-telegram-mirror-catalog.json');
@@ -50,7 +51,7 @@ final class MirrorIngesterFactory
         $ingester = new MirrorUpdateIngester(
             new MirrorFactDecomposer($resolver, $catalog),
             new MirrorFactWriter,
-            new SelfOriginatedClassifier($router),
+            new SelfOriginatedClassifier($router, $sends),
             new RoutingEventGateway($router, $events),
         );
 

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Ingest;
 
+use MeRezaRezaei\Teleframe\Handler\Middleware\EchoEliminator;
 use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
+use Psr\SimpleCache\CacheInterface;
 
 /**
  * Self-originated fact classifier — the verbatim's group-2 default.
@@ -15,21 +17,26 @@ use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
  * obvilusly its not going to be an input to our apps by default i asy by
  * default since some times we need to act on something special".
  *
- * When Telegram reports a message with `out` set, that message is a
- * reflection of OUR behaviour — handing it to the app as a NEW input would
- * be the update loop (each send → inbound event → maybe another send →
- * flood wait). Default: store_only.
+ * Two self-origination signals, strongest first:
  *
- * By default [ESCAPE HATCH]: a per-peer routing rule (tg_update_routing)
- * that explicitly marks the peer act_on flips this fact back to an input —
- * the "sometimes we need to act on something special" case. Chain-effect
- * rules (e.g. the backup timeout: absence in time, not message presence)
- * are future work and live outside this classifier.
+ * 1. The send-time registry (Q2d PSR-16 cache written by the facade's send
+ *    path — random_id/msg_id). Telethon's own docs flag the `out` flag as
+ *    NOT reliable in broadcast channels, so a registry match is the
+ *    authoritative "we sent this" evidence. Matching an own send marks the
+ *    fact a reflection of our behaviour → store_only (no re-input loop).
+ *
+ * 2. The `out` flag — Telegram's own marker, reliable outside broadcast
+ *    channels.
+ *
+ * Escapes (per-peer routing rules) apply to both signals: an in-registry
+ * or out-flagged fact whose peer is explicitly act_on becomes an input —
+ * the "sometimes we need to act on something special" / chain-effect case.
  */
 final class SelfOriginatedClassifier
 {
     public function __construct(
         private readonly UpdateRouter $router,
+        private readonly ?CacheInterface $sends = null,
     ) {}
 
     /**
@@ -40,10 +47,12 @@ final class SelfOriginatedClassifier
      */
     public function classify(int $accountId, array $payload): string
     {
-        $isOwn = (bool) ($payload['out'] ?? false);
+        $isOwn = $this->registryMatchesOwnSend($accountId, $payload)
+            || (bool) ($payload['out'] ?? false);
+
         if (! $isOwn) {
             // Facts from other people: completely out of our control — route
-            // by the peer rule (default act_on).
+            // by the peer rule (default store_only; verbatim 2026-09-14).
             return $this->router->classify($accountId, $payload);
         }
 
@@ -60,5 +69,35 @@ final class SelfOriginatedClassifier
         }
 
         return UpdateRoutingRule::MODE_STORE_ONLY;
+    }
+
+    /**
+     * Strong self-origination evidence: the facade's send-time registry has
+     * an entry for this account with this update's random_id or msg_id — we
+     * literally just sent it. Reliable where `out` is not (broadcast
+     * channels).
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function registryMatchesOwnSend(int $accountId, array $payload): bool
+    {
+        if ($this->sends === null) {
+            return false;
+        }
+
+        foreach (['random_id', 'msg_id'] as $field) {
+            $value = (string) ($payload[$field] ?? '');
+            if ($value === '') {
+                continue;
+            }
+            $record = $this->sends->get(
+                EchoEliminator::KEY.':'.$accountId.':'.$value
+            );
+            if (is_array($record)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

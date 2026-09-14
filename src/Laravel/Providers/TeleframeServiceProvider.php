@@ -185,7 +185,14 @@ class TeleframeServiceProvider extends ServiceProvider
         // themselves; the default wires the full pipeline (decompose →
         // write → classify → gated UpdateStored) from committed artifacts.
         $this->app->bind(DaemonCommand::MIRROR_INGESTER_KEY, static function ($app): callable {
-            return MirrorIngesterFactory::build($app->make(\Illuminate\Contracts\Events\Dispatcher::class));
+            $sends = $app->bound(CacheInterface::class)
+                ? $app->make(CacheInterface::class)
+                : null;
+
+            return MirrorIngesterFactory::build(
+                $app->make(\Illuminate\Contracts\Events\Dispatcher::class),
+                $sends,
+            );
         });
 
         // Backup vault factory (Phase 2, Task 6): callable(string $setId):
