@@ -38,7 +38,6 @@ use MeRezaRezaei\Teleframe\Laravel\Console\PollCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\SchemaAuditCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\SchemaUpdateCommand;
-use MeRezaRezaei\Teleframe\Laravel\Console\TeleframeMirrorCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\VaultAddAccountCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\VaultAddAppCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\VaultListCommand;
@@ -355,7 +354,6 @@ class TeleframeServiceProvider extends ServiceProvider
                 VaultListCommand::class,
                 VaultUseDefaultCommand::class,
                 RegenerateCommand::class,
-                TeleframeMirrorCommand::class,
                 IngestCommand::class,
                 IngestGateCommand::class,
                 BackfillCommand::class,

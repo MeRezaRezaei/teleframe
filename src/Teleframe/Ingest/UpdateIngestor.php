@@ -113,25 +113,22 @@ final class UpdateIngestor
     }
 
     /**
-     * Migration paths for the ingest surface: shipped domain table migrations.
+     * Migration paths for the ingest surface: hand-authored curated `tf_*`
+     * domain table migrations.
+     *
+     * The auto-generated mirror surface (and its schema-manifest.json) was
+     * purged (2026-09-09 owner verbatim ruling): generation is banned, so
+     * the manifest can no longer be a source of truth. The seam now matches
+     * the curated dial's own `create_tf_*.php` files — the same "stub
+     * prefix" split the manifest used (`tf_` vs `tl_route_` internals), so
+     * hand-authored updates-domain files are picked up and app-owned
+     * migrations (telegram_accounts, tg_update_routing, ...) are not.
      *
      * @return list<string>
      */
     public static function entityMigrationPaths(): array
     {
-        $root = dirname(__DIR__, 3);
-        $manifest = json_decode(
-            (string) file_get_contents($root . '/src/Schema/Generated/schema-manifest.json'),
-            true,
-        );
-        $tables = is_array($manifest) ? ($manifest['tables'] ?? []) : [];
-
-        $paths = [];
-        foreach ($tables as $table => $file) {
-            if (str_starts_with($table, 'tf_') && !str_starts_with($table, 'tl_route_')) {
-                $paths[] = $root . '/src/Laravel/Migrations/' . $file;
-            }
-        }
+        $paths = glob(dirname(__DIR__, 2) . '/Laravel/Migrations/*create_tf_*.php') ?: [];
         sort($paths);
         return array_values(array_unique($paths));
     }
