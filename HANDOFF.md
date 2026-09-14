@@ -173,3 +173,27 @@ The blind trailing-'s' strip in the old `className()` produced identical class n
 **Skeptic certification:** independent goal-verify agent, verdict **PROVEN** after this fix (prior verdict NOT PROVEN on the dead-observer gap).
 
 **Gates:** `composer verify` -> 1149 tests / 25986 assertions / 6 skipped, phpstan no errors, regeneration 247/247; `php bin/standalone-smoke.php` -> exit 0.
+
+---
+
+## Cycle 24 — `telegram_accounts.user_id` schema drift (93160702, 2026-09-14)
+
+**Bug:** the `2026_09_09_000201_create_telegram_accounts_table` migration never shipped the
+`user_id` column, but `TelegramAccount` (fillable + `int` cast), the login `finalize()`
+controller, and `vault:add-account` / `vault:list` / `vault:use-default` all read/write it —
+every successful phone login blew up at the final insert with
+`SQLSTATE[42S22] Unknown column 'user_id' in 'field list'`.
+
+- **Create migration** (`2026_09_09_000201`): added nullable `bigInteger('user_id')` after
+  `type` — fresh installs now have the column from the start.
+- **New additive migration** `2026_09_14_000000_add_user_id_to_telegram_accounts_table.php`
+  (idempotent `hasColumn` guard): existing DBs (where the create migration already ran) get
+  the column via `php artisan migrate`; fresh installs no-op.
+- **Ship-dial allow-lists updated** so `bin/regenerate --ship` (which purges
+  `src/Laravel/Migrations/` and rebuilds it) preserves the new file:
+  `SchemaRegenerator::APP_OWNED_MIGRATIONS` + `ShipDialGoldenTest::APP_OWNED_MIGRATIONS`.
+- Applied in the live host app (`teleframe-app`): `php artisan migrate --force` → column
+  present; user's next login insert succeeds.
+
+**Gates:** `composer verify` → **1153 tests / 26002 assertions / 6 skipped, phpstan clean**.
+**Commit:** 93160702 "fix(vault): ship user_id column for telegram_accounts (schema drift)".
