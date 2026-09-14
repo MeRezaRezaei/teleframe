@@ -37,6 +37,7 @@ final class ShipDialGoldenTest extends TestCase
         '2026_09_09_000200_create_telegram_apps_table.php',
         '2026_09_09_000201_create_telegram_accounts_table.php',
         '2026_09_14_000001_create_tg_update_routing_table.php',
+        '2026_09_14_000000_add_user_id_to_telegram_accounts_table.php',
     ];
 
     public function test_shipped_subset_count(): void

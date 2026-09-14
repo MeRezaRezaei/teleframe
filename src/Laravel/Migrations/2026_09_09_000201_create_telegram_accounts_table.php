@@ -25,6 +25,7 @@ return new class extends Migration
             $table->foreignId('app_id')->nullable()->constrained('telegram_apps')->nullOnDelete();
             $table->string('label', 255);
             $table->string('type', 16);
+            $table->bigInteger('user_id')->nullable();
             $table->string('owner_type', 255)->nullable();
             $table->bigInteger('owner_id')->nullable();
             $table->text('session')->nullable();
