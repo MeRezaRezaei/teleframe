@@ -117,6 +117,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Dashboard (Horizon-style web UI, opt-in via Teleframe::routes())
+    |--------------------------------------------------------------------------
+    | Register the package-owned dashboard routes from your app's service
+    | provider:
+    |
+    |     use MeRezaRezaei\Teleframe\Laravel\Facades\Teleframe;
+    |     Teleframe::routes(); // GET /teleframe + JSON API under it
+    |
+    | - prefix: route prefix for the dashboard index + JSON API group.
+    | - middleware: guard protecting the whole group. Default ['web', 'auth']
+    |   = the HOST's own login protects the dashboard (auth is host business,
+    |   same as Laravel Horizon). Token-based hosts may pass
+    |   Teleframe::routes(middleware: ['auth:sanctum']).
+    */
+    'dashboard' => [
+        'prefix' => env('TELEFRAME_DASHBOARD_PREFIX', 'teleframe'),
+        'middleware' => ['web', 'auth'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Schema Mirror (regeneration sources + curated migration dial)
     |--------------------------------------------------------------------------
     */

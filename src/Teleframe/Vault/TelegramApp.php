@@ -7,6 +7,7 @@ namespace MeRezaRezaei\Teleframe\Vault;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Credential vault: one row per my.telegram.org application.
@@ -22,6 +23,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int|null $owner_id
  * @property int $api_id
  * @property string $api_hash
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 final class TelegramApp extends Model
 {

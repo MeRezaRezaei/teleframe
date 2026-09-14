@@ -5,10 +5,17 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Laravel\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
 use MeRezaRezaei\Teleframe\Bot\Services\BotClient;
-use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
+use MeRezaRezaei\Teleframe\Core\Entities\EntityParser;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\Passport\PassportDecryptor;
 use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
+use MeRezaRezaei\Teleframe\Core\Types\InlineKeyboard;
+use MeRezaRezaei\Teleframe\Core\Types\InputMedia;
+use MeRezaRezaei\Teleframe\Core\Types\InputPeer;
+use MeRezaRezaei\Teleframe\Laravel\Http\Controllers\Dashboard\DashboardRoutes;
+use MeRezaRezaei\Teleframe\Laravel\Media\StorageMedia;
+use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 
 /**
  * Main Teleframe Facade for Laravel.
@@ -22,18 +29,34 @@ use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
  * @method static BotClient|\MeRezaRezaei\Teleframe\Bot\Services\BotAccountScope botFromVault(?string $label = null, string $transport = 'http') Named bot client from the DB-encrypted vault ('http' or 'mtproto').
  * @method static int schemaLayer() Declared Telegram schema layer of the packaged artifacts.
  *
- * @see \MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient
- * @see \MeRezaRezaei\Teleframe\Core\Services\UserAccountScope
- * @see \MeRezaRezaei\Teleframe\Bot\Services\BotClient
- * @see \MeRezaRezaei\Teleframe\Core\Types\InputPeer
- * @see \MeRezaRezaei\Teleframe\Core\Types\InlineKeyboard
- * @see \MeRezaRezaei\Teleframe\Core\Types\InputMedia
- * @see \MeRezaRezaei\Teleframe\Core\Entities\EntityParser
- * @see \MeRezaRezaei\Teleframe\Laravel\Media\StorageMedia
- * @see \MeRezaRezaei\Teleframe\Core\Passport\PassportDecryptor
+ * @see TeleframeClient
+ * @see UserAccountScope
+ * @see BotClient
+ * @see InputPeer
+ * @see InlineKeyboard
+ * @see InputMedia
+ * @see EntityParser
+ * @see StorageMedia
+ * @see PassportDecryptor
  */
 class Teleframe extends Facade
 {
+    /**
+     * Register the Horizon-style dashboard routes (index page + JSON API)
+     * under config('teleframe.dashboard.prefix') with the configured guard.
+     * Call once from your app's provider boot():
+     *
+     *     Teleframe::routes();
+     *
+     * Token-based hosts: Teleframe::routes(prefix: 'api', middleware: ['auth:sanctum']).
+     *
+     * @param  list<string>|null  $middleware
+     */
+    public static function routes(?string $prefix = null, ?array $middleware = null): void
+    {
+        DashboardRoutes::register($prefix, $middleware);
+    }
+
     protected static function getFacadeAccessor(): string
     {
         return TeleframeClient::class;

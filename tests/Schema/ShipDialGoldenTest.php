@@ -119,7 +119,14 @@ final class ShipDialGoldenTest extends TestCase
     public function test_provider_registers_publishable_migration_path(): void
     {
         $source = (string) file_get_contents(self::PACKAGE_ROOT.'/src/Laravel/Providers/TeleframeServiceProvider.php');
-        self::assertStringContainsString("loadMigrationsFrom(dirname(__DIR__) . '/Migrations')", $source);
+
+        // Pint (format-on-save) alternates `dirname(__DIR__) . '/Migrations'`
+        // and `dirname(__DIR__).'/Migrations'`; the contract is that the
+        // provider loads THIS package's Migrations dir, so compare with the
+        // concat spacing normalized instead of pinning one exact variant.
+        $normalized = preg_replace('/\s*\.\s*/', '.', $source);
+
+        self::assertStringContainsString("loadMigrationsFrom(dirname(__DIR__).'/Migrations')", (string) $normalized);
     }
 
     /** @return int count of *.php migration files in dir */

@@ -7,6 +7,7 @@ namespace MeRezaRezaei\Teleframe\Vault;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
 /**
@@ -40,6 +41,8 @@ use InvalidArgumentException;
  * @property string|null $bot_token
  * @property int $dc_id
  * @property TelegramApp|null $app
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 final class TelegramAccount extends Model
 {
@@ -109,7 +112,7 @@ final class TelegramAccount extends Model
 
     protected static function booted(): void
     {
-        static::saving(static function (self $account): void {
+        self::saving(static function (self $account): void {
             if ($account->type !== self::TYPE_USER && $account->type !== self::TYPE_BOT) {
                 throw new InvalidArgumentException("telegram_accounts.type must be 'user' or 'bot'.");
             }

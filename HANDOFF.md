@@ -227,3 +227,61 @@ credential pair, reproducible from `.env`.
   read-only; any write test (send message) goes only to own saved messages after
   explicit user approval. Session is encrypted at rest; raw value exists only in
   the app's gitignored `.env`.
+
+---
+
+## Cycle 25 — Horizon-style dashboard (option B), 2026-09-14
+
+The package now ships its own dashboard (routes + controllers + Blade) so any Laravel
+host gets app/account management + phone-login UI by registering `Teleframe::routes()` —
+no duplicated controllers, like Laravel Horizon (host supplies only the auth skeleton).
+
+**Package side (this repo):**
+- `config/teleframe.php` gains a `dashboard` block: `prefix` (env
+  `TELEFRAME_DASHBOARD_PREFIX`, default `teleframe`), `middleware` (default
+  `['web','auth']`). Docblock documents the `Teleframe::routes()` contract.
+- `src/Laravel/Http/Controllers/Dashboard/`:
+  - `DashboardRoutes` — package-owned route registrar (double-registration guard
+    + `refreshNameLookups()` so `route()` works immediately; config-overridable
+    prefix/middleware). Routes: index shell `GET /{prefix}`, `apps` index/store/destroy,
+    `accounts` index/destroy, `telegram/start|verify|password`.
+  - `AppsController` — list/create/delete `TelegramApp`; api_hash `encrypted`-cast at
+    rest, returned only masked (`substr 4` + `••` + `substr -4`); global unique-label
+    check (DB index is global).
+  - `AccountsController` — list/delete scoped accounts; shares static `payload()`
+    with the login flow.
+  - `TelegramLoginController` — 3-step stateful phone login (Cache+Crypt parked
+    state, 15-min TTL, 2FA branch, session export); inline legacy
+    `App\Models\User` fallback (pre-upgrade parked states), otherwise owner-agnostic.
+  - `Concerns/ConcernsScopesVault` — tenant scoping via nullable owner morph
+    (`owner_type`/`owner_id` from `$request->user()` at call time); unauthenticated
+    → zero rows (`whereKey(0)`, avoids widening under phpstan).
+  - `DashboardController` — `view('teleframe::dashboard')` shell.
+- `Facades/Teleframe.php` gains a real static `routes(?string $prefix, ?array
+  $middleware)` (facade magic only fires for undefined methods; shadows
+  `__callStatic`). FQCN call avoids the Pint import-sort hook.
+- `resources/views/dashboard.blade.php` (namespace `teleframe`, `loadViewsFrom` in
+  boot, publish tag `teleframe-dashboard`).
+- Vault models (`TelegramApp`/`TelegramAccount`) gained `@property` for
+  `created_at`/`updated_at` timestamps (phpstan access on `Carbon|null`).
+
+**Host rewiring (`teleframe-app`, not a git repo):**
+- `routes/api.php` now keeps only `AuthController` (host auth = host business) and
+  registers `Teleframe::routes(prefix: '', middleware: ['auth:sanctum'])` — the
+  framework auto-prefixes `api/`, so the Angular SPA's URL surface is byte-identical
+  (`/api/apps`, `/api/accounts`, `/api/telegram/*`).
+- Deleted the three duplicated host controllers (`AppController`,
+  `AccountController`, `TelegramLoginController`). `route:list --path=api` shows all
+  14 routes backed by the package; host phpunit + `composition boot` green.
+
+**Tests** (`tests/Laravel/Http/Dashboard/`): Testbench + sqlite in-memory, `TestUser`
+minimal Authenticatable, `DashboardRoutes::reset()` seam. 13 tests / 73 assertions.
+**Gate fixes shipped with this cycle:**
+- `ShipDialGoldenTest` golden pin now normalizes concat spacing (Pint flips
+  `dirname(__DIR__) . '/Migrations'` vs `dirname(__DIR__).'/Migrations'` on save).
+
+**Gates (quoted):** `composer verify` → **1166 tests / 26082 assertions / 6 skipped,
+phpstan clean, regeneration 254/254**; `php bin/standalone-smoke.php` → exit 0;
+`TELEFRAME_PG=1 vendor/bin/phpunit tests/Pg` → OK (7 tests, 830 assertions).
+Host: `route:list` 14 routes, `view('teleframe::dashboard')` renders (13394 bytes).
+**Commit:** (next commit in this run — cycle 25).

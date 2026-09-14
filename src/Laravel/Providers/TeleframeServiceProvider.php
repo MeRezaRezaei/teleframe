@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Laravel\Providers;
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as EventDispatcher;
 use Illuminate\Redis\RedisManager;
 use Illuminate\Routing\Router;
@@ -23,29 +24,40 @@ use MeRezaRezaei\Teleframe\Handler\Subscriptions\UpdateStoredHandler;
 use MeRezaRezaei\Teleframe\Handler\UpdateDispatcher;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
-use MeRezaRezaei\Teleframe\Ingest\UpdateRoutingCache;
+use MeRezaRezaei\Teleframe\Ingest\RoutingSettingsObserver;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
+use MeRezaRezaei\Teleframe\Ingest\UpdateRoutingCache;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackfillCommand;
-use MeRezaRezaei\Teleframe\Laravel\Console\DaemonCommand;
-use MeRezaRezaei\Teleframe\Laravel\MirrorIngesterFactory;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackupCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\DaemonCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\DoctorCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\IngestCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\IngestGateCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\LoginCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\PollCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\SchemaAuditCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\SchemaUpdateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\TeleframeMirrorCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\VaultAddAccountCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\VaultAddAppCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\VaultListCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\VaultUseDefaultCommand;
+use MeRezaRezaei\Teleframe\Laravel\Http\Controllers\TelegramWebhookController;
 use MeRezaRezaei\Teleframe\Laravel\Http\Middleware\VerifyMiniAppInitData;
+use MeRezaRezaei\Teleframe\Laravel\MirrorIngesterFactory;
+use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
 use MeRezaRezaei\Teleframe\Laravel\Realtime\UpdateStoredCentrifugoListener;
 use MeRezaRezaei\Teleframe\Laravel\Services\RoutingPeerResolver;
-use MeRezaRezaei\Teleframe\Ingest\RoutingSettingsObserver;
-use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
 use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeAuthService;
+use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 use MeRezaRezaei\Teleframe\Realtime\CentrifugoBridge;
 use MeRezaRezaei\Teleframe\Realtime\HttpCentrifugoBridge;
-use MeRezaRezaei\Teleframe\Laravel\Services\TeleframeClient;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountContext;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use MeRezaRezaei\Teleframe\Teleclient;
 use MeRezaRezaei\Teleframe\Teleframe;
+use MeRezaRezaei\Teleframe\Vault\Vault;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Psr\SimpleCache\CacheInterface;
@@ -56,12 +68,12 @@ class TeleframeServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/teleframe.php', 'teleframe');
+        $this->mergeConfigFrom(__DIR__.'/../config/teleframe.php', 'teleframe');
 
-        $this->app->singleton(AccountContext::class, static fn (): AccountContext => new AccountContext());
+        $this->app->singleton(AccountContext::class, static fn (): AccountContext => new AccountContext);
         $this->app->singleton(SchemaRegenerator::class);
         $this->app->singleton(UpdateIngestor::class, static fn ($app): UpdateIngestor => new UpdateIngestor(
-            events: $app->make(\Illuminate\Contracts\Events\Dispatcher::class),
+            events: $app->make(Dispatcher::class),
         ));
         $this->app->singleton(EntityAggregator::class);
         $this->app->singleton(Teleclient::class);
@@ -78,24 +90,24 @@ class TeleframeServiceProvider extends ServiceProvider
             $class = (string) $config->get('teleframe.logging.logger', '');
 
             if ($class !== '' && class_exists($class)) {
-                $logger = new $class();
+                $logger = new $class;
 
                 if ($logger instanceof LoggerInterface) {
                     return $logger;
                 }
             }
 
-            return new NullLogger();
+            return new NullLogger;
         });
 
         $this->app->singleton(UpdateDispatcher::class, static function ($app): UpdateDispatcher {
             $sends = $app->bound(CacheInterface::class)
                 ? $app->make(CacheInterface::class)
-                : new InMemoryCache();
+                : new InMemoryCache;
 
             return new UpdateDispatcher(
                 $app->make(HandlerRegistry::class),
-                new Pipeline(),
+                new Pipeline,
                 $app,
                 $sends,
                 logger: $app->make(LoggerInterface::class),
@@ -120,15 +132,14 @@ class TeleframeServiceProvider extends ServiceProvider
                     $app->make(RedisConnectionContract::class),
                     $app->make('db')->connection(),
                 );
-            } catch (\RuntimeException) {
+            } catch (RuntimeException) {
                 $cache = null;
             }
 
             return new RoutingSettingsObserver($cache, $app->make(EventDispatcher::class));
         });
 
-
-        $this->app->singleton(\MeRezaRezaei\Teleframe\Vault\Vault::class);
+        $this->app->singleton(Vault::class);
 
         $this->app->bind(RedisConnectionContract::class, static function ($app): RedisConnectionContract {
             $manager = $app->bound('redis') ? $app->make('redis') : null;
@@ -146,21 +157,22 @@ class TeleframeServiceProvider extends ServiceProvider
             // silent fallback here would hide a misconfigured host app.
             throw new RuntimeException(
                 'teleframe bus requires the illuminate redis service (app("redis")); '
-                . 'install illuminate/redis (predis or phpredis driver) or bind '
-                . RedisConnectionContract::class . ' yourself.',
+                .'install illuminate/redis (predis or phpredis driver) or bind '
+                .RedisConnectionContract::class.' yourself.',
             );
         });
 
         $this->app->singleton(TeleframeClient::class, function ($app) {
             $config = $app['config']['teleframe'] ?? $app['config']['telegram'] ?? [];
+
             return new TeleframeClient(
-                defaultApiId: (int)($config['api_id'] ?? 0),
-                defaultApiHash: (string)($config['api_hash'] ?? ''),
+                defaultApiId: (int) ($config['api_id'] ?? 0),
+                defaultApiHash: (string) ($config['api_hash'] ?? ''),
                 defaultBotToken: $config['bot_token'] ?? $config['default_bot_token'] ?? null,
                 defaultProxyConfig: $config['proxy'] ?? null,
                 defaultUserSession: $config['user_session'] ?? null,
                 defaultBotSession: $config['bot_session'] ?? null,
-                defaultDcId: (int)($config['dc_id'] ?? 2),
+                defaultDcId: (int) ($config['dc_id'] ?? 2),
                 logger: $app->make(LoggerInterface::class),
             );
         });
@@ -178,7 +190,7 @@ class TeleframeServiceProvider extends ServiceProvider
 
                 throw new RuntimeException(
                     "no teleframe.daemon.accounts entry with account_id={$accountId} "
-                    . '(the backfill command resolves its session through that registry)',
+                    .'(the backfill command resolves its session through that registry)',
                 );
             };
         });
@@ -229,12 +241,12 @@ class TeleframeServiceProvider extends ServiceProvider
                     $app->make(RedisConnectionContract::class),
                     $app->make('db')->connection(),
                 );
-            } catch (\RuntimeException) {
+            } catch (RuntimeException) {
                 $routingCache = null;
             }
 
             return MirrorIngesterFactory::build(
-                $app->make(\Illuminate\Contracts\Events\Dispatcher::class),
+                $app->make(Dispatcher::class),
                 $sends,
                 $routingCache,
             );
@@ -254,9 +266,9 @@ class TeleframeServiceProvider extends ServiceProvider
                 $driver = (string) $config->get('teleframe.backup.driver', 'memory');
 
                 if ($driver === 'memory') {
-                    $key = 'teleframe.backup.vault.' . $setId;
+                    $key = 'teleframe.backup.vault.'.$setId;
                     if (! $app->bound($key)) {
-                        $app->bind($key, static fn (): VaultInterface => new InMemoryVault(), true);
+                        $app->bind($key, static fn (): VaultInterface => new InMemoryVault, true);
                     }
 
                     /** @var VaultInterface */
@@ -277,7 +289,7 @@ class TeleframeServiceProvider extends ServiceProvider
                 $resolver = $app->make(BackfillCommand::SCOPE_RESOLVER_KEY);
                 if (! is_callable($resolver) || is_string($resolver)) {
                     throw new RuntimeException(
-                        BackfillCommand::SCOPE_RESOLVER_KEY . ' must bind a callable(int): UserAccountScope',
+                        BackfillCommand::SCOPE_RESOLVER_KEY.' must bind a callable(int): UserAccountScope',
                     );
                 }
 
@@ -309,6 +321,10 @@ class TeleframeServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Horizon-style dashboard shell (teleframe::dashboard) — resolved in
+        // web AND console so queue workers can render it too if a host does.
+        $this->loadViewsFrom(dirname(__DIR__).'/resources/views', 'teleframe');
+
         // The verbatim's settings-change loop: tg_update_routing changes
         // refresh the Redis-2 hot-reload cache and emit RoutingSettingsChanged.
         // Registered for every app (web + console) so a default install never
@@ -317,23 +333,27 @@ class TeleframeServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/teleframe.php' => config_path('teleframe.php'),
+                __DIR__.'/../config/teleframe.php' => config_path('teleframe.php'),
             ], 'teleframe-config');
 
             $this->publishes([
-                __DIR__ . '/../Stubs/miniapp' => base_path(),
+                __DIR__.'/../resources/views/dashboard.blade.php' => resource_path('views/vendor/teleframe/dashboard.blade.php'),
+            ], 'teleframe-dashboard');
+
+            $this->publishes([
+                __DIR__.'/../Stubs/miniapp' => base_path(),
             ], 'teleframe-miniapp');
 
             $this->commands([
-                \MeRezaRezaei\Teleframe\Laravel\Console\LoginCommand::class,
-                \MeRezaRezaei\Teleframe\Laravel\Console\PollCommand::class,
-                \MeRezaRezaei\Teleframe\Laravel\Console\DoctorCommand::class,
-                \MeRezaRezaei\Teleframe\Laravel\Console\SchemaAuditCommand::class,
-                \MeRezaRezaei\Teleframe\Laravel\Console\SchemaUpdateCommand::class,
-                \MeRezaRezaei\Teleframe\Laravel\Console\VaultAddAppCommand::class,
-                \MeRezaRezaei\Teleframe\Laravel\Console\VaultAddAccountCommand::class,
-                \MeRezaRezaei\Teleframe\Laravel\Console\VaultListCommand::class,
-                \MeRezaRezaei\Teleframe\Laravel\Console\VaultUseDefaultCommand::class,
+                LoginCommand::class,
+                PollCommand::class,
+                DoctorCommand::class,
+                SchemaAuditCommand::class,
+                SchemaUpdateCommand::class,
+                VaultAddAppCommand::class,
+                VaultAddAccountCommand::class,
+                VaultListCommand::class,
+                VaultUseDefaultCommand::class,
                 RegenerateCommand::class,
                 TeleframeMirrorCommand::class,
                 IngestCommand::class,
@@ -343,7 +363,7 @@ class TeleframeServiceProvider extends ServiceProvider
                 DaemonCommand::class,
             ]);
 
-            $this->loadMigrationsFrom(dirname(__DIR__) . '/Migrations');
+            $this->loadMigrationsFrom(dirname(__DIR__).'/Migrations');
         }
 
         if (isset($this->app['router'])) {
@@ -353,7 +373,7 @@ class TeleframeServiceProvider extends ServiceProvider
 
             // Register Route Macro for simple Webhook endpoint declaration
             $router->macro('telegramWebhook', function (string $uri = 'telegram/webhook') use ($router) {
-                return $router->post($uri, \MeRezaRezaei\Teleframe\Laravel\Http\Controllers\TelegramWebhookController::class);
+                return $router->post($uri, TelegramWebhookController::class);
             });
         }
 
