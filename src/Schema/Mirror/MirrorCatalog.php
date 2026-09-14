@@ -14,16 +14,23 @@ final class MirrorCatalog
     /** @var array<string, string> tl type => tf table */
     private array $tlIndex = [];
 
+    /** @var array<string, string> tl constructor => tf table */
+    private array $ctorIndex = [];
+
     /** @param array<string, array{tl:string,ctors:list<string>,base:list<array{string,string}>,bools:list<string>,children:list<array{string,string}>}> $entries */
     public static function fromEntries(array $entries): self
     {
-        $self = new self();
+        $self = new self;
         foreach ($entries as $tfName => $e) {
             $entry = new MirrorTableEntry($tfName, $e['tl'], $e['ctors'], $e['base'], $e['bools'], $e['children']);
             $self->tables[$tfName] = $entry;
             $self->tlIndex[$e['tl']] = $tfName;
+            foreach ($e['ctors'] as $ctor) {
+                $self->ctorIndex[$ctor] = $tfName;
+            }
             $self->assertEntryInvariants($entry);
         }
+
         return $self;
     }
 
@@ -35,6 +42,7 @@ final class MirrorCatalog
         }
         $entries = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         $entries = (new MirrorCtorSplitter($scheme))->apply($entries);
+
         return self::fromEntries($entries);
     }
 
@@ -59,11 +67,24 @@ final class MirrorCatalog
         return isset($this->tlIndex[$tlType]) ? $this->tables[$this->tlIndex[$tlType]] : null;
     }
 
+    /**
+     * Mirror table a decoded payload constructor belongs to.
+     *
+     * Decoded TL payloads carry their concrete constructor name ('message',
+     * 'user', 'chatEmpty', ...), not the abstract TL type. This resolves the
+     * constructor to the owning tf_ table — the daily ingester's
+     * ctor→table seam.
+     */
+    public function tableForCtor(string $ctor): ?MirrorTableEntry
+    {
+        return isset($this->ctorIndex[$ctor]) ? $this->tables[$this->ctorIndex[$ctor]] : null;
+    }
+
     public function assertInvariants(): void
     {
         foreach ($this->tables as $name => $entry) {
             // Ruling B: peer-first tables (e.g. tf_dialogs) are valid — only reject neither-id-nor-peer
-            if ($entry->base !== [] && !in_array($entry->base[0][0], ['id', 'peer'], true)) {
+            if ($entry->base !== [] && ! in_array($entry->base[0][0], ['id', 'peer'], true)) {
                 throw new MirrorSchemaException("{$name}: first base column must be 'id' or 'peer'");
             }
         }
@@ -76,7 +97,7 @@ final class MirrorCatalog
         }
         foreach ([...$e->base, ...$e->children] as [$name, $shape]) {
             // zero-NULL: ban nullable marker (but 'NOT NULL' is the canonical non-nullable form)
-            if (str_contains($shape, 'NULL') && !str_contains($shape, 'NOT NULL')) {
+            if (str_contains($shape, 'NULL') && ! str_contains($shape, 'NOT NULL')) {
                 throw new MirrorSchemaException("{$e->tfName}.{$name}: nullable shape '{$shape}'");
             }
             foreach (['json', 'blob', 'binary'] as $banned) {

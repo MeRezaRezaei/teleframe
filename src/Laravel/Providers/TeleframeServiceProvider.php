@@ -26,6 +26,7 @@ use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackfillCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\DaemonCommand;
+use MeRezaRezaei\Teleframe\Laravel\MirrorIngesterFactory;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackupCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\IngestCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\IngestGateCommand;
@@ -176,6 +177,15 @@ class TeleframeServiceProvider extends ServiceProvider
                     }
                 };
             };
+        });
+
+        // The daemon's mirror observer (verbatim daily loop): the default
+        // NF5 mirror-ingester callable seam the IngestConsumer drains into.
+        // Hosts override by rebinding teleclient.ingest.mirror-ingester
+        // themselves; the default wires the full pipeline (decompose →
+        // write → classify → gated UpdateStored) from committed artifacts.
+        $this->app->bind(DaemonCommand::MIRROR_INGESTER_KEY, static function ($app): callable {
+            return MirrorIngesterFactory::build($app->make(\Illuminate\Contracts\Events\Dispatcher::class));
         });
 
         // Backup vault factory (Phase 2, Task 6): callable(string $setId):
