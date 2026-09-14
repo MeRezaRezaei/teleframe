@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Laravel\Services;
 
+use MeRezaRezaei\Teleframe\Bot\Services\BotAccountScope;
 use MeRezaRezaei\Teleframe\Core\Exceptions\DcMigrationException;
 use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
-use RuntimeException;
 use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
-use MeRezaRezaei\Teleframe\Bot\Services\BotAccountScope;
+use RuntimeException;
 
 /**
  * Service for Telegram MTProto 2.0 User & Bot Authentication workflows.
@@ -22,7 +22,7 @@ class TeleframeAuthService
 
     public function __construct(?TeleframeClient $client = null, bool $live = true)
     {
-        $this->client = $client ?? new TeleframeClient();
+        $this->client = $client ?? new TeleframeClient;
         $this->live = $live;
     }
 
@@ -41,11 +41,11 @@ class TeleframeAuthService
     /**
      * Step 1: Send SMS/Telegram login verification code to a phone number.
      *
-     * @param string $phone Phone number in international format (+1234567890)
-     * @param int $apiId Telegram API ID
-     * @param string $apiHash Telegram API Hash
-     * @param int $dcId Primary DC ID (default: 2)
-     * @param SessionData|null $session Existing or new session
+     * @param  string  $phone  Phone number in international format (+1234567890)
+     * @param  int  $apiId  Telegram API ID
+     * @param  string  $apiHash  Telegram API Hash
+     * @param  int  $dcId  Primary DC ID (default: 2)
+     * @param  SessionData|null  $session  Existing or new session
      * @return array{phone_code_hash: string, session: SessionData, user: UserAccountScope, raw: array<string, mixed>}
      */
     public function sendPhoneCode(
@@ -56,33 +56,70 @@ class TeleframeAuthService
         ?SessionData $session = null
     ): array {
         $sessionData = $session ?? new SessionData(dcId: $dcId, authKey: ''); // empty key: Client handshakes lazily
+        $dc = $dcId;
+
+        // Telegram answers PHONE_MIGRATE_x (303 SEE_OTHER) when the phone number
+        // lives on another data center. Auth keys are per-DC, so the redirected
+        // attempt re-handshakes with a FRESH key bound to the target DC and the
+        // rest of the login flow (signInWithCode / check2faPassword) continues
+        // there — the returned session carries the migrated DC.
+        for ($hop = 0; $hop < 3; $hop++) {
+            try {
+                return $this->sendCodeOnDc($phone, $apiId, $apiHash, $dc, $sessionData);
+            } catch (DcMigrationException $e) {
+                $dc = $e->getDcId();
+                $sessionData = new SessionData(dcId: $dc, authKey: '');
+            }
+        }
+
+        // More than a couple of successive migrations is not expected for one
+        // phone; let the final hop surface the error to the caller.
+        return $this->sendCodeOnDc($phone, $apiId, $apiHash, $dc, $sessionData);
+    }
+
+    /**
+     * Executes a single auth.sendCode attempt against one data center.
+     *
+     * The scope (MTProto client + session) is rebuilt on every hop because the
+     * DC can change between attempts and the auth key is bound to its DC.
+     *
+     * @param  string  $phone  Phone number in international format (+1234567890)
+     * @param  int  $apiId  Telegram API ID
+     * @param  string  $apiHash  Telegram API Hash
+     * @param  int  $dcId  Data center to contact for this attempt
+     * @param  SessionData  $sessionData  Session bound to $dcId
+     * @return array{phone_code_hash: string, session: SessionData, user: UserAccountScope, raw: array<string, mixed>}
+     */
+    private function sendCodeOnDc(
+        string $phone,
+        int $apiId,
+        string $apiHash,
+        int $dcId,
+        SessionData $sessionData
+    ): array {
         $user = $this->client->user(session: $sessionData, dcId: $dcId, apiId: $apiId, apiHash: $apiHash);
         $this->goLive($user);
 
         $res = $user->call('auth.sendCode', [
             'phone_number' => $phone,
-            'api_id'       => $apiId,
-            'api_hash'     => $apiHash,
-            'settings'     => ['_' => 'codeSettings'],
+            'api_id' => $apiId,
+            'api_hash' => $apiHash,
+            'settings' => ['_' => 'codeSettings'],
         ]);
 
-        $phoneCodeHash = (string)($res['phone_code_hash'] ?? 'mock_code_hash_' . substr(md5($phone), 0, 8));
+        $phoneCodeHash = (string) ($res['phone_code_hash'] ?? 'mock_code_hash_'.substr(md5($phone), 0, 8));
 
         return [
             'phone_code_hash' => $phoneCodeHash,
-            'session'         => $sessionData,
-            'user'            => $user,
-            'raw'             => $res,
+            'session' => $sessionData,
+            'user' => $user,
+            'raw' => $res,
         ];
     }
 
     /**
      * Step 2: Submit phone verification code.
      *
-     * @param UserAccountScope $user
-     * @param string $phone
-     * @param string $phoneCodeHash
-     * @param string $code
      * @return array<string, mixed> auth.Authorization
      */
     public function signInWithCode(
@@ -92,14 +129,14 @@ class TeleframeAuthService
         string $code
     ): array {
         $res = $user->call('auth.signIn', [
-            'phone_number'    => $phone,
+            'phone_number' => $phone,
             'phone_code_hash' => $phoneCodeHash,
-            'phone_code'      => $code,
+            'phone_code' => $code,
         ]);
 
         if (isset($res['user']['id']) && $user->mtproto->session !== null) {
-            $user->mtproto->session->userId = (int)$res['user']['id'];
-            $user->session->userId = (int)$res['user']['id'];
+            $user->mtproto->session->userId = (int) $res['user']['id'];
+            $user->session->userId = (int) $res['user']['id'];
         }
 
         return $res;
@@ -108,8 +145,7 @@ class TeleframeAuthService
     /**
      * Step 3: Complete 2FA Cloud Password login when SESSION_PASSWORD_NEEDED is returned.
      *
-     * @param UserAccountScope $user
-     * @param string $password User's 2FA Cloud Password
+     * @param  string  $password  User's 2FA Cloud Password
      * @return array<string, mixed> auth.Authorization
      */
     public function check2faPassword(UserAccountScope $user, string $password): array
@@ -122,8 +158,8 @@ class TeleframeAuthService
         ]);
 
         if (isset($res['user']['id']) && $user->mtproto->session !== null) {
-            $user->mtproto->session->userId = (int)$res['user']['id'];
-            $user->session->userId = (int)$res['user']['id'];
+            $user->mtproto->session->userId = (int) $res['user']['id'];
+            $user->session->userId = (int) $res['user']['id'];
         }
 
         return $res;
@@ -132,10 +168,6 @@ class TeleframeAuthService
     /**
      * Step 1 (QR): Export a new QR code login token.
      *
-     * @param int $apiId
-     * @param string $apiHash
-     * @param int $dcId
-     * @param SessionData|null $session
      * @return array{token: string, url: string, expires: int, session: SessionData, user: UserAccountScope, raw: array<string, mixed>}
      */
     public function exportQrLoginToken(
@@ -149,33 +181,28 @@ class TeleframeAuthService
         $this->goLive($user);
 
         $res = $user->call('auth.exportLoginToken', [
-            'api_id'     => $apiId,
-            'api_hash'   => $apiHash,
+            'api_id' => $apiId,
+            'api_hash' => $apiHash,
             'except_ids' => [],
         ]);
 
         $rawToken = $res['token'] ?? random_bytes(32);
         $tokenBase64Url = rtrim(strtr(base64_encode($rawToken), '+/', '-_'), '=');
-        $loginUrl = 'tg://login?token=' . $tokenBase64Url;
+        $loginUrl = 'tg://login?token='.$tokenBase64Url;
 
         return [
-            'token'   => $rawToken,
-            'url'     => $loginUrl,
-            'expires' => (int)($res['expires'] ?? (time() + 300)),
+            'token' => $rawToken,
+            'url' => $loginUrl,
+            'expires' => (int) ($res['expires'] ?? (time() + 300)),
             'session' => $sessionData,
-            'user'    => $user,
-            'raw'     => $res,
+            'user' => $user,
+            'raw' => $res,
         ];
     }
 
     /**
      * Authenticate a Bot token natively over MTProto binary socket via `auth.importBotAuthorization`.
      *
-     * @param string $botToken
-     * @param int $apiId
-     * @param string $apiHash
-     * @param int $dcId
-     * @param SessionData|null $session
      * @return array{session: SessionData, bot: BotAccountScope, raw: array<string, mixed>}
      */
     public function loginBot(
@@ -193,8 +220,8 @@ class TeleframeAuthService
 
         return [
             'session' => $sessionData,
-            'bot'     => $bot,
-            'raw'     => $authRes,
+            'bot' => $bot,
+            'raw' => $authRes,
         ];
     }
 
@@ -203,7 +230,7 @@ class TeleframeAuthService
      * the account lives on another DC (throws DcMigrationException — reconnect
      * there and call importLoginTokenAt with the exception token), or timeout.
      *
-     * @param \Closure(string, int): void|null $onToken Called with (loginUrl, expiresInSeconds) whenever the token refreshes
+     * @param  \Closure(string, int): void|null  $onToken  Called with (loginUrl, expiresInSeconds) whenever the token refreshes
      * @return array<string, mixed> auth.Authorization from loginTokenSuccess
      */
     public function pollQrLoginToken(
@@ -220,30 +247,31 @@ class TeleframeAuthService
                 'api_hash' => $apiHash,
                 'except_ids' => [],
             ]);
-            $name = (string)($res['_'] ?? '');
+            $name = (string) ($res['_'] ?? '');
             if ($name === 'auth.loginToken') {
                 if ($onToken !== null) {
-                    $raw = (string)$res['token'];
+                    $raw = (string) $res['token'];
                     $b64 = rtrim(strtr(base64_encode($raw), '+/', '-_'), '=');
-                    $onToken('tg://login?token=' . $b64, (int)$res['expires']);
+                    $onToken('tg://login?token='.$b64, (int) $res['expires']);
                 }
                 sleep(2);
+
                 continue;
             }
             if ($name === 'auth.loginTokenMigrateTo') {
                 throw new DcMigrationException(
-                    (int)$res['dc_id'],
-                    'QR login requires migration to DC ' . (int)$res['dc_id'],
+                    (int) $res['dc_id'],
+                    'QR login requires migration to DC '.(int) $res['dc_id'],
                     303,
-                    (string)$res['token']
+                    (string) $res['token']
                 );
             }
             if ($name === 'auth.loginTokenSuccess') {
-                return (array)$res['authorization'];
+                return (array) $res['authorization'];
             }
-            throw new RuntimeException('TeleframeAuthService: unexpected QR login response ' . $name);
+            throw new RuntimeException('TeleframeAuthService: unexpected QR login response '.$name);
         }
-        throw new RuntimeException('TeleframeAuthService: QR login timed out after ' . $timeoutSeconds . 's');
+        throw new RuntimeException('TeleframeAuthService: QR login timed out after '.$timeoutSeconds.'s');
     }
 
     /**
@@ -258,10 +286,10 @@ class TeleframeAuthService
         $this->goLive($user);
 
         $res = $user->call('auth.importLoginToken', ['token' => $token]);
-        $name = (string)($res['_'] ?? '');
+        $name = (string) ($res['_'] ?? '');
         if ($name === 'auth.loginTokenSuccess') {
-            return (array)$res['authorization'];
+            return (array) $res['authorization'];
         }
-        throw new RuntimeException('TeleframeAuthService: unexpected importLoginToken response ' . $name);
+        throw new RuntimeException('TeleframeAuthService: unexpected importLoginToken response '.$name);
     }
 }
