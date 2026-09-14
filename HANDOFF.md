@@ -50,3 +50,28 @@ This repo merged two former projects into one package:
 ## Open items / not verified here
 - The old `teleframe-psr3` worktrees were not carried over — verify irrelevant before pruning.
 - Deep MTProto internals remain future work (see `AGENTS.md` known-gaps).
+
+## Cycle 20 — wire peer-shape normalizer (a17e39f0, 2026-09-14)
+- Gap closed: the wire decodes Peer as its ctor object (peerUser#user_id, peerChat#chat_id,
+  peerChannel#channel_id — TL_telegram_v227.tl 73-75) but every consumer
+  (MirrorFactDecomposer::fillPeerHalf, UpdateRouter::classify, SelfOriginatedClassifier)
+  read the canonical `_type`/`_id` pair — so real wire data silently ingested
+  `peer_type=0/peer_id=0`, the exact "wrong path of ingesting" the FK-clue mechanism
+  exists to catch.
+- New `src/Schema/Eloquent/PeerShapeTool.php`: normalizes wire ctor objects, canonical
+  `_type/_id` pairs, bare `type/id` pairs and top-level `channel_id` to the spec enum
+  (1=user 2=chat 3=channel). Wired into fillPeerHalf, classify() (incl. peerPair()),
+  and the classifier. Router channel_id fallback now yields 3 (was 2 — stale comment
+  contradicting the spec at docs/superpowers/specs/2026-09-11-telegram-mirror-schema-nf5-design.md:134).
+- Tests: `tests/Schema/Eloquent/PeerShapeToolTest.php` (7 cases); UpdateRouterTest
+  sells channel rules at peer_type 3 and classifies a wire `peerChannel` ctor.
+- Gates: composer verify → 1139 tests / 25930 assertions / 6 skipped, phpstan 0;
+  smoke exit 0.
+
+## Cycle 20 next steps (candidates)
+- Push the normalizer through the remaining peer consumers (Teleframe face fixtures /
+  MirrorIngesterSeamTest use `_type => 2` as plain canonical pairs — semantically
+  consistent, only channel-specific rules must be 3).
+- Consider PeerShapeTool in the Backfill chunk path (MirrorChunkSync feeds the
+  decomposer directly — verify it cannot receive raw wire peers).
+- Redis-2 cache peers (`UpdateRouter` cache path) — normalize before caching.
