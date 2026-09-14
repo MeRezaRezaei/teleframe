@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Handler;
 
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * The uprate — one immutable value object both intake rows (Laravel
@@ -23,9 +23,8 @@ final class Update
         public readonly string $source = 'event',
         public readonly ?int $ts = null,
         public readonly bool $selfOriginated = false,
-        public readonly ?TlAnchorModel $model = null,
-    ) {
-    }
+        public readonly ?Model $model = null,
+    ) {}
 
     /** Raw constructor name — the router's match key. */
     public function constructor(): string
@@ -47,7 +46,7 @@ final class Update
         );
         $ts = $this->ts !== null ? (string) $this->ts : '';
 
-        return sha1($this->accountId . "\0" . $ts . "\0" . $raw);
+        return sha1($this->accountId."\0".$ts."\0".$raw);
     }
 
     /** A fresh frame with the self-originated verdict set. */
@@ -67,7 +66,7 @@ final class Update
      * Attach the mirrored root model once the handler asks for it (lazy
      * hydration — the two-stage second half).
      */
-    public function withModel(?TlAnchorModel $model): self
+    public function withModel(?Model $model): self
     {
         return new self(
             $this->array,
@@ -93,7 +92,7 @@ final class Update
      * (`onMessage`) and prefix `''` patterns. Precise constructor routing
      * belongs to the bus path where the raw array is in hand.
      */
-    public static function fromMirror(TlAnchorModel $model, int $accountId, ?int $ts = null): self
+    public static function fromMirror(Model $model, int $accountId, ?int $ts = null): self
     {
         if ($ts === null) {
             $created = $model->getAttribute('created_at');
