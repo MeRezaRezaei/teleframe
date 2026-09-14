@@ -75,3 +75,10 @@ This repo merged two former projects into one package:
 - Consider PeerShapeTool in the Backfill chunk path (MirrorChunkSync feeds the
   decomposer directly — verify it cannot receive raw wire peers).
 - Redis-2 cache peers (`UpdateRouter` cache path) — normalize before caching.
+
+## Cycle 20b — unresolvable peers are clues, not silent 0/0 (c75e9b51, 2026-09-14)
+- fillPeerHalf now emits one ingest clue per unresolvable peer pair (field-variant
+  ctor, empty object, zero id) and leaves the halves unset — the verbatim's
+  "whatever foreign key fails gives us a clue to the wrong path of ingesting".
+- New test: test_unresolvable_wire_peer_is_clue_not_silent_zero (3 shapes).
+- Gates: 1140 tests / 25945 assertions / 6 skipped, phpstan 0, smoke 0.
