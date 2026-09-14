@@ -44,6 +44,8 @@ final class MirrorFactWriter
                 $message = $e->getMessage();
                 if (str_contains($message, 'FOREIGN KEY') || str_contains($message, 'foreign key')) {
                     $fkClues[] = "{$table}: FK constraint failed — {$message}";
+                } elseif (str_contains($message, 'NOT NULL') || str_contains($message, 'not null')) {
+                    $fkClues[] = "{$table}: NOT NULL constraint failed (missing required fact data) — {$message}";
                 } else {
                     throw $e;
                 }
