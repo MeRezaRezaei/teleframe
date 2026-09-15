@@ -9,25 +9,29 @@ use MeRezaRezaei\Teleframe\Tests\Concerns\RunsPostgresMigrations;
 use MeRezaRezaei\Teleframe\Tests\Schema\TestCase;
 
 /**
- * TDLib domain-schema Postgres track base: testbench app on the pg
- * connection with a disposable schema per test class (search_path).
+ * Curated-dial Postgres track base: testbench app on the pg connection
+ * with a disposable schema per test class (search_path).
  *
- * The mirror is the 13-file domain set (12 tf_* entity tables +
- * the routes migration), migrated via UpdateIngestor::migrationPaths().
- * There are no per-constructor tables and no foreign keys (spec §8).
+ * The shipped mirror is the hand-authored NF5 curated dial in
+ * src/Laravel/Migrations: 16 create_tf_* migrations + 5 app-owned
+ * migrations (tl_user_bindings, telegram_apps, telegram_accounts,
+ * add_user_id, tg_update_routing) + the Task-8 FK migration
+ * (2026_09_14_299999), migrated whole via UpdateIngestor::migrationPaths().
+ * No tl_data JSONB, no constructor_id ints, no per-constructor tables.
  *
  * Env gate — default SKIP so the sqlite CI matrix stays green:
  *  - TELEFRAME_PG=1 forces the track ON (unreachable DB = failure,
  *    not a skip — opt-in runs must not silently pass);
  *  - otherwise the track runs only when the configured Postgres answers
- *    (local dev: peer-auth socket, db teleframe_night_test).
+ *    (local dev: peer-auth socket, db teleproto_night_test).
  */
 abstract class PgTestCase extends TestCase
 {
     use RunsPostgresMigrations;
 
     /**
-     * The 12 shipped domain tables (spec §§3-5).
+     * One root parent table per create_tf_* migration in the curated dial
+     * (16 create-tf files). Children ride in the same migration files.
      *
      * @var list<string>
      */
@@ -35,15 +39,19 @@ abstract class PgTestCase extends TestCase
         'tf_users',
         'tf_chats',
         'tf_channels',
-        'tf_messages',
         'tf_dialogs',
-        'tf_updates',
+        'tf_messages',
+        'tf_messages_entities',
+        'tf_messages_media',
         'tf_documents',
         'tf_photos',
+        'tf_web_pages',
         'tf_sticker_sets',
-        'tf_stories',
-        'tf_wallpapers',
+        'tf_updates',
         'tf_channel_participants',
+        'tf_stars_transactions',
+        'tf_bot_infos',
+        'tf_folders',
     ];
 
     protected function getEnvironmentSetUp($app): void
@@ -53,10 +61,10 @@ abstract class PgTestCase extends TestCase
 
     protected function setUp(): void
     {
-        if (!static::postgresTrackEnabled()) {
+        if (! static::postgresTrackEnabled()) {
             self::markTestSkipped(
                 'Postgres track: set TELEFRAME_PG=1 (and TELEFRAME_PG_* connection env) '
-                . 'or expose database teleframe_night_test on the local Postgres to run it',
+                .'or expose database teleproto_night_test on the local Postgres to run it',
             );
         }
         parent::setUp();
@@ -74,9 +82,10 @@ abstract class PgTestCase extends TestCase
     }
 
     /**
-     * Migrate the TDLib domain set (UpdateIngestor::migrationPaths():
-     * shipped src/Laravel/Migrations/ dir + the 12 tf_* domain tables) on pg.
-     * Idempotent within a class schema: repeat runs are no-ops.
+     * Migrate the curated dial (UpdateIngestor::migrationPaths(): the whole
+     * shipped src/Laravel/Migrations dir — 16 create_tf_* + 5 app-owned +
+     * the Task-8 FK migration — plus the off-dial updates/entities anchors)
+     * on pg. Idempotent within a class schema: repeat runs are no-ops.
      */
     protected function migrateDomainSet(): void
     {

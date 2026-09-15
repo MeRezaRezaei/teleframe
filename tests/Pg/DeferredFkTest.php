@@ -5,26 +5,49 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Tests\Pg;
 
 use Illuminate\Support\Facades\DB;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfChannel;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfMessage;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfUpdate;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfUser;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerShapeTool;
 
 /**
- * Domain-schema FK truth (replaces the Night W3 deferrable-FK proof).
+ * Curated-dial FK truth (replaces the Night W3 deferrable-FK and the legacy
+ * zero-FK proofs, re-based to the Task-8 contract).
  *
- * The TDLib domain schema (design spec §8) carries ZERO foreign keys:
- * peer refs are canonical bigint longs (PeerIdTool), not FK columns, so
- * out-of-order writes need no DEFERRABLE machinery — any insert order
- * commits. The old bucketed deferrable-FK artifact (tl_message_message
- * → tl_message_media_*, 637-file / 3045-table per-constructor set) is gone.
+ * The curated dial carries CROSS-DOMAIN FKs only where the NF5 plan promises
+ * them (2026_09_14_299999, asserted by tests/Mirror/RelationIntegrityTest):
+ *  - tf_messages_media   (account_id, id) → tf_messages            CASCADE
+ *  - tf_messages_entities (account_id, id) → tf_messages           CASCADE
+ *  - tf_channel_participants (account_id, channel_id) → tf_channels RESTRICT
+ * The polymorphic peer triad (peer_type/peer_id on tf_messages / tf_dialogs)
+ * and the media→documents/photos refs are deliberately NOT DB-constrained
+ * (one FK cannot branch on peer_type) — enforced in app code instead, so
+ * out-of-order peer writes still commit inside one transaction.
+ *
+ * Intra-dial FKs declared inside the domain migrations themselves (tf_updates
+ * → telegram_accounts, the 1:1/1:N update children → tf_updates, participant
+ * children → tf_channel_participants) are part of the same real dial.
  */
 final class DeferredFkTest extends PgTestCase
 {
     private const ACCOUNT = 7;
 
-    private const MSG_CTOR_ID = 0x7600b9d3; // message#7600b9d3 (schema/sources truth)
-
     private const USER_ID = 501558149;
 
     private const CHANNEL_ID = 1737473577;
+
+    /**
+     * The Task-8 promised cross-domain FKs (child table → parent + on-delete),
+     * mirroring tests/Mirror/RelationIntegrityTest::CROSS_DOMAIN_FKS.
+     *
+     * @var array<string, array{parent:string, action:string}>
+     */
+    private const CROSS_DOMAIN_FKS = [
+        'tf_messages_media' => ['parent' => 'tf_messages', 'action' => 'ON DELETE CASCADE'],
+        'tf_messages_entities' => ['parent' => 'tf_messages', 'action' => 'ON DELETE CASCADE'],
+        'tf_channel_participants' => ['parent' => 'tf_channels', 'action' => 'ON DELETE RESTRICT'],
+    ];
 
     protected function setUp(): void
     {
@@ -32,119 +55,166 @@ final class DeferredFkTest extends PgTestCase
         $this->migrateDomainSet();
     }
 
-    public function test_peer_ref_columns_hold_canonical_longs_not_uuids(): void
+    public function test_peer_ref_columns_hold_the_canonical_pair_not_uuids(): void
     {
         $colType = DB::selectOne(
-            "SELECT format_type(a.atttypid, a.atttypmod) AS t FROM pg_attribute a "
-            . "WHERE a.attrelid = 'tf_messages'::regclass AND a.attname = 'peer_id'",
+            'SELECT format_type(a.atttypid, a.atttypmod) AS t FROM pg_attribute a '
+            .'WHERE a.attrelid = ?::regclass AND a.attname = ?',
+            ['tf_messages', 'peer_id'],
         );
         self::assertNotNull($colType);
-        self::assertSame('bigint', $colType->t, 'tf_messages.peer_id is a canonical long column');
+        self::assertSame('bigint', $colType->t, 'tf_messages.peer_id is a signed peer long');
 
         DB::table('tf_messages')->insert([
-            'id' => 9001,
-            'message_id' => 7,
-            'peer_id' => PeerIdTool::userLong(self::USER_ID),
-            'from_id' => PeerIdTool::userLong(self::USER_ID),
-            'date' => 1724852400,
-            'constructor_id' => self::MSG_CTOR_ID,
             'account_id' => self::ACCOUNT,
-            'message_text' => 'canonical peer longs',
-            'tl_data' => json_encode(['_' => 'message', 'id' => 7]),
+            'id' => 9001,
+            'peer_type' => PeerShapeTool::PEER_USER,
+            'peer_id' => self::USER_ID,
+            'constructor' => 'message',
+            'date' => 1724852400,
+            'message' => 'canonical peer pair',
+        ]);
+        DB::table('tf_messages_from_id')->insert([
+            'account_id' => self::ACCOUNT,
+            'id' => 9001,
+            'from_id_type' => PeerShapeTool::PEER_USER,
+            'from_id_id' => self::USER_ID,
         ]);
 
-        self::assertSame(1, DB::table('tf_messages')
+        $row = DB::table('tf_messages')
+            ->where('account_id', self::ACCOUNT)
             ->where('id', 9001)
-            ->where('peer_id', PeerIdTool::userLong(self::USER_ID))
-            ->count(), 'peer long round-trips through the truth column');
+            ->first();
+        self::assertNotNull($row);
+        self::assertSame(PeerShapeTool::PEER_USER, (int) $row->peer_type);
+        self::assertSame(self::USER_ID, (int) $row->peer_id, 'peer pair round-trips through the truth columns');
+        self::assertSame('message', (string) $row->constructor);
+        self::assertEquals(1, (int) DB::table('tf_messages_from_id')->where('from_id_id', self::USER_ID)->count());
     }
 
     /**
-     * Spec §8: fk_count 0 on the tf_* domain tables. PKs and uniques are
-     * constraints, not FKs — the catalog must hold no contype='f' rows
-     * whose referencing table is tf_*.
+     * The Task-8 FK set from RelationIntegrityTest exists on real PG with the
+     * exact promised columns and on-delete actions — the peer side (tf_messages)
+     * stays FK-less by design (app-enforced, one FK cannot branch on peer_type).
      */
-    public function test_domain_tables_carry_zero_foreign_keys(): void
+    public function test_task_8_fk_set_matches_relation_integrity_contract(): void
     {
-        $fkTables = array_map(
-            static fn (object $row): string => $row->tbl,
-            DB::select(
-                'SELECT c.conrelid::regclass::text AS tbl FROM pg_constraint c '
-                . 'JOIN pg_namespace n ON n.oid = c.connamespace '
-                . "WHERE n.nspname = ? AND c.contype = 'f'",
-                [self::$pgSchema],
-            ),
-        );
-        $domainFks = array_values(array_filter(
-            $fkTables,
-            static fn (string $tbl): bool => str_starts_with($tbl, 'tf_'),
-        ));
+        $byChild = [];
+        foreach ($this->foreignKeys() as $row) {
+            $byChild[$row->child][] = $row->def;
+        }
 
-        self::assertSame([], $domainFks, 'fk_count 0 on the tf_* domain tables');
+        foreach (self::CROSS_DOMAIN_FKS as $child => $expected) {
+            $defs = $byChild[$child] ?? [];
+            self::assertNotEmpty($defs, "{$child} carries a Task-8 FK");
+            $joined = implode(' ', $defs);
+            self::assertStringContainsString("REFERENCES {$expected['parent']}", $joined, "{$child} FK references {$expected['parent']}");
+            self::assertStringContainsString($expected['action'], $joined, "{$child} FK on-delete action is {$expected['action']}");
+        }
+
+        // The (account_id, id) key shape of the media/entity parents.
+        self::assertStringContainsString(
+            'REFERENCES tf_messages(account_id, id)',
+            implode(' ', $byChild['tf_messages_media'] ?? []),
+            'tf_messages_media FK constrains the shared (account_id, id) message key',
+        );
+        self::assertStringContainsString(
+            'REFERENCES tf_messages(account_id, id)',
+            implode(' ', $byChild['tf_messages_entities'] ?? []),
+            'tf_messages_entities FK constrains the shared (account_id, id) message key',
+        );
+
+        // tf_messages itself holds zero FKs — the polymorphic peer pair is
+        // app-enforced, exactly as the 299999 migration documents.
+        self::assertSame([], $byChild['tf_messages'] ?? [], 'tf_messages carries no peer FK (app-enforced triad)');
+
+        // The Task-8 FK set is exactly what it promises: the only cross-domain
+        // FK-bearing tables are the three above (participant FK set is
+        // dominated by its intra-dial account FK + the RESTRICT channel FK).
+        $crossDomain = array_values(array_filter(array_keys($byChild), static fn (string $t): bool => str_starts_with($t, 'tf_')));
+        self::assertContains('tf_messages_media', $crossDomain);
+        self::assertContains('tf_messages_entities', $crossDomain);
+        self::assertContains('tf_channel_participants', $crossDomain);
     }
 
     /**
      * Out-of-order ingest inside ONE transaction: the message row lands
      * BEFORE its referenced user/channel rows in the same transaction.
-     * With zero FKs there is nothing to defer — any order commits.
+     * The peer triad is not DB-constrained — any order commits.
      */
     public function test_child_before_parent_in_one_transaction_commits(): void
     {
         DB::transaction(function (): void {
             // Message first: references a user + channel that do NOT exist yet.
             DB::table('tf_messages')->insert([
-                'id' => 1001,
-                'message_id' => 42,
-                'peer_id' => PeerIdTool::channelLong(self::CHANNEL_ID),
-                'from_id' => PeerIdTool::userLong(self::USER_ID),
-                'date' => 1724852400,
-                'constructor_id' => self::MSG_CTOR_ID,
                 'account_id' => self::ACCOUNT,
-                'message_text' => 'out-of-order child',
-                'tl_data' => json_encode(['_' => 'message', 'id' => 42]),
+                'id' => 1001,
+                'peer_type' => PeerShapeTool::PEER_CHANNEL,
+                'peer_id' => self::CHANNEL_ID,
+                'constructor' => 'message',
+                'date' => 1724852400,
+                'message' => 'out-of-order child',
             ]);
 
-            // Parents afterwards, SAME transaction — no deferred FK to satisfy.
-            DB::table('tf_users')->insert([
-                'id' => self::USER_ID,
-                'constructor_id' => 0x2abae24,
-                'account_id' => self::ACCOUNT,
-                'first_name' => 'Reza',
-                'tl_data' => json_encode(['_' => 'user', 'id' => self::USER_ID]),
-            ]);
-            DB::table('tf_channels')->insert([
-                'id' => self::CHANNEL_ID,
-                'constructor_id' => 0xc911c155,
-                'account_id' => self::ACCOUNT,
-                'title' => 'Teleframe Café',
-                'tl_data' => json_encode(['_' => 'channel', 'id' => self::CHANNEL_ID]),
-            ]);
+            // Parents afterwards, SAME transaction — nothing to defer:
+            // peer correctness is enforced in app code, not by the DB.
+            (new TfUser(['account_id' => self::ACCOUNT, 'id' => self::USER_ID, 'constructor' => 'user']))->save();
+            (new TfChannel(['account_id' => self::ACCOUNT, 'id' => self::CHANNEL_ID, 'constructor' => 'channel', 'title' => 'Teleframe Café']))->save();
         });
 
-        self::assertSame(1, DB::table('tf_messages')->where('id', 1001)->count(), 'message row committed');
-        self::assertSame(1, DB::table('tf_users')->where('id', self::USER_ID)->where('account_id', self::ACCOUNT)->count());
-        self::assertSame(1, DB::table('tf_channels')->where('id', self::CHANNEL_ID)->where('account_id', self::ACCOUNT)->count());
+        self::assertSame(1, TfMessage::forAccount(self::ACCOUNT)->where('id', 1001)->count(), 'message row committed');
+        self::assertSame(1, TfUser::forAccount(self::ACCOUNT)->where('id', self::USER_ID)->count());
+        self::assertSame(1, TfChannel::forAccount(self::ACCOUNT)->where('id', self::CHANNEL_ID)->count());
     }
 
     /**
-     * Update path: tf_updates accepts a row with extracted pts columns
-     * plus full JSONB tl_data, with no parent row required.
+     * Update path: tf_updates accepts a row keyed (account_id, seq, position)
+     * carrying the `constructor` discriminator + extracted fact children, with
+     * its representative parent telegram_accounts row in place (the intra-dial
+     * account FK holds on real PG).
      */
     public function test_update_path_writes_tf_updates_row(): void
     {
-        DB::table('tf_updates')->insert([
-            'id' => 5001,
-            'constructor_id' => 0x1f2b0afd, // updateNewMessage
-            'account_id' => self::ACCOUNT,
-            'pts' => 1349,
-            'pts_count' => 1,
-            'tl_data' => json_encode(['_' => 'updateNewMessage', 'pts' => 1349, 'pts_count' => 1]),
+        DB::table('telegram_accounts')->insert([
+            'id' => self::ACCOUNT,
+            'label' => 'deferred-fk-'.self::ACCOUNT,
+            'type' => 'user',
+            'dc_id' => 2,
         ]);
 
-        $row = DB::table('tf_updates')->where('id', 5001)->first();
-        self::assertNotNull($row);
-        self::assertSame(1349, (int) $row->pts);
-        $tlData = is_array($row->tl_data) ? $row->tl_data : json_decode((string) $row->tl_data, true);
-        self::assertSame('updateNewMessage', (string) ($tlData['_'] ?? ''));
+        $update = new TfUpdate([
+            'account_id' => self::ACCOUNT,
+            'seq' => 0,
+            'position' => 0,
+            'constructor' => 'updateNewMessage',
+        ]);
+        $update->save();
+        $update->pts()->create([...$update->childKey(), 'pts' => 1349]);
+        $update->ptsCount()->create([...$update->childKey(), 'pts_count' => 1]);
+        $update->message()->create([...$update->childKey(),
+            'peer_type' => PeerShapeTool::PEER_CHANNEL,
+            'peer_id' => self::CHANNEL_ID,
+            'message_id' => 1186,
+        ]);
+
+        $row = TfUpdate::forAccount(self::ACCOUNT)->sole();
+        self::assertSame('updateNewMessage', $row->constructor);
+        self::assertSame(1349, (int) $row->pts()->sole()->pts);
+        self::assertSame(1186, (int) $row->message()->sole()->message_id);
+    }
+
+    /**
+     * @return array<int, object{child:string, def:string}>
+     */
+    private function foreignKeys(): array
+    {
+        return DB::select(
+            'SELECT c.conrelid::regclass::text AS child, pg_get_constraintdef(c.oid) AS def '
+            .'FROM pg_constraint c '
+            .'JOIN pg_namespace n ON n.oid = c.connamespace '
+            ."WHERE n.nspname = ? AND c.contype = 'f' AND c.conrelid::regclass::text LIKE 'tf\\_%' "
+            .'ORDER BY child, def',
+            [self::$pgSchema],
+        );
     }
 }

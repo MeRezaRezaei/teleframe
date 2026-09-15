@@ -6,21 +6,24 @@ namespace MeRezaRezaei\Teleframe\Tests\Pg;
 
 use Illuminate\Support\Facades\DB;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessage;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdate;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfChannel;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfMessage;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfUpdate;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfUser;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerShapeTool;
 use MeRezaRezaei\Teleframe\Tests\Ingest\Concerns\HasNestedUpdateFixtures;
 
 /**
- * Night W3 full Postgres mirror, rewritten for the TDLib domain schema
- * (design spec §§3-5, 8): 12 tf_* entity tables + the routes migration —
- * NOT 637 per-constructor migration files / 3045 per-constructor tables.
+ * Night W3 full Postgres mirror, rewritten for the curated NF5 dial: the
+ * hand-authored src/Laravel/Migrations surface (16 create_tf_* migrations +
+ * 5 app-owned + the Task-8 FK migration) — NOT per-constructor mirror files,
+ * NOT the legacy TDLib domain set, and NOT tl_data JSONB / constructor_id.
  *
- * Proofs: the domain set migrates up on real PG, the canned P2 nested
- * updateNewMessage tree ingests into tf_updates/tf_messages/tf_users/
- * tf_channels with bigint peer longs + JSONB tl_data, PK/unique shapes
- * match spec §3, and re-ingest is idempotent.
+ * Proofs: the curated dial migrates up on real PG, PK/peer/constructor shapes
+ * match the NF5 contract (account_id-first composite keys, peer_type/peer_id
+ * pairs, `constructor` discriminator, zero jsonb), the canned P2 nested
+ * updateNewMessage tree ingests into tf_updates/tf_messages with the peer
+ * pair + children, and re-ingest is idempotent + tenant-scoped.
  */
 final class FullMirrorPgTest extends PgTestCase
 {
@@ -38,219 +41,226 @@ final class FullMirrorPgTest extends PgTestCase
             self::assertTrue(DB::getSchemaBuilder()->hasTable($table), "domain table {$table} exists");
         }
 
-        // The routes migration ships alongside the domain set (tl_route_*
-        // per-method idempotency tables, NOT a single tf_routes table).
-        self::assertTrue(
-            DB::getSchemaBuilder()->hasTable('tl_route_messages_get_history'),
-            'sample route table exists',
-        );
-
-        // No per-constructor leftovers: every tl_* table is either a route
-        // table or userland (tl_user_bindings) — never a per-constructor
-        // mirror table.
-        $names = array_map(
-            static fn (object $row): string => $row->tablename,
-            DB::select(
-                "SELECT tablename FROM pg_tables WHERE schemaname = ? AND tablename LIKE 'tl\\_%'",
-                [self::$pgSchema],
-            ),
-        );
-        foreach ($names as $name) {
-            self::assertTrue(
-                str_starts_with($name, 'tl_route_') || $name === 'tl_user_bindings',
-                "tl table {$name} is a route or userland table, not a per-constructor artifact",
-            );
+        // The 5 app-owned migrations ship alongside the curated dial.
+        foreach (['telegram_accounts', 'telegram_apps', 'tg_update_routing', 'tl_user_bindings'] as $table) {
+            self::assertTrue(DB::getSchemaBuilder()->hasTable($table), "app-owned table {$table} exists");
         }
+
+        // Task 8 FK migration applied by the dial (2026_09_14_299999).
+        $applied = DB::table('migrations')->pluck('migration')->map(
+            static fn (string $row): bool => str_contains($row, 'create_tf_foreign_keys'),
+        );
+        self::assertContains(true, $applied, 'the Task-8 FK migration must be applied by the full dial');
     }
 
-    public function test_pk_and_unique_shapes_match_spec(): void
+    public function test_pk_and_peer_shapes_match_curated_dial(): void
     {
         $cons = DB::select(
-            'SELECT c.conrelid::regclass::text AS tbl, c.contype, c.conname, '
-            . 'pg_get_constraintdef(c.oid) AS def FROM pg_constraint c '
-            . 'JOIN pg_namespace n ON n.oid = c.connamespace '
-            . 'WHERE n.nspname = ? AND c.conrelid::regclass::text LIKE ? '
-            . 'ORDER BY tbl, contype',
-            [self::$pgSchema, 'tf\_%'],
+            'SELECT c.conrelid::regclass::text AS tbl, c.contype, pg_get_constraintdef(c.oid) AS def '
+            .'FROM pg_constraint c '
+            .'JOIN pg_namespace n ON n.oid = c.connamespace '
+            .'WHERE n.nspname = ? AND c.contype = ? AND c.conrelid::regclass::text LIKE ? '
+            .'ORDER BY tbl',
+            [self::$pgSchema, 'p', 'tf\_%'],
         );
 
-        $byTable = [];
+        $pkByTable = [];
         foreach ($cons as $row) {
-            $byTable[$row->tbl][] = $row;
+            $pkByTable[$row->tbl][] = $row->def;
         }
 
-        // Global-ID tables: composite PK (id, account_id), spec §3.
-        foreach (['tf_users', 'tf_chats', 'tf_channels', 'tf_documents', 'tf_photos', 'tf_sticker_sets', 'tf_wallpapers'] as $table) {
-            $pk = null;
-            foreach ($byTable[$table] ?? [] as $row) {
-                if ($row->contype === 'p') {
-                    $pk = $row->def;
-                }
+        $assertPkCovers = static function (string $table, array $columns) use ($pkByTable): void {
+            $def = implode(', ', $pkByTable[$table] ?? []);
+            self::assertNotSame('', $def, "{$table} has a PK");
+            foreach ($columns as $column) {
+                self::assertStringContainsString($column, $def, "{$table} PK covers {$column}");
             }
-            self::assertNotNull($pk, "{$table} has a PK");
-            self::assertStringContainsString('id', (string) $pk);
-            self::assertStringContainsString('account_id', (string) $pk, "{$table} PK is (id, account_id)");
+        };
+
+        // Global-id tables: composite PK (account_id, id).
+        foreach (['tf_users', 'tf_chats', 'tf_channels', 'tf_documents', 'tf_photos', 'tf_web_pages', 'tf_sticker_sets', 'tf_stars_transactions', 'tf_bot_infos', 'tf_folders'] as $table) {
+            $assertPkCovers($table, ['account_id', 'id']);
         }
 
-        // tf_messages: surrogate PK + UNIQUE(peer_id, message_id, account_id).
-        $msgs = $byTable['tf_messages'] ?? [];
-        $kinds = [];
-        foreach ($msgs as $row) {
-            $kinds[$row->contype][] = $row->def;
-        }
-        self::assertNotEmpty($kinds['p'] ?? [], 'tf_messages has a surrogate PK');
-        $uniqueDefs = implode(' ', $kinds['u'] ?? []);
-        self::assertStringContainsString('peer_id', $uniqueDefs, 'tf_messages unique covers peer_id');
-        self::assertStringContainsString('message_id', $uniqueDefs, 'tf_messages unique covers message_id');
-        self::assertStringContainsString('account_id', $uniqueDefs, 'tf_messages unique covers account_id');
+        // tf_messages: composite content-message PK (account_id, id) — the
+        // wire message id IS the row id; there is no separate message_id.
+        $assertPkCovers('tf_messages', ['account_id', 'id']);
+        $assertPkCovers('tf_messages_entities', ['account_id', 'id', 'position']);
+        $assertPkCovers('tf_dialogs', ['account_id', 'peer_type', 'peer_id']);
+        $assertPkCovers('tf_updates', ['account_id', 'seq', 'position']);
+        $assertPkCovers('tf_channel_participants', ['account_id', 'channel_id', 'user_id']);
 
-        // tf_dialogs: surrogate PK + UNIQUE(peer_id, account_id).
-        $dialogUnique = implode(' ', array_column(array_filter(
-            $byTable['tf_dialogs'] ?? [],
-            static fn (object $row): bool => $row->contype === 'u',
-        ), 'def'));
-        self::assertStringContainsString('peer_id', $dialogUnique);
-        self::assertStringContainsString('account_id', $dialogUnique);
-
-        // Zero FKs on the tf_* domain tables (spec §8: fk_count 0).
-        // The telegram_accounts → telegram_apps userland link in
-        // src/Schema/Generated/migrations carries the only FK in the schema.
-        $fkTables = array_map(
-            static fn (object $row): string => $row->tbl,
-            DB::select(
-                'SELECT c.conrelid::regclass::text AS tbl FROM pg_constraint c '
-                . 'JOIN pg_namespace n ON n.oid = c.connamespace '
-                . "WHERE n.nspname = ? AND c.contype = 'f'",
-                [self::$pgSchema],
-            ),
+        // No legacy columns anywhere in the class schema: no tl_data, no
+        // constructor_id, and zero json/jsonb data types (NF5 locked rules).
+        $legacyColumns = DB::select(
+            'SELECT table_name, column_name FROM information_schema.columns '
+            .'WHERE table_schema = ? AND (column_name = ? OR column_name = ?)',
+            [self::$pgSchema, 'tl_data', 'constructor_id'],
         );
-        $domainFks = array_filter($fkTables, static fn (string $tbl): bool => str_starts_with($tbl, 'tf_'));
-        self::assertSame([], array_values($domainFks), 'fk_count 0 on the tf_* domain tables');
+        self::assertSame([], array_map(
+            static fn (object $row): string => $row->table_name.'.'.$row->column_name,
+            $legacyColumns,
+        ), 'no legacy tl_data / constructor_id columns in the curated dial');
 
-        // tl_data JSONB on every domain table.
         $jsonb = DB::select(
             'SELECT table_name FROM information_schema.columns '
-            . 'WHERE table_schema = ? AND column_name = ? AND data_type = ?',
-            [self::$pgSchema, 'tl_data', 'jsonb'],
+            .'WHERE table_schema = ? AND data_type IN (?, ?)',
+            [self::$pgSchema, 'json', 'jsonb'],
         );
-        $jsonbTables = array_map(static fn (object $row): string => $row->table_name, $jsonb);
-        foreach (self::DOMAIN_TABLES as $table) {
-            self::assertContains($table, $jsonbTables, "{$table}.tl_data is JSONB");
-        }
+        self::assertSame([], array_map(static fn (object $row): string => $row->table_name, $jsonb), 'zero json/jsonb columns in the curated dial');
 
-        // Flagship native types: peer longs + telegram identities are bigint.
+        // Flagship native types: peer ids are signed bigint, peer_type tinyint.
         $columns = DB::select(
             'SELECT table_name, column_name, data_type FROM information_schema.columns '
-            . 'WHERE table_schema = ? AND ((table_name = ? AND column_name = ?) '
-            . 'OR (table_name = ? AND column_name = ?))',
-            [self::$pgSchema, 'tf_messages', 'peer_id', 'tf_users', 'id'],
+            .'WHERE table_schema = ? AND ((table_name = ? AND column_name IN (?, ?)) '
+            .'OR (table_name = ? AND column_name = ?))',
+            [self::$pgSchema, 'tf_messages', 'peer_id', 'peer_type', 'tf_users', 'id'],
         );
         $byColumn = [];
         foreach ($columns as $row) {
-            $byColumn[$row->table_name . '.' . $row->column_name] = $row->data_type;
+            $byColumn[$row->table_name.'.'.$row->column_name] = $row->data_type;
         }
-        self::assertSame('bigint', $byColumn['tf_messages.peer_id'] ?? null, 'tf_messages.peer_id is bigint');
-        self::assertSame('bigint', $byColumn['tf_users.id'] ?? null, 'tf_users.id is bigint');
+        self::assertSame('bigint', $byColumn['tf_messages.peer_id'] ?? null, 'tf_messages.peer_id is signed bigint');
+        self::assertContains($byColumn['tf_messages.peer_type'] ?? null, ['smallint', 'tinyint'], 'tf_messages.peer_type is a small peer-type column');
+        self::assertSame('bigint', $byColumn['tf_users.id'] ?? null, 'tf_users.id is signed bigint');
+
+        // Constructor discriminator lives as text/varchar, never an int.
+        $constructorCols = DB::select(
+            'SELECT table_name, data_type FROM information_schema.columns '
+            .'WHERE table_schema = ? AND column_name = ?',
+            [self::$pgSchema, 'constructor'],
+        );
+        $types = array_map(static fn (object $row): string => $row->data_type, $constructorCols);
+        self::assertContains('text', $types, 'constructor columns exist as text/varchar, not int');
     }
 
     public function test_p2_nested_update_new_message_roundtrip_on_postgres(): void
     {
-        // Global-ID sidecars: user goes through the real ingest path;
-        // channel is pinned at the table level (TlChannel regen is
-        // src-owned; direct insert is robust across the regen).
-        $ingestor = new UpdateIngestor();
-        DB::table('tf_channels')->insert([
-            'id' => self::FIXTURE_CHANNEL_ID,
-            'constructor_id' => 0x1c32b11c, // channel#1c32b11c
-            'account_id' => self::FIXTURE_ACCOUNT,
-            'access_hash' => -7779317524312221622,
-            'title' => 'Teleframe Café',
-            'date' => 1712345678,
-            'is_megagroup' => true,
-            'is_verified' => true,
-            'tl_data' => json_encode(self::channelPayload()),
-        ]);
-        $user = $ingestor->ingest(self::userPayload(), self::FIXTURE_ACCOUNT);
-        self::assertSame(self::FIXTURE_USER_ID, (int) $user->getKey());
-        self::assertSame('Teleframe Café', DB::table('tf_channels')
-            ->where('id', self::FIXTURE_CHANNEL_ID)
-            ->where('account_id', self::FIXTURE_ACCOUNT)
-            ->sole()->title);
-        self::assertSame('Reza', TlUser::withoutGlobalScopes()
-            ->where('id', self::FIXTURE_USER_ID)
-            ->where('account_id', self::FIXTURE_ACCOUNT)
-            ->sole()->first_name);
+        $this->insertAccounts(7, 8);
 
-        // Scoped tables (tf_messages / tf_updates) take the message node's
-        // extracted columns + full JSONB. Surrogate-id assignment for these
-        // tables lives in UpdateIngestor::writeNode (src-owned); this test
-        // pins the table-level contract with explicit surrogate ids.
-        $node = self::updateNewMessagePayload()['message'];
-        DB::table('tf_messages')->insert([
-            'id' => 7001,
-            'message_id' => $node['id'],
-            'peer_id' => PeerIdTool::channelLong($node['peer_id']['channel_id']),
-            'from_id' => PeerIdTool::userLong($node['from_id']['user_id']),
-            'date' => $node['date'],
-            'constructor_id' => 0x7600b9d3, // message#7600b9d3
-            'account_id' => self::FIXTURE_ACCOUNT,
-            'is_out' => true,
-            'message_text' => $node['message'],
-            'tl_data' => json_encode($node),
-        ]);
-        DB::table('tf_updates')->insert([
-            'id' => 7002,
-            'constructor_id' => 0x1f2b0afd, // updateNewMessage#1f2b0afd
-            'account_id' => self::FIXTURE_ACCOUNT,
-            'peer_id' => PeerIdTool::channelLong(self::FIXTURE_CHANNEL_ID),
-            'message_id' => $node['id'],
-            'pts' => 1349,
-            'pts_count' => 1,
-            'tl_data' => json_encode(self::updateNewMessagePayload()),
-        ]);
+        // Global-ID sidecars written straight to the curated identity surface:
+        // the UpdateIngestor handles message/update facts only (user/channel
+        // sidecars land via their domain tables).
+        (new TfChannel([...$this->channelRow(self::FIXTURE_ACCOUNT)]))->save();
+        $this->insertUser(self::FIXTURE_ACCOUNT);
 
-        // tf_messages roundtrip: wire ids + text + peer longs.
-        $message = TlMessage::withoutGlobalScopes()
-            ->where('account_id', self::FIXTURE_ACCOUNT)
-            ->sole();
-        self::assertSame(1186, (int) $message->message_id);
-        self::assertSame(
-            PeerIdTool::channelLong(self::FIXTURE_CHANNEL_ID),
-            (int) $message->peer_id,
-            'tf_messages.peer_id = canonical channel long',
-        );
-        self::assertSame(
-            PeerIdTool::userLong(self::FIXTURE_USER_ID),
-            (int) $message->from_id,
-            'tf_messages.from_id = canonical user long',
-        );
-        self::assertSame('Check https://t.me/teleframe from @Reza', $message->message_text);
-        $msgData = is_array($message->tl_data) ? $message->tl_data : json_decode((string) $message->tl_data, true);
-        self::assertSame('message', (string) ($msgData['_'] ?? ''));
-        self::assertSame('Check https://t.me/teleframe from @Reza', (string) ($msgData['message'] ?? ''));
+        // The real ingest path: updateNewMessage tree → tf_updates + children,
+        // nested message → tf_messages + from_id child.
+        $ingestor = new UpdateIngestor;
+        $root = $ingestor->ingest(self::updateNewMessagePayload(), self::FIXTURE_ACCOUNT);
+        self::assertInstanceOf(TfUpdate::class, $root);
 
-        // tf_updates roundtrip: extracted pts + full JSONB envelope.
-        $root = TlUpdate::withoutGlobalScopes()
-            ->where('account_id', self::FIXTURE_ACCOUNT)
-            ->sole();
-        self::assertSame(0x1f2b0afd, (int) $root->constructor_id);
-        self::assertSame(1349, (int) $root->pts);
-        $tlData = is_array($root->tl_data) ? $root->tl_data : json_decode((string) $root->tl_data, true);
-        self::assertSame('updateNewMessage', (string) ($tlData['_'] ?? ''));
+        // Channel + user sidecars round-trip through their models.
+        $channel = TfChannel::forAccount(self::FIXTURE_ACCOUNT)->sole();
+        self::assertSame('Teleframe Café', $channel->title);
+        self::assertSame('channel', $channel->constructor);
+        self::assertTrue((bool) $channel->megagroup);
+        self::assertTrue((bool) $channel->verified);
+        self::assertSame(-7779317524312221622, (int) $channel->access_hash);
 
-        // Scope uniqueness holds: the same wire message under a second
-        // account is a distinct row (composite scope, not global PK).
-        DB::table('tf_messages')->insert([
-            'id' => 7003,
-            'message_id' => $node['id'],
-            'peer_id' => PeerIdTool::channelLong($node['peer_id']['channel_id']),
-            'date' => $node['date'],
-            'constructor_id' => 0x7600b9d3,
-            'account_id' => self::FIXTURE_ACCOUNT + 1,
-            'message_text' => $node['message'],
-            'tl_data' => json_encode($node),
+        $user = TfUser::forAccount(self::FIXTURE_ACCOUNT)->sole();
+        self::assertSame('user', $user->constructor);
+        self::assertSame('Reza', $user->firstName()->sole()->first_name);
+        self::assertSame('RezaRezaei', $user->username()->sole()->username);
+
+        // tf_messages roundtrip: wire id is the row id, peers are the
+        // canonical (peer_type, peer_id) pair.
+        $message = TfMessage::forAccount(self::FIXTURE_ACCOUNT)->sole();
+        self::assertSame(1186, (int) $message->id);
+        self::assertSame(PeerShapeTool::PEER_CHANNEL, (int) $message->peer_type, 'tf_messages.peer_type = channel');
+        self::assertSame(self::FIXTURE_CHANNEL_ID, (int) $message->peer_id, 'tf_messages.peer_id = raw channel id');
+        self::assertSame('message', $message->constructor);
+        self::assertTrue((bool) $message->out);
+        self::assertSame('Check https://t.me/teleframe from @Reza', $message->message);
+        self::assertSame(1724852400, (int) $message->date);
+
+        $from = $message->from()->sole();
+        self::assertSame(PeerShapeTool::PEER_USER, (int) $from->from_id_type, 'tf_messages_from_id.type = user');
+        self::assertSame(self::FIXTURE_USER_ID, (int) $from->from_id_id, 'tf_messages_from_id.id = user id');
+
+        // tf_updates roundtrip: (account_id, seq, position) key + constructor
+        // + the extracted scalar / message children.
+        $update = TfUpdate::forAccount(self::FIXTURE_ACCOUNT)->sole();
+        self::assertSame('updateNewMessage', $update->constructor);
+        self::assertSame(1349, (int) $update->pts()->sole()->pts);
+        self::assertSame(1, (int) $update->ptsCount()->sole()->pts_count);
+        $linked = $update->message()->sole();
+        self::assertSame(PeerShapeTool::PEER_CHANNEL, (int) $linked->peer_type);
+        self::assertSame(self::FIXTURE_CHANNEL_ID, (int) $linked->peer_id);
+        self::assertSame(1186, (int) $linked->message_id, 'tf_updates_message.message_id = the native message id');
+    }
+
+    public function test_re_ingest_is_idempotent_on_postgres(): void
+    {
+        $this->insertAccounts(7);
+
+        $ingestor = new UpdateIngestor;
+        $first = $ingestor->ingest(self::updateNewMessagePayload(), self::FIXTURE_ACCOUNT);
+        $second = $ingestor->ingest(self::updateNewMessagePayload(), self::FIXTURE_ACCOUNT);
+
+        self::assertSame((int) $first->account_id, (int) $second->account_id);
+        self::assertSame(1, TfMessage::forAccount(self::FIXTURE_ACCOUNT)->count(), 're-ingest upserts, never duplicates');
+        self::assertSame(1, TfUpdate::forAccount(self::FIXTURE_ACCOUNT)->count());
+        self::assertSame(1186, (int) TfMessage::forAccount(self::FIXTURE_ACCOUNT)->sole()->id);
+    }
+
+    public function test_mirror_rows_are_tenant_scoped_by_composite_key(): void
+    {
+        $this->insertAccounts(7, 8);
+
+        $ingestor = new UpdateIngestor;
+        $ingestor->ingest(self::updateNewMessagePayload(), 7);
+        $ingestor->ingest(self::updateNewMessagePayload(), 8);
+
+        // Same (account_id, id) shape keys messages per tenant, not globally.
+        self::assertSame(2, TfMessage::acrossAccounts()->count(), 'same wire message under two tenants');
+        self::assertSame(2, TfUpdate::acrossAccounts()->count());
+        self::assertSame(1, TfMessage::forAccount(7)->count());
+        self::assertSame(1, TfMessage::forAccount(8)->count());
+    }
+
+    /**
+     * @return array{account_id:int, id:int, constructor:string, title:string, access_hash:int, date:int, megagroup:bool, verified:bool}
+     */
+    private function channelRow(int $accountId): array
+    {
+        $payload = self::channelPayload();
+
+        return [
+            'account_id' => $accountId,
+            'id' => (int) $payload['id'],
+            'constructor' => (string) $payload['_'],
+            'title' => (string) $payload['title'],
+            'access_hash' => (int) $payload['access_hash'],
+            'date' => (int) $payload['date'],
+            'megagroup' => (bool) ($payload['megagroup'] ?? false),
+            'verified' => (bool) ($payload['verified'] ?? false),
+        ];
+    }
+
+    private function insertUser(int $accountId): void
+    {
+        $user = new TfUser([
+            'account_id' => $accountId,
+            'id' => self::FIXTURE_USER_ID,
+            'constructor' => 'user',
         ]);
-        self::assertSame(2, TlMessage::withoutGlobalScopes()->count());
-        self::assertSame(1, TlMessage::withoutGlobalScopes()->where('account_id', self::FIXTURE_ACCOUNT)->count());
+        $user->save();
+        $user->accessHash()->create([...$user->childKey(), 'access_hash' => -5988024083302710253]);
+        $user->firstName()->create([...$user->childKey(), 'first_name' => 'Reza']);
+        $user->lastName()->create([...$user->childKey(), 'last_name' => 'Rezaei']);
+        $user->username()->create([...$user->childKey(), 'username' => 'RezaRezaei']);
+    }
+
+    private function insertAccounts(int ...$accountIds): void
+    {
+        foreach ($accountIds as $accountId) {
+            DB::table('telegram_accounts')->updateOrInsert(['id' => $accountId], [
+                'id' => $accountId,
+                'label' => 'full-mirror-pg-'.$accountId,
+                'type' => 'user',
+                'dc_id' => 2,
+            ]);
+        }
     }
 }
