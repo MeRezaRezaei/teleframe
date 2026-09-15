@@ -22,8 +22,24 @@ final class TtlJanitor
 
     /** Tables with TTL columns that the janitor sweeps. */
     private const TTL_TABLES = [
-        'tf_stories' => 'expire_date',
+        // Curated dial (2026_09_14_*) carries NO expiry-sweep surface: the
+        // generated tf_stories table this janitor swept was purged with the
+        // legacy mirror and no hand-authored table has a TTL column. The
+        // sweep is deliberately empty until the curated dial gains one.
     ];
+
+    /**
+     * The configured TTL table → TTL-column map. Kept behind an accessor so
+     * the sweep loop sees the contract type (array<string, string>) rather
+     * than the currently-empty constant value; re-enable by adding entries
+     * to {@see TTL_TABLES}.
+     *
+     * @return array<string, string>
+     */
+    protected static function ttlTables(): array
+    {
+        return self::TTL_TABLES;
+    }
 
     public function __construct(
         private readonly int $batchSize = self::DEFAULT_BATCH,
@@ -39,7 +55,7 @@ final class TtlJanitor
         $results = [];
         $now = now();
 
-        foreach (self::TTL_TABLES as $table => $ttlColumn) {
+        foreach (self::ttlTables() as $table => $ttlColumn) {
             $totalDeleted = 0;
 
             // TDLib double-limit pattern: keep deleting in batches until

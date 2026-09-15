@@ -6,8 +6,8 @@ namespace MeRezaRezaei\Teleframe;
 
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfUser;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TfMirrorModel;
 
 /**
  * The package's public face (plan Task 5): a thin, container-resolvable
@@ -23,19 +23,20 @@ final class Teleclient
     public function __construct(
         private readonly UpdateIngestor $ingestor,
         private readonly EntityAggregator $entities,
-    ) {
-    }
+    ) {}
 
     /**
      * Ingest a raw update payload (teleframe truth: snake keys, `_`
      * constructor name). Updates always become instances — they never
      * touch routes.
      *
-     * @param array<string, mixed> $update
+     * @param  array<string, mixed>  $update
      */
-    public function ingest(array $update, int $accountId): TlAnchorModel
+    public function ingest(array $update, int $accountId): ?TfMirrorModel
     {
-        return $this->ingestor->ingest($update, $accountId);
+        $root = $this->ingestor->ingest($update, $accountId);
+
+        return $root instanceof TfMirrorModel ? $root : null;
     }
 
     /**
@@ -44,12 +45,14 @@ final class Teleclient
      * instance instead of rewriting; update-kind payloads bypass routes
      * and always become instances.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, mixed> $response
+     * @param  array<string, mixed>  $params
+     * @param  array<string, mixed>  $response
      */
-    public function ingestResponse(string $method, array $params, array $response, int $accountId): TlAnchorModel
+    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TfMirrorModel
     {
-        return $this->ingestor->ingestResponse($method, $params, $response, $accountId);
+        $root = $this->ingestor->ingestResponse($method, $params, $response, $accountId);
+
+        return $root instanceof TfMirrorModel ? $root : null;
     }
 
     /**
@@ -57,7 +60,7 @@ final class Teleclient
      * instance loaded as `currentInstance` — null when the tenant never
      * saw the user or its current instance is deleted.
      */
-    public function user(int $accountId, int $tgId): ?TlUser
+    public function user(int $accountId, int $tgId): ?TfUser
     {
         return $this->entities->user($accountId, $tgId);
     }

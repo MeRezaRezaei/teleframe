@@ -15,9 +15,11 @@ use MeRezaRezaei\Teleframe\Handler\UpdateDispatcher;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackupCommand;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfChannel;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfChat;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfUser;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
+use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use Psr\Container\ContainerInterface;
 use Psr\SimpleCache\CacheInterface;
 
@@ -35,8 +37,7 @@ final class Teleframe
 {
     public function __construct(
         private readonly ContainerInterface $container,
-    ) {
-    }
+    ) {}
 
     /** @param array<string, mixed> $update */
     public function ingest(array $update, int $accountId): TlAnchorModel
@@ -45,8 +46,8 @@ final class Teleframe
     }
 
     /**
-     * @param array<string, mixed> $params
-     * @param array<string, mixed> $response
+     * @param  array<string, mixed>  $params
+     * @param  array<string, mixed>  $response
      */
     public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TlAnchorModel
     {
@@ -73,7 +74,7 @@ final class Teleframe
      * the running-mode surface without transport). Returns every non-null
      * handler result in fixture order (echoed/self-originated frames drop).
      *
-     * @param list<array{update?: array, account_id?: int, ts?: int}> $fixtures
+     * @param  list<array{update?: array, account_id?: int, ts?: int}>  $fixtures
      */
     public function run(array $fixtures): array
     {
@@ -91,17 +92,17 @@ final class Teleframe
         return $results;
     }
 
-    public function user(int $accountId, int $tgId): ?TlUser
+    public function user(int $accountId, int $tgId): ?TfUser
     {
         return $this->container->get(EntityAggregator::class)->user($accountId, $tgId);
     }
 
-    public function chat(int $accountId, int $tgId): ?TlChat
+    public function chat(int $accountId, int $tgId): ?TfChat
     {
         return $this->container->get(EntityAggregator::class)->chat($accountId, $tgId);
     }
 
-    public function channel(int $accountId, int $tgId): ?TlChat
+    public function channel(int $accountId, int $tgId): ?TfChannel
     {
         return $this->container->get(EntityAggregator::class)->channel($accountId, $tgId);
     }
@@ -134,12 +135,12 @@ final class Teleframe
     public function schemaLayer(?string $schemasDir = null, ?string $outputDir = null): array
     {
         $regenerator = $this->container->get(
-            \MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator::class,
+            SchemaRegenerator::class,
         );
         $root = dirname(__DIR__, 2);
 
         return $regenerator->regenerate(
-            $schemasDir ?? $root . '/schema/sources',
+            $schemasDir ?? $root.'/schema/sources',
             $outputDir ?? $root,
         );
     }
@@ -154,7 +155,7 @@ final class Teleframe
      * PSR-16 elimination registry so its echo never re-enters handlers.
      * Existing consumers keep their own send path unchanged.
      *
-     * @param array<string, mixed> $send
+     * @param  array<string, mixed>  $send
      */
     public function send(int $accountId, array $send): int
     {

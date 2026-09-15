@@ -5,80 +5,53 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use MeRezaRezaei\Teleframe\Ingest\TtlJanitor;
 
+/**
+ * Phase C re-baseline: the TTL janitor against the CURATED dial.
+ *
+ * The legacy sweeper targeted the generated tf_stories table (expire_date
+ * column). That surface was purged with the legacy mirror, and NO curated
+ * hand-authored table carries an expiry-sweep column — the janitor's TTL
+ * table set is empty by design until the curated dial gains one. The
+ * janitor therefore sweeps nothing and reports per-table results []
+ * regardless of what the mirror holds.
+ */
 class TtlJanitorTest extends IngestTestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
+    private const ACCOUNT = 1;
 
-        // tf_stories comes from the migrated real DDL (IngestTestCase):
-        // bigInteger id PK (no autoincrement — supply explicitly).
+    public function test_curated_dial_exposes_no_ttl_sweep_surface(): void
+    {
+        // The legacy sweep target is gone; no curated fact table carries an
+        // expiry column for the janitor to run against.
+        self::assertFalse(Schema::hasTable('tf_stories'));
+        self::assertFalse(Schema::hasColumn('tf_messages', 'expire_date'));
+        self::assertFalse(Schema::hasColumn('tf_updates', 'expires_at'));
+
+        $results = (new TtlJanitor)->sweep();
+        self::assertSame([], $results, 'no per-table results when no TTL surface exists');
     }
 
-    public function test_sweep_removes_expired_rows(): void
+    public function test_sweep_never_touches_curated_rows(): void
     {
-        $expired = now()->subDay();
-        $future = now()->addDay();
-
-        // expire_date is integer-affinity in the real DDL; store datetime
-        // strings (SQLite flexible typing) so TtlJanitor's `<= now()`
-        // string comparison behaves instead of int-vs-text always-true.
-        DB::table('tf_stories')->insert([
-            ['id' => 1, 'peer_id' => 1, 'story_id' => 1, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'expire_date' => $expired->toDateTimeString(), 'created_at' => now()],
-            ['id' => 2, 'peer_id' => 1, 'story_id' => 2, 'account_id' => 1, 'constructor_id' => 0, 'tl_data' => '{}', 'expire_date' => $future->toDateTimeString(), 'created_at' => now()],
+        DB::table('tf_messages')->insert([
+            ['account_id' => 1, 'id' => 1, 'constructor' => 'message', 'peer_type' => 3, 'peer_id' => 1, 'date' => 1724852400, 'message' => 'a'],
+            ['account_id' => 1, 'id' => 2, 'constructor' => 'message', 'peer_type' => 3, 'peer_id' => 1, 'date' => 999, 'message' => 'b'],
         ]);
 
-        $janitor = new TtlJanitor();
-        $results = $janitor->sweep();
+        $results = (new TtlJanitor)->sweep();
 
-        $storyResult = null;
-        foreach ($results as $r) {
-            if ($r['table'] === 'tf_stories') {
-                $storyResult = $r;
-                break;
-            }
-        }
-
-        $this->assertNotNull($storyResult);
-        $this->assertSame(1, $storyResult['deleted']);
-        $this->assertDatabaseMissing('tf_stories', ['story_id' => 1, 'account_id' => 1]);
-        $this->assertDatabaseHas('tf_stories', ['story_id' => 2, 'account_id' => 1]);
+        self::assertSame([], $results);
+        self::assertSame(2, DB::table('tf_messages')->where('account_id', 1)->count(), 'even long-past wire dates are not expiry-swept');
     }
 
-    public function test_sweep_respects_limit(): void
+    public function test_batch_size_acceptance_is_preserved(): void
     {
-        $expired = now()->subDay();
-        $id = 100;
-        for ($i = 100; $i < 105; $i++) {
-            DB::table('tf_stories')->insert([
-                'id' => $id++, 'peer_id' => $i, 'story_id' => $i, 'account_id' => 1,
-                'constructor_id' => 0, 'tl_data' => '{}',
-                'expire_date' => $expired->toDateTimeString(), 'created_at' => now(),
-            ]);
-        }
-
+        // The janitor still accepts the TDLib-style batch-size seam; with an
+        // empty sweep set the limit is trivially satisfied.
         $janitor = new TtlJanitor(batchSize: 2);
-        $results = $janitor->sweep();
-
-        $storyResult = null;
-        foreach ($results as $r) {
-            if ($r['table'] === 'tf_stories') {
-                $storyResult = $r;
-                break;
-            }
-        }
-
-        $this->assertNotNull($storyResult);
-        // Double-limit loop: 2 + 2 + 1 = 5 total (loop stops when batch < batchSize)
-        $this->assertSame(5, $storyResult['deleted']);
-    }
-
-    public function test_sweep_returns_empty_when_no_expired(): void
-    {
-        $janitor = new TtlJanitor();
-        $results = $janitor->sweep();
-        $this->assertSame([], $results);
+        self::assertSame([], $janitor->sweep());
     }
 }

@@ -4,30 +4,30 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannel;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessage;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUpdate;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfMessage;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfMessageFromId;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfUpdate;
 use MeRezaRezaei\Teleframe\Tests\Ingest\Concerns\HasNestedUpdateFixtures;
 
 /**
- * Plan Task 3: nested-payload ingest of the canned updateNewMessage#1f2b0afd
- * tree (message + peer refs + entities + media) plus the difference-stream
- * sidecar entities (channel + user objects), all through the same generic
- * ingest() surface onto the TDLib-style domain tables.
+ * Phase C re-baseline of the plan Task-3 nested-payload ingest test onto the
+ * curated dial: the canned updateNewMessage tree (message + peer refs +
+ * entities + media) decomposes into tf_updates (keyed (account_id, seq,
+ * position)) with its hand-authored children (pts, pts_count, message
+ * routing) and the nested message lands in the sibling messages mirror.
  *
  * The payloads themselves live in HasNestedUpdateFixtures (shared 1:1 with
  * the Postgres mirror track, tests/Pg/FullMirrorPgTest).
  *
- * Domain truth: only classified ctors persist (update→tf_updates,
- * message→tf_messages, channel→tf_channels, user→tf_users). Ephemeral
- * nodes (peerUser/peerChannel, messageMediaEmpty, messageEntity*,
- * chatPhotoEmpty) ride along inside their parent's tl_data JSONB — there
- * are no child rows, no peer tables, no media/entity tables.
+ * Curated truth: constructor = ctor name (no crc32), inline peer halves
+ * (peer_type/peer_id), booleans as live wire-false columns, NO tl_data
+ * JSONB. Ephemeral nodes (peerUser/peerChannel, messageMediaEmpty,
+ * messageEntity*) and the identity sidecars (channel/user ctors) have no
+ * curated ingest write surface — they are neither child rows nor JSONB.
  */
 final class NestedIngestTest extends IngestTestCase
 {
@@ -35,18 +35,20 @@ final class NestedIngestTest extends IngestTestCase
 
     private const ACCOUNT = self::FIXTURE_ACCOUNT;
 
+    private const OTHER_ACCOUNT = 8;
+
     private const CHANNEL_ID = self::FIXTURE_CHANNEL_ID;
 
     private const USER_ID = self::FIXTURE_USER_ID;
 
-    private function ingestTree(int $accountId = self::ACCOUNT): TlUpdate
+    private function ingestTree(int $accountId = self::ACCOUNT): TfUpdate
     {
-        $ingestor = new UpdateIngestor();
+        $ingestor = new UpdateIngestor;
         $ingestor->ingest(self::channelPayload(), $accountId);
         $ingestor->ingest(self::userPayload(), $accountId);
 
         $root = $ingestor->ingest(self::updateNewMessagePayload(), $accountId);
-        assert($root instanceof TlUpdate);
+        assert($root instanceof TfUpdate);
 
         return $root;
     }
@@ -55,61 +57,57 @@ final class NestedIngestTest extends IngestTestCase
     {
         $root = $this->ingestTree();
 
-        self::assertInstanceOf(TlUpdate::class, $root);
+        self::assertInstanceOf(TfUpdate::class, $root);
+        self::assertSame('updateNewMessage', $root->getAttribute('constructor'));
+        self::assertSame(self::ACCOUNT, (int) $root->getAttribute('account_id'));
+        self::assertSame(0, (int) $root->getAttribute('seq'));
+        self::assertSame(0, (int) $root->getAttribute('position'));
 
-        // Root update row: verbatim pts cols + constructor marker.
-        self::assertSame(0x1f2b0afd, (int) $root->constructor_id);
-        self::assertSame(self::ACCOUNT, (int) $root->account_id);
-        self::assertSame(1349, (int) $root->pts);
-        self::assertSame(1, (int) $root->pts_count);
-        self::assertSame('updateNewMessage', $root->tl_data['_']);
+        // Pts facts land in the hand-authored children (row = fact existence).
+        $stored = TfUpdate::forAccount(self::ACCOUNT)->sole();
+        self::assertSame(1349, (int) $stored->pts()->sole()->getAttribute('pts'));
+        self::assertSame(1, (int) $stored->ptsCount()->sole()->getAttribute('pts_count'));
 
-        // Message row: extracted columns + canonical peer longs + JSONB.
-        $message = TlMessage::forAccount(self::ACCOUNT)->sole();
-        self::assertSame(1186, (int) $message->message_id);
-        self::assertSame('Check https://t.me/teleframe from @Reza', $message->message_text);
-        self::assertSame(1724852400, (int) $message->date);
-        self::assertTrue((bool) $message->is_out);
-        self::assertSame(PeerIdTool::userLong(self::USER_ID), (int) $message->from_id, 'message.from_id = canonical user long');
-        self::assertSame(PeerIdTool::channelLong(self::CHANNEL_ID), (int) $message->peer_id, 'message.peer_id = canonical channel long');
-        self::assertSame('message', $message->tl_data['_']);
-        self::assertSame(0x7600b9d3, (int) $message->constructor_id, 'message#7600b9d3');
+        // Nested message row: extracted columns + canonical inline peer
+        // halves, no tl_data / message_text legacy extraction. The wire
+        // message's peer is the outgoing channel (peerChannel).
+        $message = TfMessage::forAccount(self::ACCOUNT)->sole();
+        self::assertSame(1186, (int) $message->getAttribute('id'));
+        self::assertSame('Check https://t.me/teleframe from @Reza', $message->getAttribute('message'));
+        self::assertSame(1724852400, (int) $message->getAttribute('date'));
+        self::assertTrue((bool) $message->getAttribute('out'));
+        self::assertSame(3, (int) $message->getAttribute('peer_type'), 'peerChannel normalizes to peer_type 3');
+        self::assertSame(self::CHANNEL_ID, (int) $message->getAttribute('peer_id'), 'message.peer_id = canonical channel id');
+        self::assertSame('message', $message->getAttribute('constructor'));
 
-        // Ephemeral peer/media/entity nodes have no tables — but they ride
-        // inside the message JSONB verbatim.
-        $entities = $message->tl_data['entities'] ?? [];
-        self::assertCount(3, $entities);
-        self::assertSame('messageEntityBold', $entities[0]['_']);
-        self::assertSame('messageEntityUrl', $entities[1]['_']);
-        self::assertSame('messageEntityMentionName', $entities[2]['_']);
-        self::assertSame('peerUser', $message->tl_data['from_id']['_']);
-        self::assertSame('peerChannel', $message->tl_data['peer_id']['_']);
-        self::assertSame('messageMediaEmpty', $message->tl_data['media']['_']);
+        // from_id is a 1:1 inline peer-pair child (tf_messages_from_id).
+        $from = TfMessageFromId::forAccount(self::ACCOUNT)->sole();
+        self::assertSame(1, (int) $from->getAttribute('from_id_type'));
+        self::assertSame(self::USER_ID, (int) $from->getAttribute('from_id_id'));
 
-        // Channel sidecar: native id PK + verbatim title + flags.
-        $channel = TlChannel::forAccount(self::ACCOUNT)->sole();
-        self::assertSame(self::CHANNEL_ID, (int) $channel->id);
-        self::assertSame('Teleframe Café', $channel->title);
-        self::assertTrue((bool) $channel->is_verified);
-        self::assertTrue((bool) $channel->is_megagroup);
-
-        // User sidecar: native id PK + verbatim name.
-        $user = TlUser::forAccount(self::ACCOUNT)->sole();
-        self::assertSame(self::USER_ID, (int) $user->id);
-        self::assertSame('Reza', $user->first_name);
+        // The tf_updates_message routing child points at the sibling.
+        $linked = $stored->message()->sole();
+        self::assertSame(3, (int) $linked->getAttribute('peer_type'));
+        self::assertSame(self::CHANNEL_ID, (int) $linked->getAttribute('peer_id'));
+        self::assertSame(1186, (int) $linked->getAttribute('message_id'));
     }
 
-    public function test_entities_preserve_vector_order_in_jsonb(): void
+    public function test_ephemeral_nodes_and_identity_sidecars_store_nothing(): void
     {
         $this->ingestTree();
 
-        $message = TlMessage::forAccount(self::ACCOUNT)->sole();
-        $entities = $message->tl_data['entities'] ?? [];
+        // The ephemeral child surface is NOT written by the curated ingestor:
+        // entities/media ride the wire ctor only. None of the curated
+        // envelope/media tables gain rows from this payload.
+        self::assertSame(0, DB::table('tf_messages_entities')->where('account_id', self::ACCOUNT)->count());
+        self::assertSame(0, DB::table('tf_messages_media')->where('account_id', self::ACCOUNT)->count());
 
-        self::assertCount(3, $entities);
-        self::assertSame([0, 6, 33], array_column($entities, 'offset'), 'wire vector order preserved in JSONB');
-        self::assertSame([5, 21, 5], array_column($entities, 'length'));
-        self::assertSame(self::USER_ID, $entities[2]['user_id']);
+        // channel/user sidecars have no curated ingest surface — null roots,
+        // no identity rows.
+        self::assertNull((new UpdateIngestor)->ingest(self::channelPayload(), self::ACCOUNT));
+        self::assertNull((new UpdateIngestor)->ingest(self::userPayload(), self::ACCOUNT));
+        self::assertSame(0, DB::table('tf_channels')->where('account_id', self::ACCOUNT)->count());
+        self::assertSame(0, DB::table('tf_users')->where('account_id', self::ACCOUNT)->count());
     }
 
     public function test_update_stored_event_fires_with_committed_root_model(): void
@@ -120,7 +118,7 @@ final class NestedIngestTest extends IngestTestCase
 
         Event::assertDispatchedTimes(UpdateStored::class, 1);
         Event::assertDispatched(UpdateStored::class, function (UpdateStored $event) use ($root): bool {
-            return $event->model instanceof TlUpdate
+            return $event->model instanceof TfUpdate
                 && $event->model->is($root)
                 && $event->accountId === self::ACCOUNT;
         });
@@ -130,32 +128,23 @@ final class NestedIngestTest extends IngestTestCase
     {
         $rootA = $this->ingestTree(self::ACCOUNT);
 
-        // Same Telegram entities under account 8: tenant-scoped rows with
-        // tenant-local surrogate ids for messages/updates.
-        $ingestor = new UpdateIngestor();
-        $ingestor->ingest(self::channelPayload(), 8);
-        $ingestor->ingest(self::userPayload(), 8);
-        $rootB = $ingestor->ingest(self::updateNewMessagePayload(), 8);
+        // Same Telegram entities under account 8: tenant-scoped rows keyed
+        // by (account_id, seq, position) / (account_id, id).
+        $ingestor = new UpdateIngestor;
+        $ingestor->ingest(self::channelPayload(), self::OTHER_ACCOUNT);
+        $ingestor->ingest(self::userPayload(), self::OTHER_ACCOUNT);
+        $rootB = $ingestor->ingest(self::updateNewMessagePayload(), self::OTHER_ACCOUNT);
 
-        // Updates + messages are per-tenant: two rows each side.
-        self::assertSame(2, TlUpdate::acrossAccounts()->count());
-        self::assertSame(2, TlMessage::acrossAccounts()->count());
-
-        // Global-ID sidecars are per-tenant too (composite PK): two rows each.
-        self::assertSame(2, TlChannel::acrossAccounts()->count(), 'two tenant rows for one Telegram channel');
-        self::assertSame(2, TlUser::acrossAccounts()->count(), 'two tenant rows for one Telegram user');
+        self::assertSame(2, TfUpdate::acrossAccounts()->count(), 'one update row per tenant');
+        self::assertSame(2, TfMessage::acrossAccounts()->count(), 'one message row per tenant');
 
         // Account 7's view is untouched by the account 8 ingest.
-        $messageA = TlMessage::forAccount(self::ACCOUNT)->sole();
-        self::assertSame(PeerIdTool::channelLong(self::CHANNEL_ID), (int) $messageA->peer_id, 'account 7 peer_id = canonical channel long');
-        self::assertSame(1186, (int) $messageA->message_id);
-        // Surrogate-key rows (updates/messages) carry no stable native id —
-        // tenant isolation is proven by per-account scoping, not key compare
-        // (TlAnchorModel::$incrementing=false leaves sqlite keys unfilled).
-        self::assertSame(self::ACCOUNT, (int) $rootA->account_id);
-        self::assertSame(8, (int) $rootB->account_id);
-        self::assertSame(1, TlUpdate::forAccount(self::ACCOUNT)->count());
-        self::assertSame(1, TlUpdate::forAccount(8)->count());
+        $messageA = TfMessage::forAccount(self::ACCOUNT)->sole();
+        self::assertSame(1186, (int) $messageA->getAttribute('id'));
+        self::assertSame(self::ACCOUNT, (int) $rootA->getAttribute('account_id'));
+        self::assertSame(self::OTHER_ACCOUNT, (int) $rootB->getAttribute('account_id'));
+        self::assertSame(1, TfUpdate::forAccount(self::ACCOUNT)->count());
+        self::assertSame(1, TfUpdate::forAccount(self::OTHER_ACCOUNT)->count());
     }
 
     public function test_full_re_ingest_keeps_counts_stable(): void
@@ -163,25 +152,22 @@ final class NestedIngestTest extends IngestTestCase
         $this->ingestTree();
         $this->ingestTree();
 
-        // tf_updates is an append-only event log (BIGSERIAL PK, spec §3.6):
-        // each ingest appends one row. Entity tables upsert-stable.
-        self::assertSame(2, TlUpdate::acrossAccounts()->count(), 'update log appends one row per ingest');
-        self::assertSame(1, TlMessage::acrossAccounts()->count(), 'message row upsert-stable');
-        self::assertSame(1, TlChannel::acrossAccounts()->count(), 'channel row upsert-stable');
-        self::assertSame(1, TlUser::acrossAccounts()->count(), 'user row upsert-stable');
+        // The curated update surface is keyed (account_id, seq, position) —
+        // a lone update always writes the (0, 0) key, so re-ingest UPSERTS
+        // instead of appending. Both update and message rows stay stable.
+        self::assertSame(1, TfUpdate::acrossAccounts()->count(), 'update row upsert-stable on (account_id, seq, position)');
+        self::assertSame(1, TfMessage::acrossAccounts()->count(), 'message row upsert-stable on (account_id, id)');
 
-        // Third re-ingest: entities still stable, log grows by exactly one.
+        // Third re-ingest: still stable.
         $this->ingestTree();
-        self::assertSame(3, TlUpdate::acrossAccounts()->count());
-        self::assertSame(1, TlMessage::acrossAccounts()->count());
-        self::assertSame(1, TlChannel::acrossAccounts()->count());
-        self::assertSame(1, TlUser::acrossAccounts()->count());
+        self::assertSame(1, TfUpdate::acrossAccounts()->count());
+        self::assertSame(1, TfMessage::acrossAccounts()->count());
     }
 
     public function test_root_without_constructor_fails_loudly(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("'_'");
-        (new UpdateIngestor())->ingest(['pts' => 1, 'pts_count' => 1], self::ACCOUNT);
+        (new UpdateIngestor)->ingest(['pts' => 1, 'pts_count' => 1], self::ACCOUNT);
     }
 }

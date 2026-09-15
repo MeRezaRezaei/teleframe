@@ -10,8 +10,11 @@ use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 
 /**
- * Phase 0 Task 1: the event fires through the INJECTED dispatcher, and the
- * Laravel wiring (provider closure below) makes Event::fake() still see it.
+ * Phase C re-baseline: the UpdateStored event fires through the INJECTED
+ * dispatcher, and the Laravel wiring (provider closure below) makes
+ * Event::fake() still see it. The payload is the curated messages surface
+ * (tf_messages) — the legacy user-domain ingest stored nothing and fired
+ * nothing.
  */
 final class UpdateIngestorDispatchTest extends IngestTestCase
 {
@@ -20,7 +23,8 @@ final class UpdateIngestorDispatchTest extends IngestTestCase
     public function test_ingest_fires_update_stored_through_injected_dispatcher(): void
     {
         $captured = [];
-        $capturing = new class ($captured) implements Dispatcher {
+        $capturing = new class($captured) implements Dispatcher
+        {
             public function __construct(private array &$captured) {}
 
             public function dispatch($event, $payload = [], $halt = false): array
@@ -31,17 +35,27 @@ final class UpdateIngestorDispatchTest extends IngestTestCase
             }
 
             public function listen($events, $listener = null) {}
-            public function hasListeners($eventName) { return false; }
+
+            public function hasListeners($eventName)
+            {
+                return false;
+            }
+
             public function subscribe($subscriber) {}
+
             public function until($event, $payload = []) {}
+
             public function forget($event) {}
+
             public function forgetPushed() {}
+
             public function push($event, $payload = []) {}
+
             public function flush($event) {}
         };
 
         $ingestor = new UpdateIngestor(events: $capturing);
-        $ingestor->ingest(self::userPayload(), self::ACCOUNT);
+        $ingestor->ingest(self::messagePayload(), self::ACCOUNT);
 
         self::assertCount(1, $captured);
         self::assertInstanceOf(UpdateStored::class, $captured[0]);
@@ -52,26 +66,23 @@ final class UpdateIngestorDispatchTest extends IngestTestCase
     {
         Event::fake([UpdateStored::class]);
 
-        $this->app->make(UpdateIngestor::class)->ingest(self::userPayload(), self::ACCOUNT);
+        $this->app->make(UpdateIngestor::class)->ingest(self::messagePayload(), self::ACCOUNT);
 
         Event::assertDispatchedTimes(UpdateStored::class, 1);
     }
 
-    private static function userPayload(): array
+    /**
+     * @return array<string, mixed>
+     */
+    private static function messagePayload(): array
     {
         return [
-            '_' => 'user',
-            'flags' => (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 22) | (1 << 28),
-            'id' => 501558149,
-            'access_hash' => -5988024083302710253,
-            'first_name' => 'Reza',
-            'last_name' => 'Rezaei',
-            'username' => 'RezaRezaei',
-            'phone' => '989121234567',
-            'lang_code' => 'en',
-            'flags2' => (1 << 4),
-            'stories_unavailable' => true,
-            'premium' => true,
+            '_' => 'message',
+            'out' => false,
+            'id' => 5,
+            'peer_id' => ['_' => 'peerChannel', 'channel_id' => 900],
+            'date' => 1750000000,
+            'message' => 'proof',
         ];
     }
 }

@@ -5,16 +5,22 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
-use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannel;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfChannel;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfChat;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfUser;
 
 /**
- * Entity aggregation on the domain surface: resolve the domain row for a
- * referenced entity (user/chat/channel) by (tenant, telegram id); null
- * when absent. One table per domain (TlUser, TlChat, TlChannel) — no
- * per-constructor models, no currentInstance relation. Domain rows are
- * tenant-scoped via the composite PK (id, account_id).
+ * Phase C re-baseline: aggregation on the CURATED identity dial. The
+ * aggregator resolves the hand-authored domain table for a referenced
+ * entity by (tenant, telegram id) — tf_users / tf_chats / tf_channels —
+ * the same tables the identity mirrors seed. Generated Tl* models,
+ * constructor discriminator upserts and tl_data rows are gone.
+ *
+ * Identity rows come from the identity mirror seams (tests/Mirror), NOT
+ * from ingest: the user/channel difference-stream ctors have no curated
+ * write surface, so these tests seed the rows directly exactly the way
+ * IdentityMirrorTest does — children then live in the 1:1 fact tables
+ * (first_name is tf_users_first_name, not a tf_users column).
  */
 final class EntityAggregatorTest extends IngestTestCase
 {
@@ -26,146 +32,109 @@ final class EntityAggregatorTest extends IngestTestCase
 
     private const CHANNEL_ID = 1737473577;
 
-    /**
-     * @return array<string, mixed>
-     */
-    private static function userPayload(string $firstName = 'Reza'): array
+    private const CHAT_ID = 220000013;
+
+    private function seedUser(int $accountId = self::ACCOUNT, string $firstName = 'Reza', bool $deleted = false): void
     {
-        return [
-            '_' => 'user',
-            'flags' => (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3),
+        $user = new TfUser([
+            'account_id' => $accountId,
             'id' => self::USER_ID,
-            'access_hash' => -5988024083302710253,
-            'first_name' => $firstName,
-            'last_name' => 'Rezaei',
-            'username' => 'RezaRezaei',
-        ];
+            'constructor' => 'user',
+            'deleted' => $deleted,
+            'contact' => true,
+        ]);
+        $user->save();
+
+        $user->firstName()->create([...$user->childKey(), 'first_name' => $firstName]);
+        $user->username()->create([...$user->childKey(), 'username' => 'RezaRezaei']);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private static function channelPayload(): array
+    public function test_finds_user_anchor_resolves_the_domain_row(): void
     {
-        return [
-            '_' => 'channel',
-            // verified | megagroup | access_hash
-            'flags' => (1 << 7) | (1 << 8) | (1 << 13),
-            'verified' => true,
-            'megagroup' => true,
-            'id' => self::CHANNEL_ID,
-            'access_hash' => -7779317524312221622,
-            'title' => 'Teleframe Café',
-            'photo' => ['_' => 'chatPhotoEmpty'],
-            'date' => 1712345678,
-        ];
-    }
+        $this->seedUser();
 
-    private function ingestUser(int $accountId = self::ACCOUNT, string $firstName = 'Reza'): TlUser
-    {
-        $root = (new UpdateIngestor())->ingest(self::userPayload($firstName), $accountId);
-        assert($root instanceof TlUser);
+        $anchor = (new EntityAggregator)->user(self::ACCOUNT, self::USER_ID);
 
-        return $root;
-    }
+        self::assertInstanceOf(TfUser::class, $anchor);
+        self::assertSame(self::USER_ID, (int) $anchor->getAttribute('id'), 'native Telegram id is half the PK');
+        self::assertSame(self::ACCOUNT, (int) $anchor->getAttribute('account_id'));
+        self::assertSame('user', $anchor->getAttribute('constructor'), 'ctor name, no crc32 column');
 
-    public function test_finds_user_anchor_with_current_instance(): void
-    {
-        $written = $this->ingestUser();
-
-        $anchor = (new EntityAggregator())->user(self::ACCOUNT, self::USER_ID);
-
-        self::assertInstanceOf(TlUser::class, $anchor);
-        self::assertSame((int) $written->id, (int) $anchor->id, 'resolves the row the ingestor wrote');
-        self::assertSame(self::USER_ID, (int) $anchor->id, 'native Telegram id is the PK');
-        self::assertSame(self::ACCOUNT, (int) $anchor->account_id);
-        self::assertSame(0x31774388, (int) $anchor->constructor_id);
-
-        // The domain row carries everything: extracted columns + full tl_data.
-        self::assertSame('Reza', $anchor->first_name);
-        self::assertSame('RezaRezaei', $anchor->username);
-        self::assertSame('user', $anchor->tl_data['_']);
+        // The curated dial keeps identity facts as 1:1 CHILD rows — the
+        // aggregator resolves the parent; the child read is a relation.
+        self::assertSame('Reza', $anchor->firstName()->sole()->getAttribute('first_name'));
+        self::assertSame('RezaRezaei', $anchor->username()->sole()->getAttribute('username'));
     }
 
     public function test_unknown_user_is_null(): void
     {
-        $this->ingestUser();
+        $this->seedUser();
 
-        self::assertNull((new EntityAggregator())->user(self::ACCOUNT, 999999));
+        self::assertNull((new EntityAggregator)->user(self::ACCOUNT, 999999));
     }
 
     public function test_user_rows_are_tenant_scoped(): void
     {
-        $this->ingestUser();
+        $this->seedUser(self::ACCOUNT, 'Reza');
 
-        // Composite PK (id, account_id): each tenant holds its own row for
-        // the same Telegram entity — account 8 sees nothing until it ingests.
-        $a = (new EntityAggregator())->user(self::ACCOUNT, self::USER_ID);
+        // Composite PK (account_id, id): each tenant holds its own row for
+        // the same Telegram id — account 8 sees nothing until it is seeded.
+        $a = (new EntityAggregator)->user(self::ACCOUNT, self::USER_ID);
         self::assertNotNull($a);
-        self::assertSame('Reza', $a->first_name);
-        self::assertNull((new EntityAggregator())->user(self::OTHER_ACCOUNT, self::USER_ID));
+        self::assertNull((new EntityAggregator)->user(self::OTHER_ACCOUNT, self::USER_ID));
 
-        $b = $this->ingestUser(self::OTHER_ACCOUNT, 'Ali');
-        $resolved = (new EntityAggregator())->user(self::OTHER_ACCOUNT, self::USER_ID);
+        $this->seedUser(self::OTHER_ACCOUNT, 'Ali');
+        $resolved = (new EntityAggregator)->user(self::OTHER_ACCOUNT, self::USER_ID);
         self::assertNotNull($resolved);
-        self::assertSame(self::USER_ID, (int) $resolved->id, 'same native id');
-        self::assertSame(self::OTHER_ACCOUNT, (int) $resolved->account_id, '... but a distinct tenant row');
-        self::assertSame('Ali', $resolved->first_name);
-        self::assertSame(2, TlUser::acrossAccounts()->count());
-        self::assertSame((int) $b->id, self::USER_ID);
-    }
-
-    public function test_latest_constructor_wins_on_re_ingest(): void
-    {
-        $this->ingestUser(); // user#31774388 under account 7
-
-        // userEmpty#d3bc4b7a for the SAME telegram id arrives later (account
-        // deleted upstream) — upsert hits the same (id, account_id) row and
-        // the discriminator follows the latest constructor.
-        (new UpdateIngestor())->ingest([
-            '_' => 'userEmpty',
-            'id' => self::USER_ID,
-        ], self::ACCOUNT);
-
-        $anchor = (new EntityAggregator())->user(self::ACCOUNT, self::USER_ID);
-
-        self::assertInstanceOf(TlUser::class, $anchor);
-        self::assertSame(1, TlUser::query()->count(), 'same row, re-upserted');
-        self::assertSame('userEmpty', $anchor->tl_data['_'], 'latest constructor wins');
+        self::assertSame(self::USER_ID, (int) $resolved->getAttribute('id'), 'same native id');
+        self::assertSame(self::OTHER_ACCOUNT, (int) $resolved->getAttribute('account_id'), '... but a distinct tenant row');
+        // Child facts keyed (account_id, id): scope the relation read to the
+        // tenant explicitly — the ambient account scope is unset in tests.
+        self::assertSame('Ali', $resolved->firstName()->forAccount(self::OTHER_ACCOUNT)->sole()->getAttribute('first_name'));
+        self::assertSame(2, TfUser::acrossAccounts()->count());
     }
 
     public function test_deleted_users_do_not_resolve(): void
     {
-        (new UpdateIngestor())->ingest([
-            '_' => 'user',
-            'flags' => (1 << 13), // deleted (flags.13)
-            'deleted' => true,
-            'id' => self::USER_ID,
-            'access_hash' => -5988024083302710253,
-            'first_name' => 'Reza',
-            'last_name' => 'Rezaei',
-            'username' => 'RezaRezaei',
-        ], self::ACCOUNT);
+        $this->seedUser(self::ACCOUNT, 'Reza');
 
-        self::assertNull((new EntityAggregator())->user(self::ACCOUNT, self::USER_ID), 'latest row is deleted → null');
+        // Upstream delete: latest identity row flips deleted=true — the
+        // row persists but behaves as absent.
+        TfUser::forAccount(self::ACCOUNT)->where('id', self::USER_ID)->update(['deleted' => true]);
+
+        self::assertNull((new EntityAggregator)->user(self::ACCOUNT, self::USER_ID), 'deleted row resolves to null');
     }
 
-    public function test_resolves_channel_anchors(): void
+    public function test_resolves_channel_and_chat_anchors(): void
     {
-        (new UpdateIngestor())->ingest(self::channelPayload(), self::ACCOUNT);
+        $channel = new TfChannel([
+            'account_id' => self::ACCOUNT,
+            'id' => self::CHANNEL_ID,
+            'constructor' => 'channel',
+            'title' => 'Teleframe Café',
+            'verified' => true,
+            'megagroup' => true,
+        ]);
+        $channel->save();
 
-        $aggregator = new EntityAggregator();
+        $chat = new TfChat([
+            'account_id' => self::ACCOUNT,
+            'id' => self::CHAT_ID,
+            'constructor' => 'chat',
+            'title' => 'Park Bench',
+        ]);
+        $chat->save();
 
-        // channel/channelForbidden are `= Chat;` ctors routed to tf_channels
-        // (spec §5) — they resolve through channel(), not chat().
-        $channel = $aggregator->channel(self::ACCOUNT, self::CHANNEL_ID);
-        self::assertInstanceOf(TlChannel::class, $channel);
-        self::assertSame(self::CHANNEL_ID, (int) $channel->id);
-        self::assertSame('Teleframe Café', $channel->title);
-        self::assertTrue((bool) $channel->is_verified);
-        self::assertTrue((bool) $channel->is_megagroup);
+        $aggregator = new EntityAggregator;
+
+        $found = $aggregator->channel(self::ACCOUNT, self::CHANNEL_ID);
+        self::assertInstanceOf(TfChannel::class, $found);
+        self::assertSame('Teleframe Café', $found->getAttribute('title'));
+        self::assertTrue((bool) $found->getAttribute('verified'));
+        self::assertTrue((bool) $found->getAttribute('megagroup'));
 
         self::assertNull($aggregator->chat(self::ACCOUNT, self::CHANNEL_ID), 'channel rows do not live in tf_chats');
+        self::assertInstanceOf(TfChat::class, $aggregator->chat(self::ACCOUNT, self::CHAT_ID), 'chats resolve through chat()');
         self::assertNull($aggregator->channel(self::ACCOUNT, 42), 'unknown channel id');
         self::assertNull($aggregator->channel(self::OTHER_ACCOUNT, self::CHANNEL_ID), 'tenant-scoped: other account sees nothing yet');
     }
