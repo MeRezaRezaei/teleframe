@@ -15,9 +15,10 @@ use PHPUnit\Framework\TestCase;
  * have no generated source either.
  *
  * Post-purge reality (2026-09-15):
- * - 9 curated hand-authored tf_* migrations (messages/media/updates)
+ * - 16 curated hand-authored tf_* migrations (messages/media/updates/
+ *   identity/stars-business/misc domains)
  * - 5 app-owned migrations (user_bindings, telegram_apps, ...)
- * - 14 total in src/Laravel/Migrations
+ * - 21 total in src/Laravel/Migrations
  * - bin/regenerate --ship is a no-op (no generated migrations to copy)
  */
 final class ShipDialGoldenTest extends TestCase
@@ -42,14 +43,19 @@ final class ShipDialGoldenTest extends TestCase
     public function test_shipped_subset_count(): void
     {
         $files = self::migrationFiles(self::SHIP_DIR);
-        self::assertGreaterThanOrEqual(12, $files, 'curated dial must have at least 12 migrations (9 curated + 5 app-owned)');
-        self::assertLessThanOrEqual(20, $files, 'curated dial must stay under 20 migrations total');
+        self::assertGreaterThanOrEqual(16, $files, 'curated dial must have at least 16 migrations (16 curated + 5 app-owned)');
+        self::assertLessThanOrEqual(25, $files, 'curated dial must stay under 25 migrations total');
     }
 
-    public function test_shipped_subset_contains_curated_messages_domain(): void
+    public function test_shipped_subset_contains_curated_domains(): void
     {
         $names = self::migrationNames(self::SHIP_DIR);
-        foreach (['create_tf_messages_tables'] as $stem) {
+        foreach ([
+            'create_tf_messages_tables',
+            'create_tf_users_tables',
+            'create_tf_stars_business_tables',
+            'create_tf_misc_tables',
+        ] as $stem) {
             self::assertContains(true, array_map(
                 static fn (string $n): bool => str_contains($n, $stem),
                 $names,
