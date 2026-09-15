@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * NF5 mirror — users domain (Task 2 of the reverse-engineering plan).
@@ -143,7 +144,7 @@ return new class extends Migration
             $table->boolean('has_video')->default(false);
             $table->boolean('personal')->default(false);
             $table->bigInteger('photo_id')->default(0);
-            $table->text('stripped_thumb')->default('');
+            $table->text('stripped_thumb')->default(DB::raw("('')"));
             $table->integer('dc_id')->default(0);
             $table->primary(['account_id', 'id']);
         });
@@ -203,8 +204,8 @@ return new class extends Migration
             $table->bigInteger('document_id')->default(0);
             $table->integer('until')->default(0);
             $table->bigInteger('collectible_id')->default(0);
-            $table->text('title')->default('');
-            $table->text('slug')->default('');
+            $table->text('title')->default(DB::raw("('')"));
+            $table->text('slug')->default(DB::raw("('')"));
             $table->bigInteger('pattern_document_id')->default(0);
             $table->integer('center_color')->default(0);
             $table->integer('edge_color')->default(0);
@@ -221,7 +222,7 @@ return new class extends Migration
             $table->text('constructor');
             $table->boolean('editable')->default(false);
             $table->boolean('active')->default(false);
-            $table->text('username')->default('');
+            $table->text('username')->default(DB::raw("('')"));
             $table->primary(['account_id', 'id', 'position']);
         });
 

@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * NF5 mirror — messages domain (curated dial, Task 3 of the reverse-engineering plan).
@@ -87,7 +88,7 @@ return new class extends Migration
             $table->bigInteger('peer_id')->default(0);
             $table->text('constructor');
             $table->integer('date')->default(0);
-            $table->text('message')->default('');
+            $table->text('message')->default(DB::raw("('')"));
             $table->boolean('out')->default(false);
             $table->boolean('mentioned')->default(false);
             $table->boolean('media_unread')->default(false);
@@ -150,18 +151,18 @@ return new class extends Migration
             $table->boolean('saved_out')->default(false);
             $table->tinyInteger('from_id_type')->default(0);
             $table->bigInteger('from_id_id')->default(0);
-            $table->text('from_name')->default('');
+            $table->text('from_name')->default(DB::raw("('')"));
             $table->integer('date');
             $table->integer('channel_post')->default(0);
-            $table->text('post_author')->default('');
+            $table->text('post_author')->default(DB::raw("('')"));
             $table->tinyInteger('saved_from_peer_type')->default(0);
             $table->bigInteger('saved_from_peer_id')->default(0);
             $table->integer('saved_from_msg_id')->default(0);
             $table->tinyInteger('saved_from_id_type')->default(0);
             $table->bigInteger('saved_from_id_id')->default(0);
-            $table->text('saved_from_name')->default('');
+            $table->text('saved_from_name')->default(DB::raw("('')"));
             $table->integer('saved_date')->default(0);
-            $table->text('psa_type')->default('');
+            $table->text('psa_type')->default(DB::raw("('')"));
             $table->primary(['account_id', 'id']);
         });
 
@@ -203,10 +204,10 @@ return new class extends Migration
             $table->tinyInteger('reply_to_peer_id_type')->default(0);
             $table->bigInteger('reply_to_peer_id_id')->default(0);
             $table->integer('reply_to_top_id')->default(0);
-            $table->text('quote_text')->default('');
+            $table->text('quote_text')->default(DB::raw("('')"));
             $table->integer('quote_offset')->default(0);
             $table->integer('todo_item_id')->default(0);
-            $table->text('poll_option')->default('');
+            $table->text('poll_option')->default(DB::raw("('')"));
             $table->tinyInteger('peer_type')->default(0);
             $table->bigInteger('peer_id')->default(0);
             $table->integer('story_id')->default(0);
@@ -339,8 +340,8 @@ return new class extends Migration
             $table->unsignedBigInteger('account_id');
             $table->integer('id');
             $table->boolean('need_check')->default(false);
-            $table->text('country')->default('');
-            $table->text('text')->default('');
+            $table->text('country')->default(DB::raw("('')"));
+            $table->text('text')->default(DB::raw("('')"));
             $table->bigInteger('hash');
             $table->primary(['account_id', 'id']);
         });
@@ -368,7 +369,7 @@ return new class extends Migration
             $table->boolean('single_use')->default(false);
             $table->boolean('selective')->default(false);
             $table->boolean('persistent')->default(false);
-            $table->text('placeholder')->default('');
+            $table->text('placeholder')->default(DB::raw("('')"));
             $table->primary(['account_id', 'id']);
         });
 
@@ -389,15 +390,15 @@ return new class extends Migration
             $table->boolean('requires_password')->default(false);
             $table->boolean('same_peer')->default(false);
             $table->boolean('quiz')->default(false);
-            $table->text('text')->default('');
-            $table->text('url')->default('');
-            $table->text('data')->default('');
-            $table->text('query')->default('');
-            $table->text('fwd_text')->default('');
+            $table->text('text')->default(DB::raw("('')"));
+            $table->text('url')->default(DB::raw("('')"));
+            $table->text('data')->default(DB::raw("('')"));
+            $table->text('query')->default(DB::raw("('')"));
+            $table->text('fwd_text')->default(DB::raw("('')"));
             $table->integer('button_id')->default(0);
             $table->bigInteger('user_id')->default(0);
             $table->integer('max_quantity')->default(0);
-            $table->text('copy_text')->default('');
+            $table->text('copy_text')->default(DB::raw("('')"));
             $table->primary(['account_id', 'id', 'position']);
         });
     }
@@ -454,10 +455,10 @@ return new class extends Migration
             $table->tinyInteger('reply_to_peer_id_type')->default(0);
             $table->bigInteger('reply_to_peer_id_id')->default(0);
             $table->integer('reply_to_top_id')->default(0);
-            $table->text('quote_text')->default('');
+            $table->text('quote_text')->default(DB::raw("('')"));
             $table->integer('quote_offset')->default(0);
             $table->integer('todo_item_id')->default(0);
-            $table->text('poll_option')->default('');
+            $table->text('poll_option')->default(DB::raw("('')"));
             $table->tinyInteger('peer_type')->default(0);
             $table->bigInteger('peer_id')->default(0);
             $table->integer('story_id')->default(0);

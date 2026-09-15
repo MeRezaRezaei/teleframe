@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * NF5 mirror — chats domain (Task 2 of the reverse-engineering plan).
@@ -48,7 +49,7 @@ return new class extends Migration
             $table->unsignedBigInteger('account_id');
             $table->bigInteger('id');
             $table->text('constructor');
-            $table->text('title')->default('');
+            $table->text('title')->default(DB::raw("('')"));
             $table->integer('participants_count')->default(0);
             $table->integer('date')->default(0);
             $table->integer('version')->default(0);
@@ -72,7 +73,7 @@ return new class extends Migration
             $table->text('constructor');
             $table->boolean('has_video')->default(false);
             $table->bigInteger('photo_id')->default(0);
-            $table->text('stripped_thumb')->default('');
+            $table->text('stripped_thumb')->default(DB::raw("('')"));
             $table->integer('dc_id')->default(0);
             $table->primary(['account_id', 'id']);
         });

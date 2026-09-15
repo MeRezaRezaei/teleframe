@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * NF5 mirror — messages domain: MessageEntity union vector child.
@@ -25,12 +26,12 @@ return new class extends Migration
             $table->text('constructor');
             $table->integer('offset');
             $table->integer('length');
-            $table->text('language')->default('');
-            $table->text('url')->default('');
+            $table->text('language')->default(DB::raw("('')"));
+            $table->text('url')->default(DB::raw("('')"));
             $table->bigInteger('user_id')->default(0);
             $table->bigInteger('document_id')->default(0);
             $table->boolean('collapsed')->default(false);
-            $table->text('old_text')->default('');
+            $table->text('old_text')->default(DB::raw("('')"));
             $table->integer('date')->default(0);
             $table->boolean('relative')->default(false);
             $table->boolean('short_time')->default(false);

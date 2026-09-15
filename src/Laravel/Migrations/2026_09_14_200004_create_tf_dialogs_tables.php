@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * NF5 mirror — dialogs domain (Task 2 of the reverse-engineering plan).
@@ -106,7 +107,7 @@ return new class extends Migration
             $table->text('constructor');
             $table->boolean('no_webpage')->default(false);
             $table->boolean('invert_media')->default(false);
-            $table->text('message')->default('');
+            $table->text('message')->default(DB::raw("('')"));
             $table->integer('date')->default(0);
             $table->bigInteger('effect')->default(0);
             $table->primary(['account_id', 'peer_type', 'peer_id']);
@@ -138,7 +139,7 @@ return new class extends Migration
             $table->boolean('autofill_public_groups')->default(false);
             $table->boolean('autofill_new_correspondents')->default(false);
             $table->integer('id')->default(0);
-            $table->text('title')->default('');
+            $table->text('title')->default(DB::raw("('')"));
             $table->primary(['account_id', 'peer_type', 'peer_id']);
         });
     }

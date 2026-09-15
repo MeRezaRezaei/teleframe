@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -27,12 +28,12 @@ return new class extends Migration
             $table->unsignedBigInteger('account_id');
             $table->bigInteger('id');
             $table->smallInteger('position');
-            $table->string('constructor', 64)->default('');
+            $table->string('constructor', 64)->default(DB::raw("('')"));
             $table->string('type', 64);
             $table->integer('w')->default(0);
             $table->integer('h')->default(0);
             $table->integer('size')->default(0);
-            $table->string('bytes', 2048)->default('');
+            $table->string('bytes', 2048)->default(DB::raw("('')"));
 
             $table->primary(['account_id', 'id', 'position']);
             $table->foreign(['account_id', 'id'])
@@ -45,8 +46,8 @@ return new class extends Migration
             $table->unsignedBigInteger('account_id');
             $table->bigInteger('id');
             $table->smallInteger('position');
-            $table->string('constructor', 64)->default('');
-            $table->string('type', 255)->default('');
+            $table->string('constructor', 64)->default(DB::raw("('')"));
+            $table->string('type', 255)->default(DB::raw("('')"));
             $table->integer('w')->default(0);
             $table->integer('h')->default(0);
             $table->integer('size')->default(0);

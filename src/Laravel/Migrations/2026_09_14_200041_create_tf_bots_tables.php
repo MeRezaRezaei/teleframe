@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * NF5 mirror — stars/business domain part 2 (plan Task 6): attach menu bots,
@@ -153,9 +154,9 @@ return new class extends Migration
             $table->string('constructor', 64);
             $table->bigInteger('id');
             $table->bigInteger('access_hash')->default(0);
-            $table->text('short_name')->default('');
-            $table->text('title')->default('');
-            $table->text('description')->default('');
+            $table->text('short_name')->default(DB::raw("('')"));
+            $table->text('title')->default(DB::raw("('')"));
+            $table->text('description')->default(DB::raw("('')"));
             $table->bigInteger('hash')->default(0);
 
             $table->primary(['account_id', 'id']);
@@ -235,8 +236,8 @@ return new class extends Migration
             $table->unsignedBigInteger('account_id');
             $table->bigInteger('id');
             $table->string('constructor', 64);
-            $table->text('text')->default('');
-            $table->text('url')->default('');
+            $table->text('text')->default(DB::raw("('')"));
+            $table->text('url')->default(DB::raw("('')"));
             $table->primary(['account_id', 'id']);
         });
 
@@ -252,7 +253,7 @@ return new class extends Migration
         Schema::create('tf_bot_infos_app_settings', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
             $table->bigInteger('id');
-            $table->text('placeholder_path')->default('');
+            $table->text('placeholder_path')->default(DB::raw("('')"));
             $table->integer('background_color')->default(0);
             $table->integer('background_dark_color')->default(0);
             $table->integer('header_color')->default(0);
@@ -266,8 +267,8 @@ return new class extends Migration
             $table->bigInteger('id');
             $table->boolean('can_modify_custom_description')->default(false);
             $table->bigInteger('icon')->default(0);
-            $table->text('company')->default('');
-            $table->text('custom_description')->default('');
+            $table->text('company')->default(DB::raw("('')"));
+            $table->text('custom_description')->default(DB::raw("('')"));
             $table->primary(['account_id', 'id']);
         });
     }
@@ -277,7 +278,7 @@ return new class extends Migration
         Schema::create('tf_bot_inline_results', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
             $table->string('constructor', 64);
-            $table->text('id');
+            $table->string('id', 255);
             $table->text('type');
             $table->primary(['account_id', 'id']);
         });
@@ -286,42 +287,42 @@ return new class extends Migration
         // geo/entities/reply_markup/photo/rich_message nested objects deferred.
         Schema::create('tf_bot_inline_results_send_message', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
-            $table->text('id');
+            $table->string('id', 255);
             self::botInlineMessageColumns($table);
             $table->primary(['account_id', 'id']);
         });
 
         Schema::create('tf_bot_inline_results_title', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
-            $table->text('id');
+            $table->string('id', 255);
             $table->text('title');
             $table->primary(['account_id', 'id']);
         });
 
         Schema::create('tf_bot_inline_results_description', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
-            $table->text('id');
+            $table->string('id', 255);
             $table->text('description');
             $table->primary(['account_id', 'id']);
         });
 
         Schema::create('tf_bot_inline_results_url', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
-            $table->text('id');
+            $table->string('id', 255);
             $table->text('url');
             $table->primary(['account_id', 'id']);
         });
 
         Schema::create('tf_bot_inline_results_thumb', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
-            $table->text('id');
+            $table->string('id', 255);
             self::webDocumentColumns($table);
             $table->primary(['account_id', 'id']);
         });
 
         Schema::create('tf_bot_inline_results_content', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
-            $table->text('id');
+            $table->string('id', 255);
             self::webDocumentColumns($table);
             $table->primary(['account_id', 'id']);
         });
@@ -331,7 +332,7 @@ return new class extends Migration
     {
         $table->string('constructor', 64);
         $table->bigInteger('access_hash')->default(0);
-        $table->text('file_reference')->default('');
+        $table->text('file_reference')->default(DB::raw("('')"));
         $table->integer('date')->default(0);
         $table->integer('dc_id')->default(0);
         $table->boolean('has_stickers')->default(false);
@@ -341,9 +342,9 @@ return new class extends Migration
     {
         $table->string('constructor', 64);
         $table->bigInteger('access_hash')->default(0);
-        $table->text('file_reference')->default('');
+        $table->text('file_reference')->default(DB::raw("('')"));
         $table->integer('date')->default(0);
-        $table->text('mime_type')->default('');
+        $table->text('mime_type')->default(DB::raw("('')"));
         $table->bigInteger('size')->default(0);
         $table->integer('dc_id')->default(0);
     }
@@ -354,7 +355,7 @@ return new class extends Migration
         $table->text('url');
         $table->bigInteger('access_hash')->default(0);
         $table->integer('size')->default(0);
-        $table->text('mime_type')->default('');
+        $table->text('mime_type')->default(DB::raw("('')"));
     }
 
     /**
@@ -373,19 +374,19 @@ return new class extends Migration
         $table->boolean('force_small_media')->default(false);
         $table->boolean('manual')->default(false);
         $table->boolean('safe')->default(false);
-        $table->text('message')->default('');
-        $table->text('title')->default('');
-        $table->text('description')->default('');
-        $table->text('url')->default('');
-        $table->text('phone_number')->default('');
-        $table->text('first_name')->default('');
-        $table->text('last_name')->default('');
-        $table->text('vcard')->default('');
-        $table->text('address')->default('');
-        $table->text('provider')->default('');
-        $table->text('venue_id')->default('');
-        $table->text('venue_type')->default('');
-        $table->text('currency')->default('');
+        $table->text('message')->default(DB::raw("('')"));
+        $table->text('title')->default(DB::raw("('')"));
+        $table->text('description')->default(DB::raw("('')"));
+        $table->text('url')->default(DB::raw("('')"));
+        $table->text('phone_number')->default(DB::raw("('')"));
+        $table->text('first_name')->default(DB::raw("('')"));
+        $table->text('last_name')->default(DB::raw("('')"));
+        $table->text('vcard')->default(DB::raw("('')"));
+        $table->text('address')->default(DB::raw("('')"));
+        $table->text('provider')->default(DB::raw("('')"));
+        $table->text('venue_id')->default(DB::raw("('')"));
+        $table->text('venue_type')->default(DB::raw("('')"));
+        $table->text('currency')->default(DB::raw("('')"));
         $table->bigInteger('total_amount')->default(0);
         $table->integer('heading')->default(0);
         $table->integer('period')->default(0);

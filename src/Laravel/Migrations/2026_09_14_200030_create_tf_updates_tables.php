@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Hand-authored NF5 mirror for the UPDATES domain (owner verbatim ruling:
@@ -37,7 +38,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tf_updates', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->integer('seq');
             $table->smallInteger('position');
             $table->string('constructor', 64);
@@ -85,7 +86,7 @@ return new class extends Migration
 
     private static function factColumns(Blueprint $table): void
     {
-        $table->bigInteger('account_id');
+        $table->unsignedBigInteger('account_id');
         $table->integer('seq');
         $table->smallInteger('position');
     }
@@ -227,7 +228,7 @@ return new class extends Migration
             self::factColumns($table);
             $table->string('constructor', 64);
             $table->integer('progress')->default(0);
-            $table->text('emoticon')->default('');
+            $table->text('emoticon')->default(DB::raw("('')"));
             $table->integer('msg_id')->default(0);
             $table->bigInteger('random_id')->default(0);
             $table->primary(['account_id', 'seq', 'position']);
@@ -238,7 +239,7 @@ return new class extends Migration
     private function createUpdateRouting(): void
     {
         Schema::create('tf_update_routing', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->integer('seq');
             $table->smallInteger('position');
             $table->string('constructor', 64);
@@ -248,7 +249,7 @@ return new class extends Migration
         });
 
         Schema::create('tf_update_routing_date', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->integer('seq');
             $table->smallInteger('position');
             $table->integer('date');
@@ -260,7 +261,7 @@ return new class extends Migration
         });
         // updatesCombined only: the batch's seq_start.
         Schema::create('tf_update_routing_seq_start', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->integer('seq');
             $table->smallInteger('position');
             $table->integer('seq_start');
@@ -273,7 +274,7 @@ return new class extends Migration
         // Quick-ack disposition: the wire layer flips 'acked' once msg_ack is
         // emitted for the receipt's msg_id.
         Schema::create('tf_update_routing_ack', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->integer('seq');
             $table->smallInteger('position');
             $table->boolean('acked')->default(false);
@@ -290,7 +291,7 @@ return new class extends Migration
     {
         // updates.State (updates#a56c2a3e): the getState/getDifference seam.
         Schema::create('tf_update_state', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->integer('pts');
             $table->integer('qts');
             $table->integer('date');

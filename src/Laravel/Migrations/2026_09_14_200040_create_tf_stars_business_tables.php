@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * NF5 mirror — stars/business domain part 1 (plan Task 6): stars transactions,
@@ -141,7 +142,7 @@ return new class extends Migration
     {
         Schema::create('tf_stars_transactions', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
-            $table->text('id');
+            $table->string('id', 255);
             $table->integer('date');
             $table->boolean('refund')->default(false);
             $table->boolean('pending')->default(false);
@@ -306,7 +307,7 @@ return new class extends Migration
     {
         Schema::create('tf_stars_subscriptions', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
-            $table->text('id');
+            $table->string('id', 255);
             $table->tinyInteger('peer_type')->default(0);
             $table->bigInteger('peer_id')->default(0);
             $table->integer('until_date');
@@ -477,7 +478,7 @@ return new class extends Migration
     {
         Schema::create('tf_business_chat_links', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
-            $table->text('link');
+            $table->string('link', 255);
             $table->text('message');
             $table->integer('views');
 
@@ -488,17 +489,17 @@ return new class extends Migration
         // as tf_messages_entities (messages domain).
         Schema::create('tf_business_chat_links_entities', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
-            $table->text('link');
+            $table->string('link', 255);
             $table->smallInteger('position');
             $table->string('constructor', 64);
             $table->integer('offset');
             $table->integer('length');
-            $table->text('language')->default('');
-            $table->text('url')->default('');
+            $table->text('language')->default(DB::raw("('')"));
+            $table->text('url')->default(DB::raw("('')"));
             $table->bigInteger('user_id')->default(0);
             $table->bigInteger('document_id')->default(0);
             $table->boolean('collapsed')->default(false);
-            $table->text('old_text')->default('');
+            $table->text('old_text')->default(DB::raw("('')"));
             $table->integer('date')->default(0);
             $table->boolean('relative')->default(false);
             $table->boolean('short_time')->default(false);
@@ -512,7 +513,7 @@ return new class extends Migration
 
         Schema::create('tf_business_chat_links_title', function (Blueprint $table) {
             $table->unsignedBigInteger('account_id');
-            $table->text('link');
+            $table->string('link', 255);
             $table->text('title');
             $table->primary(['account_id', 'link']);
         });
@@ -521,7 +522,7 @@ return new class extends Migration
     private static function factKey(Blueprint $table, string $key): void
     {
         $table->unsignedBigInteger('account_id');
-        $table->text($key);
+        $table->string($key, 255);
     }
 
     private static function webDocumentColumns(Blueprint $table): void
@@ -530,7 +531,7 @@ return new class extends Migration
         $table->text('url');
         $table->bigInteger('access_hash')->default(0);
         $table->integer('size')->default(0);
-        $table->text('mime_type')->default('');
+        $table->text('mime_type')->default(DB::raw("('')"));
     }
 
     private static function starsAmountColumns(Blueprint $table): void
@@ -569,25 +570,25 @@ return new class extends Migration
         $table->integer('last_sale_date')->default(0);
         $table->bigInteger('upgrade_stars')->default(0);
         $table->bigInteger('resell_min_stars')->default(0);
-        $table->text('title')->default('');
+        $table->text('title')->default(DB::raw("('')"));
         $table->tinyInteger('released_by_type')->default(0);
         $table->bigInteger('released_by_id')->default(0);
         $table->integer('per_user_total')->default(0);
         $table->integer('per_user_remains')->default(0);
         $table->integer('locked_until_date')->default(0);
-        $table->text('auction_slug')->default('');
+        $table->text('auction_slug')->default(DB::raw("('')"));
         $table->integer('gifts_per_round')->default(0);
         $table->integer('auction_start_date')->default(0);
         $table->integer('upgrade_variants')->default(0);
-        $table->text('slug')->default('');
+        $table->text('slug')->default(DB::raw("('')"));
         $table->integer('num')->default(0);
         $table->tinyInteger('owner_id_type')->default(0);
         $table->bigInteger('owner_id_id')->default(0);
-        $table->text('owner_name')->default('');
-        $table->text('owner_address')->default('');
-        $table->text('gift_address')->default('');
+        $table->text('owner_name')->default(DB::raw("('')"));
+        $table->text('owner_address')->default(DB::raw("('')"));
+        $table->text('gift_address')->default(DB::raw("('')"));
         $table->bigInteger('value_amount')->default(0);
-        $table->text('value_currency')->default('');
+        $table->text('value_currency')->default(DB::raw("('')"));
         $table->bigInteger('value_usd_amount')->default(0);
         $table->tinyInteger('theme_peer_type')->default(0);
         $table->bigInteger('theme_peer_id')->default(0);
@@ -621,26 +622,26 @@ return new class extends Migration
         $table->boolean('rtmp_stream')->default(false);
         $table->integer('ttl_seconds')->default(0);
         $table->integer('video_timestamp')->default(0);
-        $table->text('phone_number')->default('');
-        $table->text('first_name')->default('');
-        $table->text('last_name')->default('');
-        $table->text('vcard')->default('');
+        $table->text('phone_number')->default(DB::raw("('')"));
+        $table->text('first_name')->default(DB::raw("('')"));
+        $table->text('last_name')->default(DB::raw("('')"));
+        $table->text('vcard')->default(DB::raw("('')"));
         $table->bigInteger('user_id')->default(0);
-        $table->text('title')->default('');
-        $table->text('address')->default('');
-        $table->text('provider')->default('');
-        $table->text('venue_id')->default('');
-        $table->text('venue_type')->default('');
-        $table->text('description')->default('');
+        $table->text('title')->default(DB::raw("('')"));
+        $table->text('address')->default(DB::raw("('')"));
+        $table->text('provider')->default(DB::raw("('')"));
+        $table->text('venue_id')->default(DB::raw("('')"));
+        $table->text('venue_type')->default(DB::raw("('')"));
+        $table->text('description')->default(DB::raw("('')"));
         $table->integer('receipt_msg_id')->default(0);
-        $table->text('currency')->default('');
+        $table->text('currency')->default(DB::raw("('')"));
         $table->bigInteger('total_amount')->default(0);
-        $table->text('start_param')->default('');
+        $table->text('start_param')->default(DB::raw("('')"));
         $table->integer('heading')->default(0);
         $table->integer('period')->default(0);
         $table->integer('proximity_notification_radius')->default(0);
         $table->integer('value')->default(0);
-        $table->text('emoticon')->default('');
+        $table->text('emoticon')->default(DB::raw("('')"));
         $table->tinyInteger('peer_type')->default(0);
         $table->bigInteger('peer_id')->default(0);
         $table->bigInteger('channel_id')->default(0);
@@ -648,7 +649,7 @@ return new class extends Migration
         $table->integer('launch_msg_id')->default(0);
         $table->integer('winners_count')->default(0);
         $table->integer('unclaimed_count')->default(0);
-        $table->text('prize_description')->default('');
+        $table->text('prize_description')->default(DB::raw("('')"));
         $table->integer('quantity')->default(0);
         $table->integer('months')->default(0);
         $table->bigInteger('stars')->default(0);

@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('user_type', 255)->nullable();
             $table->bigInteger('user_id')->nullable();
             $table->bigInteger('tl_user_id');
-            $table->bigInteger('account_id')->nullable();
+            $table->unsignedBigInteger('account_id')->nullable();
             $table->boolean('contact_lost')->default(false);
             $table->timestamps();
             $table->unique(['tl_user_id', 'account_id']);

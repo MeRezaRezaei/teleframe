@@ -70,7 +70,7 @@ return new class extends Migration
     private function createChannelParticipants(): void
     {
         Schema::create('tf_channel_participants', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->bigInteger('channel_id');
             $table->bigInteger('user_id');
             $table->string('constructor', 64);
@@ -87,7 +87,7 @@ return new class extends Migration
         // channelParticipantBanned/Left: the exact peer pair (usually the
         // purposeful user), beyond the user_id convenience column above.
         Schema::create('tf_channel_participants_peer', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->bigInteger('channel_id');
             $table->bigInteger('user_id');
             $table->tinyInteger('peer_type');
@@ -97,7 +97,7 @@ return new class extends Migration
         });
         // channelParticipantSelf/Admin: inviter_id.
         Schema::create('tf_channel_participants_inviter', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->bigInteger('channel_id');
             $table->bigInteger('user_id');
             $table->bigInteger('inviter_id');
@@ -106,7 +106,7 @@ return new class extends Migration
         });
         // channelParticipantAdmin: promoted_by.
         Schema::create('tf_channel_participants_promoted_by', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->bigInteger('channel_id');
             $table->bigInteger('user_id');
             $table->bigInteger('promoted_by');
@@ -115,7 +115,7 @@ return new class extends Migration
         });
         // channelParticipantBanned: kicked_by.
         Schema::create('tf_channel_participants_kicked_by', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->bigInteger('channel_id');
             $table->bigInteger('user_id');
             $table->bigInteger('kicked_by');
@@ -124,7 +124,7 @@ return new class extends Migration
         });
         // channelParticipant/Admin/Self: subscription_until_date (flags.0/1).
         Schema::create('tf_channel_participants_subscription_until_date', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->bigInteger('channel_id');
             $table->bigInteger('user_id');
             $table->integer('subscription_until_date');
@@ -133,7 +133,7 @@ return new class extends Migration
         });
         // channelParticipant/Admin/Creator/Banned: rank (flags.2).
         Schema::create('tf_channel_participants_rank', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->bigInteger('channel_id');
             $table->bigInteger('user_id');
             $table->text('rank');
@@ -148,7 +148,7 @@ return new class extends Migration
     private function createChannelUpdates(): void
     {
         Schema::create('tf_channel_updates', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->bigInteger('channel_id');
             $table->smallInteger('position');
             $table->string('constructor', 64);
@@ -158,7 +158,7 @@ return new class extends Migration
         });
 
         Schema::create('tf_channel_updates_pts', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->bigInteger('channel_id');
             $table->smallInteger('position');
             $table->integer('pts');
@@ -167,7 +167,7 @@ return new class extends Migration
         });
         // channelDifferenceTooLong/channelDifference: flags.timeout.
         Schema::create('tf_channel_updates_timeout', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->bigInteger('channel_id');
             $table->smallInteger('position');
             $table->integer('timeout');
@@ -176,7 +176,7 @@ return new class extends Migration
         });
         // channelDifferenceTooLong: the pinned dialog (peer ref + top_message).
         Schema::create('tf_channel_updates_dialog', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->bigInteger('channel_id');
             $table->smallInteger('position');
             $table->tinyInteger('peer_type');
@@ -190,7 +190,7 @@ return new class extends Migration
     private function createDifferences(): void
     {
         Schema::create('tf_update_differences', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->smallInteger('position');
             $table->string('constructor', 64);
             $table->primary(['account_id', 'position']);
@@ -199,14 +199,14 @@ return new class extends Migration
 
         // differenceEmpty: date + seq.
         Schema::create('tf_update_differences_date', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->smallInteger('position');
             $table->integer('date');
             $table->primary(['account_id', 'position']);
             self::differenceLink($table);
         });
         Schema::create('tf_update_differences_seq', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->smallInteger('position');
             $table->integer('seq');
             $table->primary(['account_id', 'position']);
@@ -214,7 +214,7 @@ return new class extends Migration
         });
         // differenceTooLong: pts.
         Schema::create('tf_update_differences_pts', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->smallInteger('position');
             $table->integer('pts');
             $table->primary(['account_id', 'position']);
@@ -223,7 +223,7 @@ return new class extends Migration
         // difference / differenceSlice: the embedded updates.State snapshot
         // (state / intermediate_state).
         Schema::create('tf_update_differences_state', function (Blueprint $table) {
-            $table->bigInteger('account_id');
+            $table->unsignedBigInteger('account_id');
             $table->smallInteger('position');
             $table->integer('pts');
             $table->integer('qts');
@@ -240,7 +240,8 @@ return new class extends Migration
         $table->foreign(['account_id', 'channel_id', 'user_id'])
             ->references(['account_id', 'channel_id', 'user_id'])
             ->on('tf_channel_participants')
-            ->cascadeOnDelete();
+            ->cascadeOnDelete()
+            ->name('fk_participant_link_'.$table->getTable());
     }
 
     private static function channelUpdateLink(Blueprint $table): void
@@ -248,7 +249,8 @@ return new class extends Migration
         $table->foreign(['account_id', 'channel_id', 'position'])
             ->references(['account_id', 'channel_id', 'position'])
             ->on('tf_channel_updates')
-            ->cascadeOnDelete();
+            ->cascadeOnDelete()
+            ->name('fk_channel_update_'.$table->getTable());
     }
 
     private static function differenceLink(Blueprint $table): void
@@ -256,6 +258,7 @@ return new class extends Migration
         $table->foreign(['account_id', 'position'])
             ->references(['account_id', 'position'])
             ->on('tf_update_differences')
-            ->cascadeOnDelete();
+            ->cascadeOnDelete()
+            ->name('fk_diff_link_'.$table->getTable());
     }
 };
