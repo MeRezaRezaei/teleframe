@@ -151,8 +151,8 @@ final class MirrorIngesterSeamTest extends TestbenchTestCase
 
         $row = DB::table('tf_messages')->where('account_id', 42)->where('id', 7)->first();
         self::assertNotNull($row, 'the wire update must store');
-        self::assertSame(3, (int) $row->peer_id_type, 'peerChannel → canonical type 3 (spec enum)');
-        self::assertSame(900, (int) $row->peer_id_id, 'channel_id → canonical peer id');
+        self::assertSame(3, (int) $row->peer_type, 'peerChannel → canonical type 3 (spec enum)');
+        self::assertSame(900, (int) $row->peer_id, 'channel_id → canonical peer id');
     }
 
     public function test_wire_peer_shape_reaches_the_emitted_model(): void
@@ -182,8 +182,8 @@ final class MirrorIngesterSeamTest extends TestbenchTestCase
 
         self::assertCount(1, $seen, 'act_on peer → UpdateStored emitted');
         $model = $seen[0];
-        self::assertSame(3, (int) $model->getAttribute('peer_id_type'), 'model carries canonical peer type');
-        self::assertSame(900, (int) $model->getAttribute('peer_id_id'), 'model carries canonical peer id');
+        self::assertSame(3, (int) $model->getAttribute('peer_type'), 'model carries canonical peer type');
+        self::assertSame(900, (int) $model->getAttribute('peer_id'), 'model carries canonical peer id');
         self::assertSame('wire shape to model', (string) $model->getAttribute('message'));
     }
 
@@ -193,9 +193,10 @@ final class MirrorIngesterSeamTest extends TestbenchTestCase
 
         $ingester = $this->app->make(DaemonCommand::MIRROR_INGESTER_KEY);
 
-        // A peer the mirror cannot place must be blocked by the schema —
-        // peer_id_type/peer_id_id are NOT NULL, so the insert fails and the
-        // writer surfaces a clue (the wrong path made loud), never a fake 0.
+        // A peer the mirror cannot place is an ingest clue — never a silent
+        // 0/0 write NOR a silent drop: the row stores with the curated 0/0
+        // defaults and the decomposer surfaces the "wrong ingest path" clue
+        // (FK-failed → clue signal). inputPeerUser is not a Fact-side ctor.
         $ingester([
             '_' => 'message',
             'id' => 8,
@@ -205,10 +206,9 @@ final class MirrorIngesterSeamTest extends TestbenchTestCase
             'out' => false,
         ], 42);
 
-        self::assertSame(
-            0,
-            DB::table('tf_messages')->where('account_id', 42)->where('id', 8)->count(),
-            'unresolvable peer → NOT NULL blocks the row; no silent 0/0 in the mirror',
-        );
+        $row = DB::table('tf_messages')->where('account_id', 42)->where('id', 8)->first();
+        self::assertNotNull($row, 'the update still stores (curated defaults carry the row)');
+        self::assertSame(0, (int) $row->peer_type, 'unresolvable peer → curated 0 default, not a fake placement');
+        self::assertSame(0, (int) $row->peer_id, 'unresolvable peer → curated 0 default, not a fake placement');
     }
 }

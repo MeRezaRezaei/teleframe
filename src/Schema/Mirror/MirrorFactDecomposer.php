@@ -254,6 +254,14 @@ final class MirrorFactDecomposer
             ? substr($column->name, 0, -5)
             : substr($column->name, 0, -3);
 
+        // Canonical peer mapping: the curated peer pair `peer_type`/`peer_id`
+        // encodes the TL payload field `peer_id` (the catalog base declares
+        // ['peer_id', 'peer_type + peer_id']) — the stripped column stem
+        // (`peer`) is never the wire key.
+        if ($field === 'peer') {
+            $field = 'peer_id';
+        }
+
         $value = $payload[$field] ?? null;
         if (! is_array($value)) {
             $clues[] = "{$tfName}: peer column '{$field}' missing from payload — cannot place the fact";

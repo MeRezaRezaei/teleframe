@@ -113,7 +113,9 @@ final class MirrorIngesterFactory
             if (! str_ends_with($name, '_type')) {
                 continue;
             }
-            $field = substr($name, 0, -5);
+            $stem = substr($name, 0, -5);
+            // Canonical peer mapping: `peer_type`/`peer_id` encode payload `peer_id`.
+            $field = $stem === 'peer' ? 'peer_id' : $stem;
             $value = $payload[$field] ?? null;
             if (! is_array($value)) {
                 continue; // decomposer already clues; model stays unset
@@ -124,33 +126,39 @@ final class MirrorIngesterFactory
                 continue; // unresolvable — do not hydrate 0/0 into the model
             }
             $payload[$name] = $type;
-            $payload[substr($name, 0, -5).'_id'] = $id;
-            unset($payload[$field]);
+            $idColumn = $stem.'_id';
+            $payload[$idColumn] = $id;
+            if ($field !== $idColumn) {
+                unset($payload[$field]); // canonical peer: id column reuses the wire key
+            }
         }
 
         return $payload;
     }
 
     /**
-     * Map a mirror tf_ table name to its generated model class. The index
-     * is built once by instantiating every generated model and reading its
-     * $table — deterministic regardless of the generator's singular/plural
-     * naming (tf_messages → TfMessage, tf_users → TfUser, ...). Throws when
-     * the table name has no model, which is a generated-artifacts regression
+     * Map a mirror tf_ table name to its curated model class. The index is
+     * built once by instantiating every curated model and reading its $table
+     * — deterministic regardless of the generator's singular/plural naming
+     * (tf_messages → TfMessage, tf_users → TfUser, ...). Throws when the
+     * table name has no model, which is a curated-artifacts regression
      * surfaced loudly on the wire.
      */
     private static function modelClassFor(string $tfName): string
     {
         if (self::$modelIndex === null) {
             self::$modelIndex = [];
-            $dir = dirname(__DIR__, 1).'/Schema/Generated/Models/Mirror';
+            $dir = dirname(__DIR__, 1).'/Teleframe/Mirror/Models';
             foreach (glob($dir.'/*.php') ?: [] as $file) {
-                $class = 'MeRezaRezaei\Teleframe\Schema\Generated\Models\Mirror\\'.basename($file, '.php');
+                $class = 'MeRezaRezaei\Teleframe\Mirror\Models\\'.basename($file, '.php');
+                if (! class_exists($class)) {
+                    continue; // trait/concern files are not models
+                }
                 $model = new $class;
                 self::$modelIndex[$model->getTable()] ??= $class;
             }
         }
 
-        return self::$modelIndex[$tfName] ?? throw new \RuntimeException("No generated mirror model for table {$tfName} (run teleframe:regenerate).");
+        return self::$modelIndex[$tfName] ?? throw new \RuntimeException("No curated mirror model for table {$tfName} (curated dial regression).");
     }
 }
