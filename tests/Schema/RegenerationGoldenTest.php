@@ -7,20 +7,19 @@ namespace MeRezaRezaei\Teleframe\Tests\Schema;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Task 3 golden gate: the committed generated/ artifacts are exactly what
- * `php bin/regenerate` produces from the committed v227 mirror, and the
+ * Golden gate: the committed generated/ artifacts are exactly what
+ * `php bin/regenerate` produces from the committed v227 source, and the
  * run is deterministic — two consecutive regenerations to temp out-dirs
  * must produce byte-identical manifests (and trees), matching the
  * committed manifest hash pin.
  *
- * Count bands (verified 2026-09-13, layer 227):
- * 1685 constructors / 799 methods / migrations = legacy (13) + mirror (25)
- * = 38 / models = legacy Tl* (12) + mirror (400) = 412 / 3116 dtos /
- * factories = legacy (12) + mirror (400) = 412 / 763 tables. The mirror
- * pipeline (catalog, 37 parents, Models/Mirror, Factories/Mirror,
- * migrations/mirror) runs additively inside SchemaRegenerator.
- * Full regeneration takes well under a second, so the double-run runs
- * the FULL schema set (no subset flag needed).
+ * Post-purge reality (2026-09-15, owner verbatim #3: "i dont want the
+ * auto generation any more"):
+ * 1685 constructors / 799 methods / migrations = 0 (auto-gen banned) /
+ * models = Tl* only (12) / 3116 dtos / factories = Tl* only (12) /
+ * 0 tables / 0 fks. The mirror pipeline and MigrationGenerator are
+ * disabled; only the legacy TL-generated surface (Models, Data,
+ * Factories) ships in src/Schema/Generated.
  */
 final class RegenerationGoldenTest extends TestCase
 {
@@ -29,7 +28,7 @@ final class RegenerationGoldenTest extends TestCase
     private const MANIFEST = self::PACKAGE_ROOT.'/src/Schema/Generated/schema-manifest.json';
 
     /** sha256 of the committed generated/schema-manifest.json (full-run pin). */
-    private const COMMITTED_MANIFEST_SHA256 = '0c0d81bd4522d81a78691aa76113d767319ff2dbcc3f9b0dfab47fda0ebc6ffd';
+    private const COMMITTED_MANIFEST_SHA256 = '9f1d331238181e4ea942bf8d734beaad4059ad3df50ee5079ecd8cbb8201890b';
 
     public function test_committed_manifest_exists_and_pins_layer_227(): void
     {
@@ -50,27 +49,24 @@ final class RegenerationGoldenTest extends TestCase
         self::assertLessThan(2500, $counts['constructors']);
         self::assertGreaterThan(750, $counts['methods']);
         self::assertLessThan(950, $counts['methods']);
-        self::assertGreaterThan(700, $counts['tables']);
-        self::assertLessThan(850, $counts['tables']);
+        self::assertSame(0, $counts['tables'], 'no generated tables (auto-gen banned)');
+        self::assertSame(0, $counts['fks'], 'no generated FKs (auto-gen banned)');
     }
 
     public function test_committed_artifact_files_within_bands_and_marked_generated(): void
     {
-        $migrations = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/migrations');
         $models = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/Models');
         $dtos = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/Data');
         $factories = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/Factories');
 
-        self::assertGreaterThan(30, count($migrations), 'migrations lower bound');
-        self::assertLessThan(50, count($migrations), 'migrations upper bound');
-        self::assertGreaterThan(380, count($models), 'models lower bound');
-        self::assertLessThan(460, count($models), 'models upper bound');
+        self::assertGreaterThan(5, count($models), 'models lower bound (Tl* legacy)');
+        self::assertLessThan(50, count($models), 'models upper bound');
         self::assertGreaterThan(2800, count($dtos), 'dtos lower bound');
         self::assertLessThan(3400, count($dtos), 'dtos upper bound');
-        self::assertGreaterThan(380, count($factories), 'factories lower bound');
-        self::assertLessThan(460, count($factories), 'factories upper bound');
+        self::assertGreaterThan(5, count($factories), 'factories lower bound (Tl* legacy)');
+        self::assertLessThan(50, count($factories), 'factories upper bound');
 
-        foreach ([$migrations, $models, $dtos, $factories] as $files) {
+        foreach ([$models, $dtos, $factories] as $files) {
             foreach ($files as $path) {
                 self::assertStringContainsString(
                     'GENERATED',
@@ -81,53 +77,28 @@ final class RegenerationGoldenTest extends TestCase
         }
     }
 
-    public function test_anchor_model_and_migration_present(): void
+    public function test_anchor_model_present(): void
     {
         self::assertFileExists(self::PACKAGE_ROOT.'/src/Schema/Generated/Models/TlUser.php');
         self::assertStringContainsString(
             "protected \$table = 'tf_users';",
             (string) file_get_contents(self::PACKAGE_ROOT.'/src/Schema/Generated/Models/TlUser.php'),
         );
-        $manifest = json_decode((string) file_get_contents(self::MANIFEST), true);
-        self::assertArrayHasKey('tf_users', $manifest['tables']);
     }
 
-    public function test_committed_mirror_section_within_bands(): void
+    public function test_committed_mirror_section_is_absent(): void
     {
         $manifest = json_decode((string) file_get_contents(self::MANIFEST), true);
-        self::assertArrayHasKey('mirror', $manifest, 'manifest must carry the mirror section');
-        $mirror = $manifest['mirror'];
-        self::assertSame(37, $mirror['parents']);
-        self::assertGreaterThan(300, count($mirror['tables']), 'mirror table map lower bound');
-        self::assertLessThan(500, count($mirror['tables']), 'mirror table map upper bound');
-        self::assertSame(25, $mirror['migrations']);
-        self::assertSame(400, $mirror['models']);
-        self::assertSame(400, $mirror['factories']);
-        self::assertSame(
-            227,
-            $manifest['layer'],
-            'legacy counts must stay pinned to the committed layer',
-        );
+        self::assertArrayNotHasKey('mirror', $manifest, 'mirror section must be absent post-purge');
+        self::assertSame(227, $manifest['layer'], 'layer must stay pinned');
     }
 
-    public function test_committed_mirror_artifacts_are_generated_and_present(): void
+    public function test_committed_mirror_artifacts_are_absent(): void
     {
-        $mirrorMigrations = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/migrations/mirror');
-        $mirrorModels = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/Models/Mirror');
-        $mirrorFactories = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/Factories/Mirror');
-        self::assertSame(25, count($mirrorMigrations));
-        self::assertSame(400, count($mirrorModels));
-        self::assertSame(400, count($mirrorFactories));
-
-        foreach ([$mirrorMigrations, $mirrorModels, $mirrorFactories] as $files) {
-            foreach ($files as $path) {
-                self::assertStringContainsString(
-                    'GENERATED',
-                    (string) file_get_contents($path),
-                    "missing @generated marker: {$path}",
-                );
-            }
-        }
+        self::assertDirectoryDoesNotExist(self::PACKAGE_ROOT.'/src/Schema/Generated/migrations/mirror');
+        self::assertDirectoryDoesNotExist(self::PACKAGE_ROOT.'/src/Schema/Generated/Models/Mirror');
+        self::assertDirectoryDoesNotExist(self::PACKAGE_ROOT.'/src/Schema/Generated/Factories/Mirror');
+        self::assertDirectoryDoesNotExist(self::PACKAGE_ROOT.'/src/Schema/Generated/migrations');
     }
 
     /**

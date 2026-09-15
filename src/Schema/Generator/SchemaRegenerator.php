@@ -92,27 +92,23 @@ final class SchemaRegenerator
 
         $this->gate($combined, $outputDir);
 
-        $mig = new MigrationGenerator;
-        $migFiles = $mig->generate($combined);
         $modelFiles = (new ModelGenerator)->generate($combined);
         $dtoFiles = (new DtoGenerator)->generate($combined);
         $factoryFiles = (new FactoryGenerator)->generate($combined);
 
         $this->wipe($outputDir);
-        $this->writeAll($outputDir.'/src/Schema/Generated/migrations', $migFiles);
         $this->writeAll($outputDir.'/src/Schema/Generated/Models', $modelFiles);
         $this->writeAll($outputDir.'/src/Schema/Generated/Data', $dtoFiles);
         $this->writeAll($outputDir.'/src/Schema/Generated/Factories', $factoryFiles);
 
-        $stats = $mig->stats();
-        $counts['tables'] = count($stats['tables']);
-        $counts['fks'] = $stats['fk_count'];
+        $counts['tables'] = 0;
+        $counts['fks'] = 0;
 
         $manifest = Manifest::build(
             $combined->layer,
             $counts,
-            $stats['tables'],
-            $stats['fk_count'],
+            [],
+            0,
             $combined->crcMismatches,
         );
         $manifest['sources'] = array_map('basename', $files);
@@ -122,7 +118,7 @@ final class SchemaRegenerator
 
         $result = ['counts' => $counts, 'manifest' => $manifest];
         if ($this->shipNamespaces !== null) {
-            $result['ship'] = $this->shipMigrations($combined, $migFiles, $outputDir);
+            $result['ship'] = $this->shipMigrations($combined, [], $outputDir);
         }
 
         return $result;
