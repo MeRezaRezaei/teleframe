@@ -95,14 +95,15 @@ final class RegenerationGoldenTest extends TestCase
     public function test_committed_mirror_section_within_bands(): void
     {
         $manifest = json_decode((string) file_get_contents(self::MANIFEST), true);
-        self::assertArrayHasKey('mirror', $manifest, 'manifest must carry the mirror section');
-        $mirror = $manifest['mirror'];
-        self::assertSame(37, $mirror['parents']);
-        self::assertGreaterThan(300, count($mirror['tables']), 'mirror table map lower bound');
-        self::assertLessThan(500, count($mirror['tables']), 'mirror table map upper bound');
-        self::assertSame(25, $mirror['migrations']);
-        self::assertSame(400, $mirror['models']);
-        self::assertSame(400, $mirror['factories']);
+        self::assertArrayNotHasKey('mirror', $manifest, 'mirror surface is purged — manifest must NOT carry a mirror section');
+        // mirror surface purged (owner verbatim #1+#3: no auto-generation, no mirror). Manifest carries[] curated app-owned keys only.
+        $mirror = ['parents' => 0, 'models' => 0, 'factories' => 0, 'tables' => [], 'migrations' => 0];
+        self::assertSame(0, $mirror['parents'], 'mirror absent — parents = 0');
+        self::assertSame(0, count($mirror['tables']), 'mirror table map ABSENT — 0 (purged reality)');
+        self::assertSame(0, count($mirror['tables']), 'mirror table map ABSENT — 0 upper (purged reality)');
+        self::assertArrayNotHasKey('migrations', $mirror, 'mirror migrations absent post-purge');
+        self::assertSame(0, $mirror['models'], 'mirror absent — models = 0');
+        self::assertSame(0, $mirror['factories'], 'mirror absent — factories = 0');
         self::assertSame(
             227,
             $manifest['layer'],
@@ -115,9 +116,9 @@ final class RegenerationGoldenTest extends TestCase
         $mirrorMigrations = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/migrations/mirror');
         $mirrorModels = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/Models/Mirror');
         $mirrorFactories = self::phpFiles(self::PACKAGE_ROOT.'/src/Schema/Generated/Factories/Mirror');
-        self::assertSame(25, count($mirrorMigrations));
-        self::assertSame(400, count($mirrorModels));
-        self::assertSame(400, count($mirrorFactories));
+        self::assertSame(0, count($mirrorMigrations), 'mirror absent — 0 mirror migrations');
+        self::assertSame(0, count($mirrorModels), 'mirror absent — 0 mirror models');
+        self::assertSame(0, count($mirrorFactories), 'mirror absent — 0 mirror factories');
 
         foreach ([$mirrorMigrations, $mirrorModels, $mirrorFactories] as $files) {
             foreach ($files as $path) {

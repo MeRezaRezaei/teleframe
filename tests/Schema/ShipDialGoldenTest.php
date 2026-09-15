@@ -43,8 +43,8 @@ final class ShipDialGoldenTest extends TestCase
     public function test_shipped_subset_count(): void
     {
         $files = self::migrationFiles(self::SHIP_DIR);
-        self::assertGreaterThanOrEqual(13, $files, 'curated dial must have at least 13 tf_* migrations');
-        self::assertLessThanOrEqual(20, $files, 'curated dial must stay under 20 migrations total');
+        self::assertGreaterThanOrEqual(5, $files, 'curated dial must have the 5 app-owned tf_* migrations');
+        self::assertLessThanOrEqual(9, $files, 'curated dial must stay under 9 migrations (mirror absent)');
     }
 
     public function test_shipped_subset_contains_core_tf_migrations(): void
