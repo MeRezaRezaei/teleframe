@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe;
 
+use Illuminate\Database\Eloquent\Model;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
 
 /**
  * The package's public face (plan Task 5): a thin, container-resolvable
- * wrapper over the ingest surfaces — updates (always become instances),
- * method responses (route-deduped), and entity aggregation lookups.
+ * wrapper over the ingest surfaces — updates (null when the constructor
+ * has no curated mirror surface), method responses (route-deduped), and
+ * entity aggregation lookups.
  *
  * Resolve it from the container (bound as a singleton by the service
  * provider); see docs/ingest.md for the tenancy model, route semantics,
@@ -23,17 +24,18 @@ final class Teleclient
     public function __construct(
         private readonly UpdateIngestor $ingestor,
         private readonly EntityAggregator $entities,
-    ) {
-    }
+    ) {}
 
     /**
      * Ingest a raw update payload (teleframe truth: snake keys, `_`
-     * constructor name). Updates always become instances — they never
-     * touch routes.
+     * constructor name). Updates bypass routes.
      *
-     * @param array<string, mixed> $update
+     * @param  array<string, mixed>  $update
+     * @return Model|null the hydrated curated root (TfMessage / TfUpdate),
+     *                    or null when the constructor has no curated mirror
+     *                    surface — nothing storeable.
      */
-    public function ingest(array $update, int $accountId): TlAnchorModel
+    public function ingest(array $update, int $accountId): ?Model
     {
         return $this->ingestor->ingest($update, $accountId);
     }
@@ -41,13 +43,14 @@ final class Teleclient
     /**
      * Ingest a raw method response, route-deduped: a (method, params,
      * account) combination that already answered resolves to the stored
-     * instance instead of rewriting; update-kind payloads bypass routes
-     * and always become instances.
+     * instance instead of rewriting.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, mixed> $response
+     * @param  array<string, mixed>  $params
+     * @param  array<string, mixed>  $response
+     * @return Model|null the hydrated curated root, or null when the
+     *                    response carries no curated surface.
      */
-    public function ingestResponse(string $method, array $params, array $response, int $accountId): TlAnchorModel
+    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?Model
     {
         return $this->ingestor->ingestResponse($method, $params, $response, $accountId);
     }

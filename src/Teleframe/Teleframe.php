@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe;
 
+use Illuminate\Database\Eloquent\Model;
 use MeRezaRezaei\Teleframe\Backup\VaultInterface;
 use MeRezaRezaei\Teleframe\Bus\RouteTable;
 use MeRezaRezaei\Teleframe\Daemon\Daemon;
@@ -15,9 +16,9 @@ use MeRezaRezaei\Teleframe\Handler\UpdateDispatcher;
 use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackupCommand;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChat;
 use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
+use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use Psr\Container\ContainerInterface;
 use Psr\SimpleCache\CacheInterface;
 
@@ -35,20 +36,26 @@ final class Teleframe
 {
     public function __construct(
         private readonly ContainerInterface $container,
-    ) {
-    }
+    ) {}
 
-    /** @param array<string, mixed> $update */
-    public function ingest(array $update, int $accountId): TlAnchorModel
+    /**
+     * @param  array<string, mixed>  $update
+     * @return Model|null the hydrated curated root (TfMessage / TfUpdate),
+     *                    or null when the constructor has no curated mirror
+     *                    surface — nothing storeable.
+     */
+    public function ingest(array $update, int $accountId): ?Model
     {
         return $this->container->get(UpdateIngestor::class)->ingest($update, $accountId);
     }
 
     /**
-     * @param array<string, mixed> $params
-     * @param array<string, mixed> $response
+     * @param  array<string, mixed>  $params
+     * @param  array<string, mixed>  $response
+     * @return Model|null the hydrated curated root, or null when the
+     *                    response carries no curated surface.
      */
-    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TlAnchorModel
+    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?Model
     {
         return $this->container->get(UpdateIngestor::class)->ingestResponse($method, $params, $response, $accountId);
     }
@@ -73,7 +80,7 @@ final class Teleframe
      * the running-mode surface without transport). Returns every non-null
      * handler result in fixture order (echoed/self-originated frames drop).
      *
-     * @param list<array{update?: array, account_id?: int, ts?: int}> $fixtures
+     * @param  list<array{update?: array, account_id?: int, ts?: int}>  $fixtures
      */
     public function run(array $fixtures): array
     {
@@ -134,12 +141,12 @@ final class Teleframe
     public function schemaLayer(?string $schemasDir = null, ?string $outputDir = null): array
     {
         $regenerator = $this->container->get(
-            \MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator::class,
+            SchemaRegenerator::class,
         );
         $root = dirname(__DIR__, 2);
 
         return $regenerator->regenerate(
-            $schemasDir ?? $root . '/schema/sources',
+            $schemasDir ?? $root.'/schema/sources',
             $outputDir ?? $root,
         );
     }
@@ -154,7 +161,7 @@ final class Teleframe
      * PSR-16 elimination registry so its echo never re-enters handlers.
      * Existing consumers keep their own send path unchanged.
      *
-     * @param array<string, mixed> $send
+     * @param  array<string, mixed>  $send
      */
     public function send(int $accountId, array $send): int
     {
