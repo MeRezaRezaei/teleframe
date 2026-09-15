@@ -7,6 +7,7 @@ namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 use Illuminate\Support\Facades\DB;
 use MeRezaRezaei\Teleframe\Ingest\ChunkFetcher;
 use MeRezaRezaei\Teleframe\Ingest\MirrorChunkSync;
+use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Laravel\Providers\TeleframeServiceProvider;
 use MeRezaRezaei\Teleframe\Schema\Generator\TlParser;
 use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorCatalog;
@@ -59,15 +60,13 @@ final class MirrorChunkSyncTest extends TestbenchTestCase
         ]);
     }
 
-    private function migrateMirror(): string
+    private function migrateMirror(): void
     {
-        $out = sys_get_temp_dir().'/tf5s_'.uniqid();
-        @mkdir($out.'/migrations/mirror', 0777, true);
-
-        $this->artisan('teleframe:mirror', ['--stage' => '0', '--out' => $out])->assertExitCode(0);
-        $this->artisan('migrate', ['--path' => $out.'/migrations/mirror', '--realpath' => true])->assertExitCode(0);
-
-        return $out;
+        $this->artisan('migrate', [
+            '--force' => true,
+            '--realpath' => true,
+            '--path' => UpdateIngestor::migrationPaths(),
+        ])->assertExitCode(0);
     }
 
     private function fixtureFetcher(): ChunkFetcher
@@ -109,22 +108,19 @@ final class MirrorChunkSyncTest extends TestbenchTestCase
 
     public function test_session_register_sync_ingests_the_big_update(): void
     {
-        $out = $this->migrateMirror();
-        try {
-            $report = $this->sync->sync(DB::connection(), 42, $this->fixtureFetcher());
+        $this->migrateMirror();
 
-            self::assertSame(11, $report['state']['pts'], 'remote state returned for watermarking');
-            self::assertSame(3, $report['rows'], 'every fact kind in the chunk decomposes');
-            self::assertSame(3, $report['inserted'], 'every decomposed row inserts');
-            self::assertEmpty($report['clues'], 'well-formed chunk → no decomposer clues');
-            self::assertEmpty($report['fkClues'], 'well-formed chunk → no FK clues — schema held');
+        $report = $this->sync->sync(DB::connection(), 42, $this->fixtureFetcher());
 
-            self::assertSame(1, DB::table('tf_messages')->where('account_id', 42)->where('id', 1)->count());
-            self::assertSame(1, DB::table('tf_users')->where('account_id', 42)->where('id', 101)->count());
-            self::assertSame('mirror lab', DB::table('tf_chats')->where('account_id', 42)->where('id', 900)->value('title'));
-        } finally {
-            $this->rrmdir($out);
-        }
+        self::assertSame(11, $report['state']['pts'], 'remote state returned for watermarking');
+        self::assertSame(3, $report['rows'], 'every fact kind in the chunk decomposes');
+        self::assertSame(3, $report['inserted'], 'every decomposed row inserts');
+        self::assertEmpty($report['clues'], 'well-formed chunk → no decomposer clues');
+        self::assertEmpty($report['fkClues'], 'well-formed chunk → no FK clues — schema held');
+
+        self::assertSame(1, DB::table('tf_messages')->where('account_id', 42)->where('id', 1)->count());
+        self::assertSame(1, DB::table('tf_users')->where('account_id', 42)->where('id', 101)->count());
+        self::assertSame('mirror lab', DB::table('tf_chats')->where('account_id', 42)->where('id', 900)->value('title'));
     }
 
     public function test_prior_state_is_forwarded_to_the_fetcher(): void
@@ -149,20 +145,5 @@ final class MirrorChunkSyncTest extends TestbenchTestCase
         $this->sync->sync(DB::connection(), 42, $fetcher, ['pts' => 3, 'date' => 1725000000, 'qts' => 0, 'seq' => 0]);
 
         self::assertSame(3, $fetcher->seenPrior['pts'], 'persisted watermark drives the difference offset');
-    }
-
-    private function rrmdir(string $dir): void
-    {
-        if (! is_dir($dir)) {
-            return;
-        }
-        $items = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST
-        );
-        foreach ($items as $item) {
-            $item->isDir() && ! $item->isLink() ? rmdir($item->getPathname()) : unlink($item->getPathname());
-        }
-        rmdir($dir);
     }
 }

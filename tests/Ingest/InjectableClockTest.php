@@ -5,47 +5,69 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 
 use Illuminate\Support\Facades\DB;
-use MeRezaRezaei\Teleframe\Ingest\RouteIdempotency;
+use Illuminate\Support\Facades\Schema;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfMessage;
 
 /**
- * Phase 0 Task 2: timestamps come from the injectable clock, not the
- * Laravel now() helper (undefined function in plain PHP). Uses the same
- * proven route table as IngestResponseTest (tl_route_messages_get_history)
- * and its migration pattern (RouteIdempotency::migrationPaths()).
+ * Phase C re-baseline of the injectable-clock seam family.
+ *
+ * The legacy route-table timestamp path (RouteIdempotency with an injected
+ * `now` clock, upgraded to created_at on tl_route_*) is GONE with the
+ * tl_route_* surface. The curated dial is clock-AWARE but clock-FREE: fact
+ * tables carry no created_at/updated_at columns, and the ingestor exposes
+ * no time injection single — wire timestamps (the message `date`) are
+ * stored VERBATIM, byte for byte, with zero wall-clock involvement.
+ *
+ * The surviving injectable-clock surface (Daemon, the only process that
+ * truly needs a clock) is covered by its own test family; the ingest path
+ * here must simply prove it never reaches for one.
  */
 final class InjectableClockTest extends IngestTestCase
 {
-    protected function setUp(): void
+    private const ACCOUNT = 7;
+
+    public function test_ingest_stores_wire_timestamp_verbatim_no_clock_involved(): void
     {
-        parent::setUp();
-        $this->artisan('migrate', [
-            '--force' => true,
-            '--realpath' => true,
-            '--path' => RouteIdempotency::migrationPaths(),
-        ])->run();
+        $ingestor = new UpdateIngestor;
+
+        $ingestor->ingest([
+            '_' => 'message',
+            'id' => 1186,
+            'peer_id' => ['_' => 'peerChannel', 'channel_id' => 1737473577],
+            'date' => 1724852400,
+            'message' => 'the wire time, exactly',
+        ], self::ACCOUNT);
+
+        $row = DB::table('tf_messages')->where('account_id', self::ACCOUNT)->where('id', 1186)->first();
+        self::assertSame(1724852400, (int) $row->date, 'wire `date` (task-time epoch) stored verbatim');
+
+        // Proving "verbatim": a second payload with a different wire date
+        // overwrites the cell with ITS value — no monotonic/now() skew.
+        $ingestor->ingest([
+            '_' => 'message',
+            'id' => 1186,
+            'peer_id' => ['_' => 'peerChannel', 'channel_id' => 1737473577],
+            'date' => 998877,
+            'message' => 'rewritten',
+        ], self::ACCOUNT);
+
+        $row = DB::table('tf_messages')->where('account_id', self::ACCOUNT)->where('id', 1186)->first();
+        self::assertSame(998877, (int) $row->date, 'second wire value wins verbatim');
+        self::assertSame(1, TfMessage::forAccount(self::ACCOUNT)->count(), 'upsert only ever touches the one row');
     }
 
-    public function test_route_marking_uses_injected_clock(): void
+    public function test_curated_dial_is_timestamp_free_and_clock_seamless(): void
     {
-        $frozen = new \DateTimeImmutable('2026-09-07 10:00:00', new \DateTimeZone('UTC'));
-        $routes = new RouteIdempotency(now: static fn (): \DateTimeImmutable => $frozen);
+        // Fact tables carry NO created_at/updated_at: nothing to seed with a
+        // clock, nothing to assert monotonicity on.
+        self::assertFalse(Schema::hasColumn('tf_messages', 'created_at'));
+        self::assertFalse(Schema::hasColumn('tf_messages', 'updated_at'));
+        self::assertFalse(Schema::hasColumn('tf_updates', 'created_at'));
 
-        $routes->mark('messages.getHistory', 'clock-test', 7, 42);
-
-        $mark = DB::table('tl_route_messages_get_history')->sole();
-        self::assertSame('2026-09-07 10:00:00', substr((string) $mark->created_at, 0, 19));
-    }
-
-    public function test_ingestor_threading_passes_clock_to_routes(): void
-    {
-        $frozen = new \DateTimeImmutable('2026-09-07 11:00:00', new \DateTimeZone('UTC'));
-        $ingestor = new UpdateIngestor(now: static fn (): \DateTimeImmutable => $frozen);
-
-        $routes = new \ReflectionProperty(UpdateIngestor::class, 'routes');
-        $routes->getValue($ingestor)->mark('messages.getHistory', 'clock-thread', 7, 42);
-
-        $mark = DB::table('tl_route_messages_get_history')->sole();
-        self::assertSame('2026-09-07 11:00:00', substr((string) $mark->created_at, 0, 19));
+        // The ingestor signature exposes NO clock/now injection point.
+        $ctor = new \ReflectionMethod(UpdateIngestor::class, '__construct');
+        $params = array_map(static fn (\ReflectionParameter $p): string => (string) $p->getName(), $ctor->getParameters());
+        self::assertSame(['events', 'logger'], $params, 'only the even/logger seams remain');
     }
 }

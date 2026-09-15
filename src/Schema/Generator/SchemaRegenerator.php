@@ -6,11 +6,6 @@ namespace MeRezaRezaei\Teleframe\Schema\Generator;
 
 use FilesystemIterator;
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
-use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorCatalog;
-use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorFactoryWriter;
-use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorMigrationWriter;
-use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorModelWriter;
-use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorTableResolver;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -97,82 +92,36 @@ final class SchemaRegenerator
 
         $this->gate($combined, $outputDir);
 
-        $mig = new MigrationGenerator;
-        $migFiles = $mig->generate($combined);
         $modelFiles = (new ModelGenerator)->generate($combined);
         $dtoFiles = (new DtoGenerator)->generate($combined);
         $factoryFiles = (new FactoryGenerator)->generate($combined);
 
         $this->wipe($outputDir);
-        $this->writeAll($outputDir.'/src/Schema/Generated/migrations', $migFiles);
         $this->writeAll($outputDir.'/src/Schema/Generated/Models', $modelFiles);
         $this->writeAll($outputDir.'/src/Schema/Generated/Data', $dtoFiles);
         $this->writeAll($outputDir.'/src/Schema/Generated/Factories', $factoryFiles);
 
-        $mirror = $this->mirror($outputDir, $combined);
-
-        $stats = $mig->stats();
-        $counts['tables'] = count($stats['tables']);
-        $counts['fks'] = $stats['fk_count'];
+        $counts['tables'] = 0;
+        $counts['fks'] = 0;
 
         $manifest = Manifest::build(
             $combined->layer,
             $counts,
-            $stats['tables'],
-            $stats['fk_count'],
+            [],
+            0,
             $combined->crcMismatches,
         );
         $manifest['sources'] = array_map('basename', $files);
-        $manifest['mirror'] = [
-            'parents' => $mirror['parents'],
-            'tables' => $mirror['tables'],
-            'migrations' => $mirror['migrations'],
-            'models' => $mirror['models'],
-            'factories' => $mirror['factories'],
-        ];
         $manifest['hash'] = Manifest::hash($manifest);
         file_put_contents($outputDir.'/src/Schema/Generated/schema-manifest.json',
             json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n");
 
         $result = ['counts' => $counts, 'manifest' => $manifest];
         if ($this->shipNamespaces !== null) {
-            $result['ship'] = $this->shipMigrations($combined, $migFiles, $outputDir);
+            $result['ship'] = $this->shipMigrations($combined, [], $outputDir);
         }
 
         return $result;
-    }
-
-    /**
-     * Additive NF5 mirror stage (P2, plan task 2): regenerate the mirror
-     * pipeline alongside the legacy TDLib-domain output so committed mirror
-     * artifacts exist in the tree. Deterministic, driven from the same
-     * committed scheme; the table→file map feeds P3 manifest consumers.
-     *
-     * @return array{parents:int,tables:array<string,string>,migrations:int,models:int,factories:int}
-     */
-    private function mirror(string $outputDir, TlScheme $combined): array
-    {
-        $catalog = MirrorCatalog::load(
-            dirname(__DIR__, 3).'/docs/superpowers/specs/2026-09-11-telegram-mirror-catalog.json',
-            $combined,
-        );
-        $resolver = new MirrorTableResolver($catalog, $combined);
-        $parents = $resolver->resolveAll($catalog->tableNames());
-
-        $generated = $outputDir.'/src/Schema/Generated';
-        $tableMap = [];
-        $migPaths = (new MirrorMigrationWriter($generated.'/migrations/mirror'))
-            ->writeAll($parents, '2026_09_11', $tableMap);
-        $modelPaths = (new MirrorModelWriter($generated))->writeAll($parents);
-        $factoryPaths = (new MirrorFactoryWriter($generated))->writeAll($parents);
-
-        return [
-            'parents' => count($parents),
-            'tables' => $tableMap,
-            'migrations' => count($migPaths),
-            'models' => count($modelPaths),
-            'factories' => count($factoryPaths),
-        ];
     }
 
     /**

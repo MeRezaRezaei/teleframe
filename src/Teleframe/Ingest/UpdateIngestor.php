@@ -5,567 +5,475 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Ingest;
 
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
-use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlConstructor;
-use MeRezaRezaei\Teleframe\Schema\Generator\Naming;
-use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfMessage;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfMessageService;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfUpdate;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerShapeTool;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\TfMirrorModel;
+use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
- * TDLib-style domain table ingestor: raw TL update arrays → domain table
- * rows with extracted query columns + tl_data JSONB.
+ * Curated-dial ingestor: raw TL update arrays → hand-authored tf_* rows.
  *
- * Each TL constructor is classified into a domain (users, messages, etc.)
- * via Naming::classifyType(). The full TL payload is serialized to JSONB,
- * hot-path query columns are extracted, and the row is upserted into the
- * appropriate domain table.
+ * Phase C re-pointed the write path off the legacy contract (constructor_id
+ * FK, tl_data JSONB, extracted legacy columns, generated Tl* models) onto the
+ * curated dial the same way the mirror seam decomposes: booleans as live
+ * wire-false columns, peer shapes expanded to {field}_type / {field}_id pairs
+ * via PeerShapeTool, `constructor` as the ctor name. No tl_data, no
+ * constructor_id, no timestamps.
+ *
+ * Domains decomposed here:
+ * - messages — `message` / `messageEmpty` / `messageService` → tf_messages /
+ *   tf_messages_service (upsert-stable on (account_id, id)) plus the 1:1 peer
+ *   children (from_id, saved_peer_id);
+ * - updates — every single `update*` ctor → tf_updates keyed
+ *   (account_id, seq, position) with its hand-authored children (row
+ *   existence = fact existence); a nested message object lands in the
+ *   messages mirror (sibling domain); `updates` / `updatesCombined` /
+ *   `updatesTooLong` containers decompose their nested updates;
+ * - envelopes carrying a `messages` list (messages.messages & co.)
+ *   decompose each nested message and return the first stored root.
+ *
+ * Any constructor with no curated surface is a clue (logged via the PSR-3
+ * seam when one is injected, silent by default) — never a throw.
+ *
+ * The public face stays: ingest() / ingestBatch() / ingestResponse() /
+ * entityMigrationPaths() / migrationPaths() / the UpdateStored event.
  */
 final class UpdateIngestor
 {
+    /** Message ctors the curated messages surface (tf_messages) owns. */
+    private const MESSAGE_CTORS = ['message', 'messageEmpty', 'messageService'];
 
-    /**
-     * Domain-specific query column extraction: domain => list of param names to extract.
-     *
-     * @var array<string, list<string>>
-     */
-    private const DOMAIN_EXTRACT_COLUMNS = [
-        'users' => ['access_hash', 'first_name', 'last_name', 'username', 'phone', 'is_bot', 'is_self', 'is_contact', 'is_premium', 'is_deleted', 'photo_id', 'status_type'],
-        'chats' => ['title', 'participants_count', 'version', 'date', 'is_deactivated', 'is_left'],
-        'channels' => ['access_hash', 'title', 'username', 'date', 'participants_count', 'is_broadcast', 'is_megagroup', 'is_verified', 'is_restricted', 'is_left', 'is_forum', 'restriction_reason'],
-        'messages' => ['message_id', 'peer_id', 'from_id', 'date', 'is_out', 'is_mentioned', 'is_silent', 'is_pinned', 'message_text', 'media_type', 'reply_to_msg_id'],
-        'dialogs' => ['peer_id', 'peer_type', 'top_message_id', 'unread_count', 'unread_mentions', 'is_pinned', 'folder_id', 'pts'],
-        'updates' => ['peer_id', 'message_id', 'user_id', 'pts', 'pts_count', 'date'],
-        'documents' => ['access_hash', 'date', 'mime_type', 'size', 'dc_id', 'file_reference'],
-        'photos' => ['access_hash', 'date', 'dc_id', 'has_stickers', 'file_reference'],
-        'sticker_sets' => ['access_hash', 'title', 'short_name', 'count', 'hashes'],
-        'stories' => ['story_id', 'peer_id', 'date', 'expire_date', 'caption'],
-        'wallpapers' => ['access_hash', 'title', 'slug', 'document_id'],
-        'channel_participants' => ['channel_id', 'user_id', 'date'],
+    /** Update container ctors whose `updates` list carries the real updates. */
+    private const UPDATE_CONTAINERS = ['updates', 'updatesCombined', 'updatesTooLong'];
+
+    /** tf_messages bits that don't make the wire as explicit booleans. */
+    private const TF_MESSAGES_SERVICE = 'tf_messages_service';
+
+    /** @var array<string, string> ctor → service message table. */
+    private const MESSAGE_TABLES = [
+        'messageService' => self::TF_MESSAGES_SERVICE,
     ];
 
     /**
-     * TL param name aliases for extraction: domain column key => TL param
-     * names to try when the key itself is absent from the payload (TL
-     * wire names differ from domain column names: id→message_id,
-     * message→message_text). The `is_*` boolean columns fall back to
-     * their bare TL flag name (is_out→out) via the generic rule below.
+     * Booleans per messages surface — mirrors the curated DDL's
+     * `BOOLEAN NOT NULL DEFAULT FALSE` columns, wire-false on absence.
      *
      * @var array<string, list<string>>
      */
-    private const EXTRACT_PARAM_ALIASES = [
-        'message_id'   => ['id'],
-        'story_id'     => ['id'],
-        'message_text' => ['message'],
-        // Users domain: TL flag-only bools (self/contact/deleted/bot/...)
-        // arrive as bare keys, while domain columns are is_*-prefixed.
-        'is_bot'       => ['bot'],
-        'is_self'      => ['self'],
-        'is_contact'   => ['contact'],
-        'is_premium'   => ['premium'],
-        'is_deleted'   => ['deleted'],
-        // Channels domain: same bare-key convention for TL flag bools.
-        'is_broadcast' => ['broadcast'],
-        'is_megagroup' => ['megagroup'],
-        'is_verified'  => ['verified'],
-        'is_restricted' => ['restricted'],
-        'is_left'      => ['left'],
-        'is_forum'     => ['forum'],
+    private const MESSAGE_BOOLS = [
+        'tf_messages' => [
+            'out', 'mentioned', 'media_unread', 'silent', 'post',
+            'from_scheduled', 'legacy', 'edit_hide', 'pinned',
+            'noforwards', 'invert_media', 'offline',
+            'video_processing_pending', 'paid_suggested_post_stars',
+            'paid_suggested_post_ton',
+        ],
+        self::TF_MESSAGES_SERVICE => [
+            'out', 'mentioned', 'media_unread', 'reactions_are_possible',
+            'silent', 'post', 'legacy',
+        ],
     ];
 
     /**
-     * Conflict target for upsert per domain.
+     * 1:1 scalar update children — child table → payload field + leaf column.
      *
-     * @var array<string, list<string>>
+     * @var array<string, array{field: string, column: string}>
      */
-    private const DOMAIN_CONFLICT_TARGETS = [
-        'users'                => ['id', 'account_id'],
-        'chats'                => ['id', 'account_id'],
-        'channels'             => ['id', 'account_id'],
-        'messages'             => ['peer_id', 'message_id', 'account_id'],
-        'dialogs'              => ['peer_id', 'account_id'],
-        'documents'            => ['id', 'account_id'],
-        'photos'               => ['id', 'account_id'],
-        'sticker_sets'         => ['id', 'account_id'],
-        'stories'              => ['peer_id', 'story_id', 'account_id'],
-        'wallpapers'           => ['id', 'account_id'],
-        'channel_participants' => ['channel_id', 'user_id', 'account_id'],
+    private const UPDATE_SCALAR_CHILDREN = [
+        'tf_updates_pts' => ['field' => 'pts', 'column' => 'pts'],
+        'tf_updates_pts_count' => ['field' => 'pts_count', 'column' => 'pts_count'],
+        'tf_updates_qts' => ['field' => 'qts', 'column' => 'qts'],
+        'tf_updates_date' => ['field' => 'date', 'column' => 'date'],
+        'tf_updates_max_id' => ['field' => 'max_id', 'column' => 'max_id'],
+        'tf_updates_still_unread_count' => ['field' => 'still_unread_count', 'column' => 'still_unread_count'],
+        'tf_updates_top_msg_id' => ['field' => 'top_msg_id', 'column' => 'top_msg_id'],
+        'tf_updates_folder_id' => ['field' => 'folder_id', 'column' => 'folder_id'],
+        'tf_updates_channel' => ['field' => 'channel_id', 'column' => 'channel_id'],
+        'tf_updates_chat' => ['field' => 'chat_id', 'column' => 'chat_id'],
+        'tf_updates_user' => ['field' => 'user_id', 'column' => 'user_id'],
     ];
 
-    /** @var array<string, TlConstructor>|null ctor name => metamodel entry */
-    private static ?array $constructors = null;
-
-    /** @var array<string, string>|null domain => table name (lazy) */
-    private static ?array $domainTables = null;
-
-    private const MODELS_NS = 'MeRezaRezaei\Teleframe\Schema\Generated\Models\\';
-
-    private readonly RouteIdempotency $routes;
+    /** 1:1 peer-shaped update children — child table → payload field. */
+    private const UPDATE_PEER_CHILDREN = [
+        'tf_updates_peer' => 'peer_id',
+        'tf_updates_from' => 'from_id',
+    ];
 
     public function __construct(
-        ?RouteIdempotency $routes = null,
         private readonly ?Dispatcher $events = null,
-        private readonly ?\Closure $now = null,
-    ) {
-        $this->routes = $routes ?? new RouteIdempotency(now: $now);
-    }
+        private readonly ?LoggerInterface $logger = null,
+    ) {}
 
     /**
-     * Migration paths for the ingest surface: shipped domain table migrations.
+     * Migration paths for the hand-authored updates/entity dial.
+     *
+     * The curated dial itself lives in src/Laravel/Migrations (shipped whole
+     * via migrationPaths()); these are the off-dial root-namespace entity
+     * anchors the updates/entity mirror writes to — those two files only
+     * (the seam test pins the exact list).
      *
      * @return list<string>
      */
     public static function entityMigrationPaths(): array
     {
-        $root = dirname(__DIR__, 3);
-        $manifest = json_decode(
-            (string) file_get_contents($root . '/src/Schema/Generated/schema-manifest.json'),
-            true,
-        );
-        $tables = is_array($manifest) ? ($manifest['tables'] ?? []) : [];
-
-        $paths = [];
-        foreach ($tables as $table => $file) {
-            if (str_starts_with($table, 'tf_') && !str_starts_with($table, 'tl_route_')) {
-                $paths[] = $root . '/src/Laravel/Migrations/' . $file;
-            }
-        }
-        sort($paths);
-        return array_values(array_unique($paths));
+        return [
+            dirname(__DIR__, 2).'/Laravel/Migrations/2026_09_14_200030_create_tf_updates_tables.php',
+            dirname(__DIR__, 2).'/Laravel/Migrations/2026_09_14_200031_create_tf_channel_participants_tables.php',
+        ];
     }
 
     /**
-     * All migration paths the ingest surface runs.
+     * All migration paths the ingest surface runs: the curated dial dir plus
+     * the entity anchors.
      *
      * @return list<string>
      */
     public static function migrationPaths(): array
     {
         return array_merge(
-            [dirname(__DIR__, 2) . '/Laravel/Migrations'],
+            [dirname(__DIR__, 2).'/Laravel/Migrations'],
             self::entityMigrationPaths(),
         );
     }
 
     /**
-     * The P1 metamodel (cached): combined scheme over the committed
-     * schema/sources/*.tl, indexed by constructor name.
+     * Ingest one payload under a tenant; returns the hydrated curated root
+     * model (TfMessage / TfUpdate) after the write commits and UpdateStored
+     * has fired, or null when the constructor has no curated surface.
      *
-     * @return array<string, TlConstructor>
+     * @param  array<string, mixed>  $payload
      */
-    public static function constructors(): array
+    public function ingest(array $payload, int $accountId): ?Model
     {
-        if (self::$constructors === null) {
-            $scheme = (new SchemaRegenerator())->loadScheme();
-            $index = [];
-            foreach ($scheme->types() as $type) {
-                foreach ($type->constructors() as $constructor) {
-                    $index[$constructor->name] = $constructor;
-                }
-            }
-            self::$constructors = $index;
-        }
-
-        return self::$constructors;
-    }
-
-    /** @var array<string, bool> table => migrated on this connection (checked once) */
-    private static array $tablesReady = [];
-
-    private static function constructor(string $name): TlConstructor
-    {
-        $ctor = self::constructors()[$name] ?? null;
-        if ($ctor === null) {
-            throw new \InvalidArgumentException(
-                "UpdateIngestor: unknown TL constructor '{$name}' (not in the committed scheme sources)",
-            );
-        }
-
-        return $ctor;
-    }
-
-    private static function assertTableReady(string $table, string $context): void
-    {
-        self::$tablesReady[$table] ??= Schema::hasTable($table);
-        if (!self::$tablesReady[$table]) {
-            throw new \InvalidArgumentException(
-                "UpdateIngestor: table '{$table}' ({$context}) is not migrated",
-            );
-        }
-    }
-
-    /**
-     * Ingest one payload (flat or arbitrarily nested) under a tenant.
-     * Returns the root constructor's domain model after the transaction
-     * commits and UpdateStored has fired.
-     *
-     * @param array<string, mixed> $payload
-     */
-    public function ingest(array $payload, int $accountId): TlAnchorModel
-    {
-        $nodes = iterator_to_array(PayloadWalker::walk($payload), false);
-        if ($nodes === []) {
+        $ctor = (string) ($payload['_'] ?? '');
+        if ($ctor === '') {
             throw new \InvalidArgumentException(
                 "UpdateIngestor: payload carries no '_' constructor node — nothing to ingest",
             );
         }
 
-        /** @var array<string, TlAnchorModel> $written path => written model */
-        $written = [];
+        $root = DB::transaction(fn (): ?Model => $this->ingestImpl($payload, $accountId, $ctor));
+        if ($root !== null) {
+            $this->events?->dispatch(new UpdateStored($root, $accountId));
+        }
 
-        $root = DB::transaction(function () use ($nodes, $accountId, &$written): TlAnchorModel {
-            foreach (array_reverse($nodes) as $node) {
-                $model = $this->writeNode(
-                    $node['constructor'],
-                    $node['payload'],
-                    $accountId,
-                );
-                if ($model !== null) {
-                    $written[$node['path']] = $model;
+        return $root;
+    }
+
+    /**
+     * Ingest a batch of payloads under one transaction, one UpdateStored per
+     * stored root, in order.
+     *
+     * @param  iterable<array<string, mixed>>  $payloads
+     * @return list<Model>
+     */
+    public function ingestBatch(iterable $payloads, int $accountId): array
+    {
+        $roots = [];
+        DB::transaction(function () use ($payloads, $accountId, &$roots): void {
+            foreach ($payloads as $payload) {
+                $ctor = (string) ($payload['_'] ?? '');
+                if ($ctor === '') {
+                    continue; // batch skip — same clue rule as ingest(), never throws
+                }
+                $root = $this->ingestImpl((array) $payload, $accountId, $ctor);
+                if ($root !== null) {
+                    $roots[] = $root;
                 }
             }
-
-            if (isset($written[$nodes[0]['path']])) {
-                return $written[$nodes[0]['path']]; // walker yields the root first
-            }
-
-            // The root node is an ephemeral envelope (e.g. messages.Messages):
-            // return the first persisted descendant instead.
-            $first = reset($written);
-            if ($first === false) {
-                throw new \InvalidArgumentException(
-                    'UpdateIngestor: payload carries no persistable domain node — nothing to ingest',
-                );
-            }
-
-            return $first;
         });
 
-        $this->events?->dispatch(new UpdateStored($root, $accountId));
+        foreach ($roots as $root) {
+            $this->events?->dispatch(new UpdateStored($root, $accountId));
+        }
 
-        return $root;
+        return $roots;
     }
 
     /**
-     * Ingest a method RESPONSE under a tenant.
+     * Ingest a method RESPONSE under a tenant. The legacy route-table
+     * dedup (RouteIdempotency) is gone with the tl_route_* tables; a
+     * response is a payload like any other — update-kind payloads and
+     * message envelopes decompose into the curated surface.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, mixed> $response
+     * @param  array<string, mixed>  $params
+     * @param  array<string, mixed>  $response
      */
-    public function ingestResponse(string $method, array $params, array $response, int $accountId): TlAnchorModel
+    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?Model
     {
-        if (RouteIdempotency::isUpdatePayload($response)) {
-            return $this->ingest($response, $accountId);
-        }
-
-        $table = RouteIdempotency::tableFor($method);
-        if (!Schema::hasTable($table)) {
-            return $this->ingest($response, $accountId);
-        }
-
-        $key = RouteIdempotency::keyFor($method, $params);
-        $storedId = $this->routes->storedId($method, $key, $accountId);
-        if ($storedId !== null) {
-            // Envelope ctors (messages.messages, users.users, ...) persist
-            // only their descendants, so no stored instance resolves — fall
-            // back to an idempotent re-ingest (upsert-stable) instead of
-            // returning null for a seen route.
-            return $this->storedInstance((string) ($response['_'] ?? ''), $storedId)
-                ?? $this->ingest($response, $accountId);
-        }
-
-        $root = $this->ingest($response, $accountId);
-
-        // Surrogate-key roots (messages, updates: null key on sqlite) have
-        // nothing stable to point the route at — marking id 0 would collide
-        // across distinct keys, so only native-id roots mark routes.
-        if ($root->getKey() !== null && !DB::table($table)->where('id', (int) $root->getKey())->exists()) {
-            $this->routes->mark($method, $key, $accountId, (int) $root->getKey());
-        }
-
-        return $root;
+        return $this->ingest($response, $accountId);
     }
 
     /**
-     * The instance a seen route points at, resolved through the domain table.
+     * @param  array<string, mixed>  $payload
      */
-    private function storedInstance(string $constructor, int $storedId): ?TlAnchorModel
+    private function ingestImpl(array $payload, int $accountId, string $ctor): ?Model
     {
-        if ($constructor === '') {
-            return null;
+        if (in_array($ctor, self::MESSAGE_CTORS, true)) {
+            return $this->writeMessage($payload, $accountId, $ctor);
         }
 
-        $ctor = self::constructor($constructor);
-        $classification = Naming::classifyConstructor($constructor, $ctor->resultType);
-        if ($classification === null) {
-            return null;
+        if (in_array($ctor, self::UPDATE_CONTAINERS, true)) {
+            return $this->writeUpdateContainer($payload, $accountId);
         }
 
-        $domain = $classification['domain'];
-        $modelClass = self::domainModelClass($domain);
-
-        /** @var TlAnchorModel|null $instance */
-        $instance = $modelClass::query()->find($storedId);
-
-        return $instance;
-    }
-
-    /**
-     * Write a single TL node to its domain table.
-     *
-     * @param array<string, mixed> $payload
-     */
-    private function writeNode(
-        string $name,
-        array $payload,
-        int $accountId,
-    ): ?TlAnchorModel {
-        $ctor = self::constructor($name);
-        $classification = Naming::classifyConstructor($name, $ctor->resultType);
-        if ($classification === null) {
-            // Ephemeral envelope (e.g. messages.Messages): its children were
-            // walked and persisted as domain rows; nothing to store for the
-            // envelope itself.
-            return null;
+        if (str_starts_with($ctor, 'update')) {
+            return $this->writeUpdate($payload, $accountId, $ctor);
         }
 
-        $domain = $classification['domain'];
-        $table = self::domainTable($domain);
-        self::assertTableReady($table, $domain);
-        $modelClass = self::domainModelClass($domain);
-
-        // Build the full TL data as JSONB
-        $tlData = $this->serializeToTlData($payload);
-
-        // Extract query columns from the payload
-        $extractCols = self::DOMAIN_EXTRACT_COLUMNS[$domain] ?? [];
-        $columns = $this->extractColumns($ctor, $payload, $extractCols);
-
-        // Compute conflict target for upsert
-        $conflictCols = self::DOMAIN_CONFLICT_TARGETS[$domain] ?? ['id', 'account_id'];
-
-        // Build the fill array
-        $fill = array_merge([
-            'constructor_id' => $ctor->id,
-            'account_id' => $accountId,
-            'tl_data' => $tlData,
-        ], $columns);
-
-        // For global-ID types, set the id column from the payload
-        $idValue = $this->extractGlobalId($ctor, $columns, $payload);
-        if ($idValue !== null) {
-            $fill['id'] = $idValue;
+        $messages = $payload['messages'] ?? null;
+        if (is_array($messages) && array_is_list($messages)) {
+            return $this->writeEnvelope($payload, $accountId);
         }
 
-        // Upsert
-        $existing = $this->findExisting($modelClass, $conflictCols, $fill);
-        if ($existing !== null) {
-            $existing->forceFill($fill);
-            $existing->save();
+        $this->clue("UpdateIngestor: constructor '{$ctor}' has no curated mirror surface — nothing stored");
 
-            return $existing;
-        }
-
-        $model = new $modelClass();
-        $model->forceFill($fill);
-        $model->save();
-
-        return $model;
-    }
-
-    /**
-     * Serialize a TL payload to the tl_data JSONB structure.
-     *
-     * @param array<string, mixed> $payload
-     *
-     * @return array<string, mixed>
-     */
-    private function serializeToTlData(array $payload): array
-    {
-        $data = [];
-        foreach ($payload as $key => $value) {
-            if ($key === '_') {
-                $data['_'] = $value;
-            } else {
-                // Store all fields as-is: scalars, nested objects, and vectors.
-                // Nested objects that were also written as separate domain rows
-                // keep their full representation in the parent's JSONB for
-                // read-path convenience; the domain row is the write-side truth.
-                $data[$key] = $value;
-            }
-        }
-        return $data;
-    }
-
-    /**
-     * Extract query columns from a TL payload for a given domain.
-     *
-     * @param array<string, mixed> $payload
-     * @param list<string> $extractCols
-     *
-     * @return array<string, mixed>
-     */
-    private function extractColumns(TlConstructor $ctor, array $payload, array $extractCols): array
-    {
-        $columns = [];
-        $paramByField = [];
-        foreach ($ctor->params() as $p) {
-            $paramByField[$p->name] = $p;
-        }
-
-        foreach ($extractCols as $colKey) {
-            $col = Naming::column($colKey);
-            $tlName = $colKey;
-            $value = $payload[$colKey] ?? null;
-
-            if ($value === null) {
-                foreach (self::EXTRACT_PARAM_ALIASES[$colKey] ?? [] as $alias) {
-                    if (array_key_exists($alias, $payload) && $payload[$alias] !== null) {
-                        $tlName = $alias;
-                        $value = $payload[$alias];
-                        break;
-                    }
-                }
-            }
-
-            if ($value === null && str_starts_with($colKey, 'is_')) {
-                $bare = substr($colKey, 3);
-                if (array_key_exists($bare, $payload) && $payload[$bare] !== null) {
-                    $tlName = $bare;
-                    $value = $payload[$bare];
-                }
-            }
-
-            if ($value === null) {
-                continue;
-            }
-
-            $param = $paramByField[$tlName] ?? $paramByField[$colKey] ?? null;
-            if ($param === null) {
-                continue;
-            }
-
-            if (is_array($value) && isset($value['_'])) {
-                // Nested object — extract peer long for Peer/InputPeer params
-                if ($param->kind() === 'ref' && in_array($param->baseType(), ['Peer', 'InputPeer'], true)) {
-                    $long = self::peerLong($value);
-                    if ($long !== null) {
-                        $columns[$col] = $long;
-                    }
-                }
-                // For other object params, store null (the tl_data has the full object)
-            } elseif (is_array($value) && array_is_list($value)) {
-                // Vector — skip (stored in tl_data)
-            } else {
-                $columns[$col] = $value;
-            }
-        }
-
-        // Special handling for peer_id: extract from Peer object if present
-        if (in_array('peer_id', $extractCols, true) && !isset($columns['peer_id'])) {
-            $peerParam = $paramByField['peer_id'] ?? null;
-            if ($peerParam !== null && is_array($payload['peer_id'] ?? null)) {
-                $long = self::peerLong((array) $payload['peer_id']);
-                if ($long !== null) {
-                    $columns['peer_id'] = $long;
-                }
-            }
-        }
-
-        return $columns;
-    }
-
-    /**
-     * Extract the global ID (Telegram native ID) from the payload.
-     * Returns null for scoped-ID types.
-     */
-    private function extractGlobalId(TlConstructor $ctor, array $columns, array $payload): ?int
-    {
-        foreach ($ctor->params() as $p) {
-            if ($p->kind() === 'scalar' && $p->name === 'id' && $p->baseType() === 'long') {
-                $val = $columns['id'] ?? $payload['id'] ?? null;
-                return $val !== null ? (int) $val : null;
-            }
-        }
         return null;
     }
 
     /**
-     * Find an existing row for upsert conflict resolution.
+     * Decompose a message ctor into its curated table (upsert-stable on
+     * (account_id, id)) with the 1:1 peer children (from_id, saved_peer_id).
      *
-     * @param class-string<TlAnchorModel> $modelClass
-     * @param list<string> $conflictCols
-     * @param array<string, mixed> $fill
+     * @param  array<string, mixed>  $payload
      */
-    private function findExisting(string $modelClass, array $conflictCols, array $fill): ?TlAnchorModel
+    private function writeMessage(array $payload, int $accountId, string $ctor): TfMirrorModel
     {
-        $query = $modelClass::query()->withoutGlobalScopes();
-        foreach ($conflictCols as $col) {
-            $val = $fill[$col] ?? null;
-            if ($val === null) {
-                return null; // can't match without all conflict columns
-            }
-            $query->where($col, $val);
+        $table = self::MESSAGE_TABLES[$ctor] ?? 'tf_messages';
+        $modelClass = $table === self::TF_MESSAGES_SERVICE ? TfMessageService::class : TfMessage::class;
+
+        $id = (int) ($payload['id'] ?? 0);
+        [$peerType, $peerId] = PeerShapeTool::normalize(self::peerValue($payload['peer_id']));
+
+        $fill = [
+            'account_id' => $accountId,
+            'id' => $id,
+            'constructor' => $ctor,
+            'peer_type' => $peerType,
+            'peer_id' => $peerId,
+            'date' => (int) ($payload['date'] ?? 0),
+            'message' => (string) ($payload['message'] ?? ''),
+        ];
+        foreach (self::MESSAGE_BOOLS[$table] as $bool) {
+            $fill[$bool] = (bool) ($payload[$bool] ?? false);
         }
 
-        /** @var TlAnchorModel|null $existing */
-        $existing = $query->first();
+        DB::table($table)->updateOrInsert(['account_id' => $accountId, 'id' => $id], $fill);
 
-        return $existing;
-    }
-
-    /**
-     * Telegram's canonical Peer long for an ingested peer object.
-     *
-     * @param array<string, mixed> $value
-     */
-    private static function peerLong(array $value): ?int
-    {
-        $ctor = (string) ($value['_'] ?? '');
-        return match ($ctor) {
-            'peerUser' => PeerIdTool::userLong((int) ($value['user_id'] ?? 0)),
-            'peerChat' => PeerIdTool::chatLong((int) ($value['chat_id'] ?? 0)),
-            'peerChannel' => PeerIdTool::channelLong((int) ($value['channel_id'] ?? 0)),
-            default => null,
-        };
-    }
-
-    /**
-     * Resolve the walker path for a child node.
-     */
-
-    /**
-     * Get the domain table name for a domain.
-     */
-    private static function domainTable(string $domain): string
-    {
-        if (self::$domainTables === null) {
-            self::$domainTables = [];
-            foreach (array_keys(self::DOMAIN_EXTRACT_COLUMNS) as $d) {
-                self::$domainTables[$d] = Naming::domainTable($d);
+        foreach (['from_id', 'saved_peer_id'] as $field) {
+            if (! is_array($payload[$field] ?? null)) {
+                continue;
             }
-        }
-
-        return self::$domainTables[$domain] ?? Naming::domainTable($domain);
-    }
-
-    /**
-     * Get the model class for a domain.
-     *
-     * @return class-string<TlAnchorModel>
-     */
-    private static function domainModelClass(string $domain): string
-    {
-        $class = Naming::domainModel($domain);
-        $fqcn = self::MODELS_NS . $class;
-        if (!class_exists($fqcn)) {
-            throw new \InvalidArgumentException(
-                "UpdateIngestor: generated model '{$fqcn}' is missing — run artisan teleframe:regenerate",
+            [$type, $peer] = PeerShapeTool::normalize((array) $payload[$field]);
+            DB::table("{$table}_{$field}")->updateOrInsert(
+                ['account_id' => $accountId, 'id' => $id],
+                ['account_id' => $accountId, 'id' => $id, "{$field}_type" => $type, "{$field}_id" => $peer],
             );
         }
 
-        return $fqcn;
+        /** @var TfMirrorModel|null $stored */
+        $stored = $modelClass::forAccount($accountId)->where('id', $id)->first();
+        if ($stored === null) {
+            throw new RuntimeException("UpdateIngestor: failed to re-read '{$table}' row ({$accountId}, {$id}) after write");
+        }
+
+        return $stored;
+    }
+
+    /**
+     * Decompose a single update ctor into tf_updates (keyed (account_id,
+     * seq, position) — 0 / 0 for a lone update) plus its hand-authored
+     * children, and route a nested message object to the messages mirror.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function writeUpdate(array $payload, int $accountId, string $ctor): Model
+    {
+        $key = ['account_id' => $accountId, 'seq' => 0, 'position' => 0];
+
+        DB::table('tf_updates')->updateOrInsert($key, [...$key, 'constructor' => $ctor]);
+        $this->writeUpdateChildren($payload, $key);
+
+        $nested = $payload['message'] ?? null;
+        if (is_array($nested) && in_array((string) ($nested['_'] ?? ''), self::MESSAGE_CTORS, true)) {
+            $this->writeMessage($nested, $accountId, (string) $nested['_']);
+        }
+
+        $stored = TfUpdate::forAccount($accountId)->where('seq', 0)->where('position', 0)->first();
+        if ($stored === null) {
+            throw new RuntimeException("UpdateIngestor: failed to re-read 'tf_updates' row ({$accountId}, 0, 0) after write");
+        }
+
+        return $stored;
+    }
+
+    /**
+     * Decompose an updates container envelope into each nested single update.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function writeUpdateContainer(array $payload, int $accountId): ?Model
+    {
+        $items = $payload['updates'] ?? null;
+        $first = null;
+        if (is_array($items) && array_is_list($items)) {
+            foreach ($items as $item) {
+                if (! is_array($item)) {
+                    continue;
+                }
+                $ctor = (string) ($item['_'] ?? '');
+                if (str_starts_with($ctor, 'update') && ! in_array($ctor, self::UPDATE_CONTAINERS, true)) {
+                    $first ??= $this->writeUpdate($item, $accountId, $ctor);
+                }
+            }
+        }
+
+        if ($first === null) {
+            $this->clue('UpdateIngestor: update container carries no single-update members — nothing stored');
+        }
+
+        return $first;
+    }
+
+    /**
+     * Decompose a message-carrier envelope (messages.messages & co.) into
+     * each nested message; the first stored message is the returned root.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function writeEnvelope(array $payload, int $accountId): ?Model
+    {
+        $messages = $payload['messages'] ?? null;
+        if (! is_array($messages) || ! array_is_list($messages)) {
+            $this->clue('UpdateIngestor: envelope payload carries no list "messages" member — nothing stored');
+
+            return null;
+        }
+
+        $first = null;
+        foreach ($messages as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $ctor = (string) ($item['_'] ?? '');
+            if (in_array($ctor, self::MESSAGE_CTORS, true)) {
+                $first ??= $this->writeMessage($item, $accountId, $ctor);
+            }
+        }
+
+        if ($first === null) {
+            $this->clue('UpdateIngestor: envelope carries no message ctor members — nothing stored');
+        }
+
+        return $first;
+    }
+
+    /**
+     * Write the hand-authored tf_updates_* children present in the payload.
+     * Row existence = fact existence: a missing field means no child row
+     * (the curated 1:1 / 1:N children are presence facts).
+     *
+     * @param  array<string, mixed>  $payload
+     * @param  array{account_id: int, seq: int, position: int}  $key
+     */
+    private function writeUpdateChildren(array $payload, array $key): void
+    {
+        foreach (self::UPDATE_SCALAR_CHILDREN as $table => $spec) {
+            $value = $payload[$spec['field']] ?? null;
+            if ($value === null) {
+                continue;
+            }
+            DB::table($table)->updateOrInsert(
+                $key,
+                [...$key, $spec['column'] => (int) $value],
+            );
+        }
+
+        foreach (self::UPDATE_PEER_CHILDREN as $table => $field) {
+            if (! is_array($payload[$field] ?? null)) {
+                continue;
+            }
+            [$type, $peer] = PeerShapeTool::normalize((array) $payload[$field]);
+            DB::table($table)->updateOrInsert(
+                $key,
+                [...$key, 'peer_type' => $type, 'peer_id' => $peer],
+            );
+        }
+
+        $ids = $payload['messages'] ?? null;
+        if (is_array($ids)) {
+            $position = 0;
+            foreach ($ids as $id) {
+                DB::table('tf_updates_messages')->updateOrInsert(
+                    [...$key, 'message_position' => $position],
+                    [...$key, 'message_position' => $position, 'message_id' => (int) $id],
+                );
+                $position++;
+            }
+        }
+
+        $nested = $payload['message'] ?? null;
+        if (is_array($nested) && isset($nested['_'])) {
+            [$type, $peer] = PeerShapeTool::normalize(self::peerValue($nested['peer_id'] ?? null));
+            DB::table('tf_updates_message')->updateOrInsert(
+                $key,
+                [...$key, 'peer_type' => $type, 'peer_id' => $peer, 'message_id' => (int) ($nested['id'] ?? 0)],
+            );
+        } elseif (is_string($nested) && $nested !== '') {
+            [$type, $peer] = PeerShapeTool::normalize(self::peerValue($payload['peer_id'] ?? $payload['from_id'] ?? $payload['chat_id'] ?? null));
+            DB::table('tf_updates_message')->updateOrInsert(
+                $key,
+                [...$key, 'peer_type' => $type, 'peer_id' => $peer, 'message_id' => (int) ($payload['id'] ?? 0)],
+            );
+        }
+
+        $status = $payload['status'] ?? null;
+        if (is_array($status) && isset($status['_'])) {
+            DB::table('tf_updates_status')->updateOrInsert(
+                $key,
+                [...$key,
+                    'constructor' => (string) $status['_'],
+                    'by_me' => (bool) ($status['by_me'] ?? false),
+                    'expires' => (int) ($status['expires'] ?? 0),
+                    'was_online' => (int) ($status['was_online'] ?? 0),
+                ],
+            );
+        }
+
+        $action = $payload['action'] ?? null;
+        if (is_array($action) && isset($action['_'])) {
+            DB::table('tf_updates_action')->updateOrInsert(
+                $key,
+                [...$key,
+                    'constructor' => (string) $action['_'],
+                    'progress' => (int) ($action['progress'] ?? 0),
+                    'emoticon' => (string) ($action['emoticon'] ?? ''),
+                    'msg_id' => (int) ($action['msg_id'] ?? 0),
+                    'random_id' => (int) ($action['random_id'] ?? 0),
+                ],
+            );
+        }
+    }
+
+    /**
+     * A peer payload value, normalized to an array for PeerShapeTool.
+     *
+     * @return array<string, mixed>
+     */
+    private static function peerValue(mixed $peer): array
+    {
+        return is_array($peer) ? $peer : [];
+    }
+
+    /** Clue-not-swallow: log the ingest clue through the PSR-3 seam (silent by default). */
+    private function clue(string $message): void
+    {
+        $this->logger?->notice($message);
     }
 }

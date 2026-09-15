@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Tests\Handler;
 
+use Illuminate\Support\Facades\DB;
 use MeRezaRezaei\Teleframe\Handler\HandlerRegistry;
+use MeRezaRezaei\Teleframe\Handler\Update;
 use MeRezaRezaei\Teleframe\Handler\UpdateDispatcher;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfMessage;
 use MeRezaRezaei\Teleframe\Teleframe;
 use MeRezaRezaei\Teleframe\Tests\Ingest\IngestTestCase;
 
@@ -31,26 +33,39 @@ final class TeleframeFacadeTest extends IngestTestCase
 
     public function test_ingest_delegates_to_the_real_ingestor(): void
     {
+        // A storeable constructor delegates to the real ingestor: the root
+        // is the hydrated curated model committed under the tenant.
         $root = $this->teleframe->ingest([
-            '_' => 'user',
-            'flags' => (1 << 0) | (1 << 1),
-            'id' => self::USER_ID,
-            'access_hash' => -5988024083302710253,
-            'first_name' => 'Reza',
-            'last_name' => 'Rezaei',
-            'username' => 'RezaRezaei',
+            '_' => 'message',
+            'id' => 30,
+            'peer_id' => ['_' => 'peerUser', 'user_id' => 5],
+            'date' => 1_700_000_030,
+            'message' => 'hello',
+            'out' => false,
         ], self::ACCOUNT);
 
-        self::assertInstanceOf(\MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel::class, $root);
+        self::assertInstanceOf(TfMessage::class, $root);
+        self::assertSame(30, $root->id);
+        self::assertSame(
+            1,
+            DB::table('tf_messages')->where('account_id', self::ACCOUNT)->where('id', 30)->count(),
+            'the facade really ingested into the curated messages truth',
+        );
 
-        $user = $this->teleframe->user(self::ACCOUNT, self::USER_ID);
-        self::assertInstanceOf(TlUser::class, $user);
+        // A constructor with no curated surface is null — nothing storeable.
+        $none = $this->teleframe->ingest([
+            '_' => 'user',
+            'id' => self::USER_ID,
+            'first_name' => 'Reza',
+        ], self::ACCOUNT);
+
+        self::assertNull($none);
     }
 
     public function test_on_message_runs_the_real_pipeline_through_run(): void
     {
         $seen = [];
-        $this->teleframe->onMessage(function (\MeRezaRezaei\Teleframe\Handler\Update $u) use (&$seen) {
+        $this->teleframe->onMessage(function (Update $u) use (&$seen) {
             $seen[] = $u->accountId;
         });
 
@@ -83,8 +98,7 @@ final class TeleframeFacadeTest extends IngestTestCase
 
     public function test_send_writes_the_registry_the_echo_eliminator_consumes(): void
     {
-        $this->teleframe->onMessage(function (): void {
-        });
+        $this->teleframe->onMessage(function (): void {});
 
         $this->teleframe->send(self::ACCOUNT, ['random_id' => 'r-1', 'msg_id' => 99]);
 

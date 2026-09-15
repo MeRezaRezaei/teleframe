@@ -48,7 +48,7 @@ final class MessageSearchQuery
     {
         $builder = DB::table('tf_messages')
             ->where('account_id', $accountId)
-            ->where('message_text', 'LIKE', '%' . $query . '%')
+            ->where('message', 'LIKE', '%'.$query.'%')
             ->limit($limit);
 
         if ($peerId !== null) {

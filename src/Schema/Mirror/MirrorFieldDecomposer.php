@@ -29,11 +29,24 @@ final class MirrorFieldDecomposer
             return null;
         }
         if ($shape === self::PEER_SHAPE) {
+            // Catalog convention (curated dial): the canonical message/chat
+            // peer field `peer_id` expands to `peer_type`/`peer_id` — NOT
+            // `peer_id_type`/`peer_id_id`. Other peer fields (from_id,
+            // reply_to_peer_id, saved_peer_id, ...) keep the
+            // `{field}_type`/`{field}_id` half naming per the curated tables.
+            if ($field === 'peer_id') {
+                return [
+                    new MirrorColumn('peer_type', MirrorColumnType::TinyInt, peer: true),
+                    new MirrorColumn('peer_id', MirrorColumnType::BigInt, peer: true),
+                ];
+            }
+
             return [
                 new MirrorColumn("{$field}_type", MirrorColumnType::TinyInt, peer: true),
-                new MirrorColumn("{$field}_id",  MirrorColumnType::BigInt,  peer: true),
+                new MirrorColumn("{$field}_id", MirrorColumnType::BigInt, peer: true),
             ];
         }
+
         return [self::scalarColumn($shape, $field, $hex)];
     }
 
@@ -44,13 +57,13 @@ final class MirrorFieldDecomposer
     public static function shapeForParam(TlParam $param): string
     {
         return match ($param->kind()) {
-            'true'    => 'BOOLEAN NOT NULL DEFAULT FALSE',
-            'scalar'  => self::scalarShape($param->baseType()),
-            'ref'     => in_array($param->baseType(), ['Bool', 'True'], true)
+            'true' => 'BOOLEAN NOT NULL DEFAULT FALSE',
+            'scalar' => self::scalarShape($param->baseType()),
+            'ref' => in_array($param->baseType(), ['Bool', 'True'], true)
                          ? 'BOOLEAN NOT NULL DEFAULT FALSE'
-                         : 'FK→' . $param->baseType(),
-            'vector'  => '1:N child',
-            default   => 'TEXT NOT NULL',
+                         : 'FK→'.$param->baseType(),
+            'vector' => '1:N child',
+            default => 'TEXT NOT NULL',
         };
     }
 
@@ -97,19 +110,20 @@ final class MirrorFieldDecomposer
         if (str_contains($shape, 'INTEGER')) {
             return new MirrorColumn($field, MirrorColumnType::Integer);
         }
+
         return new MirrorColumn($field, MirrorColumnType::BigInt);
     }
 
     private static function scalarShape(string $baseType): string
     {
         return match ($baseType) {
-            'int'    => 'INTEGER NOT NULL',
-            'long'   => 'BIGINT NOT NULL',
+            'int' => 'INTEGER NOT NULL',
+            'long' => 'BIGINT NOT NULL',
             'bool', 'True' => 'BOOLEAN NOT NULL DEFAULT FALSE',
             'string' => 'TEXT NOT NULL',
             'double' => 'DOUBLE PRECISION NOT NULL',
-            'bytes'  => 'TEXT NOT NULL',
-            default  => 'TEXT NOT NULL',
+            'bytes' => 'TEXT NOT NULL',
+            default => 'TEXT NOT NULL',
         };
     }
 }

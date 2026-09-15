@@ -9,46 +9,60 @@ use Illuminate\Support\Facades\Event;
 use MeRezaRezaei\Teleframe\Ingest\Events\MessagesDeleted;
 use MeRezaRezaei\Teleframe\Ingest\SafeDelete;
 
+/**
+ * Phase C re-baseline: explicit-safe message deletion on the CURATED dial.
+ * tf_messages is keyed (account_id, id) with NO extracted message_id /
+ * constructor_id / tl_data / created_at legacy surface — the Telegram
+ * message id IS the `id` column, and deletions match on it exactly (the
+ * SafeDelete src seam was aligned in the same re-baseline).
+ */
 class SafeDeleteTest extends IngestTestCase
 {
+    private const ACCOUNT = 1;
+
     private SafeDelete $safeDelete;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // tf_messages comes from the migrated real DDL (IngestTestCase):
-        // bigInteger id PK (no autoincrement — supply explicitly) + date NOT NULL.
         Event::fake([MessagesDeleted::class]);
         $this->safeDelete = new SafeDelete(app('events'));
+
+        DB::table('telegram_accounts')->insert([
+            'id' => self::ACCOUNT,
+            'label' => 'safe-delete-'.self::ACCOUNT,
+            'type' => 'user',
+            'dc_id' => 2,
+        ]);
     }
 
     public function test_delete_messages_removes_matching_rows(): void
     {
         DB::table('tf_messages')->insert([
-            ['id' => 1, 'peer_id' => 1001, 'message_id' => 10, 'account_id' => 1, 'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}', 'created_at' => now()],
-            ['id' => 2, 'peer_id' => 1001, 'message_id' => 20, 'account_id' => 1, 'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}', 'created_at' => now()],
-            ['id' => 3, 'peer_id' => 1001, 'message_id' => 30, 'account_id' => 1, 'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}', 'created_at' => now()],
+            ['account_id' => 1, 'id' => 10, 'constructor' => 'message', 'peer_type' => 3, 'peer_id' => 1001, 'date' => 1724852400, 'message' => 'a'],
+            ['account_id' => 1, 'id' => 20, 'constructor' => 'message', 'peer_type' => 3, 'peer_id' => 1001, 'date' => 1724852401, 'message' => 'b'],
+            ['account_id' => 1, 'id' => 30, 'constructor' => 'message', 'peer_type' => 3, 'peer_id' => 1001, 'date' => 1724852402, 'message' => 'c'],
         ]);
 
         $deleted = $this->safeDelete->deleteMessages(1, [10, 20]);
 
-        $this->assertSame(2, $deleted);
-        $this->assertDatabaseMissing('tf_messages', ['peer_id' => 1001, 'message_id' => 10, 'account_id' => 1]);
-        $this->assertDatabaseMissing('tf_messages', ['peer_id' => 1001, 'message_id' => 20, 'account_id' => 1]);
-        $this->assertDatabaseHas('tf_messages', ['peer_id' => 1001, 'message_id' => 30, 'account_id' => 1]);
+        self::assertSame(2, $deleted);
+        $this->assertDatabaseMissing('tf_messages', ['account_id' => 1, 'id' => 10]);
+        $this->assertDatabaseMissing('tf_messages', ['account_id' => 1, 'id' => 20]);
+        $this->assertDatabaseHas('tf_messages', ['account_id' => 1, 'id' => 30]);
     }
 
     public function test_delete_messages_fires_event(): void
     {
         DB::table('tf_messages')->insert([
-            ['id' => 1, 'peer_id' => 2001, 'message_id' => 5, 'account_id' => 2, 'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}', 'created_at' => now()],
+            ['account_id' => 1, 'id' => 5, 'constructor' => 'message', 'peer_type' => 3, 'peer_id' => 2001, 'date' => 1724852400, 'message' => 'x'],
         ]);
 
-        $this->safeDelete->deleteMessages(2, [5]);
+        $this->safeDelete->deleteMessages(1, [5]);
 
         Event::assertDispatched(MessagesDeleted::class, function (MessagesDeleted $event): bool {
-            return $event->accountId === 2
+            return $event->accountId === 1
                 && $event->messageIds === [5]
                 && $event->peerId === null;
         });
@@ -57,7 +71,7 @@ class SafeDeleteTest extends IngestTestCase
     public function test_delete_nonexistent_messages_is_noop(): void
     {
         $deleted = $this->safeDelete->deleteMessages(1, [99999]);
-        $this->assertSame(0, $deleted);
+        self::assertSame(0, $deleted);
         Event::assertNotDispatched(MessagesDeleted::class);
     }
 }

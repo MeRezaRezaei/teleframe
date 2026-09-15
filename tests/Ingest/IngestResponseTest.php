@@ -6,27 +6,29 @@ namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use MeRezaRezaei\Teleframe\Ingest\EntityAggregator;
+use Illuminate\Support\Facades\Schema;
 use MeRezaRezaei\Teleframe\Ingest\Events\UpdateStored;
-use MeRezaRezaei\Teleframe\Ingest\RouteIdempotency;
 use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerIdTool;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlChannel;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlMessage;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfMessage;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfUpdate;
 
 /**
- * Plan Task 5: response routing on the public ingest path —
- * UpdateIngestor::ingestResponse() dedups method responses through the
- * route tables (seen? return the stored instance : ingest + mark), while
- * update-kind payloads ALWAYS become instances (branch taken before any
- * route logic). Methods without a generated route table stay routable-free
- * and ingest unconditionally.
+ * Phase C re-baseline: response ingest on the public
+ * UpdateIngestor::ingestResponse() path. The legacy route-table dedup
+ * (RouteIdempotency + tl_route_* surfaces) is GONE — a response is a
+ * payload like any other, and the message/update-kind branches below are
+ * the whole routing story:
  *
- * Domain truth: envelope ctors (messages.messages, users.users, ...) are
- * ephemeral — only their descendants land in tf_* rows, so the "root" of
- * a response ingest is the first persisted descendant, and routes whose
- * root is a surrogate-key row (updates, messages) are never marked.
+ *   - message envelopes (messages.messages, ...) decompose into the nested
+ *     messages mirror; the FIRST stored message is the returned root;
+ *   - update-kind payloads ALWAYS become tf_updates root instances;
+ *   - the users/chats sidecar vectors are difference-stream-only — they
+ *     have NO curated ingest write surface (identity mirrors are seeded),
+ *     so they are walked and dropped, never persisted.
+ *
+ * Dedup therefore has exactly one source: content upserts on the curated
+ * composite keys ((account_id, id) for messages, (account_id, seq,
+ * position) for updates). No request-token table exists to mark responses.
  */
 final class IngestResponseTest extends IngestTestCase
 {
@@ -40,36 +42,10 @@ final class IngestResponseTest extends IngestTestCase
 
     private const CHANNEL_ID = 1737473577;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->artisan('migrate', [
-            '--force' => true,
-            '--realpath' => true,
-            '--path' => RouteIdempotency::migrationPaths(),
-        ]);
-    }
-
     /**
-     * @return array<string, mixed>
-     */
-    private static function historyParams(int $channelId = self::CHANNEL_ID): array
-    {
-        return [
-            'peer' => ['_' => 'inputPeerChannel', 'channel_id' => $channelId, 'access_hash' => -7779317524312221622],
-            'offset_id' => 0,
-            'offset_date' => 0,
-            'add_offset' => 0,
-            'limit' => 1,
-            'max_id' => 0,
-            'min_id' => 0,
-            'hash' => 0,
-        ];
-    }
-
-    /**
-     * messages.getHistory response family member messages.messages#1d73e7ea
-     * carrying the full message tree plus the chats/users sidecar vectors.
+     * messages.getHistory response member messages.messages carrying one
+     * full message tree plus the chats/users sidecar vectors — the exact
+     * wire shape the legacy test family used.
      *
      * @return array<string, mixed>
      */
@@ -80,7 +56,6 @@ final class IngestResponseTest extends IngestTestCase
             'messages' => [
                 [
                     '_' => 'message',
-                    // out | entities | from_id | media
                     'flags' => (1 << 1) | (1 << 7) | (1 << 8) | (1 << 9),
                     'out' => true,
                     'id' => 1186,
@@ -125,87 +100,60 @@ final class IngestResponseTest extends IngestTestCase
 
     public function test_response_ingests_descendants(): void
     {
-        $root = (new UpdateIngestor())->ingestResponse(
+        $root = (new UpdateIngestor)->ingestResponse(
             self::METHOD,
-            self::historyParams(),
+            ['peer' => ['_' => 'inputPeerChannel', 'channel_id' => self::CHANNEL_ID]],
             self::messagesMessagesResponse(),
             self::ACCOUNT,
         );
 
-        self::assertNotNull($root, 'envelope resolves to its first persisted descendant');
+        self::assertInstanceOf(TfMessage::class, $root, 'envelope resolves to its first persisted descendant');
 
-        // The sidecar vectors landed: the user + channel objects are addressable.
-        $user = (new EntityAggregator())->user(self::ACCOUNT, self::USER_ID);
-        self::assertInstanceOf(TlUser::class, $user);
-        self::assertSame('Reza', $user->first_name);
+        // The message row landed with canonical inline peer halves and no
+        // tl_data / extracted message_text legacy surface.
+        $message = TfMessage::forAccount(self::ACCOUNT)->sole();
+        self::assertSame(1186, (int) $message->getAttribute('id'));
+        self::assertSame(3, (int) $message->getAttribute('peer_type'), 'peerChannel normalizes to peer_type 3');
+        self::assertSame(self::CHANNEL_ID, (int) $message->getAttribute('peer_id'));
+        self::assertSame('Check https://t.me/teleframe from @Reza', $message->getAttribute('message'));
 
-        $channel = (new EntityAggregator())->channel(self::ACCOUNT, self::CHANNEL_ID);
-        self::assertInstanceOf(TlChannel::class, $channel);
-        self::assertSame('Teleframe Café', $channel->title);
-
-        // The message row landed with canonical peer longs.
-        $message = TlMessage::forAccount(self::ACCOUNT)->sole();
-        self::assertSame(1186, (int) $message->message_id);
-        self::assertSame(PeerIdTool::channelLong(self::CHANNEL_ID), (int) $message->peer_id);
-        self::assertSame('Check https://t.me/teleframe from @Reza', $message->message_text);
+        // The user/channel SIDECARS are ephemeral in the curated dial: they
+        // ride the wire only and satisfy nothing on the identity mirrors.
+        self::assertSame(0, DB::table('tf_users')->where('account_id', self::ACCOUNT)->count());
+        self::assertSame(0, DB::table('tf_channels')->where('account_id', self::ACCOUNT)->count());
     }
 
-    public function test_seen_route_reingests_idempotently(): void
+    public function test_duplicate_response_reingests_upsert_stable(): void
     {
-        Event::fake([UpdateStored::class]); // fake ONLY UpdateStored (ingest path must run)
+        Event::fake([UpdateStored::class]);
 
         $ingestor = new UpdateIngestor(events: $this->app['events']);
-        $first = $ingestor->ingestResponse(self::METHOD, self::historyParams(), self::messagesMessagesResponse(), self::ACCOUNT);
+        $first = $ingestor->ingestResponse(self::METHOD, [], self::messagesMessagesResponse(), self::ACCOUNT);
+        $second = $ingestor->ingestResponse(self::METHOD, [], self::messagesMessagesResponse(), self::ACCOUNT);
 
-        $counts = [
-            'route' => DB::table('tl_route_messages_get_history')->count(),
-            'message' => TlMessage::acrossAccounts()->count(),
-            'user' => TlUser::acrossAccounts()->count(),
-        ];
+        self::assertInstanceOf(TfMessage::class, $first);
+        self::assertInstanceOf(TfMessage::class, $second, 'duplicate response re-ingests through the same branch');
+        self::assertSame(1, TfMessage::acrossAccounts()->count(), 'content upsert keeps the message row stable on (account_id, id)');
 
-        $second = $ingestor->ingestResponse(self::METHOD, self::historyParams(), self::messagesMessagesResponse(), self::ACCOUNT);
-
-        self::assertNotNull($first);
-        self::assertNotNull($second, 'duplicate response resolves to the stored rows');
-        self::assertSame($counts['route'], DB::table('tl_route_messages_get_history')->count(), 'no second route row');
-        self::assertSame($counts['message'], TlMessage::acrossAccounts()->count(), 'no second message row');
-        self::assertSame($counts['user'], TlUser::acrossAccounts()->count(), 'no second user row');
-
-        Event::assertDispatchedTimes(UpdateStored::class, 2, 'each response ingest fires once (upsert-stable)');
+        Event::assertDispatchedTimes(UpdateStored::class, 2, 'each response ingest fires once (no route-table dedup)');
     }
 
-    public function test_routes_are_tenant_scoped(): void
+    public function test_response_rows_are_tenant_scoped(): void
     {
-        $ingestor = new UpdateIngestor();
-        // Use different channel IDs and message IDs per account to avoid
-        // unique-constraint collisions on the scope columns.
-        $otherChannelId = self::CHANNEL_ID + 1;
-        $otherUserId = self::USER_ID + 1;
-        $paramsA = self::historyParams();
-        $paramsB = self::historyParams($otherChannelId);
-        $responseA = self::messagesMessagesResponse();
-
-        $responseB = self::messagesMessagesResponse();
-        $responseB['chats'][0]['id'] = $otherChannelId;
-        $responseB['users'][0]['id'] = $otherUserId;
-        foreach ($responseB['messages'] as &$msg) {
-            $msg['id'] = 2186;
-            $msg['peer_id']['channel_id'] = $otherChannelId;
-            $msg['from_id']['user_id'] = $otherUserId;
-        }
-        unset($msg);
-
-        $a = $ingestor->ingestResponse(self::METHOD, $paramsA, $responseA, self::ACCOUNT);
-        $b = $ingestor->ingestResponse(self::METHOD, $paramsB, $responseB, self::OTHER_ACCOUNT);
+        // Same response under a second tenant: distinct (account_id, id)
+        // rows — no cross-account dedup, no unique-constraint collision.
+        $ingestor = new UpdateIngestor;
+        $a = $ingestor->ingestResponse(self::METHOD, [], self::messagesMessagesResponse(), self::ACCOUNT);
+        $b = $ingestor->ingestResponse(self::METHOD, [], self::messagesMessagesResponse(), self::OTHER_ACCOUNT);
 
         self::assertNotNull($a);
         self::assertNotNull($b);
-        self::assertSame(1, TlMessage::forAccount(self::ACCOUNT)->count(), 'each tenant stores its own message');
-        self::assertSame(1, TlMessage::forAccount(self::OTHER_ACCOUNT)->count());
-        self::assertSame(2, TlMessage::acrossAccounts()->count());
+        self::assertSame(1, TfMessage::forAccount(self::ACCOUNT)->count(), 'each tenant stores its own message');
+        self::assertSame(1, TfMessage::forAccount(self::OTHER_ACCOUNT)->count());
+        self::assertSame(2, TfMessage::acrossAccounts()->count());
     }
 
-    public function test_update_kind_payloads_bypass_routes(): void
+    public function test_update_kind_payloads_always_become_instances(): void
     {
         Event::fake([UpdateStored::class]);
 
@@ -230,40 +178,19 @@ final class IngestResponseTest extends IngestTestCase
         $first = $ingestor->ingestResponse('updates.getDifference', ['pts_total' => 1], $payload, self::ACCOUNT);
         $second = $ingestor->ingestResponse('updates.getDifference', ['pts_total' => 1], $payload, self::ACCOUNT);
 
-        // updates.getDifference HAS a route table — the update-kind branch
-        // (checked BEFORE route logic) keeps it empty.
-        self::assertSame(0, DB::table('tl_route_updates_get_difference')->count(), 'update-kind payloads never touch routes');
+        self::assertInstanceOf(TfUpdate::class, $first);
+        self::assertInstanceOf(TfUpdate::class, $second, 'update-kind payloads always become instances (no dedup skip)');
+        self::assertSame(1, TfUpdate::acrossAccounts()->count(), 'update row upsert-stable on (account_id, seq, position)');
 
-        self::assertNotNull($first);
-        self::assertNotNull($second);
         Event::assertDispatchedTimes(UpdateStored::class, 2);
     }
 
-    public function test_methods_without_a_route_table_ingest_unconditionally(): void
+    public function test_no_route_tables_exist_in_the_curated_dial(): void
     {
-        // users.getUsers returns Vector<User> — the generator skips route
-        // tables for generic/vector returns, so this method is unroutable.
-        $response = [
-            '_' => 'users.users',
-            'users' => [
-                [
-                    '_' => 'user',
-                    'flags' => (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3),
-                    'id' => self::USER_ID,
-                    'access_hash' => -5988024083302710253,
-                    'first_name' => 'Reza',
-                    'last_name' => 'Rezaei',
-                    'username' => 'RezaRezaei',
-                ],
-            ],
-        ];
-
-        $ingestor = new UpdateIngestor();
-        $first = $ingestor->ingestResponse('users.getUsers', ['id' => [['_' => 'inputUserSelf']]], $response, self::ACCOUNT);
-        $second = $ingestor->ingestResponse('users.getUsers', ['id' => [['_' => 'inputUserSelf']]], $response, self::ACCOUNT);
-
-        self::assertNotNull($first);
-        self::assertNotNull($second, 'unrouted methods never dedup-skip');
-        self::assertSame(1, TlUser::acrossAccounts()->count(), 'content upsert keeps the user row stable anyway');
+        // The legacy tl_route_* / generated surface is purged from the dial;
+        // ingestResponse routes through the message/update-kind branches only.
+        self::assertFalse(Schema::hasTable('tl_route_messages_get_history'));
+        self::assertFalse(Schema::hasTable('tl_route_updates_get_difference'));
+        self::assertFalse(Schema::hasTable('tf_routes'));
     }
 }

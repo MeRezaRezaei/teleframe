@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Bus;
 
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use JsonException;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Teleclient;
 
 /**
@@ -52,7 +52,7 @@ final class IngestConsumer
     /** Hard ceiling on tracked strike counters (unbounded growth guard). */
     private const FAILURE_CAP = 1024;
 
-    /** @var ?Closure(TlAnchorModel, int): void */
+    /** @var ?Closure(Model, int): void fired only for a stored root — same gate as UpdateStored. */
     private readonly ?Closure $onStored;
 
     /** @var ?Closure(array<string, mixed>, int): void */
@@ -164,7 +164,9 @@ final class IngestConsumer
             } else {
                 $root = $this->client->ingest($entry['update'], $entry['account_id']);
 
-                if ($this->onStored !== null) {
+                // onStored mirrors UpdateStored: it fires only when the
+                // ingest actually stored a root (null = nothing storeable).
+                if ($this->onStored !== null && $root !== null) {
                     ($this->onStored)($root, $entry['account_id']);
                 }
             }

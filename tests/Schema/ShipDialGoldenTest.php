@@ -7,15 +7,19 @@ namespace MeRezaRezaei\Teleframe\Tests\Schema;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Task 4 golden gate: the curated migration dial. `php bin/regenerate --ship`
- * copies the tf_* per-type migration files from the full generated mirror
- * (src/Schema/Generated/migrations) into src/Laravel/Migrations inside the
- * package — byte-identical copies (global sequence numbers preserved), never
- * re-derived — for the provider's loadMigrationsFrom publish surface.
+ * Golden gate: the curated migration dial. The hand-authored tf_*
+ * migrations live in src/Laravel/Migrations and are NEVER auto-generated
+ * — bin/regenerate no longer produces migrations (MigrationGenerator
+ * disabled per owner verbatim #3: "i dont want the auto generation any
+ * more"). App-owned migrations (user_bindings, telegram_apps, etc.)
+ * have no generated source either.
  *
- * Verified against the real v227 generated set: 13 tf_* mirror migrations are
- * shipped; app-owned migrations (user_bindings, telegram_apps, telegram_accounts)
- * live alongside but have no generated source.
+ * Post-purge reality (2026-09-15):
+ * - 16 curated hand-authored tf_* migrations (messages/media/updates/
+ *   identity/stars-business/misc domains)
+ * - 5 app-owned migrations (user_bindings, telegram_apps, ...)
+ * - 21 total in src/Laravel/Migrations
+ * - bin/regenerate --ship is a no-op (no generated migrations to copy)
  */
 final class ShipDialGoldenTest extends TestCase
 {
@@ -23,48 +27,39 @@ final class ShipDialGoldenTest extends TestCase
 
     private const SHIP_DIR = self::PACKAGE_ROOT.'/src/Laravel/Migrations';
 
-    private const GENERATED_DIR = self::PACKAGE_ROOT.'/src/Schema/Generated/migrations';
-
     /**
-     * App-owned migrations under src/Laravel/Migrations/ that are hand-authored (Phase 5b
-     * identity bindings) and therefore have NO generated source and are NOT
-     * reproduced by `bin/regenerate --ship` (the dial only copies TL per-type
-     * migrations). Exempted from the two regenerate-reproduction golden
-     * checks; the byte-identical check still verifies they exist.
+     * App-owned migrations under src/Laravel/Migrations/ that are hand-authored
+     * and have NO generated source. Always present, never overwritten by
+     * bin/regenerate.
      */
     private const APP_OWNED_MIGRATIONS = [
         '2026_09_08_000100_create_tl_user_bindings_table.php',
         '2026_09_09_000200_create_telegram_apps_table.php',
         '2026_09_09_000201_create_telegram_accounts_table.php',
-        '2026_09_14_000001_create_tg_update_routing_table.php',
         '2026_09_14_000000_add_user_id_to_telegram_accounts_table.php',
+        '2026_09_14_000001_create_tg_update_routing_table.php',
     ];
 
     public function test_shipped_subset_count(): void
     {
         $files = self::migrationFiles(self::SHIP_DIR);
-        self::assertGreaterThanOrEqual(5, $files, 'curated dial must have the 5 app-owned tf_* migrations');
-        self::assertLessThanOrEqual(9, $files, 'curated dial must stay under 9 migrations (mirror absent)');
+        self::assertGreaterThanOrEqual(16, $files, 'curated dial must have at least 16 migrations (16 curated + 5 app-owned)');
+        self::assertLessThanOrEqual(25, $files, 'curated dial must stay under 25 migrations total');
     }
 
-    public function test_shipped_subset_contains_core_tf_migrations(): void
+    public function test_shipped_subset_contains_curated_domains(): void
     {
         $names = self::migrationNames(self::SHIP_DIR);
-        foreach (['create_tf_users_table', 'create_tf_chats_table', 'create_tf_messages_table'] as $stem) {
+        foreach ([
+            'create_tf_messages_tables',
+            'create_tf_users_tables',
+            'create_tf_stars_business_tables',
+            'create_tf_misc_tables',
+        ] as $stem) {
             self::assertContains(true, array_map(
                 static fn (string $n): bool => str_contains($n, $stem),
                 $names,
             ), "no shipped migration matches {$stem}");
-        }
-    }
-
-    public function test_all_generated_tf_migrations_are_shipped(): void
-    {
-        $shipped = self::migrationNames(self::SHIP_DIR);
-        $generated = self::migrationNames(self::GENERATED_DIR);
-        // Every generated tf_* file must appear in the shipped set
-        foreach ($generated as $genName) {
-            self::assertContains($genName, $shipped, "generated migration {$genName} not shipped");
         }
     }
 
@@ -74,45 +69,33 @@ final class ShipDialGoldenTest extends TestCase
         self::assertSame([], array_filter($names, static fn (string $n): bool => str_contains($n, 'create_tl_route_tables') || str_contains($n, 'add_tl_foreign_keys')));
     }
 
-    public function test_shipped_files_are_byte_identical_copies_of_generated(): void
+    public function test_app_owned_migrations_present(): void
     {
-        foreach (glob(self::SHIP_DIR.'/*.php') ?: [] as $shipped) {
-            $name = basename($shipped);
-            if (in_array($name, self::APP_OWNED_MIGRATIONS, true)) {
-                continue; // app-owned (Phase 5b): hand-authored, no generated source
-            }
-            $generated = self::GENERATED_DIR.'/'.$name;
-            self::assertFileExists($generated, $name.' has no generated counterpart');
-            self::assertSame(
-                hash_file('sha256', $generated),
-                hash_file('sha256', $shipped),
-                $name.' drifted from its generated source',
-            );
-        }
-
         foreach (self::APP_OWNED_MIGRATIONS as $name) {
             self::assertFileExists(self::SHIP_DIR.'/'.$name, $name.' missing');
         }
     }
 
-    public function test_ship_run_to_temp_dir_reproduces_committed_subset(): void
+    public function test_curated_migrations_are_hand_authored(): void
     {
-        $bin = self::PACKAGE_ROOT.'/bin/regenerate';
-        $out = sys_get_temp_dir().'/tl-ship-golden-'.getmypid();
-        $cmd = sprintf('%s %s --out=%s --ship 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg($bin), escapeshellarg($out));
-        $proc = proc_open($cmd, [1 => ['pipe', 'w']], $pipes);
-        self::assertIsResource($proc);
-        fclose($pipes[1]);
-        self::assertSame(0, proc_close($proc), 'bin/regenerate --ship failed');
-
-        try {
-            $fresh = self::migrationNames($out.'/src/Laravel/Migrations');
-            $committed = array_values(array_diff(self::migrationNames(self::SHIP_DIR), self::APP_OWNED_MIGRATIONS));
-            sort($fresh);
-            sort($committed);
-            self::assertSame($committed, $fresh, 'fresh --ship run does not reproduce the committed subset');
-        } finally {
-            exec('rm -rf '.escapeshellarg($out));
+        foreach (self::APP_OWNED_MIGRATIONS as $skip) {
+            $file = self::SHIP_DIR.'/'.$skip;
+            if (is_file($file)) {
+                self::assertStringNotContainsString(
+                    '@generated',
+                    (string) file_get_contents($file),
+                    "app-owned migration {$skip} must not carry @generated marker",
+                );
+            }
+        }
+        $curated = glob(self::SHIP_DIR.'/2026_09_14_2000*.php') ?: [];
+        self::assertNotEmpty($curated, 'no curated hand-authored migrations found');
+        foreach ($curated as $path) {
+            self::assertStringNotContainsString(
+                '@generated',
+                (string) file_get_contents($path),
+                'curated migration must not carry @generated marker: '.basename($path),
+            );
         }
     }
 
