@@ -14,7 +14,7 @@ use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Ingest\UpdateRouter;
 use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
 use MeRezaRezaei\Teleframe\Laravel\Providers\TeleframeServiceProvider;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\Mirror\TfMessage;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfMessage;
 use MeRezaRezaei\Teleframe\Schema\Generator\TlParser;
 use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorCatalog;
 use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorFactDecomposer;
@@ -127,8 +127,8 @@ final class MirrorUpdateIngesterTest extends TestbenchTestCase
         return fn (array $payload) => (new TfMessage)->forceFill([
             'account_id' => $payload['account_id'] ?? 42,
             'id' => (int) ($payload['id'] ?? 0),
-            'peer_id_type' => (int) ($payload['peer_id']['_type'] ?? 0),
-            'peer_id_id' => (int) ($payload['peer_id']['_id'] ?? 0),
+            'peer_type' => (int) ($payload['peer_id']['_type'] ?? 0),
+            'peer_id' => (int) ($payload['peer_id']['_id'] ?? 0),
             'date' => (int) ($payload['date'] ?? 0),
             'message' => (string) ($payload['message'] ?? ''),
             'constructor' => (string) ($payload['_'] ?? 'message'),
