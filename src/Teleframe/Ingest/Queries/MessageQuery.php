@@ -32,7 +32,7 @@ final class MessageQuery extends Builder
     }
 
     /**
-     * Most-recent-N ordering (TDLib default: descending message_id).
+     * Most-recent-N ordering (TDLib default: descending message id).
      *
      * Named "recent" instead of "latest" to avoid collision with
      * Illuminate\Database\Eloquent\Builder::latest().
@@ -40,39 +40,39 @@ final class MessageQuery extends Builder
     public function recent(int $limit = 20): self
     {
         /** @var self $builder */
-        $builder = $this->orderByDesc('message_id')->limit($limit);
+        $builder = $this->orderByDesc('id')->limit($limit);
 
         return $builder;
     }
 
-    /** Messages newer than a unix timestamp. */
+    /** Messages with a date at or after a unix timestamp. */
     public function since(int $unixTimestamp): self
     {
-        return $this->where('created_at', '>=', date('Y-m-d H:i:s', $unixTimestamp));
+        return $this->where('date', '>=', $unixTimestamp);
     }
 
     /**
      * Keyset pagination (TDLib pattern): fetch messages before a given
-     * message_id, avoiding OFFSET. Cursor = (message_id).
+     * message id, avoiding OFFSET. Cursor = (id).
      */
     public function beforeId(int $messageId, int $limit = 50): self
     {
         /** @var self $builder */
-        $builder = $this->where('message_id', '<', $messageId)
-            ->orderByDesc('message_id')
+        $builder = $this->where('id', '<', $messageId)
+            ->orderByDesc('id')
             ->limit($limit);
 
         return $builder;
     }
 
     /**
-     * Keyset pagination forward: fetch messages after a given message_id.
+     * Keyset pagination forward: fetch messages after a given message id.
      */
     public function afterId(int $messageId, int $limit = 50): self
     {
         /** @var self $builder */
-        $builder = $this->where('message_id', '>', $messageId)
-            ->orderBy('message_id')
+        $builder = $this->where('id', '>', $messageId)
+            ->orderBy('id')
             ->limit($limit);
 
         return $builder;

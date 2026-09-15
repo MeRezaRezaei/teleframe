@@ -14,52 +14,50 @@ class MessageSearchQueryTest extends IngestTestCase
     {
         parent::setUp();
 
-        // tf_messages comes from the migrated real DDL (IngestTestCase):
-        // bigInteger id PK + message_id/peer_id/date NOT NULL + tl_data.
+        // Curated tf_messages: composite PK (account_id, id), peer pair,
+        // constructor TEXT, date INTEGER, message TEXT. Legacy columns
+        // (message_id/constructor_id/tl_data/message_text/created_at) do not
+        // exist on this surface.
         DB::table('tf_messages')->insert([
             [
-                'id' => 1, 'peer_id' => 1001, 'message_id' => 1, 'account_id' => 1,
-                'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}',
-                'message_text' => 'hello world',
-                'created_at' => now(),
+                'account_id' => 1, 'id' => 1, 'peer_type' => 2, 'peer_id' => 1001,
+                'constructor' => 'message', 'date' => now()->timestamp,
+                'message' => 'hello world',
             ],
             [
-                'id' => 2, 'peer_id' => 1001, 'message_id' => 2, 'account_id' => 1,
-                'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}',
-                'message_text' => 'the quick brown fox',
-                'created_at' => now(),
+                'account_id' => 1, 'id' => 2, 'peer_type' => 2, 'peer_id' => 1001,
+                'constructor' => 'message', 'date' => now()->timestamp,
+                'message' => 'the quick brown fox',
             ],
             [
-                'id' => 3, 'peer_id' => 1001, 'message_id' => 3, 'account_id' => 1,
-                'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}',
-                'message_text' => 'hello there friend',
-                'created_at' => now(),
+                'account_id' => 1, 'id' => 3, 'peer_type' => 2, 'peer_id' => 1001,
+                'constructor' => 'message', 'date' => now()->timestamp,
+                'message' => 'hello there friend',
             ],
         ]);
     }
 
     public function test_search_finds_matching_messages(): void
     {
-        $results = (new MessageSearchQuery())->search(1, 'hello');
+        $results = (new MessageSearchQuery)->search(1, 'hello');
         $this->assertCount(2, $results);
     }
 
     public function test_search_scopes_to_account(): void
     {
         DB::table('tf_messages')->insert([
-            'id' => 10, 'peer_id' => 1001, 'message_id' => 10, 'account_id' => 2,
-            'constructor_id' => 0, 'date' => now()->timestamp, 'tl_data' => '{}',
-            'message_text' => 'hello from other account',
-            'created_at' => now(),
+            'account_id' => 2, 'id' => 10, 'peer_type' => 2, 'peer_id' => 1001,
+            'constructor' => 'message', 'date' => now()->timestamp,
+            'message' => 'hello from other account',
         ]);
 
-        $results = (new MessageSearchQuery())->search(1, 'hello');
+        $results = (new MessageSearchQuery)->search(1, 'hello');
         $this->assertCount(2, $results); // only account 1
     }
 
     public function test_search_with_peer_filter(): void
     {
-        $results = (new MessageSearchQuery())->search(1, 'hello', peerId: 1001);
+        $results = (new MessageSearchQuery)->search(1, 'hello', peerId: 1001);
         $this->assertCount(2, $results);
     }
 }
