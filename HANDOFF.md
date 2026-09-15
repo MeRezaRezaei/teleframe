@@ -1,6 +1,98 @@
-# Handoff — 2026-09-13
+# Handoff — current state (2026-09-16, NF5 directive complete)
 
-State of this clone when it was created. Read this first in any future session.
+Read this first in any future session. Everything below the `---` is the
+historical ledger from 2026-09-13 onward; the section above it is the live
+state.
+
+## Repo identity
+- Single canonical clone of `github.com/MeRezaRezaei/teleframe`, branch **`main`**,
+  HEAD `24d7c60f`, tree clean.
+- The NF5 mirror reverse-engineering directive is **fully merged to main** from
+  `feat/nf5-mirror-reverse-engineering` (all worktree branches landed).
+
+## Gates — all green (proven this session)
+- `composer verify` = `vendor/bin/phpunit` + `vendor/bin/phpstan analyse --no-progress`
+  → **1106 tests / 15422 assertions / 6 skipped, 0 errors, 0 failures**; phpstan [OK].
+- `php bin/standalone-smoke.php` → exit 0 (34 checks).
+- `TELEFRAME_PG=1 vendor/bin/phpunit tests/Pg` → OK (9 tests, 136 assertions) — curated
+  dial PostgreSQL track.
+- **MySQL 8.4 live gate (new, owner's gate):** `php bin/prove-mysql-curated-dial.php` →
+  PASSED. Boots a real Laravel app on live MySQL, migrates the full 22-file curated
+  dial into a fresh DB, asserts the 20-table surface + Task-8 FKs + peer-pair defaults
+  + signed negative BIGINT peer round-trip, then proves FK enforcement fires
+  (orphan blocked, error 1452) and CASCADE delete propagates to children.
+  Env overrides: `TELEFRAME_MYSQL_HOST/PORT/USER/PASS/DB` (local usage default:
+  user `teleframe_proof` / pass `nf5prooflocal` / db `teleframe_proof_nf5`, granted
+  via `sudo mysql` on this machine). **Not part of CI.**
+
+## What the curated NF5 dial is (shipped truth)
+- `src/Laravel/Migrations/` = **22 hand-authored migrations**: 16 curated parent
+  surfaces (`200001`–`200050`: users/chats/channels/dialogs/messages(+entities/media)/
+  documents/photos/web_pages/sticker_sets/updates/channel_participants/stars_business/
+  bots/misc) + the Task-8 cross-domain FK migration `2026_09_14_299999` +
+  5 app-owned (`tl_user_bindings`, `telegram_apps`, `telegram_accounts`,
+  `add_user_id`, `tg_update_routing`).
+- Locked NF5 rules: PK `account_id` unsigned BIGINT NOT NULL + signed BIGINT Telegram
+  keys; composite PK `(account_id, id[, position])`; zero nullable/json/blob/binary;
+  no auto-increment/timestamps on tf_*; `constructor VARCHAR(64)` on multi-ctor
+  tables; bools `BOOLEAN NOT NULL DEFAULT FALSE`; peers `{field}_type TINYINT
+  NOT NULL DEFAULT 0` + `{field}_id BIGINT NOT NULL DEFAULT 0` (**canonical
+  `peer_id` → `peer_type`/`peer_id`**, not `peer_id_type`/`peer_id_id`);
+  string-id PKs `VARCHAR(255)`.
+- MySQL portability was proven and baked in (commit `24d7c60f`): TEXT defaults use
+  expression form `DB::raw("('')")`; all `account_id` columns `unsignedBigInteger`
+  to match `telegram_accounts.id`; FK names under MySQL's 64-char limit (short
+  explicit names on the shared channel-participants link helpers); no TEXT in PKs.
+- FK-as-clue philosophy (owner verbatim): FK failures during ingest are the
+  diagnostic signal for the wrong ingest path — enforced, not disabled.
+
+## Ingest/consumer state that pairs with the dial
+- `UpdateIngestor::migrationPaths()` → `src/Laravel/Migrations` +
+  `entityMigrationPaths()` (updates + channel-participants files). Ingest returns
+  curated models ONLY (`TfMessage`/`TfUpdate`/… in `src/Teleframe/Mirror/Models`,
+  all extending `Schema\Eloquent\TfMirrorModel`); `?TfMirrorModel` from `Teleframe`
+  facade / `Teleclient` ingest surfaces. `IngestConsumer::onStored` fires only for a
+  stored root. Unresolvable peers store row with 0/0 + ingest clue (curated
+  0-default semantics), NOT blocked by NOT NULL.
+- `teleframe:mirror` command is gone; regenerate command ships the curated dial only.
+- Behavior seam: `RoutingPeerResolver` links `tg_update_routing` → core facts;
+  daemon hot path reads Redis-2 routing cache (Cycle 22/23); dashboard package routes
+  (Cycle 25); live real-account seeding lives in the HOST app (`teleframe-app`),
+  never here.
+
+## Known constraints / hazards (do not re-litigate)
+- Wire layer still speaks Layer 227; schema catalog is Layer 229. **Never "fix" the
+  gap.**
+- Shared-vendor discipline across worktrees: symlink `vendor/` and run
+  `composer dump-autoload -q` immediately before each phpunit run (last dump wins);
+  never hardlink-copy vendor.
+- `/tmp` is tmpfs with ~1M inodes — regeneration/schema test runs exhaust inodes
+  and produce false "No space left on device" failures. Clean
+  `/tmp/tlgen-* /tmp/probe-*` after heavy runs.
+- Pint/hook mangles `TeleframeServiceProvider` imports and concat spacing the
+  `ShipDialGoldenTest` requires — apply provider edits formatter-proof
+  (git-show base + perl insert + cp), never via the edit tool.
+- No `.env` in this repo (gitignored, holds real session strings). Live gates are
+  opt-in.
+
+## Handoff reliability note
+- `2026-09-15-telegram-nf5-golden-re-baseline-controller-seam.md` was referenced in
+  wave-3 briefs but does not exist on disk; ground truth for the controller-spec was
+  the inline brief contract + `tests/Mirror`. The 6 verbatim specs that DO exist are
+  in `docs/superpowers/specs/` (committed), plan in
+  `docs/superpowers/plans/2026-09-14-mtproto-nf5-reverse-engineering.md`.
+
+## Open items / next candidates (not blocking)
+- Deep MTProto transport internals remain un-wired to PSR-3 (see AGENTS.md gaps).
+- `MessageSearchQuery::searchPgsql()` references a non-existent `search_vector`
+  column (curated dial has no tsvector/GIN) — flagged by SA-4b/SA-5; tests pass on
+  the LIKE path, the PG branch is inert unless a host adds the column.
+- `MessageSearchQuery::forPeer()` filters `peer_id` only (not the `(peer_type,
+  peer_id)` pair); `since()` means wire-`date` cutoff (no ingest-timestamp column).
+- Feature branch `feat/nf5-mirror-reverse-engineering` has not been force-pushed to
+  origin; push of main is the last sync step if the owner wants the remote updated.
+
+---
 
 ## Repo identity
 - Clone of `github.com/Merezarezaei/teleframe`, created 2026-09-13 as the **single canonical** working copy.
