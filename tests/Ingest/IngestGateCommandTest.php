@@ -7,6 +7,7 @@ namespace MeRezaRezaei\Teleframe\Tests\Ingest;
 use Illuminate\Support\Facades\DB;
 use MeRezaRezaei\Teleframe\Ingest\ChunkFetcher;
 use MeRezaRezaei\Teleframe\Ingest\PtsWatermark;
+use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Laravel\Console\IngestGateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Providers\TeleframeServiceProvider;
 use MeRezaRezaei\Teleframe\Tests\Support\ArrayRedis;
@@ -44,15 +45,13 @@ final class IngestGateCommandTest extends TestbenchTestCase
         ]);
     }
 
-    private function migrateMirror(): string
+    private function migrateMirror(): void
     {
-        $out = sys_get_temp_dir().'/tf5g_'.uniqid();
-        @mkdir($out.'/migrations/mirror', 0777, true);
-
-        $this->artisan('teleframe:mirror', ['--stage' => '0', '--out' => $out])->assertExitCode(0);
-        $this->artisan('migrate', ['--path' => $out.'/migrations/mirror', '--realpath' => true])->assertExitCode(0);
-
-        return $out;
+        $this->artisan('migrate', [
+            '--force' => true,
+            '--realpath' => true,
+            '--path' => UpdateIngestor::migrationPaths(),
+        ])->assertExitCode(0);
     }
 
     private function fixtureFetcher(): ChunkFetcher
@@ -94,59 +93,38 @@ final class IngestGateCommandTest extends TestbenchTestCase
 
     public function test_gate_ingests_chunk_and_succeeds(): void
     {
-        $out = $this->migrateMirror();
-        try {
-            $this->app->bind(IngestGateCommand::FETCHER_KEY, fn (): callable => fn (int $accountId): ChunkFetcher => $this->fixtureFetcher());
-            $this->app->singleton(PtsWatermark::class, fn () => new PtsWatermark(new ArrayRedis));
+        $this->migrateMirror();
 
-            $this->artisan('teleframe:ingest:gate', ['account' => '42'])
-                ->assertExitCode(0)
-                ->expectsOutputToContain('Integrity OK')
-                ->expectsOutputToContain('inserted');
+        $this->app->bind(IngestGateCommand::FETCHER_KEY, fn (): callable => fn (int $accountId): ChunkFetcher => $this->fixtureFetcher());
+        $this->app->singleton(PtsWatermark::class, fn () => new PtsWatermark(new ArrayRedis));
 
-            self::assertSame(1, DB::table('tf_messages')->where('account_id', 42)->where('id', 7)->count());
-            self::assertSame('gate lab', DB::table('tf_chats')->where('account_id', 42)->where('id', 900)->value('title'));
-        } finally {
-            $this->rrmdir($out);
-        }
+        $this->artisan('teleframe:ingest:gate', ['account' => '42'])
+            ->assertExitCode(0)
+            ->expectsOutputToContain('Integrity OK')
+            ->expectsOutputToContain('inserted');
+
+        self::assertSame(1, DB::table('tf_messages')->where('account_id', 42)->where('id', 7)->count());
+        self::assertSame('gate lab', DB::table('tf_chats')->where('account_id', 42)->where('id', 900)->value('title'));
     }
 
     public function test_gate_only_flag_does_not_persist_watermark(): void
     {
-        $out = $this->migrateMirror();
-        try {
-            $this->app->bind(IngestGateCommand::FETCHER_KEY, fn (): callable => fn (int $accountId): ChunkFetcher => $this->fixtureFetcher());
-            $this->app->singleton(PtsWatermark::class, function () {
-                $redis = new ArrayRedis;
-                $wm = new PtsWatermark($redis);
-                $wm->put(42, ['pts' => 1, 'date' => 1, 'qts' => 1, 'seq' => 1]);
-                $this->redis = $redis;
+        $this->migrateMirror();
 
-                return $wm;
-            });
+        $this->app->bind(IngestGateCommand::FETCHER_KEY, fn (): callable => fn (int $accountId): ChunkFetcher => $this->fixtureFetcher());
+        $this->app->singleton(PtsWatermark::class, function () {
+            $redis = new ArrayRedis;
+            $wm = new PtsWatermark($redis);
+            $wm->put(42, ['pts' => 1, 'date' => 1, 'qts' => 1, 'seq' => 1]);
+            $this->redis = $redis;
 
-            $this->artisan('teleframe:ingest:gate', ['account' => '42', '--only' => true])
-                ->assertExitCode(0)
-                ->expectsOutputToContain('watermark not persisted');
+            return $wm;
+        });
 
-            self::assertSame('1', $this->redis->hget('tg:pts:42', 'pts'), '--only leaves the old watermark untouched');
-        } finally {
-            $this->rrmdir($out);
-        }
-    }
+        $this->artisan('teleframe:ingest:gate', ['account' => '42', '--only' => true])
+            ->assertExitCode(0)
+            ->expectsOutputToContain('watermark not persisted');
 
-    private function rrmdir(string $dir): void
-    {
-        if (! is_dir($dir)) {
-            return;
-        }
-        $items = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST
-        );
-        foreach ($items as $item) {
-            $item->isDir() && ! $item->isLink() ? rmdir($item->getPathname()) : unlink($item->getPathname());
-        }
-        rmdir($dir);
+        self::assertSame('1', $this->redis->hget('tg:pts:42', 'pts'), '--only leaves the old watermark untouched');
     }
 }
