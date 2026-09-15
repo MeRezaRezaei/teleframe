@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Tests\Console;
 
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\FloodWaitException;
+use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
 use MeRezaRezaei\Teleframe\Laravel\Console\BackfillCommand;
 use MeRezaRezaei\Teleframe\Tests\Ingest\IngestTestCase;
 use MeRezaRezaei\Teleframe\Tests\Support\FakeUserScope;
-use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\FloodWaitException;
-use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
 use RuntimeException;
 use Throwable;
 
@@ -56,7 +57,7 @@ final class BackfillCommandTest extends IngestTestCase
         $this->artisan('teleframe:backfill', ['--account' => 7, '--peer' => ['chat']])->assertExitCode(0);
 
         self::assertSame(1, DB::table('tf_messages')->where('account_id', 7)->count(), 'message row landed');
-        self::assertSame(1, DB::table('tf_messages')->where('message_id', 30)->count(), 'message id landed');
+        self::assertSame(1, DB::table('tf_messages')->where('account_id', 7)->where('id', 30)->count(), 'message id landed');
     }
 
     public function test_budget_stop_leaves_the_peer_queued_for_the_next_run(): void
@@ -102,7 +103,7 @@ final class BackfillCommandTest extends IngestTestCase
 
     public function test_command_is_registered(): void
     {
-        $kernel = $this->app->make(\Illuminate\Contracts\Console\Kernel::class);
+        $kernel = $this->app->make(Kernel::class);
 
         self::assertArrayHasKey('teleframe:backfill', $kernel->all());
     }
@@ -142,7 +143,7 @@ final class ScriptedHistoryScope extends FakeUserScope
         $peer = is_array($rawPeer) ? (string) ($rawPeer['_'] ?? 'peer') : (string) $rawPeer;
 
         $step = $this->script[$peer][$this->cursor]
-            ?? throw new RuntimeException('ScriptedHistoryScope script exhausted for ' . $peer);
+            ?? throw new RuntimeException('ScriptedHistoryScope script exhausted for '.$peer);
         $this->cursor++;
 
         if ($step instanceof Throwable) {

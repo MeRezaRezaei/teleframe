@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe;
 
+use Illuminate\Database\Eloquent\Model;
 use MeRezaRezaei\Teleframe\Backup\VaultInterface;
 use MeRezaRezaei\Teleframe\Bus\RouteTable;
 use MeRezaRezaei\Teleframe\Daemon\Daemon;
@@ -18,7 +19,6 @@ use MeRezaRezaei\Teleframe\Laravel\Console\BackupCommand;
 use MeRezaRezaei\Teleframe\Mirror\Models\TfChannel;
 use MeRezaRezaei\Teleframe\Mirror\Models\TfChat;
 use MeRezaRezaei\Teleframe\Mirror\Models\TfUser;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use Psr\Container\ContainerInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -39,8 +39,13 @@ final class Teleframe
         private readonly ContainerInterface $container,
     ) {}
 
-    /** @param array<string, mixed> $update */
-    public function ingest(array $update, int $accountId): TlAnchorModel
+    /**
+     * @param  array<string, mixed>  $update
+     * @return Model|null the hydrated curated root (TfMessage / TfUpdate),
+     *                    or null when the constructor has no curated mirror
+     *                    surface — nothing storeable.
+     */
+    public function ingest(array $update, int $accountId): ?Model
     {
         return $this->container->get(UpdateIngestor::class)->ingest($update, $accountId);
     }
@@ -48,8 +53,10 @@ final class Teleframe
     /**
      * @param  array<string, mixed>  $params
      * @param  array<string, mixed>  $response
+     * @return Model|null the hydrated curated root, or null when the
+     *                    response carries no curated surface.
      */
-    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?TlAnchorModel
+    public function ingestResponse(string $method, array $params, array $response, int $accountId): ?Model
     {
         return $this->container->get(UpdateIngestor::class)->ingestResponse($method, $params, $response, $accountId);
     }

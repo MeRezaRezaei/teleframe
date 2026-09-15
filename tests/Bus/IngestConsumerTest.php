@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Tests\Bus;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use MeRezaRezaei\Teleframe\Bus\IngestConsumer;
 use MeRezaRezaei\Teleframe\Bus\RedisStreamSink;
 use MeRezaRezaei\Teleframe\Bus\RouteTable;
 use MeRezaRezaei\Teleframe\Bus\StreamSchema;
-use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
-use MeRezaRezaei\Teleframe\Schema\Generated\Models\TlUser;
+use MeRezaRezaei\Teleframe\Mirror\Models\TfMessage;
 use MeRezaRezaei\Teleframe\Teleclient;
 use MeRezaRezaei\Teleframe\Tests\Ingest\IngestTestCase;
 use MeRezaRezaei\Teleframe\Tests\Support\ArrayRedis;
@@ -56,8 +57,8 @@ final class IngestConsumerTest extends IngestTestCase
 
         $sink = new RedisStreamSink($this->redis, self::ACCOUNT);
 
-        // 1) ingestable user update → default path → sqlite truth
-        $sink->handle($this->userUpdate(), (string) self::ACCOUNT);
+        // 1) storeable message update → default path → sqlite truth
+        $sink->handle($this->messageUpdate(), (string) self::ACCOUNT);
 
         // 2) routed update → forwarded verbatim to the target stream
         $routed = ['_' => 'updateNewMessage', 'message' => ['_' => 'message', 'id' => 7]];
@@ -74,11 +75,12 @@ final class IngestConsumerTest extends IngestTestCase
 
         self::assertSame(['processed' => 3, 'forwarded' => 1], $stats);
 
-        // Default path stored the user under the tenant
-        $client = $this->app->make(Teleclient::class);
-        $user = $client->user(self::ACCOUNT, self::USER_ID);
-        self::assertNotNull($user);
-        self::assertSame('Reza', $user->first_name);
+        // Default path stored the message under the tenant
+        self::assertSame(
+            1,
+            DB::table('tf_messages')->where('account_id', self::ACCOUNT)->where('id', 30)->count(),
+            'default path landed a curated message row',
+        );
 
         // Forwarded entry kept the original payload untouched
         $targets = $this->redis->streamEntries('tg:target:messages');
@@ -108,12 +110,9 @@ final class IngestConsumerTest extends IngestTestCase
     {
         $sink = new RedisStreamSink($this->redis, self::ACCOUNT);
 
-        // Decodes fine, but the deep constructor is unknown to this build —
-        // ingest() throws deterministically on every attempt.
-        $sink->handle(
-            ['_' => 'updateNewMessage', 'message' => ['_' => 'messageDefinitelyNotInThisBuild', 'id' => 7]],
-            (string) self::ACCOUNT,
-        );
+        // Decodes fine, but carries no '_' constructor node — ingest()
+        // throws deterministically (InvalidArgumentException) on every attempt.
+        $sink->handle(['message_id' => 404], (string) self::ACCOUNT);
 
         // A healthy entry appended after the throwing one must not be
         // stranded behind it in the same batch.
@@ -123,8 +122,10 @@ final class IngestConsumerTest extends IngestTestCase
         self::assertSame(['processed' => 1, 'forwarded' => 0], $this->consumer->consumeOnce());
         self::assertSame([], $this->redis->streamEntries(StreamSchema::DL));
 
+        // The healthy tail is acked even though it stores nothing: the `user`
+        // constructor has no curated mirror surface — null, gracefully acked.
         $client = $this->app->make(Teleclient::class);
-        self::assertSame('Reza', $client->user(self::ACCOUNT, self::USER_ID)?->first_name);
+        self::assertNull($client->user(self::ACCOUNT, self::USER_ID));
 
         // Cycle 2: retry throws again — still pending, still no dead-letter
         self::assertSame(['processed' => 0, 'forwarded' => 0], $this->consumer->consumeOnce());
@@ -137,9 +138,9 @@ final class IngestConsumerTest extends IngestTestCase
         $dead = $this->redis->streamEntries(StreamSchema::DL);
         self::assertCount(1, $dead);
         self::assertSame('ingest-failed', $dead[0][1]['reason']);
-        self::assertStringContainsString('messageDefinitelyNotInThisBuild', $dead[0][1]['error']);
+        self::assertStringContainsString("payload carries no '_' constructor node", $dead[0][1]['error']);
         self::assertSame(
-            ['_' => 'updateNewMessage', 'message' => ['_' => 'messageDefinitelyNotInThisBuild', 'id' => 7]],
+            ['message_id' => 404],
             StreamSchema::decode($dead[0][1]['update'])['update'],
         );
         self::assertSame((string) self::ACCOUNT, $dead[0][1]['account_id']);
@@ -164,7 +165,7 @@ final class IngestConsumerTest extends IngestTestCase
         $consumer = new IngestConsumer(
             $this->redis,
             $this->app->make(Teleclient::class),
-            static function (TlAnchorModel $root, int $accountId) use (&$attempts, &$stored): void {
+            static function (Model $root, int $accountId) use (&$attempts, &$stored): void {
                 $attempts++;
                 if ($attempts < 3) {
                     throw new \RuntimeException('transient hiccup after the row committed');
@@ -174,7 +175,7 @@ final class IngestConsumerTest extends IngestTestCase
         );
 
         $sink = new RedisStreamSink($this->redis, self::ACCOUNT);
-        $sink->handle($this->userUpdate(), (string) self::ACCOUNT);
+        $sink->handle($this->messageUpdate(), (string) self::ACCOUNT);
 
         // Two transient failures: the entry is retried, never dead-lettered
         self::assertSame(['processed' => 0, 'forwarded' => 0], $consumer->consumeOnce());
@@ -203,18 +204,18 @@ final class IngestConsumerTest extends IngestTestCase
         $consumer = new IngestConsumer(
             $this->redis,
             $this->app->make(Teleclient::class),
-            static function (TlAnchorModel $root, int $accountId) use (&$seen): void {
+            static function (Model $root, int $accountId) use (&$seen): void {
                 $seen[] = [get_class($root), $accountId];
             },
         );
 
         $sink = new RedisStreamSink($this->redis, self::ACCOUNT);
-        $sink->handle($this->userUpdate(), (string) self::ACCOUNT);
+        $sink->handle($this->messageUpdate(), (string) self::ACCOUNT);
         $sink->handle(['_' => 'updateNewMessage', 'message' => ['_' => 'message', 'id' => 9]], (string) self::ACCOUNT);
 
         $consumer->consumeOnce();
 
-        self::assertSame([[TlUser::class, self::ACCOUNT]], $seen);
+        self::assertSame([[TfMessage::class, self::ACCOUNT]], $seen);
     }
 
     public function test_routed_entries_fan_into_the_on_routed_seam(): void
@@ -265,6 +266,21 @@ final class IngestConsumerTest extends IngestTestCase
         // defers entirely to the ingester (mirror pipeline), so no P2 row.
         $client = $this->app->make(Teleclient::class);
         self::assertNull($client->user(self::ACCOUNT, self::USER_ID));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function messageUpdate(): array
+    {
+        return [
+            '_' => 'message',
+            'id' => 30,
+            'peer_id' => ['_' => 'peerUser', 'user_id' => 5],
+            'date' => 1_700_000_030,
+            'message' => 'hello from the default path',
+            'out' => false,
+        ];
     }
 
     /**
