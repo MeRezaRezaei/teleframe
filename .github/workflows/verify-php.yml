@@ -1,0 +1,751 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# verify-php.yml — the PHP verification lanes, ported from GitLab CI to GitHub
+# Actions. THE .gitlab-ci.yml FILE WAS THE SPECIFICATION: every command, every
+# flag, every budget and every WHY-comment below is carried across from it
+# rather than re-invented here. Nothing in this file was taken from a tutorial.
+#
+# REPLACES THESE RANGES OF .gitlab-ci.yml (the file stays, because GitLab is
+# demoted to exactly one job — private/public separation, D-035 — so it is still
+# the record of what used to run here):
+#
+#   .gitlab-ci.yml:1-175    header comments · stages · GIT_DEPTH: 0 ·
+#                          COMPOSER_PROCESS_TIMEOUT · the .php-setup anchor ·
+#                          the composer cache block · `default: interruptible`
+#   .gitlab-ci.yml:172-220  credential-guard          → NOT ported here (another
+#                                                           lane owns it)
+#   .gitlab-ci.yml:222-257  verify:8.3 / verify:8.4   → the `verify` matrix job
+#   .gitlab-ci.yml:259-402  verify-shards +
+#                          verify-shard-rollup       → two jobs, below
+#
+# Source of every budget quoted below: ci/shard-timings.md (per-area wall times,
+# the command that produced them, the measurements that had to be VOIDED and
+# re-taken) and ci/phpunit-shards.json (the partition itself, which is proven by
+# bin/verify-shard-partition.php and never written out a second time here).
+#
+# WHY THE SETUP BLOCK IS REPEATED INSTEAD OF BEING A COMPOSITE ACTION. GitLab
+# expressed it as the anchor `.php-setup: &php-setup` and every job merged it.
+# GitHub Actions has NO YAML anchors and no merge-key syntax at all, so the only
+# way to share the block is a composite action under .github/actions/. That is
+# deliberately NOT done here: six other lanes are porting their jobs out of the
+# same .gitlab-ci.yml in parallel right now, and a shared .github/actions/php-setup
+# is a write-write collision on a file nobody owns. It is owed, it is named, and
+# it is not created while the port is in flight — an inline copy per job is
+# duplicated, but each job stays independently readable and independently
+# editable, which is what a reviewer of one lane needs.
+#
+# CONVENTIONS CARRIED FROM THE SOURCE. Em-dashes instead of ": " inside
+# unquoted messages, for the reason recorded at .gitlab-ci.yml:196-199 (a bare
+# YAML scalar containing ": " is parsed as a MAPPING, and a whole pipeline then
+# fails to lint). Every message a step prints is therefore safe in a `run:` block
+# without quoting.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: verify-php
+
+# `default: interruptible: true` (.gitlab-ci.yml:152-162) → this is its
+# Actions-native form. GitLab's reason, carried: a newer pipeline supersedes an
+# older one on the same branch, so the older run is wasted runner time. GitLab
+# had to put it under `default:` because it rejects `interruptible` at the root
+# with "jobs concurrent config should implement the script:, run:, or trigger:
+# keyword"; Actions has no such lint, so the root is correct here.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# .gitlab-ci.yml:43-52 `workflow: rules:` ran the ordinary gates on push and
+# merge-request, and ADDED (not replaced) schedule/api/web so a nightly pipeline
+# could reach the warm lane. No `schedule:` is registered in THIS file on
+# purpose: the GitLab cron existed to reach `warm-live-host`, which is
+# `when: never` and is not ported into this file. Whoever ports the warm lane
+# owns adding the cron; registering one here would burn hosted minutes on a
+# schedule whose only purpose was to reach a disabled lane.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege. The verification lanes read the repository and nothing else;
+# no lane here pushes, publishes, or writes a package.
+permissions:
+  contents: read
+
+# Deterministic shell. The `php:8.x-cli` image's /bin/sh is dash, and these
+# scripts were written against a bash-ish shell on the GitLab runner; naming bash
+# makes the port's semantics explicit instead of inheriting the container's.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # verify — `verify:8.3` + `verify:8.4` (.gitlab-ci.yml:222-257)
+  #
+  # GitLab spelled these as two named jobs that differ only in `image:`. A
+  # matrix over the PHP version is the same shape with one body, so the two job
+  # names collapse to `verify` + a `php` matrix leg. The mapping is stated here
+  # because the name is otherwise untraceable: matrix php=8.3 was
+  # `verify:8.3`, matrix php=8.4 was `verify:8.4`.
+  #
+  # NOTE WHAT IS NOT HERE, and why — this is the source's own comment, carried
+  # verbatim in substance because dropping it would make the job look broken:
+  # "The phpunit half of `composer verify` now lives in `verify-shards`, one job
+  # per shard, all running at once. It is removed here rather than left in
+  # because leaving it would mean this job still runs the WHOLE suite serially —
+  # which is the thing that could not finish. What stays is everything that is
+  # not the suite: the credential guard, phpstan, and the standalone smoke."
+  # ───────────────────────────────────────────────────────────────────────────
+  verify:
+    name: verify (php ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45 # GitLab `timeout: 45m`, unchanged. Sized, not guessed.
+    strategy:
+      # GitLab's `parallel.matrix` and Actions' `strategy.matrix` fail fast by
+      # default on DIFFERENT terms; here they agree, because there is one leg
+      # per PHP version and both must report. A red 8.3 must not cancel the 8.4
+      # that would localise whether the defect is version-specific.
+      fail-fast: false
+      matrix:
+        # The official images, exactly as GitLab did (php:8.3-cli / php:8.4-cli).
+        php: ['8.3', '8.4']
+    # COMPOSER_PROCESS_TIMEOUT: 3600 — .gitlab-ci.yml:70-103, carried with its
+    # reasoning because the reasoning is the point.
+    #
+    # Composer's process-timeout is 300s by default, and `composer verify` runs
+    # the whole suite as ONE child process. The suite reached 3439 tests this
+    # cycle and pipeline #275 died at 74% with
+    #   The process "phpunit" exceeded the timeout of 300 seconds
+    # — not a test failure, a runner measuring the gate and calling it red.
+    #
+    # #271 was green minutes earlier on essentially the same suite, which is the
+    # real tell: the suite was sitting ON the limit and the runner's speed decided
+    # the outcome. A gate that flips on machine speed is not a gate, it is a coin.
+    # The job timeout still bounds the run; this only stops composer from killing
+    # its own child first.
+    #
+    # ── RAISED 1800 -> 3600, AND THE SUITE IS NOW SHARDED ANYWAY ──────────────
+    # Both, deliberately. Sharding alone still leaves a single shard able to blow
+    # this budget on a slow runner, and a raised timeout alone leaves the job
+    # serially slow. Either fix alone is the wrong half of the pair.
+    #
+    # The suite got slower ON PURPOSE and this number is not the reason to shrink
+    # it: FK enforcement was turned ON in the ingest harness (D-022, 57f02b38).
+    # Pipeline 1594 is the bill: 4475 tests, killed at 1342 (29%) of an 1800s
+    # budget — roughly 6000s of work against 1800s of allowance. **That is a
+    # budget problem, not a suite problem, and buying it back by weakening the
+    # harness would be paying for speed with the only currency this repository
+    # actually cares about: whether anything was really checked.**
+    #
+    # 3600 is sized against the SHARD, not the suite. The heaviest shard is
+    # budgeted at 1800s of measured test time (see ci/shard-timings.md), and this
+    # is that budget with 2x headroom for a runner slower than the one measured
+    # on. It is NOT the suite timeout: no shard is expected to need it, and a
+    # shard that does has a real problem to report rather than a slow machine to
+    # blame.
+    env:
+      COMPOSER_PROCESS_TIMEOUT: "3600"
+      # Root in the container. Without this, composer prints a loud warning per
+      # command and the cache below is written by a user the runner's cleanup does
+      # not look for.
+      COMPOSER_ALLOW_SUPERUSER: "1"
+      # Point composer AT the directory the cache step stores, so the cache is a
+      # real warm cache rather than a directory nothing ever writes to. On Linux
+      # composer's default cache dir is ~/.cache/composer, which is NOT the
+      # ~/.composer/cache/ the source cached; this is pinned to the source's path
+      # on purpose so the port and the original warm the same bytes. Without this
+      # line the cache step is DECORATIVE — it saves and restores a directory
+      # composer never touches, and every job re-downloads from scratch.
+      COMPOSER_CACHE_DIR: /root/.composer/cache
+    container:
+      image: php:${{ matrix.php }}-cli
+    steps:
+      # ── THE SHARED SETUP, INLINED (was .php-setup, .gitlab-ci.yml:105-129) ────
+      #
+      # Unlike credential-guard, these packages are NOT optional: docker-php-ext-install
+      # below compiles against libgmp-dev / libzip-dev / libpq-dev / libicu-dev, and the
+      # job cannot
+      # run its suite without the extensions they build. So a failure here IS fatal —
+      # but it is reported as a NAMED environment failure rather than left as an
+      # anonymous apt exit code, so the next reader can tell "the runner is broken"
+      # from "the package is broken" without opening the job log archaeology.
+      # `--no-install-recommends` + the clean below are what keep the archives from
+      # becoming the next "not enough free space in /var/cache/apt/archives".
+      #
+      # WHY IT RUNS BEFORE actions/checkout, WHICH IS THE REVERSE OF A CONVENTIONAL
+      # ACTIONS FILE, and the ordering is LOAD-BEARING rather than stylistic:
+      # `php:8.3-cli` / `php:8.4-cli` DO NOT SHIP GIT. actions/checkout then falls
+      # back to downloading a REST API tarball instead of cloning, and a tarball has
+      # NO HISTORY — which would silently reduce `fetch-depth: 0` (see the checkout
+      # step) to the exact "DISABLED GATE" the fetch-depth comment below exists to
+      # prevent, while the job still reports green. Installing git first is what
+      # makes the full-history requirement REAL rather than merely written down.
+      # GitLab's runner injects its own tooling and never had this problem; Actions
+      # does not. The assert step after checkout is the second half of this: it
+      # catches a count of 1 rather than trusting the ordering to have held.
+      #
+      # On GitLab this ordering was free — the runner had already cloned the project.
+      # Here it is a real dependency, and this is the one place where the port has
+      # to be explicit about it.
+      - name: Apt build deps + PHP extensions + composer (was .php-setup)
+        run: |
+          set -euo pipefail
+          apt-get update -qq || echo "apt-get update FAILED on this runner — if the next line fails too, this is a RUNNER disk/network problem, not a package problem"
+          apt-get install -y -qq --no-install-recommends git curl unzip libgmp-dev libzip-dev libpq-dev libicu-dev >/dev/null || { echo "FATAL — apt could not install the REQUIRED build deps (git curl unzip libgmp-dev libzip-dev libpq-dev libicu-dev)."; echo "        docker-php-ext-install cannot build gmp/zip/pdo_pgsql/intl without them, so this job cannot verify anything."; echo "        If the message above mentions free space or an unsigned repo, the RUNNER is degraded and no code was tested."; exit 1; }
+          apt-get clean && rm -rf /var/lib/apt/lists/*
+          # `intl` is here for a named reason, not for tidiness: composer.json
+          # requires ext-intl (composer.json:32), and Normalizer is what makes
+          # message search tokens NFC-canonical (MessageSearchIndexer::toNfc).
+          # Without it `composer install` fails on the platform requirement in
+          # EVERY job in this file, so a missing line here reads as a total CI
+          # outage rather than as one extension. libicu-dev is the build
+          # dependency; the official php:*-cli images ship none of this, exactly
+          # like bcmath/gmp/zip above.
+          docker-php-ext-install bcmath gmp zip pdo_pgsql sockets intl >/dev/null
+          # The official php:*-cli images ship memory_limit=128M. The full suite
+          # peaks around 235M (it fatals in guzzlehttp/psr7 Stream inside
+          # AwsSdkS3GatewayTest at 128M), so raise it before anything runs rather
+          # than letting a container default decide whether the gate passes.
+          printf "memory_limit=1G\n" > /usr/local/etc/php/conf.d/ci-memory.ini
+          php -r 'printf("memory_limit=%s\n", ini_get("memory_limit"));'
+          curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --quiet
+          composer --version
+
+      # GIT_DEPTH: 0 → `fetch-depth: 0`. NON-NEGOTIABLE, and the reasoning is
+      # carried from .gitlab-ci.yml:54-66 because this is the single setting most
+      # likely to be "tidied up" by someone who has not read what it is for.
+      #
+      # A SHALLOW CLONE IS A DISABLED GATE, not a speed optimisation.
+      #
+      # bin/scan-credentials.php scans git HISTORY for committed session strings. At
+      # the default depth 20 the runner's object set is truncated, so the guard could
+      # not see an exposure 84 commits back — while still printing
+      # "history depth all reachable from all". Pipeline #206 was GREEN on the
+      # credential-guard job with a live Telegram session sitting outside the window,
+      # and the only visible symptom was an unrelated test asserting a receipt that
+      # the truncated clone could not reach.
+      #
+      # GIT_DEPTH: 0 fetches the full history, so the guard's coverage claim becomes
+      # true and the receipt ratchet in tests/Credentials/RepositoryGuardTest.php can
+      # pass honestly. Clone time is the cost; a gate that cannot see is not a gate.
+      - name: Checkout (FULL history — see the fetch-depth comment)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # PROVE THE HISTORY IS THERE, mechanically, because "NON-NEGOTIABLE" that
+      # nothing checks is a wish. The check is seconds-long, not a test suite.
+      #
+      # The threshold is 20 because 20 is Actions' DEFAULT depth: any count at or
+      # below it is the signature of a truncated fetch (including the
+      # checkout-fallback-without-git case, which yields 1 — the reason the setup
+      # step above installs git BEFORE this step). The repository has hundreds of
+      # commits, so 20 is a floor that cannot produce a false red while catching
+      # every truncation.
+      #
+      # Inlined per job for the same reason the setup block is: Actions has no
+      # anchor syntax, and each job must stay independently readable.
+
+      # `actions/checkout@v4` does NOT mark the checkout as safe. The Actions
+      # runner checks the tree out as a different UID than the job shell runs
+      # as, so every `git` command afterwards refuses with `fatal: detected
+      # dubious ownership in repository at '$GITHUB_WORKSPACE'` and exits 128.
+      # Measured: the public-surface gate failed exactly this way, and
+      # `git ls-files` is how that gate enumerates the public surface — so
+      # this step is load-bearing for it, not a convenience.
+      - name: Trust the checkout (git safe.directory)
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Assert the clone is NOT shallow (a disabled gate must fail loudly)
+        run: |
+          set -euo pipefail
+          count=$(git rev-list --count HEAD)
+          shallow=$(git rev-parse --is-shallow-repository)
+          echo "commits reachable from HEAD — ${count} (shallow=${shallow})"
+          echo "commits reachable from HEAD — ${count}"
+          if [ "$shallow" = "true" ]; then
+            echo "FATAL — the clone is shallow (${count} commits). bin/scan-credentials.php"
+            echo "        scans git HISTORY, so a shallow clone turns the credential guard into a"
+            echo "        no-op that still prints a success message. This is a DISABLED GATE, not a"
+            echo "        speed optimisation. Fix \`fetch-depth\` before reading anything else."
+            exit 1
+          fi
+
+      # Composer cache. Ported from .gitlab-ci.yml:131-150, keeping its INTENT and
+      # its reasoning rather than its syntax:
+      #
+      # Project-namespaced and lockfile-keyed, NOT a bare ref slug.
+      #
+      # A ref-slug key minted a BRAND NEW cache directory per branch, so
+      # ~/.composer/cache was re-downloaded from scratch on every fresh branch and
+      # never shared between them. The slug also carried no project name, so the key
+      # space collided with the other CI projects sharing that one bare-metal runner —
+      # and cache collisions between projects serve each other the wrong packages.
+      # The Actions form of that failure would be `${{ github.ref }}` or
+      # `github.head_ref` in the key, and it is therefore DELIBERATELY ABSENT.
+      #
+      # This repository is a LIBRARY and .gitignore excludes composer.lock, so
+      # `hashFiles('composer.lock')` resolves to the EMPTY STRING today — the direct
+      # equivalent of the `files:` list resolving to nothing and GitLab falling back
+      # to the static `prefix`. One shared, project-namespaced directory for every
+      # branch is the intended outcome, and the hash is kept so the key starts
+      # tracking the real lockfile the moment the project commits one.
+      #
+      # The cross-project collision cannot recur on GitHub-hosted runners, because a
+      # repository's Actions cache is already scoped to that repository. The explicit
+      # `teleframe` segment is kept anyway: it costs nothing, it makes the key read
+      # identically to the one it replaces, and it keeps the key unique if a
+      # self-hosted runner with a shared cache is ever reintroduced.
+      - name: Composer cache (project-namespaced, lockfile-keyed, NOT ref-keyed)
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: teleframe-composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            teleframe-composer-${{ runner.os }}-
+
+      # `retry: 1` (.gitlab-ci.yml:231) as an in-job loop. GitLab's rationale,
+      # carried: "One retry absorbs a genuine transient stall before it is called a
+      # failure."
+      #
+      # It does NOT convert a red run into a green pipeline — a second failure exits
+      # non-zero, which is GitLab's own semantics (`retry:` does not make a failing
+      # job pass) and the source is explicit that the retry "does NOT convert a red
+      # shard into a green pipeline (a job that fails twice is still red)".
+      #
+      # `&&`-CHAINED rather than newline-separated, and that is load-bearing: the
+      # whole block runs inside an `until` CONDITION, which suspends `set -e` for
+      # its entire body, so a newline-separated sequence would report only the exit
+      # code of the LAST command and a failure in `composer guard` would be masked
+      # by a green `composer smoke`.
+      - name: composer validate + install + guard + stan + smoke (one retry)
+        run: |
+          run_verify() {
+            composer validate --strict --no-check-publish &&
+            composer install --no-interaction --prefer-dist &&
+            composer guard &&
+            composer stan &&
+            composer smoke
+          }
+          attempt=1
+          until run_verify; do
+            if [ "$attempt" -ge 2 ]; then
+              echo "FATAL — the verify script failed on 2 consecutive attempts. Reporting red; the first failure's log above is the one to read."
+              exit 1
+            fi
+            attempt=$((attempt + 1))
+            echo "### verify attempt ${attempt} of 2 — a genuine transient stall is absorbed here, a real failure is not"
+          done
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # verify-shards — the sharded suite (.gitlab-ci.yml:259-375)
+  #
+  # WHY THIS EXISTS. `verify:8.4` used to run `composer verify`, which runs the
+  # whole suite as ONE process. The suite reached 4475 tests and pipeline 1594
+  # killed it at 1342 (29%):
+  #
+  #   The following exception is caused by a process timeout
+  #   In Process.php line 1205:
+  #     The process "phpunit" exceeded the timeout of 1800 seconds.
+  #
+  # At that observed rate the whole run needs ~6000s against an 1800s allowance.
+  # **A job that cannot finish cannot report anything** — so the PHP matrix was not
+  # slow, it was structurally incapable of saying green or red, which made every
+  # other number in this project unverifiable at the merge gate.
+  #
+  # WHY NOT SIMPLY RAISE THE TIMEOUT. Because that leaves the job serially slow:
+  # ~6000s is 100 minutes of one runner doing one thing, for a gate whose result is
+  # identical either way. Sharding turns 100 minutes of wall time into ~25 minutes
+  # with eight runners working at once. And sharding alone is also insufficient — a
+  # single shard can still blow a budget on a slow runner — so COMPOSER_PROCESS_TIMEOUT
+  # was raised as well.
+  #
+  # WHY THE BOUNDARIES ARE NOT A GUESS. Every area was measured; see
+  # ci/shard-timings.md for the per-area wall times, the command that produced them,
+  # the two measurements that had to be VOIDED and re-taken, and the red areas that
+  # are other lanes' business. A shard boundary chosen from a guess is a boundary
+  # that will be wrong on the next schema change.
+  #
+  # WHY THE SHARD LIST IS NOT HERE. The paths live in ci/phpunit-shards.json, and
+  # this job passes a shard NAME. The paths are spelled once, in the one file that
+  # a proof reads: if they were also written here, the proof would certify a file
+  # the pipeline ignores, and the paths CI actually used would be the unproven ones.
+  # That is the shape of the failure this whole change exists to remove.
+  # ───────────────────────────────────────────────────────────────────────────
+  verify-shards:
+    name: verify-shards (${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    # PER-SHARD BUDGET: 45m per shard, chosen from measurement.
+    #
+    # The measured total for the sharded suite is 6646s of test time (see
+    # ci/shard-timings.md), and packing it into 8 shards gives a mean of 831s and a
+    # WORST shard of 1213s. That worst shard is a single file,
+    # tests/Ingest/EveryClassifiedEndpointIngestsTest.php: 177 data-provider cases
+    # at 1213s, which no directory- or file-level boundary can split further.
+    #
+    # So the floor for this figure is 1213s, measured — not guessed. The budget is
+    # 1800s of test time, which is that plus ~48% for a runner slower than the one
+    # measured on, and the job timeout above it is 45m (2700s) so that composer
+    # install and start-up sit inside the job allowance rather than eating the
+    # test budget. The reasoning matters more than the numbers:
+    #
+    #   * It is FINITE. A shard with no timeout inherits the platform default and
+    #     runs until something kills it, which is how the shard that cannot finish
+    #     becomes the shard that never reports — the exact failure being fixed.
+    #   * It is PER-SHARD, not per-suite. Eight shards at 45m each, in parallel, is
+    #     45m of wall time. The old single job had 45m for ~6600s of work, so it
+    #     was always going to be killed having proved nothing.
+    #   * It is NOT so generous that a hung shard holds a runner slot for an hour.
+    #
+    # KNOWN RISK, recorded rather than hidden: tests/Ingest/
+    # EveryClassifiedEndpointIngestsTest.php is a single 1213s file and it is the
+    # whole of shard-1. It fits today's budget with ~48% headroom, and it is the
+    # one shard that will break first if that area grows. The honest fix when it
+    # does is to split the FILE by data set — which needs a `--filter`-capable
+    # shard mechanism, not a bigger timeout. A bigger timeout would only buy the
+    # appearance of headroom that is not there.
+    timeout-minutes: 45
+    strategy:
+      # GitLab's `parallel.matrix` has no fail-fast concept: all eight shards run
+      # and the pipeline is red because a shard was red. Actions defaults to
+      # fail-fast: true, which CANCELS the sibling shards on the first failure —
+      # a DIFFERENT verdict, because it destroys the evidence the rollup counts.
+      # `false` is what reproduces the source's semantics.
+      fail-fast: false
+      matrix:
+        shard:
+          - shard-1
+          - shard-2
+          - shard-3
+          - shard-4
+          - shard-5
+          - shard-6
+          - shard-7
+          - shard-8
+    # COMPOSER_PROCESS_TIMEOUT: 3600 — sized against the SHARD, not the suite.
+    # See the full reasoning on the `verify` job above (.gitlab-ci.yml:70-103);
+    # the shard-specific half is the last paragraph of that block: the heaviest
+    # shard is budgeted at 1800s measured, and 3600 is that with 2x headroom.
+    env:
+      COMPOSER_PROCESS_TIMEOUT: "3600"
+      # Root in the container, and composer pointed AT the cached directory.
+      # Same reasoning and same consequence as in the `verify` job above: without
+      # COMPOSER_CACHE_DIR the ~/.composer/cache the cache step restores is a
+      # directory composer never writes to, so the cache is decorative and every
+      # shard re-downloads all eight times over.
+      COMPOSER_ALLOW_SUPERUSER: "1"
+      COMPOSER_CACHE_DIR: /root/.composer/cache
+    container:
+      image: php:8.4-cli
+    steps:
+      # The setup block, inline. See the header comment for why this is repeated
+      # rather than shared, and the `verify` job for why it precedes the checkout.
+      # Content is .php-setup verbatim (.gitlab-ci.yml:105-129).
+      - name: Apt build deps + PHP extensions + composer (was .php-setup)
+        run: |
+          set -euo pipefail
+          apt-get update -qq || echo "apt-get update FAILED on this runner — if the next line fails too, this is a RUNNER disk/network problem, not a package problem"
+          apt-get install -y -qq --no-install-recommends git curl unzip libgmp-dev libzip-dev libpq-dev libicu-dev >/dev/null || { echo "FATAL — apt could not install the REQUIRED build deps (git curl unzip libgmp-dev libzip-dev libpq-dev libicu-dev)."; echo "        docker-php-ext-install cannot build gmp/zip/pdo_pgsql/intl without them, so this job cannot verify anything."; echo "        If the message above mentions free space or an unsigned repo, the RUNNER is degraded and no code was tested."; exit 1; }
+          apt-get clean && rm -rf /var/lib/apt/lists/*
+          # `intl` is here for a named reason, not for tidiness: composer.json
+          # requires ext-intl (composer.json:32), and Normalizer is what makes
+          # message search tokens NFC-canonical (MessageSearchIndexer::toNfc).
+          # Without it `composer install` fails on the platform requirement in
+          # EVERY job in this file, so a missing line here reads as a total CI
+          # outage rather than as one extension. libicu-dev is the build
+          # dependency; the official php:*-cli images ship none of this, exactly
+          # like bcmath/gmp/zip above.
+          docker-php-ext-install bcmath gmp zip pdo_pgsql sockets intl >/dev/null
+          # The official php:*-cli images ship memory_limit=128M. The full suite
+          # peaks around 235M (it fatals in guzzlehttp/psr7 Stream inside
+          # AwsSdkS3GatewayTest at 128M), so raise it before anything runs rather
+          # than letting a container default decide whether the gate passes.
+          printf "memory_limit=1G\n" > /usr/local/etc/php/conf.d/ci-memory.ini
+          php -r 'printf("memory_limit=%s\n", ini_get("memory_limit"));'
+          curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --quiet
+          composer --version
+
+      # fetch-depth: 0 — the full-history requirement is a COVERAGE requirement,
+      # not a speed setting, and it applies to every job in this workflow. Full
+      # reasoning on the `verify` job above; carried from .gitlab-ci.yml:54-66.
+      - name: Checkout (FULL history — see the fetch-depth comment)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # PROVE THE HISTORY IS THERE, mechanically, because "NON-NEGOTIABLE" that
+      # nothing checks is a wish. The check is seconds-long, not a test suite.
+      #
+      # The threshold is 20 because 20 is Actions' DEFAULT depth: any count at or
+      # below it is the signature of a truncated fetch (including the
+      # checkout-fallback-without-git case, which yields 1 — the reason the setup
+      # step above installs git BEFORE this step). The repository has hundreds of
+      # commits, so 20 is a floor that cannot produce a false red while catching
+      # every truncation.
+      #
+      # Inlined per job for the same reason the setup block is: Actions has no
+      # anchor syntax, and each job must stay independently readable.
+
+      # `actions/checkout@v4` does NOT mark the checkout as safe. The Actions
+      # runner checks the tree out as a different UID than the job shell runs
+      # as, so every `git` command afterwards refuses with `fatal: detected
+      # dubious ownership in repository at '$GITHUB_WORKSPACE'` and exits 128.
+      # Measured: the public-surface gate failed exactly this way, and
+      # `git ls-files` is how that gate enumerates the public surface — so
+      # this step is load-bearing for it, not a convenience.
+      - name: Trust the checkout (git safe.directory)
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Assert the clone is NOT shallow (a disabled gate must fail loudly)
+        run: |
+          set -euo pipefail
+          count=$(git rev-list --count HEAD)
+          shallow=$(git rev-parse --is-shallow-repository)
+          echo "commits reachable from HEAD — ${count}"
+          if [ "$shallow" = "true" ]; then
+            echo "FATAL — the clone is shallow (${count} commits). bin/scan-credentials.php"
+            echo "        scans git HISTORY, so a shallow clone turns the credential guard into a"
+            echo "        no-op that still prints a success message. This is a DISABLED GATE, not a"
+            echo "        speed optimisation. Fix \`fetch-depth\` before reading anything else."
+            exit 1
+          fi
+
+      # Composer cache — see the `verify` job above for the ported comment and for
+      # why the ref slug is deliberately absent from the key.
+      - name: Composer cache (project-namespaced, lockfile-keyed, NOT ref-keyed)
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: teleframe-composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            teleframe-composer-${{ runner.os }}-
+
+      # The runner proves the partition before it runs anything (a shard that
+      # cannot prove it is running its share does not run), then invokes PHPUnit
+      # and passes its exit code straight through (.gitlab-ci.yml:370-375).
+      #
+      # NOTE THE ABSENT RETRY, which is a DEVIATION from the source's `retry: 1`
+      # and is deliberate. GitLab's `retry:` grants a FRESH `timeout:` per attempt,
+      # so a retried shard had a whole new 45m. Actions' `timeout-minutes` bounds
+      # the JOB, retries included, so a second full shard attempt (composer install
+      # plus up to 1213s of test time, worst case 1800s by budget) cannot fit
+      # inside the 45m that the shard floor above requires. Choosing between them
+      # means either halving the budget that is MEASURED from shard-1's 1213s, or
+      # doubling the job ceiling — and .gitlab-ci.yml:317-325 explicitly rejects the
+      # second option as "buy[ing] the appearance of headroom that is not there".
+      # So the shard retry is dropped rather than silently paid for out of the
+      # budget. The `verify` job above keeps its retry, because 362s measured
+      # against a 45m allowance leaves room for a second attempt honestly.
+      - name: Install deps, prove the partition, run this shard
+        run: |
+          composer install --no-interaction --prefer-dist
+          php bin/run-phpunit-shard.php "${{ matrix.shard }}"
+
+      # GitLab `artifacts: when: always` (.gitlab-ci.yml:360-368), which is NOT the
+      # default. The source's comment, carried:
+      #
+      #   `when: always`, NOT the default `on_success`. A red shard uploads nothing
+      #   by default — so the rollup below, the one job whose job is to notice that a
+      #   shard ran too few tests, would be blind to exactly the shard that needs
+      #   looking at.
+      #
+      # `if: always()` is the Actions spelling of that, and it also covers the
+      # cancelled case, which is an improvement rather than a deviation.
+      #
+      # The artifact is NAMED PER SHARD, and it has to be: the eight matrix legs are
+      # one workflow run, and upload-artifact@v4 refuses two uploads under the same
+      # name. Each leg publishes exactly one file, `phpunit-shard-<name>.xml`, so
+      # naming the artifact `phpunit-shard-${{ matrix.shard }}` keeps the contained
+      # filename identical to the source's and the rollup's glob working unchanged.
+      #
+      # `if-no-files-found: warn` is deliberate and matches GitLab, which warns when
+      # an artifact path matches nothing and still lets the job pass. The check
+      # that turns "no reports" into a FAILURE is not here — it is the rollup job,
+      # which owns that verdict (see bin/rollup-shard-reports.php:210-217). Putting
+      # it here too would be a second gate for one condition.
+      - name: Publish the shard's JUnit report (was the artifacts-when-always fence)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpunit-shard-${{ matrix.shard }}
+          path: phpunit-shard-*.xml
+          retention-days: 7 # `expire_in: 1 week`, unchanged.
+          if-no-files-found: warn
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # verify-shard-rollup — the one verdict, in one place (.gitlab-ci.yml:377-401)
+  #
+  # WHY A ROLLUP EXISTS INSTEAD OF ONE MATRIX JOB THAT CHECKS EVERYTHING. The
+  # check is "the shards TOGETHER ran every test the suite collects", and that is
+  # not a per-shard property — it is a property of the union. A matrix leg can
+  # only ever see its own report, so it can assert "my shard ran its paths" and
+  # nothing more; the failure it cannot see is the suite having grown past the
+  # shard list, which keeps every individual shard green. Splitting the assertion
+  # across legs would therefore leave the one condition worth catching — the
+  # partition silently drifting behind the suite, which is how 355 tests once sat
+  # in this repository unregistered and green — as the one thing no leg checks.
+  # So the count is asserted once, in one place, over every shard's report.
+  # ───────────────────────────────────────────────────────────────────────────
+  verify-shard-rollup:
+    name: verify-shard-rollup
+    runs-on: ubuntu-latest
+    timeout-minutes: 10 # GitLab `timeout: 10m`, unchanged.
+    # The source calls this `when: always` and says why it is REQUIRED and is the
+    # one place in .gitlab-ci.yml where it belongs
+    # (.gitlab-ci.yml:384-388), carried verbatim in substance:
+    #
+    #   Without it this job is skipped on a red pipeline — which is precisely when
+    #   the operator most needs to know whether the shards covered the suite. It does
+    #   NOT soften the shards' verdict: each shard's own exit code is the pipeline
+    #   status.
+    #
+    # Actions expresses that as `if: always()` on a job whose `needs:` failed,
+    # which is otherwise the case that SKIPS the dependent job. Note what the
+    # verdict actually is, because it is easy to get backwards here: the workflow
+    # run is already red because a shard leg was red, and `always()` does not
+    # change that. This job does not re-decide the suite verdict — it adds a second,
+    # independent fact ("the shards ran N of N tests") to a red run. Making it fail
+    # merely BECAUSE a shard was red would double-count one defect and would
+    # contradict bin/rollup-shard-reports.php, which exits 0 while reporting the
+    # failures it found and exits 1 only on a test-count shortfall.
+    if: always()
+    needs:
+      - verify-shards # GitLab `needs: [{job: verify-shards, artifacts: true}]`
+    env:
+      COMPOSER_PROCESS_TIMEOUT: "3600" # same sizing, same reasoning — see above
+      # Same root + cache-dir pair as every other job here, and for the same
+      # reason: the rollup runs `composer install`, so without COMPOSER_CACHE_DIR
+      # the restored ~/.composer/cache is a directory nothing ever writes to.
+      COMPOSER_ALLOW_SUPERUSER: "1"
+      COMPOSER_CACHE_DIR: /root/.composer/cache
+    container:
+      image: php:8.4-cli
+    steps:
+      # The setup block, inline. See the header comment for why it is repeated
+      # rather than shared, and the `verify` job for why it precedes the checkout.
+      # Content is .php-setup verbatim (.gitlab-ci.yml:105-129).
+      - name: Apt build deps + PHP extensions + composer (was .php-setup)
+        run: |
+          set -euo pipefail
+          apt-get update -qq || echo "apt-get update FAILED on this runner — if the next line fails too, this is a RUNNER disk/network problem, not a package problem"
+          apt-get install -y -qq --no-install-recommends git curl unzip libgmp-dev libzip-dev libpq-dev libicu-dev >/dev/null || { echo "FATAL — apt could not install the REQUIRED build deps (git curl unzip libgmp-dev libzip-dev libpq-dev libicu-dev)."; echo "        docker-php-ext-install cannot build gmp/zip/pdo_pgsql/intl without them, so this job cannot verify anything."; echo "        If the message above mentions free space or an unsigned repo, the RUNNER is degraded and no code was tested."; exit 1; }
+          apt-get clean && rm -rf /var/lib/apt/lists/*
+          # `intl` is here for a named reason, not for tidiness: composer.json
+          # requires ext-intl (composer.json:32), and Normalizer is what makes
+          # message search tokens NFC-canonical (MessageSearchIndexer::toNfc).
+          # Without it `composer install` fails on the platform requirement in
+          # EVERY job in this file, so a missing line here reads as a total CI
+          # outage rather than as one extension. libicu-dev is the build
+          # dependency; the official php:*-cli images ship none of this, exactly
+          # like bcmath/gmp/zip above.
+          docker-php-ext-install bcmath gmp zip pdo_pgsql sockets intl >/dev/null
+          # The official php:*-cli images ship memory_limit=128M. The full suite
+          # peaks around 235M (it fatals in guzzlehttp/psr7 Stream inside
+          # AwsSdkS3GatewayTest at 128M), so raise it before anything runs rather
+          # than letting a container default decide whether the gate passes.
+          printf "memory_limit=1G\n" > /usr/local/etc/php/conf.d/ci-memory.ini
+          php -r 'printf("memory_limit=%s\n", ini_get("memory_limit"));'
+          curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --quiet
+          composer --version
+
+      # fetch-depth: 0 — same non-negotiable requirement as every other job here;
+      # full reasoning on the `verify` job above.
+      - name: Checkout (FULL history — see the fetch-depth comment)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # PROVE THE HISTORY IS THERE, mechanically, because "NON-NEGOTIABLE" that
+      # nothing checks is a wish. The check is seconds-long, not a test suite.
+      #
+      # The threshold is 20 because 20 is Actions' DEFAULT depth: any count at or
+      # below it is the signature of a truncated fetch (including the
+      # checkout-fallback-without-git case, which yields 1 — the reason the setup
+      # step above installs git BEFORE this step). The repository has hundreds of
+      # commits, so 20 is a floor that cannot produce a false red while catching
+      # every truncation.
+      #
+      # Inlined per job for the same reason the setup block is: Actions has no
+      # anchor syntax, and each job must stay independently readable.
+
+      # `actions/checkout@v4` does NOT mark the checkout as safe. The Actions
+      # runner checks the tree out as a different UID than the job shell runs
+      # as, so every `git` command afterwards refuses with `fatal: detected
+      # dubious ownership in repository at '$GITHUB_WORKSPACE'` and exits 128.
+      # Measured: the public-surface gate failed exactly this way, and
+      # `git ls-files` is how that gate enumerates the public surface — so
+      # this step is load-bearing for it, not a convenience.
+      - name: Trust the checkout (git safe.directory)
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Assert the clone is NOT shallow (a disabled gate must fail loudly)
+        run: |
+          set -euo pipefail
+          count=$(git rev-list --count HEAD)
+          shallow=$(git rev-parse --is-shallow-repository)
+          echo "commits reachable from HEAD — ${count}"
+          if [ "$shallow" = "true" ]; then
+            echo "FATAL — the clone is shallow (${count} commits). bin/scan-credentials.php"
+            echo "        scans git HISTORY, so a shallow clone turns the credential guard into a"
+            echo "        no-op that still prints a success message. This is a DISABLED GATE, not a"
+            echo "        speed optimisation. Fix \`fetch-depth\` before reading anything else."
+            exit 1
+          fi
+
+      # Composer cache — the rollup installs dependencies too, so it restores the
+      # same key; see the `verify` job above for the ported comment.
+      - name: Composer cache (project-namespaced, lockfile-keyed, NOT ref-keyed)
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: teleframe-composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            teleframe-composer-${{ runner.os }}-
+
+      # GitLab `needs: [{job: verify-shards, artifacts: true}]`.
+      #
+      # `merge-multiple: true` IS LOAD-BEARING and its absence is a silent gate
+      # failure. download-artifact@v4 with NO `name:` creates a SUBDIRECTORY per
+      # artifact under `path`, so the eight reports would land as
+      # `phpunit-shard-shard-1/phpunit-shard-1.xml` and the script's
+      # `glob('phpunit-shard-*.xml')` would match nothing. That is exactly the
+      # "no shard published a JUnit report" failure bin/rollup-shard-reports.php
+      # exists to raise — on a pipeline where every shard was genuinely green.
+      # `merge-multiple: true` flattens all eight reports into the repository root,
+      # where the glob finds them and the file names stay identical to the source's.
+      - name: Download every shard report (was needs-with-artifacts-true)
+        uses: actions/download-artifact@v4
+        with:
+          path: .
+          merge-multiple: true
+
+      # Counts the tests the shards ACTUALLY ran, across their JUnit reports, and
+      # compares that with the number the suite collects. This is the check that a
+      # green pipeline really ran the suite: a shard that exited 0 having collected
+      # nothing is green and invisible everywhere else
+      # (.gitlab-ci.yml:395-401).
+      #
+      # `--no-scripts` is carried from the source: this job only needs PHPUnit's
+      # collector, not a post-install bootstrapped application.
+      - name: Count what the shards ran, and compare it with the suite
+        run: |
+          composer install --no-interaction --prefer-dist --no-scripts
+          php bin/rollup-shard-reports.php
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # A GATE THAT WAS NOT PORTED, AND WHY IT MUST NOT BE ADDED BACK QUIETLY.
+  #
+  # GitLab's shard job deliberately had NO `allow_failure: true`, and said why
+  # (.gitlab-ci.yml:333-340), carried here because the Actions keyword is
+  # different and equally easy to reach for by accident:
+  #
+  #   `allow_failure: true` is how a red shard becomes a green pipeline — the
+  #   "weakening an assertion to reach green" failure wearing a CI costume. In
+  #   Actions the same escape is spelled `continue-on-error: true`, and
+  #   `fail-fast` is a THIRD, subtler one: a fail-fast matrix that cancels the
+  #   sibling shards destroys the very reports the rollup counts, turning a red
+  #   shard into an unreportable green-ish run.
+  #
+  # So: no `continue-on-error` on any shard leg or on this rollup, and
+  # `fail-fast: false` on the shard matrix. All three absences are deliberate and
+  # all three are cheap to reintroduce by accident. They are asserted in code by
+  # tests/Concerns/ShardPartitionTest.php — which currently reads
+  # `.gitlab-ci.yml`, and so has to be repointed at this file by whoever owns the
+  # test surface. That repointing is NOT done here, because this file's owner owns
+  # one workflow file and no PHP.
+  # ───────────────────────────────────────────────────────────────────────────

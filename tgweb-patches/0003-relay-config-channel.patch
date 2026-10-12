@@ -1,0 +1,191 @@
+diff --git a/src/api/gramjs/worker/connector.ts b/src/api/gramjs/worker/connector.ts
+index 8c56862..f16634d 100644
+--- a/src/api/gramjs/worker/connector.ts
++++ b/src/api/gramjs/worker/connector.ts
+@@ -3,7 +3,7 @@ import type { TypedBroadcastChannel } from '../../../util/browser/multitab';
+ import type { ApiError, ApiInitialArgs, ApiOnProgress, OnApiUpdate } from '../../types';
+ import type { LocalDb } from '../localDb';
+ import type { MethodArgs, MethodResponse, Methods } from '../methods/types';
+-import type { OriginPayload, ThenArg, WorkerMessageEvent } from './types';
++import type { OriginPayload, RelayConfig, ThenArg, WorkerMessageEvent } from './types';
+ 
+ import { DEBUG, IGNORE_UNHANDLED_ERRORS } from '../../../config';
+ import { IS_TAURI } from '../../../util/browser/globalEnvironment';
+@@ -73,6 +73,36 @@ export function initApiOnMasterTab(initialArgs: ApiInitialArgs) {
+   });
+ }
+ 
++/**
++ * Relay config handed to the GramJS worker when it initializes. Read on the
++ * main thread, where window globals and build-time env values are available;
++ * the worker scope cannot see either, so the worker entry applies these to
++ * its own `globalThis` before any connection is made.
++ *
++ * ORDERING REQUIREMENT (enforced by build, guarded at runtime): the
++ * relay-bootstrap.js `<script src>` that bin/build-tgweb.sh injects into
++ * `<head>` MUST execute BEFORE initApi / initApiOnMasterTab runs — this
++ * function reads its baked globals from `globalThis` at collection time only,
++ * and a bootstrap script running after initApi is missed silently, leaving
++ * the client on stock Telegram transport. The build injects the script tag
++ * ahead of the module script, so it holds by construction; the guard below
++ * turns a silent miss (a script-order or extraction problem elsewhere) into
++ * a visible console warning instead.
++ */
++function collectRelayConfig(): RelayConfig | undefined {
++  const webLiveEndpoint = (globalThis as { TELEGRAM_WEB_LIVE_ENDPOINT?: string }).TELEGRAM_WEB_LIVE_ENDPOINT
++    || import.meta.env.VITE_TELEGRAM_WEB_LIVE_ENDPOINT || undefined;
++  const serverKey = (globalThis as { TELEGRAM_WEB_RELAY_SERVER_KEY?: string }).TELEGRAM_WEB_RELAY_SERVER_KEY;
++  const ticketUrl = (globalThis as { TELEGRAM_WEB_RELAY_TICKET_URL?: string }).TELEGRAM_WEB_RELAY_TICKET_URL || undefined;
++  const bearer = (globalThis as { TELEGRAM_WEB_RELAY_BEARER?: string }).TELEGRAM_WEB_RELAY_BEARER || undefined;
++  if (!webLiveEndpoint && import.meta.env.VITE_TELEGRAM_WEB_LIVE_ENDPOINT) {
++    console.warn('[teleframe] VITE_TELEGRAM_WEB_LIVE_ENDPOINT is set but the relay-bootstrap.js '
++      + 'global was absent when initApi collected the relay config (script-order/extraction '
++      + 'problem) — relay wiring skipped; client stays on stock transport.');
++  }
++  return webLiveEndpoint || serverKey || ticketUrl ? { webLiveEndpoint, serverKey, ticketUrl, bearer } : undefined;
++}
++
+ let updateCallback: OnApiUpdate;
+ 
+ let localApiRequestsQueue: { fnName: any; args: any; deferred: Deferred<any> }[] = [];
+@@ -111,7 +141,7 @@ export function initApi(onUpdate: OnApiUpdate, initialArgs: ApiInitialArgs) {
+ 
+   return makeRequest({
+     type: 'initApi',
+-    args: [initialArgs, savedLocalDb],
++    args: [initialArgs, savedLocalDb, collectRelayConfig()],
+   }).then(() => {
+     isInited = true;
+ 
+diff --git a/src/api/gramjs/worker/types.ts b/src/api/gramjs/worker/types.ts
+index 5a7efcb..60a7041 100644
+--- a/src/api/gramjs/worker/types.ts
++++ b/src/api/gramjs/worker/types.ts
+@@ -51,11 +51,18 @@ export type WorkerMessageEvent = {
+   data: WorkerMessageData;
+ };
+ 
++export type RelayConfig = {
++  webLiveEndpoint?: string;
++  serverKey?: string;
++  ticketUrl?: string;
++  bearer?: string;
++};
++
+ export type OriginPayload =
+   {
+     type: 'initApi';
+     messageId?: string;
+-    args: [ApiInitialArgs, LocalDb];
++    args: [ApiInitialArgs, LocalDb, RelayConfig?];
+   }
+   |
+   {
+diff --git a/src/api/gramjs/worker/worker.ts b/src/api/gramjs/worker/worker.ts
+index 2a8291c..396888d 100644
+--- a/src/api/gramjs/worker/worker.ts
++++ b/src/api/gramjs/worker/worker.ts
+@@ -54,6 +54,23 @@ onmessage = ({ data }: OriginMessageEvent) => {
+     switch (payload.type) {
+       case 'initApi': {
+         const { messageId, args } = payload;
++        const relay = args[2];
++        if (relay) {
++          const relayGlobals: Record<string, unknown> = {};
++          if (relay.webLiveEndpoint) {
++            relayGlobals.TELEGRAM_WEB_LIVE_ENDPOINT = relay.webLiveEndpoint;
++          }
++          if (relay.serverKey) {
++            relayGlobals.TELEGRAM_WEB_RELAY_SERVER_KEY = relay.serverKey;
++          }
++          if (relay.ticketUrl) {
++            relayGlobals.TELEGRAM_WEB_RELAY_TICKET_URL = relay.ticketUrl;
++          }
++          if (relay.bearer) {
++            relayGlobals.TELEGRAM_WEB_RELAY_BEARER = relay.bearer;
++          }
++          Object.assign(globalThis, relayGlobals);
++        }
+         initApi(onUpdate, args[0], args[1]).then(() => {
+           if (messageId) {
+             sendToOrigin({
+diff --git a/src/lib/gramjs/crypto/RSA.ts b/src/lib/gramjs/crypto/RSA.ts
+index 520fc11..02f8a80 100644
+--- a/src/lib/gramjs/crypto/RSA.ts
++++ b/src/lib/gramjs/crypto/RSA.ts
+@@ -38,15 +38,57 @@ function getRelayServerKey() {
+   return BAKED_RELAY_SERVER_KEY;
+ }
+ 
+-function addRelayServerKey(keys: Map<bigint, { n: bigint; e: number }>) {
+-  const relayKey = getRelayServerKey();
+-  if (relayKey) {
+-    keys.set(relayKey.fingerprint, { n: relayKey.n, e: relayKey.e });
++/**
++ * Server-key map that materializes the lazily-derived relay key before EVERY
++ * access: get, has, forEach, entries, keys, values and Symbol.iterator all
++ * ensure it first, so membership and iteration can never miss it (W-39) —
++ * callers are not limited to a strict get().
++ */
++class RelayAwareServerKeys extends Map<bigint, { n: bigint; e: number }> {
++  private ensureRelayKey(): void {
++    const relayKey = getRelayServerKey();
++    if (relayKey) {
++      this.set(relayKey.fingerprint, { n: relayKey.n, e: relayKey.e });
++    }
++  }
++
++  override get(fingerprint: bigint) {
++    this.ensureRelayKey();
++    return super.get(fingerprint);
++  }
++
++  override has(fingerprint: bigint) {
++    this.ensureRelayKey();
++    return super.has(fingerprint);
++  }
++
++  override forEach(callbackfn: (value: { n: bigint; e: number }, key: bigint, map: Map<bigint, { n: bigint; e: number }>) => void, thisArg?: unknown): void {
++    this.ensureRelayKey();
++    super.forEach(callbackfn, thisArg);
++  }
++
++  override entries(): IterableIterator<[bigint, { n: bigint; e: number }]> {
++    this.ensureRelayKey();
++    return super.entries();
++  }
++
++  override keys(): IterableIterator<bigint> {
++    this.ensureRelayKey();
++    return super.keys();
++  }
++
++  override values(): IterableIterator<{ n: bigint; e: number }> {
++    this.ensureRelayKey();
++    return super.values();
++  }
++
++  override [Symbol.iterator](): IterableIterator<[bigint, { n: bigint; e: number }]> {
++    this.ensureRelayKey();
++    return super[Symbol.iterator]();
+   }
+-  return keys;
+ }
+ 
+-export const SERVER_KEYS = addRelayServerKey([
++export const SERVER_KEYS = new RelayAwareServerKeys([
+   {
+     fingerprint: BigInt('-3414540481677951611'),
+     n: BigInt(
+@@ -71,10 +113,7 @@ export const SERVER_KEYS = addRelayServerKey([
+     ),
+     e: 65537,
+   },
+-].reduce((acc, { fingerprint, ...keyInfo }) => {
+-  acc.set(fingerprint, keyInfo);
+-  return acc;
+-}, new Map<bigint, { n: bigint; e: number }>()));
++].map(({ fingerprint, ...keyInfo }) => [fingerprint, keyInfo] as const));
+ 
+ /**
+  * Encrypts the given data known the fingerprint to be used

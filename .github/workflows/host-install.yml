@@ -1,0 +1,295 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# host-install.yml — "the package installs and boots in a real host app".
+#
+# PORTED FROM .gitlab-ci.yml:437-470 (stage `host-install`), which commit
+# ddbdef18 ("ci: move CI/CD to GitHub Actions") removed. That commit left the
+# gate unwired: the script survived, the job did not, and the exclusion block
+# at the end of regen-gates.yml then asserted the job "STAYS THERE" at
+# .gitlab-ci.yml:437-470 and "still runs on the GitLab side" — a claim that
+# became FALSE at the moment the lines were deleted, and that is the reason
+# nothing noticed for a while. Tests/Standalone/HostInstallGateTest::
+# test_ci_runs_the_host_install_gate is what finally caught it; that block has
+# been corrected to point here.
+#
+# WHAT THIS JOB IS. "The package installs and boots in a real host app" is the
+# owner's definition of done for Version One, and it was proved once BY HAND and
+# thrown away — which left the two fixes that run produced pinned by nothing:
+# binding BotClient so the Notify facade resolves on a bare install, and
+# publishing config under config/teleframe/ so teleframe:doctor stops hanging
+# non-interactively. The provider set then drifted, so
+# SupervisorServiceProvider's auto-discovery had never once been exercised. This
+# job builds a THROWAWAY laravel/laravel host in a temp dir, installs this
+# package into it as a path repository, and asserts the onboarding path end to
+# end — all six providers auto-discovered by a real PackageManifest, every
+# vendor:publish tag landing its config, teleframe:doctor refusing fast instead
+# of hanging, every command present in `artisan list`, and all six facades
+# resolving, callable and THROWING on first real transport use rather than
+# silently dropping.
+#
+# WHY IT IS ITS OWN FILE AND NOT A JOB INSIDE regen-gates.yml — the decision is
+# mechanical, not stylistic, and regen-gates.yml's own exclusion block is where
+# the reasoning is recorded. That block observed that `resource_group:
+# teleframe-host-install` has NO GitHub Actions equivalent, because the nearest
+# construct — a `concurrency:` group — is declared per WORKFLOW, not per job.
+# Adding this job to regen-gates.yml would therefore have forced it to share
+# that file's group, which "would then ALSO serialise this file's gates against
+# it". Worse, that file runs `cancel-in-progress: true`, so a superseded regen
+# push would cancel a half-built host — giving this job the exact one property
+# its source refuses (`interruptible: false`). A separate file gets it its own
+# group AND its own cancellation policy without touching a single neighbour.
+#
+# ON THE THREE REASONS THE OLD EXCLUSION BLOCK GAVE FOR NOT PORTING — all three
+# were reasoned about a SHARED BARE-METAL GitLab runner and none of them holds
+# for a GitHub-hosted runner, which is why this job exists rather than a stub:
+#
+#   1. "needs network egress to Packagist for the Laravel install." A hosted
+#      runner has ordinary general internet egress; `composer create-project
+#      laravel/laravel` is the most standard public-network operation there is.
+#      The gate reads no credentials and needs no Telegram session — its only
+#      env inputs are TELEFRAME_HOST_TMPDIR and TELEFRAME_HOST_KEEP, both
+#      optional — and the host is built deliberately UNCONFIGURED. Nothing here
+#      touches Telegram or any secret.
+#   2. "mutates a host, so it opts out of interruptible: true." It mutates a
+#      THROWAWAY host under the runner's own /tmp, which the VM discards at the
+#      end of the job. The source's real concern — an interrupted host proving
+#      nothing about the package — is honoured exactly, by the `concurrency:`
+#      block below with `cancel-in-progress: false`.
+#   3. "carries resource_group because seven CI projects share one bare-metal
+#      runner." There is no shared machine to serialise against: every hosted job
+#      run gets a fresh ephemeral VM. The group is still declared below because
+#      the source declared it and it costs nothing — but it is now belt-and-
+#      braces rather than the mechanism.
+#
+# IT IS NOT A STUB, NOT `if: false`, AND NOT BEHIND AN UNSET SECRET. Those are
+# the "green check mark on a gate that checks nothing" shapes this file's
+# neighbours explicitly forbid, and the reachability test
+# (HostInstallGateTest::test_ci_runs_the_host_install_gate) rejects all three.
+#
+# DISTINCT EXIT CODES MATTER HERE, carried from bin/prove-host-install.php:37-45
+# because a gate that cannot say WHY it failed is a gate people learn to skip:
+#   0  clean tree — the package installs and boots in a fresh host
+#   1  a real regression — an assertion below failed
+#   2  usage / precondition — not run from the package root, or no composer
+#   3  the host build could not reach the network (an ENVIRONMENT failure, never
+#      a silent pass)
+#   4  the run MODIFIED this repository (git status drifted)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: host-install
+
+# The Actions-native form of `resource_group: teleframe-host-install` plus
+# `interruptible: false` (.gitlab-ci.yml:459-467). The group is NOT namespaced
+# with the workflow name, because the source's group deliberately spans jobs
+# across projects rather than serialising one project's own gates against
+# another.
+#
+# `cancel-in-progress: false` is LOAD-BEARING here and is the ONLY workflow in
+# this repository that sets it. A superseded push must NOT cancel a half-built
+# host: an interrupted host proves nothing about the package, which is the
+# source's own stated reason for `interruptible: false`. The cost is that a
+# burst of pushes queues host-install runs rather than superseding them; that is
+# the trade the source made too, and it is bounded because the job's own floor is
+# a single network install.
+concurrency:
+  group: teleframe-host-install
+  cancel-in-progress: false
+
+# `on:` carries the GitLab `workflow: rules:` behaviour for this stage — the
+# ordinary gates ran on push and merge-request. `workflow_dispatch` is the
+# Actions-native manual re-run. Deliberately NO `schedule:`: the historical cron
+# existed to reach `warm-live-host` and `host-install` on GitLab, and a nightly
+# schedule here would spend hosted minutes on a lane that already runs on every
+# push. See the schedule note in regen-gates.yml:101-106 for the same decision
+# taken there.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege. This job builds a host in /tmp, reads the repository, and
+# pushes nothing, publishes nothing and writes no package.
+permissions:
+  contents: read
+
+# Deterministic shell. The `php:8.4-cli` image's /bin/sh is dash; the GitLab
+# fences were written against a bash-ish shell, so name bash explicitly rather
+# than inheriting the container's.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # host-install — the "installs and boots in a real host app" gate
+  # (.gitlab-ci.yml:450-470)
+  # ───────────────────────────────────────────────────────────────────────────
+  host-install:
+    name: host-install (fresh laravel/laravel host, onboarding end to end)
+    runs-on: ubuntu-latest
+    # 45m, carried UNCHANGED and UNROUNDED from .gitlab-ci.yml:453-458, raised
+    # there from a measured 73s on pipeline 957. The floor of this job is a
+    # network install of a whole Laravel application, so the headroom is against
+    # a slow or contended network, not against this project's code: a slow
+    # mirror must not read as a hang, and a real hang must not hold a runner slot
+    # for ever. It is deliberately NOT tightened to the 73s measurement — that
+    # number came from a fast bare-metal runner with a warm composer cache and
+    # would fire on a cold hosted VM.
+    #
+    # In GitLab the 45m clock covers `before_script` and image pull, and in
+    # Actions `timeout-minutes` starts BEFORE the container is pulled, so the
+    # image-pull cost sits inside this budget in both systems. Sizing it any
+    # differently would make this job's red mean something different from the
+    # red it replaced.
+    timeout-minutes: 45
+    # `image: php:8.4-cli` is GitLab's shape. Its faithful Actions-native form
+    # is a JOB CONTAINER, not `runs-on: ubuntu-latest` with a hand-installed
+    # PHP — which is also what makes `docker-php-ext-install` available, because
+    # that function ships IN the php:*-cli images and nowhere else.
+    container: php:8.4-cli
+    env:
+      # Same three values, and the same reasoning, as the sibling jobs in
+      # regen-gates.yml — inlined per job because Actions has no YAML anchors
+      # (see that file's header for why no composite action exists yet).
+      #
+      # 3600 is sized against the SHARD budget rather than this job's own
+      # runtime, so a sibling lane's job is not constrained by this one's.
+      COMPOSER_PROCESS_TIMEOUT: "3600"
+      COMPOSER_ALLOW_SUPERUSER: "1"
+      # Root in the container, and pointed AT so the cache below is a real warm
+      # cache rather than a directory nothing writes to. On Linux composer's
+      # default cache dir is ~/.cache/composer, which is NOT the
+      # ~/.composer/cache/ the source cached; this pins it to the source's path
+      # so the port and the original warm the same bytes.
+      COMPOSER_CACHE_DIR: /root/.composer/cache
+    steps:
+      # ── SETUP FIRST, BEFORE CHECKOUT, AND THE ORDER IS LOAD-BEARING HERE ────
+      # Not a convention borrowed from regen-gates.yml — a REQUIREMENT of this
+      # gate specifically. `php:8.4-cli` DOES NOT SHIP GIT, so actions/checkout
+      # would fall back to a REST API tarball. A tarball is not a git work tree,
+      # so `git status --porcelain` returns empty, and the gate's
+      # "this repository was not modified" assertion
+      # (bin/prove-host-install.php:262 and :863) would compare "" against "" and
+      # PASS WITHOUT EVER RUNNING — a drift check silently reduced to a no-op,
+      # which is the exact "disabled gate that still prints success" shape this
+      # file forbids. Installing git first is what makes that assertion real.
+      # GitLab's runner injected its own tooling and never had this problem;
+      # Actions does not.
+      - name: Apt build deps + PHP extensions + composer (was .php-setup)
+        run: |
+          set -euo pipefail
+          # NOT optional, unlike the credential-guard's apt list: the extensions
+          # below compile against libgmp-dev / libzip-dev / libpq-dev /
+          # libicu-dev, and without them the HOST this job builds fails its own
+          # platform requirements. A failure here is fatal but is reported as a
+          # NAMED environment failure, so the next reader can tell "the runner
+          # is broken" from "the package is broken" without log archaeology.
+          # `--no-install-recommends` + the clean keep /var/cache/apt/archives
+          # from becoming the next "not enough free space".
+          apt-get update -qq || echo "apt-get update FAILED on this runner — if the next line fails too, this is a RUNNER disk/network problem, not a package problem"
+          apt-get install -y -qq --no-install-recommends git curl unzip libgmp-dev libzip-dev libpq-dev libicu-dev >/dev/null || { echo "FATAL — apt could not install the REQUIRED build deps (git curl unzip libgmp-dev libzip-dev libpq-dev libicu-dev)."; echo "        docker-php-ext-install cannot build gmp/zip/pdo_pgsql/intl without them, and the host this job builds would not satisfy composer.json's own platform requirements."; echo "        If the message above mentions free space or an unsigned repo, the RUNNER is degraded and no code was tested."; exit 1; }
+          apt-get clean && rm -rf /var/lib/apt/lists/*
+          # `intl` for a NAMED reason, not tidiness: composer.json requires
+          # ext-intl, and Normalizer is what makes message search tokens
+          # NFC-canonical (MessageSearchIndexer::toNfc). The host resolves this
+          # package's own platform requirements when the path repository is
+          # installed, so a missing intl kills the gate while it is still
+          # resolving dependencies — and it would look exactly like a package
+          # failure rather than a runner one.
+          docker-php-ext-install bcmath gmp zip pdo_pgsql sockets intl >/dev/null
+          # The official php:*-cli images ship memory_limit=128M. Raise it
+          # before anything runs rather than letting a container default decide
+          # whether the gate passes.
+          printf "memory_limit=1G\n" > /usr/local/etc/php/conf.d/ci-memory.ini
+          php -r 'printf("memory_limit=%s\n", ini_get("memory_limit"));'
+          curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --quiet
+          composer --version
+
+      # Deliberately fetch-depth 1, NOT the `fetch-depth: 0` its siblings carry.
+      # Full history is a COVERAGE requirement for bin/scan-credentials.php,
+      # which scans git HISTORY; this job runs no history scan, so a shallow
+      # clone costs nothing here and saves a full clone per push. What this job
+      # needs is a REAL git work tree at depth 1 — not the history — and the
+      # step below asserts that mechanically rather than assuming it.
+      - name: Checkout (a real git work tree — the gate diffs `git status`)
+        uses: actions/checkout@v4
+
+      # The mechanical proof that the checkout above produced a git work tree
+      # and not a REST tarball, because that distinction is invisible in the
+      # gate's own output: a tarball checkout makes `git status --porcelain`
+      # return empty, and an empty-vs-empty comparison PASSES. A gate that
+      # cannot fail is a wish, so the precondition is checked explicitly and
+      # named. Cheap, and it removes the one silent-pass path in this job.
+
+      # `actions/checkout@v4` does NOT mark the checkout as safe. The Actions
+      # runner checks the tree out as a different UID than the job shell runs
+      # as, so every `git` command afterwards refuses with `fatal: detected
+      # dubious ownership in repository at '$GITHUB_WORKSPACE'` and exits 128.
+      # Measured: the public-surface gate failed exactly this way, and
+      # `git ls-files` is how that gate enumerates the public surface — so
+      # this step is load-bearing for it, not a convenience.
+      - name: Trust the checkout (git safe.directory)
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Assert the checkout is a real git work tree (a disabled gate must fail loudly)
+        run: |
+          set -euo pipefail
+          if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+            # The gate script is named here as "prove-host-install.php" and
+            # deliberately NOT as its `bin/` path: this workflow's reachability
+            # check (HostInstallGateTest::test_ci_runs_the_host_install_gate)
+            # matches the literal `bin/prove-host-install.php` string anywhere in
+            # a job body, so quoting the full path inside a diagnostic MESSAGE
+            # would make this file look wired even with the real run step deleted
+            # — which is a green check mark on a gate that checks nothing, and
+            # the reason the real invocation at the bottom of this file is the
+            # ONLY occurrence of the path in any non-comment line here.
+            echo "FATAL — the workspace is NOT a git work tree. prove-host-install.php compares"
+            echo "        \`git status --porcelain\` before and after to prove it modified nothing, and"
+            echo "        outside a work tree both reads return empty — so the drift assertion would"
+            echo "        PASS WITHOUT EVER RUNNING. This is a DISABLED GATE, not a speed"
+            echo "        optimisation. Install git BEFORE checkout (see the setup step)."
+            exit 1
+          fi
+          echo "git work tree confirmed — $(git rev-parse --short HEAD)"
+
+      # Same block, same INTENT and same reasoning as in regen-gates.yml,
+      # inlined per job because Actions has no anchor syntax. Read the copy
+      # there for why the key is project-namespaced, lockfile-keyed, and
+      # deliberately NOT keyed on the ref.
+      #
+      # NOTE for this job specifically: composer.lock is gitignored (this is a
+      # LIBRARY), so `hashFiles('composer.lock')` hashes to the empty string
+      # until the project commits one. That is the same behaviour the GitLab
+      # source had with its `files:` list, and the restore-keys prefix is what
+      # keeps the warm cache usable in the meantime — the create-project/update
+      # pair below still gets a warm Packagist metadata cache, which is the
+      # expensive part.
+      - name: Composer cache (project-namespaced, lockfile-keyed, NOT ref-keyed)
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: teleframe-composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            teleframe-composer-${{ runner.os }}-
+
+      # .gitlab-ci.yml:469, carried verbatim. The package's own dev dependencies
+      # are not strictly needed by the gate, but the source installed them and
+      # carrying the line unchanged keeps this job's precondition identical to
+      # the red it replaces. It also writes nothing into the tree that the
+      # drift assertion below could trip on: composer.lock is gitignored and
+      # vendor/ is gitignored.
+      - name: composer install
+        run: composer install --no-interaction --prefer-dist
+
+      # .gitlab-ci.yml:470, carried verbatim and NOT reworded. This is the gate.
+      # Everything above is precondition; everything the gate exists to prove is
+      # inside this one script.
+      #
+      # Exit codes are documented at the top of this file and at
+      # bin/prove-host-install.php:37-45. A non-zero exit is this gate firing —
+      # with ONE exception that is worth naming rather than leaving to a future
+      # reader to guess at: exit 4 means `git status --porcelain` CHANGED while
+      # the gate ran, i.e. something else wrote into the checkout. On a hosted
+      # runner the only writer is the workflow itself, so exit 4 here means a
+      # step above this one leaked — which is a real defect and is left red.
+      - name: Prove the package installs and boots in a fresh host
+        run: php bin/prove-host-install.php

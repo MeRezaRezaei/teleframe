@@ -1,0 +1,431 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# fidelity-audit.yml — the fidelity auditor as a STANDALONE CI GATE.
+#
+# WHAT THIS FILE IS, AND WHY IT IS NOT A STEP INSIDE db-tracks.yml
+# ─────────────────────────────────────────────────────────────────────────────
+# `bin/audit-fidelity.php` compares the EXECUTED shipped relational schema
+# against Telegram's own data model (read from the .tl sources and the mirror
+# catalog) and reports every divergence with a named verdict. It is the only
+# thing in this repository that can see infidelity rather than mere
+# self-consistency — `MirrorRelationPlan` compares tables to tables, and
+# `EveryFkableRelationHasAConstraintTest` asks whether a declared relation HAS a
+# constraint, never whether the relation is what Telegram actually says.
+#
+# It DRIFTED for a long time before anyone noticed: the committed report went
+# stale while the tool moved on. The only thing catching it was
+# `tests/Schema/FidelityAuditIsCurrentTest.php`, which lives in the sharded
+# suite. A test inside a shard is a WEAK gate, because a shard that times out
+# can lose it silently — and this project's own doctrine holds that "a shard
+# that silently loses tests is worse than a slow job, because a slow job is
+# obviously slow". So the audit gets its own job, whose failure is a red row
+# with a name on it.
+#
+# PLACEMENT — a NEW FILE, not a new job in db-tracks.yml. Four reasons, in the
+# order they actually decided it:
+#
+#   1. THE GATE NEEDS A SERVICE, AND regen-gates.yml HAS NONE. `container:` and
+#      `services:` are per-job in Actions, so a new job there would be legal —
+#      but regen-gates.yml is deliberately the "no database, no secrets, just
+#      generate and compare" file, and this gate is the first thing in it that
+#      would carry a stateful service. Mixing the two blurs a distinction a
+#      reader currently relies on.
+#   2. A WRITE-WRITE COLLIDING FILE IS A WRITE-WRITE COLLISION. The other lanes
+#      in this port are editing db-tracks.yml, verify-php.yml and
+#      regen-gates.yml right now. A brand-new file has zero collision surface,
+#      and this file's own setup block is inlined per job — the same decision
+#      regen-gates.yml records at its header, and for the same reason (Actions
+#      has no YAML anchors, and a shared composite action under .github/actions/
+#      would be exactly the shared file every lane would then be editing).
+#   3. IT DESERVES ITS OWN IDENTITY IN THE UI. The failure mode being fixed is
+#      "nobody noticed for a long time". A job named `fidelity-audit (mysql:8.4)`
+#      is one addressable row; a step buried in a 30-minute db-tracks job is a
+#      thing you scroll to.
+#   4. db-tracks.yml's whole argument (its `needs: []` block, lines 446-486) is
+#      that the MySQL TRUTH TRACK is an INDEPENDENT engine lane and must not be
+#      sequenced behind anything. Appending a schema-fidelity gate to that file
+#      would make the track's identity answer to a gate that is not a track.
+#
+# ── WHY MySQL AND NOT SQLITE — this is the whole point of the gate ────────────
+# The tool says so in its own header ("ENGINE BLINDNESS, STATED RATHER THAN
+# PAPERED OVER"), and the mechanism is a single fact about a grammar file:
+# Laravel's SQLiteGrammar maps `typeInteger()` and `typeBigInteger()` to the
+# SAME declared word, `'integer'` (SQLiteGrammar.php:774,785). SQLite therefore
+# stores any integer in any integer-affinity column and enforces no width and no
+# signedness at all, so on SQLite the C1 (key width and signedness) check reports
+# "NOT MEASURABLE ON THIS ENGINE" and CANNOT produce a verdict.
+#
+# A SQLite-only gate would have been GREEN while the schema was wrong. That is
+# not hypothetical: it is exactly how `tf_wallpapers.id` shipped as `int` against
+# `tf_wallpapers_settings.id` as `bigint`, and how `tf_dialog_filters.id` shipped
+# as `int` against bigint children — both refused by MySQL with errno 3780 and
+# both invisible to SQLite. So `--engine=mysql` is REQUIRED here, and a run on
+# SQLite alone is not a weaker version of this gate, it is a different and much
+# blinder one.
+#
+# ── WHY `--check` AND NOT `--no-write` — read the tail of the tool ───────────
+# The exit is `exit($counts['UNEXPLAINED'] > 0 ? EXIT_DIVERGENCE : EXIT_CLEAN)`
+# (bin/audit-fidelity.php:2402), so `--no-write` alone exits 0 on a tree whose
+# only new findings are COPYING-GAP — and a COPYING-GAP is, in the tool's own
+# words, "THIS IS A DEFECT AND IT IS THE DELIVERABLE" (bin/audit-fidelity.php:64).
+#
+# `--check` STRICTLY DOMINATES it, and the reason is mechanical, not a matter of
+# taste: `--check` compares the freshly generated markdown against the committed
+# report and exits 1 on any difference (bin/audit-fidelity.php:2389-2394), and
+# only if the report matches does it fall THROUGH to the same UNEXPLAINED exit.
+# So one command covers both halves of the drift: the committed report going
+# stale, AND an unexplained divergence appearing. `--no-write` covers only the
+# second, and `--check` costs nothing extra — same run, same measurement.
+#
+# It is also the mode that makes the gate engine-pinned on purpose. The committed
+# report carries `| engine | mysql |` (docs/schema/fidelity-audit.md:29), so a
+# SQLite `--check` would report STALE on a perfectly healthy tree — a guaranteed
+# false red. Regenerating the report on SQLite is not "another view of the same
+# findings": SQLite produces 49 comparisons where MySQL produces 50 (C1 is
+# unmeasurable there), so the two reports are genuinely different documents and
+# exactly one of them can be the committed truth.
+#
+# ── EXIT CODES, so a red is readable without opening the source ──────────────
+#   0  the report is current AND there is no unexplained divergence
+#   1  the report is STALE, or UNEXPLAINED >= 1 — either way the gate fires
+#   2  usage or boot failure (e.g. the service never became reachable)
+# All three are non-zero-is-failure except 0. There is deliberately NO `|| true`,
+# NO `continue-on-error:` and NO soft-fail path anywhere in this file: a gate that
+# cannot fail is not a gate, and the file's one job is to be one that can.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: fidelity-audit
+
+# `default: interruptible: true` (.gitlab-ci.yml:159-169), carried in its
+# Actions-native form for the reason regen-gates.yml records: Actions has no
+# lint that rejects `interruptible` at the root, so the root is correct here.
+# This job mutates nothing outside its own service container and its own
+# throwaway database, so superseding a running one wastes only runner time.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Ordinary gates on push and merge-request, plus a manual dispatch. No
+# `schedule:` — nothing here reaches a disabled lane, and a nightly run would
+# burn hosted minutes to re-prove a property that changes only when the tree does.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege. This gate reads the repository, boots a throwaway database in
+# its own service container, and writes nothing back. It does not push, publish,
+# or write a package.
+permissions:
+  contents: read
+
+# Deterministic shell. The `php:8.4-cli` image's /bin/sh is dash; naming bash
+# makes the semantics explicit instead of inheriting the container's.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  fidelity-audit:
+    name: fidelity-audit (mysql:8.4)
+    runs-on: ubuntu-latest
+    # Sized, not guessed, and the derivation is recorded rather than asserted.
+    #
+    # MEASURED locally on the clean tree, 2026-10-11: `php bin/audit-fidelity.php
+    # --engine=mysql --check` takes 101-105s (it boots and migrates 261 tables
+    # against a real server, then reflects them back out of
+    # information_schema). The job's dominant cost is therefore NOT the gate —
+    # it is the same `composer install` plus `docker-php-ext-install` chain that
+    # regen-gates.yml's standalone-smoke job already budgets 15m for, and that job
+    # runs on a comparable hosted runner.
+    #
+    # 15m is deliberately NOT 30m (db-tracks.yml's budget): that figure is sized
+    # against a 1925s PHPUnit MySQL track, and this job runs no PHPUnit at all.
+    # It is deliberately NOT smaller: a timeout that can fire on a healthy runner
+    # is a coin, and this file's gate is a verdict about the schema, so a coin
+    # here would be a coin about the schema.
+    timeout-minutes: 15
+    container: php:8.4-cli
+    services:
+      mysql:
+        # The SAME image the MySQL truth track uses (db-tracks.yml:506). The audit
+        # measures what that track's engine actually enforces, so measuring it on
+        # a different MySQL would be measuring a different database.
+        image: mysql:8.4
+        env:
+          # Carried from db-tracks.yml:515-516 for the reason recorded there:
+          # mysql:8.4 ships MYSQL_ALLOW_EMPTY_PASSWORD rather than an auth plugin
+          # a PHP client can negotiate, and MYSQL_ROOT_HOST "%" is what makes
+          # root reachable from OUTSIDE the service container. Without it every
+          # connection from the job container is refused, which reads as a package
+          # failure rather than a configuration one.
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_ROOT_HOST: "%"
+          # MYSQL_DATABASE IS NOT OPTIONAL — it is the bug that cost the MySQL
+          # track two whole pipelines (db-tracks.yml:517-536, measured on GitLab
+          # pipelines 1588 and 1589). The mysql image creates exactly ONE
+          # database, the one named here, and creates NO others. Without it the
+          # fence below connects with `dbname=teleframe_fidelity_audit`, MySQL
+          # answers "Unknown database" forever, and the fence reports an
+          # unreachable service when the service is healthy the entire time.
+          #
+          # Note that the audit then DROPs and re-CREATEs this very database
+          # itself (bin/audit-fidelity.php, bootDialect: a connection whose
+          # database does not exist cannot create it, so the lifecycle runs on a
+          # databaseless handle first). This entry exists for the FENCE, not for
+          # the audit.
+          MYSQL_DATABASE: teleframe_fidelity_audit
+        # Readiness, waited for explicitly. Same limit as everywhere else in this
+        # port: `mysqladmin ping` answers for the SERVER, not for this PDO client
+        # with these credentials against this database — which is why the fence
+        # below still exists and is still the real gate.
+        options: >-
+          --health-cmd "mysqladmin ping --host=127.0.0.1 --user=root"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 30
+        ports:
+          - 3306:3306
+    env:
+      # Inside a job container a service is reachable at its service LABEL, which
+      # is why this is `mysql` and not `127.0.0.1` — the label is the only name
+      # that resolves from this container's network namespace.
+      TELEFRAME_MYSQL_HOST: mysql
+      TELEFRAME_MYSQL_PORT: "3306"
+      # This is the name the fence connects to AND the name the audit drops and
+      # recreates. It is namespaced per job on purpose: the tool issues
+      # `DROP DATABASE IF EXISTS` on it, so a shared name would let two
+      # concurrent runs destroy each other's database.
+      TELEFRAME_MYSQL_DATABASE: teleframe_fidelity_audit
+      TELEFRAME_MYSQL_USER: root
+      # SET EXPLICITLY TO EMPTY, NOT LEFT UNSET. The tool distinguishes the two:
+      # `getenv()` returns false when UNSET and '' when set-empty, and
+      # mysqlConfig() defaults an UNSET password to a local dev value rather than
+      # to '' (see the note there citing RunsMysqlMigrations.php:77-101 and a
+      # 56-error production run). An unset var here would silently send the wrong
+      # password; an explicitly empty one is the real, deliberate configuration
+      # that MYSQL_ALLOW_EMPTY_PASSWORD actually created.
+      TELEFRAME_MYSQL_PASSWORD: ""
+      #
+      # `TELEFRAME_MYSQL=1` is deliberately NOT set. It is the opt-in flag that
+      # tells the PHPUnit MySQL track to run at all; bin/audit-fidelity.php never
+      # reads it (verified: the tool reads only HOST/PORT/DATABASE/USER/PASSWORD).
+      # Setting it would claim a test-track opt-in this job does not need.
+      #
+      # Same sizing and same reasoning as every sibling job in this port — see
+      # regen-gates.yml's COMPOSER_PROCESS_TIMEOUT note for why 300s (composer's
+      # default) would kill this job instead of reporting a result.
+      COMPOSER_PROCESS_TIMEOUT: "3600"
+      COMPOSER_ALLOW_SUPERUSER: "1"
+      COMPOSER_CACHE_DIR: /root/.composer/cache
+    steps:
+      # ── SETUP FIRST, BEFORE CHECKOUT, AND THE ORDER IS LOAD-BEARING ─────────
+      # `php:8.4-cli` DOES NOT SHIP GIT. actions/checkout then falls back to
+      # downloading a REST API tarball instead of cloning, and a tarball has NO
+      # HISTORY — which would silently reduce `fetch-depth: 0` below to exactly
+      # the "disabled gate" the checkout comment is about. Installing git first
+      # is what makes the full-history requirement real rather than merely
+      # written down. GitLab's runner injected its own tooling and never had
+      # this problem; Actions does not.
+      - name: Apt build deps + PHP extensions + composer (was .php-setup)
+        run: |
+          set -euo pipefail
+          # Unlike credential-guard these packages are NOT optional:
+          # `docker-php-ext-install` below compiles against libzip-dev /
+          # libpq-dev / libicu-dev, and the job cannot open the autoloader
+          # without them. A failure here IS fatal, but it is reported as a NAMED
+          # environment failure rather than left as an anonymous apt exit code, so
+          # the next reader can tell "the runner is broken" from "the package is
+          # broken" without log archaeology.
+          apt-get update -qq || echo "apt-get update FAILED on this runner — if the next line fails too, this is a RUNNER disk/network problem, not a package problem"
+          apt-get install -y -qq --no-install-recommends git curl unzip libgmp-dev libzip-dev libpq-dev libicu-dev >/dev/null || { echo "FATAL — apt could not install the REQUIRED build deps (git curl unzip libgmp-dev libzip-dev libpq-dev libicu-dev)."; echo "        docker-php-ext-install cannot build gmp/zip/pdo_pgsql/intl without them, so this job cannot verify anything."; echo "        If the message above mentions free space or an unsigned repo, the RUNNER is degraded and no code was tested."; exit 1; }
+          apt-get clean && rm -rf /var/lib/apt/lists/*
+          # `intl` is a hard requirement, not tidiness: composer.json requires
+          # ext-intl, and bin/audit-fidelity.php opens vendor/autoload.php on
+          # line 136, which resolves the platform requirement. Without it
+          # `composer install` fails and this job dies looking exactly like a
+          # package failure. libicu-dev is the build dependency; the official
+          # php:*-cli images ship neither.
+          docker-php-ext-install bcmath gmp zip pdo_pgsql sockets intl >/dev/null
+          # The official php:*-cli images ship memory_limit=128M. Reflection over
+          # 261 tables and 2060 columns is the widest in-memory structure this
+          # job builds, so raise it before anything runs rather than letting a
+          # container default decide whether the gate passes.
+          printf "memory_limit=1G\n" > /usr/local/etc/php/conf.d/ci-memory.ini
+          php -r 'printf("memory_limit=%s\n", ini_get("memory_limit"));'
+          curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --quiet
+          composer --version
+
+      # fetch-depth: 0 — carried for the same reason as every sibling in this
+      # port. This job does not itself call the credential guard, but the
+      # shallow-checkout failure mode is not per-job: it is a property of
+      # whatever the checkout degrades into, and a job that clones shallow
+      # trains the next reader to think shallow is acceptable.
+      - name: Checkout (FULL history — see the fetch-depth comment)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # PROVE THE HISTORY IS THERE, mechanically, because "NON-NEGOTIABLE" that
+      # nothing checks is a wish. The check is seconds-long, not a test suite.
+      # Threshold 20 because 20 is Actions' DEFAULT depth: any count at or below
+      # it is the signature of a truncated fetch. The repository has hundreds of
+      # commits, so 20 is a floor that cannot produce a false red while catching
+      # every truncation.
+
+      # `actions/checkout@v4` does NOT mark the checkout as safe. The Actions
+      # runner checks the tree out as a different UID than the job shell runs
+      # as, so every `git` command afterwards refuses with `fatal: detected
+      # dubious ownership in repository at '$GITHUB_WORKSPACE'` and exits 128.
+      # Measured: the public-surface gate failed exactly this way, and
+      # `git ls-files` is how that gate enumerates the public surface — so
+      # this step is load-bearing for it, not a convenience.
+      - name: Trust the checkout (git safe.directory)
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Assert the clone is NOT shallow (a disabled gate must fail loudly)
+        run: |
+          set -euo pipefail
+          count=$(git rev-list --count HEAD)
+          shallow=$(git rev-parse --is-shallow-repository)
+          echo "commits reachable from HEAD — ${count} (shallow=${shallow})"
+          echo "commits reachable from HEAD — ${count}"
+          if [ "$shallow" = "true" ]; then
+            echo "FATAL — the clone is shallow (${count} commits). A shallow clone is a DISABLED"
+            echo "        GATE, not a speed optimisation. Fix \`fetch-depth\` before reading"
+            echo "        anything else."
+            exit 1
+          fi
+
+      # Composer cache. Project-namespaced and lockfile-keyed, NOT a bare ref
+      # slug, and the ref is deliberately absent — the same reasoning
+      # regen-gates.yml records at length. This repository is a library and
+      # .gitignore excludes composer.lock, so `hashFiles('composer.lock')`
+      # resolves to the EMPTY STRING today; the shared project-namespaced
+      # directory is the intended outcome and the hash starts tracking a real
+      # lockfile the moment the project commits one.
+      - name: Composer cache (project-namespaced, lockfile-keyed, NOT ref-keyed)
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: teleframe-composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            teleframe-composer-${{ runner.os }}-
+
+      # pdo_mysql FIRST, before composer even runs: mysqlnd is bundled in the
+      # image so this needs no additional apt package, and composer.json requires
+      # no ext-mysql, so nothing above this line was waiting on a driver it did
+      # not have. It is installed HERE and not in the shared setup above for the
+      # reason db-tracks.yml:437-444 records: the shared block is used by every
+      # other job, and adding a MySQL build to all of them would tax jobs with no
+      # use for it. The `PDO::getAvailableDrivers()` print is kept because "could
+      # not find driver" must be visible as a driver LIST, not as an audit
+      # verdict 400 lines later that looks like a schema finding.
+      #
+      # `composer validate` is NOT run here: it is a manifest gate, it belongs to
+      # the verify lane that already runs it, and adding it would be a second home
+      # for one rule.
+      - name: pdo_mysql + driver proof, then composer install
+        run: |
+          set -euo pipefail
+          docker-php-ext-install pdo_mysql >/dev/null
+          php -r 'print_r(PDO::getAvailableDrivers());'
+          composer install --no-interaction --prefer-dist
+
+      # ── FENCE: WAIT FOR MYSQL TO ACCEPT AN AUTHENTICATED CONNECTION ─────────
+      # Carried VERBATIM in shape and intent from db-tracks.yml:684-723. A real
+      # connection attempt, not a port probe and not `mysqladmin ping`, because
+      # mysql holds its port open while it initialises and only an authenticated
+      # connection proves it can serve this audit.
+      #
+      # 300s, not 90s, for the reason db-tracks.yml records: `Pulling docker
+      # image mysql:8.4` alone took 28s and the image INITIALISES A DATA
+      # DIRECTORY on first boot. 45 attempts was simply under budget and cost the
+      # MySQL truth track two pipelines. It costs nothing when the service is
+      # healthy — the loop exits on the first success — and the job's own 15m
+      # budget leaves ample room, so a 300s fence cannot become a job timeout.
+      #
+      # "Unknown database" in the LAST ERROR line means the service is HEALTHY
+      # and the DATABASE is missing — MYSQL_DATABASE above is what makes it exist.
+      - name: Fence — wait for mysql to accept an AUTHENTICATED connection
+        run: |
+          set -euo pipefail
+          php -r '
+            $deadline = time() + 300;
+            $dsn = sprintf("mysql:host=%s;port=%s;dbname=%s",
+                getenv("TELEFRAME_MYSQL_HOST"), getenv("TELEFRAME_MYSQL_PORT"), getenv("TELEFRAME_MYSQL_DATABASE"));
+            $attempt = 0;
+            $last = null;
+            while (time() < $deadline) {
+                $attempt++;
+                try {
+                    new PDO($dsn, getenv("TELEFRAME_MYSQL_USER"), getenv("TELEFRAME_MYSQL_PASSWORD"),
+                        [PDO::ATTR_TIMEOUT => 3, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+                    echo "mysql ready after {$attempt} attempt(s)\n";
+                    exit(0);
+                } catch (Throwable $e) {
+                    $last = $e->getMessage();
+                    // PRINT THE REAL REASON, at first and last. The previous
+                    // version of this fence printed only "not ready yet", which is
+                    // why a missing database was indistinguishable from an
+                    // unreachable service for two whole pipelines. A fence that
+                    // cannot say WHY it is failing is a fence that cannot be
+                    // debugged.
+                    if ($attempt === 1 || $attempt % 25 === 0) {
+                        fwrite(STDERR, "  attempt {$attempt}: ".$last."\n");
+                    }
+                    sleep(2);
+                }
+            }
+            fwrite(STDERR, "FATAL: mysql never became ready within 300s after {$attempt} attempt(s).\n");
+            fwrite(STDERR, "LAST ERROR: ".($last ?? "(none)")."\n");
+            fwrite(STDERR, "The service container started but never accepted an authenticated\n");
+            fwrite(STDERR, "connection to dbname=".getenv("TELEFRAME_MYSQL_DATABASE").".\n");
+            fwrite(STDERR, "Read the LAST ERROR line above before blaming the runner. An\n");
+            fwrite(STDERR, "\"Unknown database\" means MYSQL_DATABASE is not creating the\n");
+            fwrite(STDERR, "database this job asks for, and the service itself is healthy.\n");
+            exit(1);
+          '
+
+      # ── THE GATE ────────────────────────────────────────────────────────────
+      # ONE command, run under `set -euo pipefail`, with NOTHING between it and
+      # the job result. There is no `|| true`, no `continue-on-error:`, no `if:`
+      # around it and no second invocation that could mask the first: the exit
+      # code of this php process IS the exit code of this step, and a non-zero
+      # step is a red job.
+      #
+      # The flags are read off the tool's own parser (bin/audit-fidelity.php,
+      # parseOptions), not guessed:
+      #   php bin/audit-fidelity.php [--engine=sqlite|mysql] [--scope=ID,ID]
+      #        [--format=text|json] [--no-write|--check] [--inject=...]
+      #
+      # `--engine=mysql` is REQUIRED, not preferred — see the header. It is what
+      # makes integer width and signedness measurable at all, and it is the only
+      # form in which the C1 check can return a verdict rather than "NOT
+      # MEASURABLE ON THIS ENGINE".
+      #
+      # `--check` means: never write the report, compare a fresh generation
+      # against the committed one, and exit 1 on any difference. It also falls
+      # through to the tool's own UNEXPLAINED exit, so this single command covers
+      # both ways this gate can fire. It cannot write to the worktree, so a run
+      # here can never dirty a checked-out tree — which is also why `--no-write`
+      # is not added as a second step: `--check` already implies it.
+      #
+      # The `git status --porcelain` assertion afterwards is NOT a formality: it
+      # proves the gate did not MODIFY the tree it was judging. An audit that
+      # could quietly rewrite the very report it is checking would be able to
+      # certify its own drift, and `--check` is what makes that impossible — so
+      # this step asserts the property rather than trusting the flag.
+      - name: Fidelity audit — the shipped schema against Telegram, on real MySQL
+        run: |
+          set -euo pipefail
+          php bin/audit-fidelity.php --engine=mysql --check
+          # `--check` must not have written anything. A gate that edits the tree
+          # it is judging can certify its own drift.
+          touched=$(git status --porcelain -- docs/schema/fidelity-audit.md)
+          if [ -n "$touched" ]; then
+            echo "FATAL — the audit MODIFIED the committed report it was asked to check:"
+            echo "$touched"
+            echo "        \`--check\` never writes. If this fires, the tool's contract has changed and"
+            echo "        this gate can no longer be trusted to be read-only."
+            exit 1
+          fi
+          echo "docs/schema/fidelity-audit.md — unmodified by the audit, as \`--check\` promises"

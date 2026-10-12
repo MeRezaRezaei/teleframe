@@ -1,0 +1,104 @@
+# The verbatim archive stores user text byte-for-byte, including trailing spaces
+# and tabs the user actually typed. `git diff --check` must not "fix" them, or
+# the archive would stop being byte-for-byte — the one property it exists for.
+# `-whitespace` disables all whitespace rules for these paths; nothing else about
+# the files changes.
+docs/verbatim.md        -whitespace
+docs/verbatim/*.md      -whitespace
+
+# After the D-036 move the archive lives here. The protection has to follow the
+# files: `git diff --check` must not "fix" a trailing space the user actually
+# typed, and it only respects that per path, so naming the old location alone
+# would leave the archive unprotected at its new one.
+.brain/verbatim.md      -whitespace
+.brain/verbatim/*.md    -whitespace
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# --- THE MOVE: docs/ -> .brain/ (the operator's ruling, D-036) ---------------
+# The agent's own documentation used to live under docs/; it now lives under
+# .brain/. Both the destination AND the old names are marked, for two different
+# reasons, and both are needed:
+#
+#   .brain/**        is where those files are now.
+#   docs/<old names> are named because the public branch's strip commit deletes
+#                    them. If one is ever restored from an old checkout, or a
+#                    partial merge re-adds it, these attributes stop the merge
+#                    from resurrecting it on the private side. A strip-set entry
+#                    for a path that does not exist costs nothing and catches
+#                    the regression that would otherwise publish it.
+# PRIVATE-ONLY PATHS — `merge=ours`
+#
+# WHY THIS BLOCK EXISTS. Decision D-035 splits this repository in two: the
+# PRIVATE repo is the whole thing, the PUBLIC repo is a sanitized copy produced
+# from the allowlist in bin/public-manifest.txt. The split direction is
+# private -> public, and the public repository's default branch therefore
+# carries a STRIP COMMIT that deletes every private-only path.
+#
+# The consequence, if nothing here stops it: merging the public branch BACK
+# into this private repository propagates those deletions, and the private-only
+# files are deleted from the private repo too — by a commit that was authored in
+# a repository that was never supposed to know those files existed. That is the
+# one way this split can destroy the thing it is protecting.
+#
+# `merge=ours` is git's BUILT-IN merge driver. On a path carrying it, when the
+# other side deletes the file and this side modified it, the merge KEEPS THIS
+# SIDE'S VERSION and never takes the deletion. It needs no `git config`, no
+# `.gitattributes` in the other repository, and nothing set up on the runner —
+# per-path scoping here is the whole mechanism, and it is the documented way to
+# express "this file exists only on my side of the merge".
+#
+# WHAT IT DELIBERATELY DOES NOT DO. `merge=ours` resolves CONFLICTS; it does not
+# stop a delete/modify pair from being auto-resolved quietly in this file's
+# favour — which is the point. It is one-directional by design: it protects
+# these paths from the public branch, and it says nothing about a change that
+# travels private -> public. That direction is governed by the allowlist and by
+# bin/check-public-surface.php, which fails the build if any path listed here is
+# ever tracked in the public tree.
+#
+# `merge` and `-whitespace` are SEPARATE attribute namespaces, so the two blocks
+# above and below compose on the same paths: `docs/verbatim.md` and
+# `docs/verbatim/*.md` get BOTH the whitespace exemption above and the merge
+# protection here. Nothing above was changed to make room for this.
+#
+# The list is decision D-035's private-only set. Keep it in step with
+# bin/check-public-surface.php's PRIVATE_ONLY array — a private path present in
+# one and absent from the other is a real defect, not a cosmetic drift.
+.brain/**                     merge=ours
+.ledger/**                    merge=ours
+.opencode-ci/**               merge=ours
+inspection-snapshot/**        merge=ours
+docs/verbatim.md              merge=ours
+docs/verbatim/**              merge=ours
+docs/subagents/**             merge=ours
+docs/evidence/**              merge=ours
+docs/test-reports/**          merge=ours
+docs/plans/**                 merge=ours
+docs/decisions.md             merge=ours
+docs/agent-registry.md        merge=ours
+docs/agent-identities.md      merge=ours
+HANDOFF.md                    merge=ours
+.warm-ledger.json             merge=ours
+.credential-guard-baseline    merge=ours
+
+# the destination: everything the agent owns now lives here
+.brain/**                      merge=ours
+
+# the old locations, kept marked so a restore cannot resurrect them
+docs/subagents/**              merge=ours
+docs/verbatim/**               merge=ours
+docs/verbatims/**              merge=ours
+docs/evidence/**               merge=ours
+docs/test-reports/**           merge=ours
+docs/plans/**                  merge=ours
+docs/superpowers/**            merge=ours
+docs/decisions.md              merge=ours
+docs/decisions/**              merge=ours
+docs/agent-registry.md         merge=ours
+docs/agent-identities.md       merge=ours
+docs/verbatim.md               merge=ours
+docs/verbatim-report.md        merge=ours
+docs/verbatim-goals.md         merge=ours
+docs/verbatim-coverage.md      merge=ours
+docs/repo-status.md            merge=ours
+docs/what-has-been-done.md     merge=ours
