@@ -1,0 +1,25 @@
+<?php
+
+// GENERATED — do not edit; run artisan teleframe:regenerate
+
+declare(strict_types=1);
+
+namespace MeRezaRezaei\Teleframe\Schema\Generated\Data\Methods;
+
+use Spatie\LaravelData\Data;
+
+/** Request DTO for RPC method aicompose.getTone (crc32 b2e8ba03), returns aicompose.Tones. */
+final class TlAicomposeGetToneData extends Data
+{
+    public const METHOD = 'aicompose.getTone';
+
+    public static function method(): string
+    {
+        return self::METHOD;
+    }
+
+    public function __construct(
+    public mixed $tone,
+    ) {
+    }
+}

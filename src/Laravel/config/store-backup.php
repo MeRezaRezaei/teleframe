@@ -1,0 +1,254 @@
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Teleframe Store Backup — the DB-dump surface (design 2026-09-24 §7)
+|--------------------------------------------------------------------------
+| Merged into config under the `teleframe.store.backup` key by
+| StoreBackupServiceProvider (this package's OWN provider — registered via
+| composer.json extra.laravel.providers, deliberately NOT hooked into
+| TeleframeServiceProvider). Hosts may publish and override any key; the
+| facade resolves `teleclient.store.backup.service` from these.
+|
+| The verbatim's default install: a Laravel host dumps its database on a
+| schedule into a per-bucket Telegram channel (sealed by default), keeps a
+| run ledger, and heartbeats the Notify gap watchdog so a missed dump
+| alerts on `backup.missing`.
+|
+| Runtime posture: DB credentials are env-at-run ONLY (MYSQL_PWD /
+| PGPASSWORD in the forked dump process env — ps-safe) — never argv,
+| never config, never manifests/index rows/queue payloads/logs. There is
+| deliberately NO TELEFRAME_STORE_BACKUP_PASSWORD key, ever.
+*/
+
+return [
+
+    /* MASTER SWITCH — gates the backup WATCHDOG. false = no watchdog
+       registration, and the hourly `teleframe:notify watch --check` is not
+       scheduled either. The DUMP still runs: this is not a kill switch for
+       teleframe:tstore backup, only for watching it.
+
+       StoreBackupServiceProvider has ONE reader of this key — masterEnabled() —
+       and both call sites require it to be true:
+         masterEnabled()                returns this key's own value
+         backupWatchSource()            registers the 'backup' expectation,
+                                         so false = no expectation to miss
+         scheduleBackupWatchdogCheck()  false = no hourly check scheduled
+       (backupWatchSource's `! master || ! scheduled` is De Morgan over two
+       INDEPENDENT conditions — both must hold. The two switches are never
+       folded into one term, which is what used to absorb this key.)
+
+       WHAT false DOES NOT DO, and does not claim to: it does not disable the
+       dump, and it does not stop a successful run recording its heartbeat —
+       the producer side is DatabaseBackupService's touch, which reads no
+       config. What stops is the EXPECTATION and the CHECK: nothing looks for
+       a missing dump and nothing polls. This switch governs the watchdog, not
+       the module — to stop the module itself, use schedule.enabled below
+       (which also silences the watchdog registration) or drop the binding.
+
+       BEHAVIOUR CHANGE (dead-config audit 2026-09-27, deliberate): this key
+       used to be folded into `master || schedule.enabled` and then gated on
+       `! enabled || ! schedule.enabled`, and that reduces to
+       `! schedule.enabled` — the master term was absorbed, so setting this to
+       false with the shipped schedule.enabled=true skipped NOTHING: the
+       expectation was still registered and the hourly check still scheduled.
+       A host that set it false was paying for a watchdog it had switched off.
+       It now gets neither, which is what it asked for. The change is visible
+       (the entries simply are not registered) rather than silent-but-present.
+
+       Default true, so a default install is unaffected. */
+    'enabled' => (bool) env('TELEFRAME_STORE_BACKUP_ENABLED', true),
+
+    'schedule' => [
+        /* Per-schedule switch (design §5: the default install ships it ON
+           — the watchdog heartbeat is live from day one, no Temporal
+           required). GATES THE WATCHDOG REGISTRATION: with this false the
+           'backup' heartbeat is not expected, so no missing dump is ever
+           reported, whatever the master switch says.
+
+           This comment used to say it was the only working switch "because
+           the master `enabled` above is absorbed by the readers' boolean
+           algebra". That absorption is gone — the master switch above is read
+           honestly now (see its comment) and BOTH must be true for the
+           watchdog to be armed. This key is the one that also stays false
+           when a host only wants on-demand dumps with no no-show alerting. */
+        'enabled' => (bool) env('TELEFRAME_STORE_BACKUP_SCHEDULE_ENABLED', true),
+        /* Daily default (verbatim: "backup ... in schedules"). */
+        'interval_seconds' => (int) env('TELEFRAME_STORE_BACKUP_INTERVAL', 86400),
+        /* SchedulePublisher seam: 'null' (off — probe only) or 'temporal'.
+           NULL DEFAULT = the one-line cron posture:
+           `0 0 * * * cd $APP && php artisan teleframe:tstore backup`.
+
+           READ THIS BEFORE SETTING IT TO 'temporal'. 'temporal' needs the
+           Temporal PHP SDK, an OPTIONAL runtime dependency of this package
+           (require-dev here, on purpose). With `composer require
+           temporal/sdk` present the package builds its own SDK-backed
+           recurring client and arms interval_seconds with no code of yours. An
+           app that binds
+           MeRezaRezaei\Teleframe\Store\Schedules\RecurringScheduleClient in the
+           container WINS over that, verbatim; bind the one-shot
+           ...\Schedules\TemporalScheduleClient instead and it can only start a
+           single run per install. With neither, the key REFUSES AT BOOT by
+           name and never degrades to 'off' — keep 'null' + cron until then. */
+        'publisher' => env('TELEFRAME_STORE_BACKUP_SCHEDULES', 'null'),
+        /* Frontend address handed to your bound Temporal client. Nothing in
+           this package dials it — your TemporalScheduleClient does. */
+        'dsn' => env('TELEFRAME_STORE_BACKUP_TEMPORAL_DSN', '127.0.0.1:7233'),
+        /* Task queue your bound client posts the schedules to. Read by the
+           provider; it was previously read from a key no config file defined,
+           so it could only ever have been the default. */
+        'task_queue' => env('TELEFRAME_STORE_BACKUP_TEMPORAL_TASK_QUEUE', 'default'),
+        /* Watchdog grace: expect-every = interval × this (default one
+           missed cycle + grace); floor 3600 s enforced in the provider. */
+        'watchdog_expect_multiplier' => (int) env('TELEFRAME_STORE_BACKUP_WATCHDOG_MULT', 2),
+    ],
+
+    'target' => [
+        /* 0 = reuse teleframe.tstore.account_id (the MTProto account whose
+           dialogs host the store buckets). */
+        'account_id' => (int) env('TELEFRAME_STORE_BACKUP_ACCOUNT', 0),
+        /* Bucket name → the registry title is 'teleframe-backup:'.$bucket
+           (ChannelRegistry::PREFIX_BACKUP). */
+        'bucket' => env('TELEFRAME_STORE_BACKUP_BUCKET', 'default'),
+        /* 0 = the OWNED-channel posture: no peer identity, so the provider
+           does not build a PeerTargetRegistry row from this block at all
+           (StoreBackupServiceProvider::targetRows() returns [] unless a peer
+           id is present) and DatabaseBackupService acquires the
+           channel itself.
+
+           ADDED (dead-config audit 2026-09-27). peer_id/access_hash were read
+           by targetRows() and PeerTargetRegistry::targetFromRow() but were
+           NOT DECLARED here, so the documented singular-block fallback was
+           unreachable by configuration alone. Same defect shape as the
+           task_queue key Cycle 19 recorded. Set peer_id to the peer id and
+           access_hash to its access hash to route the default row at an
+           existing channel/group; leave both 0 for the owned channel.
+
+           READ only in combination with access_hash below, and only on the
+           non-owned-peer posture. */
+        'peer_id' => (int) env('TELEFRAME_STORE_BACKUP_PEER_ID', 0),
+        // The access hash that goes with peer_id above (non-numeric is
+        // refused loudly by PeerTargetRegistry::targetFromRow()).
+        // READ only in combination with peer_id above.
+        'access_hash' => (int) env('TELEFRAME_STORE_BACKUP_ACCESS_HASH', 0),
+        /* channel|group — wave-2 non-bot peers; slice 1 = the owned
+           broadcast channel. READ ONLY when peer_id above is non-zero (it is
+           then consumed by PeerTargetRegistry, which refuses any value
+           outside channel|group); ignored entirely on the owned-channel
+           posture, which is always sealed. */
+        'peer_type' => env('TELEFRAME_STORE_BACKUP_PEER_TYPE', 'channel'),
+        /* Sealed default ("put pass on whatever you send there"). Read on
+           BOTH postures: DatabaseBackupService takes it as the ctor secret
+           (StoreBackupServiceProvider::registerService()). */
+        'passphrase' => env('TELEFRAME_STORE_BACKUP_PASSPHRASE', ''),
+        /* raw|sealed, default sealed. Read only on the peer_id posture, by
+           PeerTargetRegistry (:158) — a group in raw mode is refused. The
+           owned-channel posture is always sealed regardless of this value. */
+        'mode' => env('TELEFRAME_STORE_BACKUP_MODE', 'sealed'),
+        /* Wave 2: int[]|string[] user ids/usernames to invite — never
+           session strings. Read only on the peer_id posture, by
+           PeerTargetRegistry (:168). */
+        'members' => [],
+    ],
+
+    /* Wave 2-D multi-target rows (design §6 channel/group targets). Each
+       row is ONE backup destination beyond the singular 'default' target
+       above — bucket (registry title suffix, ChannelRegistry::PREFIX_BACKUP
+       . $bucket), peer_id + access_hash (the dialed inputPeerChannel),
+       peer_type channel|group, mode, the seal passphrase, and members.
+
+       peer_type: 'channel' (owned broadcast channel OR a channel the
+       account was added to) | 'group' (supergroup the account joined or
+       was invited into) — both dial as inputPeerChannel, so the existing
+       send path works unchanged; what differs is membership semantics.
+
+       members: int[]|string[] user ids/usernames to invite via
+       PeerMembership::ensureMember (channels.inviteToChannel) — NEVER
+       session strings.
+
+       Non-owned peers REQUIRE mode=sealed ("put pass on whatever you send
+       there") — a row IS a decision; config-merge refuses raw for them.
+       The singular 'target' block stays the back-compat default: when
+       'targets' is empty the provider builds the registry from the
+       singular block (i.e. the default row), so existing installs are
+       untouched. */
+    'targets' => [
+        // [
+        //     'bucket' => 'nightly',
+        //     'peer_id' => 0,
+        //     'access_hash' => 0,
+        //     'peer_type' => 'channel',   // channel|group
+        //     'mode' => 'sealed',
+        //     'passphrase' => env('TELEFRAME_STORE_BACKUP_TARGET_NIGHTLY_PASSPHRASE', ''),
+        //     'members' => [],            // int[]|string[] user ids/usernames to invite
+        // ],
+    ],
+
+    'database' => [
+        /* '' = unconfigured (read the host DB config at run time). The
+           provider binds a dumper that still lets the service construct
+           and throws loud on first dump() — no silent no-op. */
+        'driver' => env('TELEFRAME_STORE_BACKUP_DB_DRIVER', ''),
+        'host' => env('TELEFRAME_STORE_BACKUP_DB_HOST', ''),
+        'port' => (int) env('TELEFRAME_STORE_BACKUP_DB_PORT', 0),
+        'database' => env('TELEFRAME_STORE_BACKUP_DB_DATABASE', ''),
+        'user' => env('TELEFRAME_STORE_BACKUP_DB_USER', ''),
+        'socket' => env('TELEFRAME_STORE_BACKUP_DB_SOCKET', ''),
+        /* Optional table whitelist; [] = whole database. */
+        'tables' => [],
+        // password: env-only at run time (MYSQL_PWD / PGPASSWORD) — never in config/rows/logs
+    ],
+
+    /* WHERE A DUMP IS SPOOLED before it is uploaded. This comment used to be a
+       DEAD warning (dead-config audit 2026-09-27): the key was read by nothing,
+       because the only DumpWorkspace the backup path built was
+       `new DumpWorkspace` with NO argument, so $dir was always '' and every
+       dump landed in sys_get_temp_dir()/teleframe-dumps — never in host
+       storage. The DumpWorkspace docblock repeated the same false claim.
+
+       IT IS NOW WIRED. Chain, all three hops real:
+         this key
+           → StoreBackupServiceProvider::registerService() passes spoolDir:
+           → DatabaseBackupService::__construct(… , string $spoolDir = '')
+           → backup() builds `new DumpWorkspace($this->spoolDir)`
+       So this comment no longer claims a default it does not have: a
+       configured value IS the directory used, and '' (the default) means
+       the sys_get_temp_dir()/teleframe-dumps fallback, verbatim.
+
+       LAZY BY CONSTRUCTION, deliberately: nothing reads this at register()
+       time, no directory is resolved or created, and the mkdir(0700) still
+       happens on the first spool() — so a wrong path fails loud at the first
+       dump instead of at boot, and the smoke gate still constructs the
+       module with no container. Point it at a host volume when system temp is
+       too small, ephemeral, or on another filesystem. */
+    'spool_dir' => env('TELEFRAME_STORE_BACKUP_SPOOL_DIR', ''),
+
+    /* sync|amqp — the upload queue driver the BACKUP runs on; reuses the
+       tstore upload queue seams (there is ONE queue: the backup dump is
+       uploaded by the same StoreService the tstore seam builds, so this key
+       decides which driver builds the shared teleclient.tstore.queue).
+       Read by StoreBackupServiceProvider::registerUploadQueue().
+
+       LEDGER RULING SATISFIED — THIS KEY IS WIRED (dead-config audit
+       2026-09-27). docs/verbatim-goals.md still records
+       TELEFRAME_STORE_BACKUP_QUEUE as "deliberately NOT wired ... to be
+       either wired or removed, not silently left". That record is STALE:
+       registerUploadQueue() exists and reads this key inside
+       StoreBackupServiceProvider::registerUploadQueue().
+
+       It is not merely read, it WINS. Container::bind() is last-write-wins
+       on the abstract, and composer.json extra.laravel.providers lists
+       TeleframeServiceProvider (which binds teleclient.tstore.queue) at
+       index 0 and this package's StoreBackupServiceProvider (which rebinds
+       the same key) at index 2 — so 'amqp' here overrides the tstore driver,
+       and the tstore StoreService singleton resolves the queue lazily, after
+       every provider has registered. No provider change is outstanding for
+       this key.
+
+       '' | 'sync' (the default) DEFER to teleframe.tstore.queue — a host's
+       existing tstore config is untouched. 'amqp' names a driver and
+       overrides it (broker options stay teleframe.tstore.amqp.*). Any other
+       value throws LOUD at resolve time — a backup that quietly degrades to
+       an inline upload is the failure this key exists to prevent. */
+    'queue' => env('TELEFRAME_STORE_BACKUP_QUEUE', 'sync'),
+];

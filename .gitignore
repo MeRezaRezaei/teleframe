@@ -1,0 +1,72 @@
+vendor/
+.phpunit.result.cache
+.phpunit.cache/
+.env
+composer.lock
+
+.superpowers/
+.openclaude/
+.opencode/
+schema/audit-report.md
+schema/ddl/
+MadelineProto.log
+
+# monorepo: per-package vendor + caches
+packages/*/vendor/
+packages/*/.phpunit.cache/
+
+# orchestral/testbench boots a Laravel app rooted here and requires this cache dir
+bootstrap/cache/
+
+# embedded Telegram Web client (telegram-tt) — cloned source + node_modules + built dist
+# (npm output is not portable; rebuild via bin/build-tgweb.sh)
+/tgweb/
+
+# runtime logs
+/storage/logs/*.log
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Internal agent / derived artefacts. Appended by D-035; nothing above was
+# changed, and nothing here may be reverted — these are untracked BY DESIGN and
+# each one is also listed in bin/check-public-surface.php's private-only set.
+#
+# NOTE ON WHAT IS DELIBERATELY ABSENT: `.credential-guard-baseline` is NOT
+# ignored. It is a tracked receipt that the credential guard READS to ratchet
+# its findings, not a suppression list — ignoring it would make the guard's
+# baseline disappear from a fresh clone and silently reset what it has already
+# proven. It is a private-only path (so it carries `merge=ours` in
+# .gitattributes), but "private" and "untracked" are different things.
+#
+# MECHANICAL NOTE, because it is a real trap in this file's syntax: a `#` only
+# starts a comment at the BEGINNING of a line. A trailing `# text` becomes part
+# of the PATTERN, so every entry below puts its comment on its own line above
+# the path rather than after it. `git check-ignore` is the gate for that.
+
+# agent working state (private, never published)
+.ai/
+
+# generated knowledge graph — derived, rebuilt by `graphify update .`
+graphify-out/
+
+# local inspection snapshots of the real app
+inspection-snapshot/
+
+# per-commit warm/ledger indexes (see also the TRACKED .warm-ledger.json)
+.ledger/
+
+# `.brain/` IS NOT IGNORED, and that is deliberate.
+#
+# It used to be listed here, back when it held a handful of files while the
+# agent's real documentation lived under docs/ (D-035). D-036 moved that
+# documentation INTO .brain/, which makes it the canonical, TRACKED home: the
+# verbatim archive, the decision log, the plans, the registry and the per-lane
+# transcripts all live there and must version with the repository.
+#
+# Gitignore is not privacy. Nothing here is kept out of the PUBLIC repository by
+# being ignored — it is kept out by bin/public-manifest.txt and by the strip set
+# in bin/check-public-surface.php, both of which fail the build when an internal
+# path reaches the public tree. Ignoring .brain/ would only have had the effect
+# of silently dropping new files from the agent's own history.
+
+# the agent's own CI config + AGENTS.md copy, read by the opencode CI lanes
+.opencode-ci/

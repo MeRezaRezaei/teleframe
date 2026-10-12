@@ -1,0 +1,565 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Teleframe Temporal worker — the process that makes an armed schedule mean
+ * something.
+ *
+ * Usage:
+ *   php bin/teleframe-worker                             # poll the 'default' task queue
+ *   php bin/teleframe-worker --task-queue=tstore         # the queue the schedules were armed on
+ *   php bin/teleframe-worker --describe                  # what this worker would serve, and exit
+ *   php bin/teleframe-worker --app=echo --call=health    # serve one app-call workflow type
+ *   php bin/teleframe-worker --bootstrap=/path/to/host   # bind the seams from a real Laravel host
+ *   php bin/teleframe-worker --seam-file=/path/seams.php # bind the seams from a non-Laravel host
+ *   php bin/teleframe-worker --buckets=alpha,beta        # this worker's fallback bucket list
+ *   php bin/teleframe-worker --help
+ *
+ * WHY THIS EXISTS. SdkTemporalScheduleClient arms a real server-side Temporal
+ * schedule whose action is StartWorkflowAction::new($type) — a RAW STRING. A
+ * schedule whose workflow type nothing implements still reports
+ * "armed %s recurring every %ds" from TemporalSchedulePublisher, so before this
+ * entry point a host that set TELEFRAME_STORE_BACKUP_SCHEDULES=temporal and
+ * installed temporal/sdk got a green line for a job that could never run.
+ * This process registers the workflow and activity types those three spec
+ * producers emit, so the armed string names a real handler.
+ *
+ * THE TASK QUEUE MUST MATCH THE ONE THE SCHEDULES WERE ARMED ON. The publisher
+ * arms with the spec's `task_queue` (or its own default); a worker polling a
+ * different queue is a worker that never sees a tick. --describe prints the
+ * queue it would poll for exactly this reason.
+ *
+ * THE SEAMS, AND WHY THE DEFAULT STILL REFUSES. Every activity here resolves
+ * its Laravel collaborator through ONE ContainerResolver seam, on the tick and
+ * never in a constructor. This script therefore has no container of its own —
+ * it is a bin entry point precisely so that no service provider had to be
+ * edited to add one — and the default is ContainerResolver::refusing(). With
+ * nothing bound, each tick throws naming the seam it needs, rather than running
+ * an activity that reports success having done nothing. That default is
+ * deliberate, so NOTHING here boots a host application on its own: an operator
+ * has to ask for a container, with EXACTLY ONE of two mutually exclusive flags
+ * (both at once is a named refusal, because they are two answers to one
+ * question):
+ *
+ *   --bootstrap=PATH   A real Laravel host. PATH is either the host's directory
+ *                      or its bootstrap/app.php. The file returns the
+ *                      application, the application IS the container, and it is
+ *                      booted through the host's own console kernel exactly as
+ *                      bin/prove-host-install.php does. The seams are then bound
+ *                      from it by LaravelWorkerBindings — a factory per BOUND
+ *                      seam only, so an unbound seam still refuses.
+ *   --seam-file=PATH   A host that is not Laravel-shaped. PATH is a PHP file
+ *                      that must RETURN a
+ *                      MeRezaRezaei\Teleframe\Store\Schedules\Worker\ContainerResolver.
+ *                      A non-object, an object of another class, or a file that
+ *                      throws is a NAMED refusal and exit 1 — never a silent
+ *                      fall back to the refusing default, because that fallback
+ *                      is a worker that quietly does nothing.
+ *
+ * --buckets=a,b,c is THIS WORKER's own fallback bucket list for the scheduled
+ * registry sweep, and it is a fallback only: a schedule's own payload takes
+ * precedence, and a payload that names a `buckets` value — even an empty one —
+ * wins outright. Only a payload that names none reaches this list, and with
+ * neither the sweep runs with an EMPTY list, which is precisely
+ * `php artisan teleframe:tstore sync` with no --buckets. The list is normalised
+ * the way StoreSyncActivity normalises a payload value: comma-split, each
+ * element trimmed, empty elements dropped.
+ *
+ * WHAT THIS DOES NOT PROVE. It has never been run against a live Temporal
+ * server. The registration is proven against the real SDK's own readers in
+ * tests/Store/TemporalWorkerRegistrationTest.php; server-side dispatch is not.
+ * Nothing in the seam section above weakens that: BOUND SEAMS ARE NOT PROOF A
+ * SERVER EVER DISPATCHES A TICK. A binding proves the worker can reach a
+ * collaborator if a tick arrives; that a tick arrives, and that the activity
+ * then succeeds against a live Telegram account, is untested here.
+ *
+ * The worker is a LONG-RUNNING process: it needs a Temporal server reachable
+ * over gRPC and a RoadRunner (or compatible) host to poll through. Run it the
+ * way you run any long-running process (systemd, supervisord, the package's own
+ * `php artisan teleframe:supervise --process=…` if you catalogued it).
+ */
+
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Contracts\Container\Container;
+use MeRezaRezaei\Teleframe\Store\Schedules\Worker\ContainerResolver;
+use MeRezaRezaei\Teleframe\Store\Schedules\Worker\LaravelWorkerBindings;
+use MeRezaRezaei\Teleframe\Store\Schedules\Worker\TemporalWorker;
+
+/**
+ * Refuse, LOUDLY and BY NAME, then exit 1.
+ *
+ * Never a deprecation, never a warning, never exit 0 on a misconfiguration. A
+ * worker that quietly does nothing is the exact failure this script exists to
+ * make visible, so every wrong input leaves through here.
+ */
+function tf_worker_refuse(string $message): never
+{
+    fwrite(STDERR, 'Teleframe worker: '.$message."\n");
+
+    exit(1);
+}
+
+/**
+ * The seam posture, as lines for --describe.
+ *
+ * With a container, the honest paragraph and the bound/unbound split come from
+ * LaravelWorkerBindings, which is the class that knows the seam catalog. With
+ * NO container the paragraph is written out by hand here, on purpose: "no
+ * container was given" is the DEFAULT posture, and the default may not depend
+ * on a class that only exists to serve a flag. That is why the refusing
+ * sentence below is prose and not a loop over a catalog.
+ *
+ * $route is NULL when no container route was given at all, and otherwise the
+ * sentence naming the route that WAS accepted. The two are NOT the same and
+ * must not print the same thing: a `--seam-file` whose resolver happens to bind
+ * nothing is a host that DID hand over a container route and got an empty one,
+ * and telling that operator "NO CONTAINER WAS GIVEN" erases the one fact they
+ * would have asked --describe to confirm. (An earlier version of this function
+ * branched on the resolver's emptiness instead of on the route, so the two
+ * cases printed byte-identical output and the flag vanished from the report.)
+ *
+ * @param  null|string  $route  null = no container route was given
+ */
+function tf_worker_seam_report(?LaravelWorkerBindings $bindings, ContainerResolver $resolver, ?string $route): string
+{
+    if ($route === null) {
+        $bound = $resolver->seams();
+
+        if ($bound !== []) {
+            // THIS BRANCH IS A GUARD, NOT A COURTESY. No route given and yet a
+            // seam is bound is unreachable from this script's own code — the
+            // default is `ContainerResolver::refusing()` and only the two flag
+            // routes ever bind. It is reachable by EDITING this script, which is
+            // exactly when a hardcoded disclosure is most dangerous: the
+            // paragraphs below assert "binds no factory for any seam" and "every
+            // tick fails", and printing them over a resolver that has a factory
+            // would make this report state the opposite of the truth about the
+            // worker's own behaviour. So it reports what is actually bound.
+            return implode("\n", [
+                'Seam posture: NO CONTAINER ROUTE WAS GIVEN, BUT THE RESOLVER HAS '.
+                    strtoupper((string) count($bound)).' SEAM(S) BOUND: '.implode(', ', $bound).'.',
+                'That is NOT what this entry point does when it is run with no flags — its default is '
+                    .ContainerResolver::class.'::refusing(), which binds nothing — so either this script has been '
+                    .'edited, or a future default changed the posture without changing this report. Treat the '
+                    .'sentence below as unverified: what a tick actually reaches is the resolver above, not this '
+                    .'paragraph.',
+                'No honest claim is made about whether a tick can run. This repo has no live Temporal server, so '
+                    .'live dispatch is untested, and a bound seam would only mean a tick REACHES a service method.',
+            ]);
+        }
+
+        return implode("\n", [
+            'Seam posture: NO CONTAINER WAS GIVEN. This worker holds '.ContainerResolver::class
+                .'::refusing(), which binds no factory for any seam.',
+            sprintf(
+                'Consequence: ALL %d activity types above FAIL ON EVERY TICK. Each tick\'s first seam resolve() '
+                .'throws naming the seam it needs and that nothing is bound to it. Refusing is deliberate: '
+                .'returning null would let a tick report success having done nothing.',
+                count(TemporalWorker::servedActivities()),
+            ),
+            'How to fix it: pass EXACTLY ONE of',
+            '  --bootstrap=PATH   a Laravel host — its directory, or its bootstrap/app.php — whose container binds the seams',
+            '  --seam-file=PATH   a PHP file that RETURNS a '.ContainerResolver::class,
+            'Then re-run --describe with that flag: it prints which seams the container bound and which a tick '
+            .'will still refuse by name.',
+        ]);
+    }
+
+    $lines = [
+        'Seam posture: '.$route,
+        'Binding a seam is NOT proof a server dispatches a tick. This repo has no live Temporal server, so '
+        .'live dispatch — and any Telegram call the activity would then make — remains untested.',
+    ];
+
+    if ($bindings !== null) {
+        // LaravelWorkerBindings owns the seam catalog, so it owns the wording
+        // too: its describe() already states how many seams this container bound,
+        // names them, names the ones it did not, and says that a tick for each
+        // unbound one refuses BY NAME. Re-deriving that list here would give the
+        // same fact two sources that can drift apart, which is the one way an
+        // honest disclosure turns into a stale one.
+        $lines[] = $bindings->describe();
+
+        return implode("\n", $lines);
+    }
+
+    $bound = $resolver->seams();
+    $lines[] = 'Seams that resolver bound ('.count($bound).'): '.($bound === [] ? 'NONE' : implode(', ', $bound));
+
+    if ($bound === []) {
+        // A route was given and the resolver it returned binds nothing. That is
+        // a different fact from "no route was given", and it is the one this
+        // report exists to state: every tick will still fail, naming its seam.
+        $lines[] = sprintf(
+            'Consequence: the resolver that route returned is EMPTY, so ALL %d activity types above still FAIL ON '
+            .'EVERY TICK, each refusing by name. The route was accepted; what it handed over cannot serve anything. '
+            .'Bind at least one seam in the file the route returns.',
+            count(TemporalWorker::servedActivities()),
+        );
+
+        return implode("\n", $lines);
+    }
+
+    // The complement is only knowable from the seam catalog, which is the
+    // Laravel-shaped route's class. It is consulted defensively so a non-Laravel
+    // host's --describe never depends on it, and the sentence below says so
+    // plainly when it is unavailable rather than implying a complete list.
+    $catalog = class_exists(LaravelWorkerBindings::class) ? LaravelWorkerBindings::seamNames() : null;
+
+    if ($catalog === null) {
+        $lines[] = 'Seams NOT bound: not enumerable on this route — the seam catalog could not be loaded. Any '
+            .'activity tick needing a seam absent from the list above will REFUSE BY NAME.';
+
+        return implode("\n", $lines);
+    }
+
+    $unbound = array_values(array_filter(
+        $catalog,
+        static fn (string $seam): bool => ! $resolver->has($seam),
+    ));
+
+    $lines[] = 'Seams NOT bound ('.count($unbound).'): '.($unbound === [] ? 'none' : implode(', ', $unbound));
+
+    foreach ($unbound as $seam) {
+        $lines[] = sprintf(
+            '  "%s" is unbound: an activity tick that needs it will REFUSE BY NAME, naming that seam.',
+            $seam,
+        );
+    }
+
+    return implode("\n", $lines);
+}
+
+$loaded = false;
+foreach ([__DIR__.'/../vendor/autoload.php', __DIR__.'/../../../autoload.php'] as $autoload) {
+    if (file_exists($autoload)) {
+        require $autoload;
+        $loaded = true;
+
+        break;
+    }
+}
+
+if (! $loaded) {
+    fwrite(STDERR, "Teleframe worker: cannot find composer autoload.php. Run 'composer install' in the teleframe repo, or install the package via composer.\n");
+
+    exit(1);
+}
+
+$options = getopt('', [
+    'task-queue::',
+    'app::',
+    'call::',
+    'bootstrap::',
+    'seam-file::',
+    'buckets::',
+    'describe',
+    'help',
+]);
+
+$help = <<<'HELP'
+Teleframe Temporal worker
+
+  --task-queue=NAME   The task queue the schedules were armed on (default: default)
+  --app=NAME          Serve the telegram.app.run-call workflow type for this app
+  --call=NAME         ... and this call. Repeat via repeated --app/--call pairs.
+  --bootstrap=PATH    Bind the activity seams from a real Laravel host. PATH is
+                      either the host's directory or its bootstrap/app.php. The
+                      returned application is the container.
+  --seam-file=PATH    Bind the activity seams from a host that is not Laravel-shaped.
+                      PATH must be a PHP file that RETURNS a
+                      MeRezaRezaei\Teleframe\Store\Schedules\Worker\ContainerResolver.
+  --buckets=a,b,c     This worker's FALLBACK bucket list for the scheduled registry
+                      sweep. A schedule payload that names its own list wins, even
+                      when that list is empty.
+  --describe          Print what this worker would register, then exit. No server needed.
+  --help              This text.
+
+A schedule armed for a workflow type this worker does not serve will fail on
+every tick. --describe tells you which types are served; TemporalSchedulePublisher
+prints the same per-schedule answer when it arms one.
+
+THE SEAMS. Every activity resolves its Laravel collaborator through one
+ContainerResolver seam, on the tick. With neither --bootstrap nor --seam-file
+this worker holds the REFUSING resolver, so all five activity types fail on
+every tick, each refusing by name. That default is deliberate and is not
+"auto-discovery": nothing here boots a host app on its own. Pass EXACTLY ONE of
+the two flags above to bind the seams. Binding a seam is not proof a server
+dispatches a tick — this repo has no live Temporal server.
+
+HELP;
+
+if (isset($options['help'])) {
+    echo $help;
+
+    exit(0);
+}
+
+// The task queue is the ONE thing that must agree between the arm side and the
+// serve side, and nothing used to force it to: the schedule side could arm on
+// any queue while this default was the literal 'default'. A host that set
+// TELEFRAME_APP_TEMPORAL_TASK_QUEUE and then ran the documented worker command
+// got a worker that polled an empty queue forever — no tick, no error, no log,
+// while `armed ... recurring every ...` still read healthy. One env var now
+// moves both sides, and the precedence is flag, then env, then 'default'.
+$taskQueueEnv = getenv('TELEFRAME_TEMPORAL_TASK_QUEUE');
+
+if ($taskQueueEnv === false || trim($taskQueueEnv) === '') {
+    $taskQueueEnv = null;
+}
+
+$taskQueue = (string) ($options['task-queue'] ?? $taskQueueEnv ?? 'default');
+
+// The declared (app, call) pairs this worker serves. getopt returns false for
+// an option given without a value, and collapses repeats to the LAST one, so
+// this reads the argv tail too — an app-call worker with a single pair is the
+// common case and must not silently serve only the last of several.
+$pairs = [];
+$args = array_slice($argv, 1);
+for ($i = 0; $i < count($args) - 1; $i++) {
+    if ($args[$i] === '--app' && $args[$i + 1] !== '--describe') {
+        $app = $args[$i + 1];
+        for ($j = $i + 2; $j < count($args); $j++) {
+            if ($args[$j] === '--call') {
+                $pairs[] = [$app, $args[$j + 1] ?? ''];
+
+                break;
+            }
+
+            if ($args[$j] === '--app') {
+                break;
+            }
+        }
+    }
+}
+
+if ($pairs === [] && isset($options['app'], $options['call'])) {
+    $pairs[] = [(string) $options['app'], (string) $options['call']];
+}
+
+// --------------------------------------------------------------------------
+// The route to a host container. Two EXPLICIT, mutually exclusive answers, and
+// otherwise the refusing default — which is decided here and nowhere else.
+// --------------------------------------------------------------------------
+
+// isset(), not a truthiness test: getopt stores false for a flag given without
+// a value, and `--bootstrap` with no path is a mistake worth naming, not an
+// absent flag to shrug at.
+$bootstrapPath = isset($options['bootstrap']) ? (string) $options['bootstrap'] : null;
+$seamFilePath = isset($options['seam-file']) ? (string) $options['seam-file'] : null;
+
+if ($bootstrapPath !== null && $seamFilePath !== null) {
+    tf_worker_refuse(sprintf(
+        '--bootstrap=%s and --seam-file=%s were BOTH given. They are two answers to one question — which '
+        .'container binds the worker activity seams — so exactly one may be passed. Nothing has been bound '
+        .'and no worker has started.',
+        $bootstrapPath,
+        $seamFilePath,
+    ));
+}
+
+if ($bootstrapPath !== null && trim($bootstrapPath) === '') {
+    tf_worker_refuse('--bootstrap was given with NO PATH. Pass the host\'s directory or its bootstrap/app.php.');
+}
+
+if ($seamFilePath !== null && trim($seamFilePath) === '') {
+    tf_worker_refuse(sprintf(
+        '--seam-file was given with NO PATH. Pass a PHP file that RETURNS a %s.',
+        ContainerResolver::class,
+    ));
+}
+
+/** @var LaravelWorkerBindings|null $bindings */
+$bindings = null;
+$resolver = ContainerResolver::refusing();
+
+if ($bootstrapPath !== null) {
+    // Accept EITHER a host directory OR the bootstrap/app.php file itself.
+    $bootstrapFile = is_dir($bootstrapPath)
+        ? rtrim($bootstrapPath, '/').'/bootstrap/app.php'
+        : $bootstrapPath;
+
+    if (! is_file($bootstrapFile)) {
+        tf_worker_refuse(sprintf(
+            '--bootstrap=%s does not resolve to a readable PHP file. Expected %s (a host directory) or the '
+            .'bootstrap/app.php inside it. No seam is bound and every activity tick will fail.',
+            $bootstrapPath,
+            $bootstrapFile,
+        ));
+    }
+
+    // Mirrors this repo's own precedent (bin/prove-host-install.php:407-412):
+    // the returned application IS the container, booted through the host's own
+    // console kernel so its providers and package discovery are the host's.
+    try {
+        $app = require $bootstrapFile;
+    } catch (Throwable $e) {
+        tf_worker_refuse(sprintf(
+            'booting --bootstrap=%s threw %s: %s. No seam is bound and every activity tick will fail.',
+            $bootstrapFile,
+            $e::class,
+            $e->getMessage(),
+        ));
+    }
+
+    if (! $app instanceof Container) {
+        tf_worker_refuse(sprintf(
+            '%s returned %s, not an %s. That file is not a Laravel bootstrap/app.php, so there is no container '
+            .'to bind the worker activity seams to.',
+            $bootstrapFile,
+            get_debug_type($app),
+            Container::class,
+        ));
+    }
+
+    try {
+        $app->make(Kernel::class)->bootstrap();
+    } catch (Throwable $e) {
+        tf_worker_refuse(sprintf(
+            'the console kernel of the application at %s threw %s: %s. No seam is bound and every activity tick '
+            .'will fail.',
+            $bootstrapFile,
+            $e::class,
+            $e->getMessage(),
+        ));
+    }
+
+    if (! class_exists(LaravelWorkerBindings::class)) {
+        tf_worker_refuse(sprintf(
+            'the host at %s booted, but %s does not exist, so no seam can be bound from it. Refusing rather than '
+            .'starting a worker whose every activity tick fails.',
+            $bootstrapFile,
+            LaravelWorkerBindings::class,
+        ));
+    }
+
+    $bindings = new LaravelWorkerBindings($app);
+    $resolver = $bindings->resolver();
+} elseif ($seamFilePath !== null) {
+    if (! is_file($seamFilePath)) {
+        tf_worker_refuse(sprintf(
+            '--seam-file=%s is not a readable PHP file. No seam is bound and every activity tick will fail.',
+            $seamFilePath,
+        ));
+    }
+
+    try {
+        $fromFile = require $seamFilePath;
+    } catch (Throwable $e) {
+        // The expected class is named HERE as well as in the wrong-type branch
+        // below: a host author whose seam file explodes is the operator who most
+        // needs to be told what the file was supposed to return, and "threw
+        // RuntimeException" on its own does not say it.
+        tf_worker_refuse(sprintf(
+            '--seam-file=%s threw %s: %s. The file must RETURN a %s and must not throw. No seam is bound and '
+            .'every activity tick will fail. This is NOT downgraded to the refusing resolver: that would be a '
+            .'worker that quietly does nothing.',
+            $seamFilePath,
+            $e::class,
+            $e->getMessage(),
+            ContainerResolver::class,
+        ));
+    }
+
+    if (! $fromFile instanceof ContainerResolver) {
+        tf_worker_refuse(sprintf(
+            '--seam-file=%s returned %s, but it must RETURN a %s. This is NOT downgraded to the refusing '
+            .'resolver: that would be a worker that quietly does nothing.',
+            $seamFilePath,
+            get_debug_type($fromFile),
+            ContainerResolver::class,
+        ));
+    }
+
+    $resolver = $fromFile;
+}
+
+// --buckets, normalised exactly the way StoreSyncActivity::buckets() normalises
+// a payload value: comma-split, trimmed, empty elements dropped. An empty result
+// is the command's own default (a sweep with no bucket list), not an error.
+$buckets = [];
+
+foreach (explode(',', (string) ($options['buckets'] ?? '')) as $bucket) {
+    $name = trim($bucket);
+
+    if ($name !== '') {
+        $buckets[] = $name;
+    }
+}
+
+$worker = new TemporalWorker($taskQueue, $pairs, resolver: $resolver, defaultBuckets: $buckets);
+
+if (isset($options['describe'])) {
+    echo $worker->describe(), "\n\n";
+    echo tf_worker_seam_report(
+        $bindings,
+        $resolver,
+        // NULL when neither route was given — the refusing default, which the
+        // report words as its own fact. Never "" or a placeholder: a route that
+        // was accepted but handed over nothing must NOT read as a route that was
+        // never passed.
+        $bootstrapPath !== null
+            ? 'a Laravel container was given (--bootstrap='.$bootstrapPath.'), booted at worker start.'
+            : ($seamFilePath !== null
+                ? 'NO LARAVEL CONTAINER — the resolver was handed over by --seam-file='.$seamFilePath.'.'
+                : null),
+    ), "\n";
+
+    exit(0);
+}
+
+if (! TemporalWorker::sdkInstalled()) {
+    // LOUD and BY NAME. Not a deprecation, not a warning, not a silent exit 0:
+    // a host that reaches this has armed schedules whose workflow type nothing
+    // implements, and must be told so in the loudest available way.
+    fwrite(STDERR, 'Teleframe worker: '.TemporalWorker::sdkMissingMessage()."\n");
+
+    exit(1);
+}
+
+fwrite(STDERR, sprintf(
+    "Teleframe worker: polling task queue '%s' (from %s) for %d workflow type(s) and %d activity type(s). Ctrl+C to stop.\n",
+    $taskQueue,
+    isset($options['task-queue']) ? '--task-queue' : ($taskQueueEnv !== null ? 'TELEFRAME_TEMPORAL_TASK_QUEUE' : 'default'),
+    count($worker->servedTypes()),
+    count(TemporalWorker::servedActivities()),
+));
+
+// The arm side prints the queue per schedule type (TemporalSchedulePublisher
+// prints its per-type verdicts). Those two lines are the only way an operator
+// can see a split-brain, so say so where they are most likely to be read.
+fwrite(STDERR, sprintf(
+    "Teleframe worker: if the schedules were armed on a DIFFERENT queue, nothing will ever execute here and "
+    ."nothing will say so. Compare this queue with the one your arm command reported.\n",
+));
+
+$seams = $worker->resolver()->seams();
+
+fwrite(STDERR, $seams === []
+    ? 'Teleframe worker: NO SEAM IS BOUND. Every activity tick will fail, refusing by name with the seam it '
+        .'needs. Pass EXACTLY ONE of --bootstrap=PATH (a Laravel host) or --seam-file=PATH (a PHP file '
+        .'returning a '.ContainerResolver::class."). Run --describe for the full seam posture.\n"
+    : sprintf("Teleframe worker: %d container seam(s) bound: %s\n", count($seams), implode(', ', $seams)));
+
+if ($bindings !== null) {
+    $unbound = $bindings->unboundSeams();
+
+    if ($unbound !== []) {
+        fwrite(STDERR, sprintf(
+            'Teleframe worker: %d seam(s) NOT bound from the host container (%s). An activity tick that needs one '
+            ."will REFUSE BY NAME, naming it. Run --describe.\n",
+            count($unbound),
+            implode(', ', $unbound),
+        ));
+    }
+}
+
+try {
+    exit($worker->run());
+} catch (Throwable $e) {
+    fwrite(STDERR, 'Teleframe worker failed: '.$e::class.': '.$e->getMessage()."\n");
+
+    exit(1);
+}

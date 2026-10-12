@@ -1,0 +1,177 @@
+{
+    "name": "merezarezaei/teleframe",
+    "description": "Unified Telegram engine and framework: MTProto 2.0 (user + bot), Bot HTTP API, Mini App auth, Passport KYC, consumer layer (ingest, bus, daemon, backfill, backup) and a one-class handler facade (Teleframe)",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "telegram",
+        "mtproto",
+        "bot-api",
+        "teleframe",
+        "teleclient",
+        "laravel"
+    ],
+    "homepage": "https://github.com/MeRezaRezaei/teleframe",
+    "support": {
+        "issues": "https://github.com/MeRezaRezaei/teleframe/issues",
+        "source": "https://github.com/MeRezaRezaei/teleframe"
+    },
+    "authors": [
+        {
+            "name": "Teleframe Team",
+            "homepage": "https://github.com/MeRezaRezaei"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "ext-bcmath": "*",
+        "ext-dom": "*",
+        "ext-fileinfo": "*",
+        "ext-gmp": "*",
+        "ext-hash": "*",
+        "ext-json": "*",
+        "ext-libxml": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-pdo": "*",
+        "ext-sodium": "*",
+        "ext-zlib": "*",
+        "centrifugal/phpcent": "^6.0",
+        "laravel/framework": "^13.0",
+        "phpseclib/phpseclib": "^3.0",
+        "psr/log": "^3.0",
+        "spatie/laravel-data": "^4.0",
+        "temporal/sdk": "^2.19",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "require-dev": {
+        "aws/aws-sdk-php": "^3.395",
+        "chillerlan/php-qrcode": "^6.0",
+        "fakerphp/faker": "^1.23",
+        "laravel/pint": "^1.13",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.0",
+        "orchestra/testbench": "^10.0 || ^11.0",
+        "phpstan/phpstan": "^1.10 || ^2.0",
+        "phpunit/phpunit": "^12.0",
+        "predis/predis": "^3.6",
+        "spatie/laravel-ignition": "^2.4",
+        "spaze/phpstan-disallowed-calls": "^4.14"
+    },
+    "suggest": {
+        "ext-amqp": "Pecl AMQP - required by the tstore and notify RabbitMQ queue drivers. Without it those two drivers refuse to arm.",
+        "predis/predis": "Optional: faster bus/queue throughput. The package runs fully without it via the memory implementations."
+    },
+    "autoload": {
+        "psr-4": {
+            "MeRezaRezaei\\Teleframe\\Core\\": "src/Core/",
+            "MeRezaRezaei\\Teleframe\\Bot\\": "src/Bot/",
+            "MeRezaRezaei\\Teleframe\\Laravel\\": "src/Laravel/",
+            "MeRezaRezaei\\Teleframe\\Schema\\": "src/Schema/",
+            "MeRezaRezaei\\Teleframe\\": "src/Teleframe/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/",
+            "MeRezaRezaei\\Teleframe\\Tests\\": "tests/",
+            "MeRezaRezaei\\Teleframe\\Core\\Tests\\": "tests/Core/",
+            "MeRezaRezaei\\Teleframe\\Bot\\Tests\\": "tests/Bot/",
+            "MeRezaRezaei\\Teleframe\\Laravel\\Tests\\": "tests/Laravel/",
+            "MeRezaRezaei\\Teleframe\\Schema\\Tests\\": "tests/Schema/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "stan": "phpstan.phar analyse -c phpstan.neon.dist",
+        "smoke": "php bin/standalone-smoke.php",
+        "guard": "@php bin/scan-credentials.php",
+        "reap": "@php bin/reap-orphan-tests.php",
+        "verify": [
+            "@guard",
+            "@test",
+            "@stan",
+            "@smoke"
+        ],
+        "warm": "@php bin/warm-live-host.php",
+        "e2e": "@php bin/test-e2e.php"
+    },
+    "archive": {
+        "exclude": [
+            "/.brain",
+            "/.ledger",
+            "/.github",
+            "/.gitlab-ci.yml",
+            "/.gitattributes",
+            "/docs",
+            "/tests",
+            "/inspection-snapshot",
+            "/bin/build-tgweb.sh",
+            "/bin/build-verbatim-teleframe.py",
+            "/bin/export-subagent-ledger.py",
+            "/bin/generate-botapi-schema.php",
+            "/bin/generate-method-builders.php",
+            "/bin/generate-method-schema.php",
+            "/bin/generate-rpc-catalog.php",
+            "/bin/generate-skill-files.php",
+            "/bin/generate-userscope-schema.php",
+            "/bin/live-hot-reload-proof.php",
+            "/bin/live-walkthrough.php",
+            "/bin/prove-host-install.php",
+            "/bin/prove-mysql-curated-dial.php",
+            "/bin/regenerate",
+            "/bin/scan-credentials.php",
+            "/bin/standalone-smoke.php",
+            "/bin/test-e2e.php",
+            "/bin/test-me.php",
+            "/storage",
+            "/bootstrap",
+            "/examples",
+            "/phpstan.neon.dist",
+            "/phpunit.xml.dist",
+            "/composer.lock",
+            "/AGENTS.md",
+            "/CONTRIBUTING.md",
+            "/HANDOFF.md",
+            "/llms.txt"
+        ]
+    },
+    "extra": {
+        "telegram-layer": 229,
+        "laravel": {
+            "dont-discover": [],
+            "providers": [
+                "MeRezaRezaei\\Teleframe\\Laravel\\Providers\\TeleframeServiceProvider",
+                "MeRezaRezaei\\Teleframe\\Laravel\\NotifyServiceProvider",
+                "MeRezaRezaei\\Teleframe\\Laravel\\StoreBackupServiceProvider",
+                "MeRezaRezaei\\Teleframe\\Laravel\\AppServiceProvider",
+                "MeRezaRezaei\\Teleframe\\Laravel\\PassportServiceProvider",
+                "MeRezaRezaei\\Teleframe\\Laravel\\SupervisorServiceProvider"
+            ],
+            "aliases": {
+                "TF": "MeRezaRezaei\\Teleframe\\Laravel\\Facades\\TF",
+                "Teleframe": "MeRezaRezaei\\Teleframe\\Laravel\\Facades\\Teleframe",
+                "TStore": "MeRezaRezaei\\Teleframe\\Laravel\\Facades\\TStore",
+                "Notify": "MeRezaRezaei\\Teleframe\\Laravel\\Facades\\Notify",
+                "StoreBackup": "MeRezaRezaei\\Teleframe\\Laravel\\Facades\\StoreBackup",
+                "TelegramApp": "MeRezaRezaei\\Teleframe\\Laravel\\Facades\\TelegramApp",
+                "Passport": "MeRezaRezaei\\Teleframe\\Laravel\\Facades\\Passport"
+            }
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "policy": {
+            "advisories": {
+                "block": false
+            }
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

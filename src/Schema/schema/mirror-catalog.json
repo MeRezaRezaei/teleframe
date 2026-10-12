@@ -1,0 +1,2247 @@
+{
+ "tf_attach_menu_bots": {
+  "tl": "AttachMenuBot",
+  "ctors": [
+   "attachMenuBot"
+  ],
+  "sources": [
+   {
+    "ctor": "attachMenuBots",
+    "field": "bots"
+   }
+  ],
+  "base": [
+   [
+    "bot_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "short_name",
+    "TEXT NOT NULL"
+   ],
+   [
+    "icons",
+    "1:N child"
+   ]
+  ],
+  "bools": [
+   "inactive",
+   "has_settings",
+   "request_write_access",
+   "show_in_attach_menu",
+   "show_in_side_menu",
+   "side_menu_disclaimer_needed"
+  ],
+  "children": [
+   [
+    "peer_types",
+    "1:N child"
+   ]
+  ]
+ },
+ "tf_bot_apps": {
+  "tl": "BotApp",
+  "ctors": [
+   "botAppNotModified",
+   "botApp"
+  ],
+  "sources": [
+   {
+    "ctor": "messages.botApp",
+    "field": "app"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "short_name",
+    "TEXT NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "description",
+    "TEXT NOT NULL"
+   ],
+   [
+    "photo",
+    "FK\u2192Photo"
+   ],
+   [
+    "hash",
+    "BIGINT NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "document",
+    "FK\u2192Document"
+   ]
+  ]
+ },
+  "tf_bot_infos": {
+  "tl": "BotInfo",
+  "_folded_scalar_note": "`description` is a COLUMN here, not a child. `BotInfo` declares `description:flags.1?string` (schema/sources/TL_telegram_v227.tl:697) \u2014 a plain `string` scalar, so the wire nests nothing there. `2026_10_11_000100_fold_bot_infos_description_onto_the_bot_info_fact.php` dropped the fabricated `tf_bot_infos_description` table and moved the value up here, and re-parented `tf_bot_infos_description_{photo,document}` onto `tf_bot_infos`, which is where `description_photo:flags.4?Photo` and `description_document:flags.5?Document` actually live \u2014 the catalog declared those two as children of `tf_bot_infos` all along, and the shipped FK pointed at the fabricated table only because `MirrorRelationPlan::reflect()` picks a child parent by LONGEST name prefix. The `description` child entry stayed listed here until this edit, which left `MirrorFactWriter` inserting into a table the dial no longer creates: an ingest-time break, not a cosmetic one.",
+  "ctors": [
+   "botInfo"
+  ],
+  "sources": [
+   {
+    "ctor": "userFull",
+    "field": "bot_info"
+   },
+   {
+    "ctor": "chatFull",
+    "field": "bot_info"
+   },
+   {
+    "ctor": "channelFull",
+    "field": "bot_info"
+   }
+  ],
+  "key": [
+   "id"
+  ],
+  "keyFrom": {
+   "id": "user_id"
+  },
+  "base": [
+   [
+    "description",
+    "TEXT NOT NULL"
+   ]
+  ],
+  "bools": [
+   "has_preview_medias"
+  ],
+  "children": [
+   [
+    "user_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "description_photo",
+    "FK\u2192Photo"
+   ],
+   [
+    "description_document",
+    "FK\u2192Document"
+   ],
+   [
+    "commands",
+    "1:N child"
+   ],
+   [
+    "menu_button",
+    "FK\u2192BotMenuButton"
+   ],
+   [
+    "privacy_policy_url",
+    "TEXT NOT NULL"
+   ],
+   [
+    "app_settings",
+    "FK\u2192BotAppSettings"
+   ],
+   [
+    "verifier_settings",
+    "FK\u2192BotVerifierSettings"
+   ]
+  ]
+ },
+ "tf_bot_inline_results": {
+  "tl": "BotInlineResult",
+  "ctors": [
+   "botInlineResult",
+   "botInlineMediaResult"
+  ],
+  "sources": [
+   {
+    "ctor": "messages.botResults",
+    "field": "results"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "TEXT NOT NULL"
+   ],
+   [
+    "type",
+    "TEXT NOT NULL"
+   ],
+   [
+    "send_message",
+    "FK\u2192BotInlineMessage"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "description",
+    "TEXT NOT NULL"
+   ],
+   [
+    "url",
+    "TEXT NOT NULL"
+   ],
+   [
+    "thumb",
+    "FK\u2192WebDocument"
+   ],
+   [
+    "content",
+    "FK\u2192WebDocument"
+   ]
+  ]
+ },
+ "tf_business_chat_links": {
+  "tl": "BusinessChatLink",
+  "key": [
+   "link"
+  ],
+  "ctors": [
+   "businessChatLink"
+  ],
+  "sources": [
+   {
+    "ctor": "account.businessChatLinks",
+    "field": "links"
+   }
+  ],
+  "base": [
+   [
+    "link",
+    "TEXT NOT NULL"
+   ],
+   [
+    "message",
+    "TEXT NOT NULL"
+   ],
+   [
+    "views",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "entities",
+    "1:N child"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ]
+  ]
+ },
+ "tf_admin_log_events": {
+  "tl": "ChannelAdminLogEvent",
+  "ctors": [
+   "channelAdminLogEvent"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "user_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "action",
+    "FK\u2192ChannelAdminLogEventAction"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_channel_participants": {
+  "tl": "ChannelParticipant",
+  "ctors": [
+   "channelParticipant",
+   "channelParticipantSelf",
+   "channelParticipantCreator",
+   "channelParticipantAdmin",
+   "channelParticipantBanned",
+   "channelParticipantLeft"
+  ],
+  "sources": [
+   {
+    "ctor": "updateChannelParticipant",
+    "field": "new_participant",
+    "context": [
+     "channel_id"
+    ]
+   },
+   {
+    "ctor": "updateChannelParticipant",
+    "field": "prev_participant",
+    "context": [
+     "channel_id"
+    ]
+   }
+  ],
+  "key": [
+   "channel_id",
+   "user_id"
+  ],
+  "base": [
+   [
+    "channel_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "user_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "subscription_until_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "rank",
+    "TEXT NOT NULL"
+   ]
+  ]
+ },
+ "tf_chats": {
+  "tl": "Chat",
+  "ctors": [
+   "chatEmpty",
+   "chat",
+   "chatForbidden"
+  ],
+  "sources": [
+   {
+    "ctor": "messages.dialogs",
+    "field": "chats"
+   },
+   {
+    "ctor": "messages.dialogsSlice",
+    "field": "chats"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "photo",
+    "FK\u2192ChatPhoto"
+   ],
+   [
+    "participants_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "version",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [
+   "creator",
+   "left",
+   "deactivated",
+   "call_active",
+   "call_not_empty",
+   "noforwards"
+  ],
+  "children": [
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "migrated_to",
+    "FK\u2192InputChannel"
+   ],
+   [
+    "admin_rights",
+    "FK\u2192ChatAdminRights"
+   ],
+   [
+    "default_banned_rights",
+    "FK\u2192ChatBannedRights"
+   ]
+  ]
+ },
+ "tf_dialogs": {
+  "tl": "Dialog",
+  "ctors": [
+   "dialog",
+   "dialogFolder"
+  ],
+  "sources": [
+   {
+    "ctor": "messages.dialogs",
+    "field": "dialogs"
+   },
+   {
+    "ctor": "messages.dialogsSlice",
+    "field": "dialogs"
+   }
+  ],
+  "base": [
+   [
+    "peer",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "top_message",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "read_inbox_max_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "read_outbox_max_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "unread_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "unread_mentions_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "unread_reactions_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "unread_poll_votes_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "notify_settings",
+    "FK\u2192PeerNotifySettings"
+   ]
+  ],
+  "bools": [
+   "pinned",
+   "unread_mark",
+   "view_forum_as_messages"
+  ],
+  "children": [
+   [
+    "pts",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "draft",
+    "FK\u2192DraftMessage"
+   ],
+   [
+    "folder_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "ttl_period",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_dialog_filters": {
+  "tl": "DialogFilter",
+  "ctors": [
+   "dialogFilter",
+   "dialogFilterDefault",
+   "dialogFilterChatlist"
+  ],
+  "sources": [
+   {
+    "ctor": "updateDialogFilter",
+    "field": "filter"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "title",
+    "FK\u2192TextWithEntities"
+   ],
+   [
+    "pinned_peers",
+    "1:N child"
+   ],
+   [
+    "include_peers",
+    "1:N child"
+   ],
+   [
+    "exclude_peers",
+    "1:N child"
+   ]
+  ],
+  "bools": [
+   "contacts",
+   "non_contacts",
+   "groups",
+   "broadcasts",
+   "bots",
+   "exclude_muted",
+   "exclude_read",
+   "exclude_archived",
+   "title_noanimate"
+  ],
+  "children": [
+   [
+    "emoticon",
+    "TEXT NOT NULL"
+   ],
+   [
+    "color",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_documents": {
+  "tl": "Document",
+  "ctors": [
+   "documentEmpty",
+   "document"
+  ],
+  "sources": [
+   {
+    "ctor": "messageMediaDocument",
+    "field": "document"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "file_reference",
+    "VARCHAR(255) NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "mime_type",
+    "TEXT NOT NULL"
+   ],
+   [
+    "size",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "dc_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "attributes",
+    "1:N child"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "thumbs",
+    "1:N child"
+   ],
+   [
+    "video_thumbs",
+    "1:N child"
+   ]
+  ]
+ },
+ "tf_encrypted_chats": {
+  "tl": "EncryptedChat",
+  "ctors": [
+   "encryptedChatEmpty",
+   "encryptedChatWaiting",
+   "encryptedChatRequested",
+   "encryptedChat",
+   "encryptedChatDiscarded"
+  ],
+  "sources": [
+   {
+    "ctor": "updateEncryption",
+    "field": "chat"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "admin_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "participant_id",
+    "BIGINT NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_folders": {
+  "tl": "Folder",
+  "ctors": [
+   "folder"
+  ],
+  "sources": [
+   {
+    "ctor": "dialogFolder",
+    "field": "folder"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ]
+  ],
+  "bools": [
+   "autofill_new_broadcasts",
+   "autofill_public_groups",
+   "autofill_new_correspondents"
+  ],
+  "children": [
+   [
+    "photo",
+    "FK\u2192ChatPhoto"
+   ]
+  ]
+ },
+ "tf_forum_topics": {
+  "tl": "ForumTopic",
+  "ctors": [
+   "forumTopicDeleted",
+   "forumTopic"
+  ],
+  "sources": [
+   {
+    "ctor": "messages.messages",
+    "field": "topics"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_group_calls": {
+  "tl": "GroupCall",
+  "ctors": [
+   "groupCallDiscarded",
+   "groupCall"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "duration",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_messages": {
+  "tl": "Message",
+  "ctors": [
+   "messageEmpty",
+   "message",
+   "messageService"
+  ],
+  "scoped_by": [
+   "peer_type",
+   "peer_id"
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "peer_id",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "message",
+    "TEXT NOT NULL"
+   ]
+  ],
+  "bools": [
+   "out",
+   "mentioned",
+   "media_unread",
+   "silent",
+   "post",
+   "from_scheduled",
+   "legacy",
+   "edit_hide",
+   "pinned",
+   "noforwards",
+   "invert_media",
+   "offline",
+   "video_processing_pending",
+   "paid_suggested_post_stars",
+   "paid_suggested_post_ton"
+  ],
+  "children": [
+   [
+    "from_id",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "from_boosts_applied",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "from_rank",
+    "TEXT NOT NULL"
+   ],
+   [
+    "saved_peer_id",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "fwd_from",
+    "FK\u2192MessageFwdHeader"
+   ],
+   [
+    "via_bot_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "via_business_bot_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "guestchat_via_from",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "reply_to",
+    "FK\u2192MessageReplyHeader"
+   ],
+   [
+    "media",
+    "FK\u2192MessageMedia"
+   ],
+   [
+    "reply_markup",
+    "FK\u2192ReplyMarkup"
+   ],
+   [
+    "entities",
+    "1:N child"
+   ],
+   [
+    "views",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "forwards",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "replies",
+    "FK\u2192MessageReplies"
+   ],
+   [
+    "edit_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "post_author",
+    "TEXT NOT NULL"
+   ],
+   [
+    "grouped_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "reactions",
+    "FK\u2192MessageReactions"
+   ],
+   [
+    "restriction_reason",
+    "1:N child"
+   ],
+   [
+    "ttl_period",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "quick_reply_shortcut_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "effect",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "factcheck",
+    "FK\u2192FactCheck"
+   ],
+   [
+    "report_delivery_until_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "paid_message_stars",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "suggested_post",
+    "FK\u2192SuggestedPost"
+   ],
+   [
+    "schedule_repeat_period",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "summary_from_language",
+    "TEXT NOT NULL"
+   ],
+   [
+    "rich_message",
+    "FK\u2192RichMessage"
+   ]
+  ]
+ },
+ "tf_message_actions": {
+  "tl": "MessageAction",
+  "ctors": [
+   "messageActionEmpty",
+   "messageActionChatCreate",
+   "messageActionChatEditTitle",
+   "messageActionChatEditPhoto",
+   "messageActionChatDeletePhoto",
+   "messageActionChatAddUser",
+   "messageActionChatDeleteUser",
+   "messageActionChatJoinedByLink",
+   "messageActionChannelCreate",
+   "messageActionChatMigrateTo",
+   "messageActionChannelMigrateFrom",
+   "messageActionPinMessage",
+   "messageActionHistoryClear",
+   "messageActionGameScore",
+   "messageActionPaymentSentMe",
+   "messageActionPaymentSent",
+   "messageActionPhoneCall",
+   "messageActionScreenshotTaken",
+   "messageActionCustomAction",
+   "messageActionBotAllowed",
+   "messageActionSecureValuesSentMe",
+   "messageActionSecureValuesSent",
+   "messageActionContactSignUp",
+   "messageActionGeoProximityReached",
+   "messageActionGroupCall",
+   "messageActionInviteToGroupCall",
+   "messageActionSetMessagesTTL",
+   "messageActionGroupCallScheduled",
+   "messageActionSetChatTheme",
+   "messageActionChatJoinedByRequest",
+   "messageActionWebViewDataSentMe",
+   "messageActionWebViewDataSent",
+   "messageActionGiftPremium",
+   "messageActionTopicCreate",
+   "messageActionTopicEdit",
+   "messageActionSuggestProfilePhoto",
+   "messageActionRequestedPeer",
+   "messageActionSetChatWallPaper",
+   "messageActionGiftCode",
+   "messageActionGiveawayLaunch",
+   "messageActionGiveawayResults",
+   "messageActionBoostApply",
+   "messageActionRequestedPeerSentMe",
+   "messageActionPaymentRefunded",
+   "messageActionGiftStars",
+   "messageActionPrizeStars",
+   "messageActionStarGift",
+   "messageActionStarGiftUnique",
+   "messageActionPaidMessagesRefunded",
+   "messageActionPaidMessagesPrice",
+   "messageActionConferenceCall",
+   "messageActionTodoCompletions",
+   "messageActionTodoAppendTasks",
+   "messageActionSuggestedPostApproval",
+   "messageActionSuggestedPostSuccess",
+   "messageActionSuggestedPostRefund",
+   "messageActionGiftTon",
+   "messageActionSuggestBirthday",
+   "messageActionStarGiftPurchaseOffer",
+   "messageActionStarGiftPurchaseOfferDeclined",
+   "messageActionNewCreatorPending",
+   "messageActionChangeCreator",
+   "messageActionNoForwardsToggle",
+   "messageActionNoForwardsRequest",
+   "messageActionPollAppendAnswer",
+   "messageActionPollDeleteAnswer",
+   "messageActionManagedBotCreated"
+  ],
+  "key": [
+    "message_action_id"
+  ],
+  "keyFrom": {
+    "message_action_id": "id"
+  },
+  "scoped_by": [
+   "peer_type",
+   "peer_id"
+  ],
+  "sources": [
+   {
+    "ctor": "messageService",
+    "field": "action",
+    "context": [
+     "id",
+     "peer_id"
+    ]
+   }
+  ],
+  "base": [
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "users",
+    "1:N child"
+   ],
+   [
+    "peer_id",
+    "peer_type TINYINT + peer_id BIGINT"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_message_medias": {
+  "tl": "MessageMedia",
+  "ctors": [
+   "messageMediaEmpty",
+   "messageMediaPhoto",
+   "messageMediaGeo",
+   "messageMediaContact",
+   "messageMediaUnsupported",
+   "messageMediaDocument",
+   "messageMediaWebPage",
+   "messageMediaVenue",
+   "messageMediaGame",
+   "messageMediaInvoice",
+   "messageMediaGeoLive",
+   "messageMediaPoll",
+   "messageMediaDice",
+   "messageMediaStory",
+   "messageMediaGiveaway",
+   "messageMediaGiveawayResults",
+   "messageMediaPaidMedia",
+   "messageMediaToDo",
+   "messageMediaVideoStream"
+  ],
+  "key": [
+   "message_media_id"
+  ],
+  "keyFrom": {
+   "message_media_id": "id"
+  },
+  "scoped_by": [
+   "peer_type",
+   "peer_id"
+  ],
+  "sources": [
+   {
+    "ctor": "message",
+    "field": "media",
+    "context": [
+     "id",
+     "peer_id"
+    ]
+   }
+  ],
+  "base": [
+   [
+    "peer_id",
+    "peer_type TINYINT + peer_id BIGINT"
+   ]
+  ],
+  "bools": [
+   "spoiler",
+   "live_photo"
+  ],
+  "children": [
+   [
+    "photo",
+    "FK\u2192Photo"
+   ],
+   [
+    "ttl_seconds",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "video",
+    "FK\u2192Document"
+   ]
+  ]
+ },
+ "tf_phone_calls": {
+  "tl": "PhoneCall",
+  "ctors": [
+   "phoneCallEmpty",
+   "phoneCallWaiting",
+   "phoneCallRequested",
+   "phoneCallAccepted",
+   "phoneCall",
+   "phoneCallDiscarded"
+  ],
+  "sources": [
+   {
+    "ctor": "updatePhoneCall",
+    "field": "phone_call"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "admin_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "participant_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "protocol",
+    "FK\u2192PhoneCallProtocol"
+   ]
+  ],
+  "bools": [
+   "video"
+  ],
+  "children": [
+   [
+    "receive_date",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_photos": {
+  "tl": "Photo",
+  "ctors": [
+   "photoEmpty",
+   "photo"
+  ],
+  "sources": [
+   {
+    "ctor": "messageMediaPhoto",
+    "field": "photo"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "file_reference",
+    "VARCHAR(255) NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "sizes",
+    "1:N child"
+   ],
+   [
+    "dc_id",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [
+   "has_stickers"
+  ],
+  "children": [
+   [
+    "video_sizes",
+    "1:N child"
+   ]
+  ]
+ },
+ "tf_quick_replies": {
+  "tl": "QuickReply",
+  "ctors": [
+   "quickReply"
+  ],
+  "sources": [
+   {
+    "ctor": "updateQuickReplies",
+    "field": "quick_replies"
+   },
+   {
+    "ctor": "updateNewQuickReply",
+    "field": "quick_reply"
+   }
+  ],
+  "base": [
+   [
+    "shortcut_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "shortcut",
+    "TEXT NOT NULL"
+   ],
+   [
+    "top_message",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "count",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_reactions": {
+  "tl": "Reaction",
+  "ctors": [
+   "reactionEmpty",
+   "reactionEmoji",
+   "reactionCustomEmoji",
+   "reactionPaid"
+  ],
+  "base": [
+   [
+    "emoticon",
+    "TEXT NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_saved_dialogs": {
+  "tl": "SavedDialog",
+  "ctors": [
+   "savedDialog",
+   "monoForumDialog"
+  ],
+  "sources": [
+   {
+    "ctor": "messages.savedDialogs",
+    "field": "dialogs"
+   },
+   {
+    "ctor": "messages.savedDialogsSlice",
+    "field": "dialogs"
+   }
+  ],
+  "base": [
+   [
+    "peer",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "top_message",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [
+   "pinned"
+  ],
+  "children": []
+ },
+ "tf_saved_reaction_tags": {
+  "tl": "SavedReactionTag",
+  "ctors": [
+   "savedReactionTag"
+  ],
+  "base": [
+   [
+    "reaction",
+    "FK\u2192Reaction"
+   ],
+   [
+    "count",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "title",
+    "TEXT NOT NULL"
+   ]
+  ]
+ },
+ "tf_saved_star_gifts": {
+  "tl": "SavedStarGift",
+  "ctors": [
+   "savedStarGift"
+  ],
+  "sources": [
+   {
+    "ctor": "payments.savedStarGifts",
+    "field": "gifts"
+   }
+  ],
+  "key": [
+   "id"
+  ],
+  "keyFrom": {
+   "id": "gift.id"
+  },
+  "base": [
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "gift",
+    "FK\u2192StarGift"
+   ],
+   [
+    "gift_num",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [
+   "name_hidden",
+   "unsaved",
+   "refunded",
+   "can_upgrade",
+   "pinned_to_top",
+   "upgrade_separate"
+  ],
+  "children": [
+   [
+    "from_id",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "message",
+    "FK\u2192TextWithEntities"
+   ],
+   [
+    "msg_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "saved_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "convert_stars",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "upgrade_stars",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "can_export_at",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "transfer_stars",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "can_transfer_at",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "can_resell_at",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "collection_id",
+    "1:N child"
+   ],
+   [
+    "prepaid_upgrade_hash",
+    "TEXT NOT NULL"
+   ],
+   [
+    "drop_original_details_stars",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "can_craft_at",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_stars_subscriptions": {
+  "tl": "StarsSubscription",
+  "ctors": [
+   "starsSubscription"
+  ],
+  "sources": [
+   {
+    "ctor": "payments.starsStatus",
+    "field": "subscriptions"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "TEXT NOT NULL"
+   ],
+   [
+    "peer",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "until_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "pricing",
+    "FK\u2192StarsSubscriptionPricing"
+   ]
+  ],
+  "bools": [
+   "canceled",
+   "can_refulfill",
+   "missing_balance",
+   "bot_canceled"
+  ],
+  "children": [
+   [
+    "chat_invite_hash",
+    "TEXT NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "photo",
+    "FK\u2192WebDocument"
+   ],
+   [
+    "invoice_slug",
+    "TEXT NOT NULL"
+   ]
+  ]
+ },
+ "tf_stars_transactions": {
+  "tl": "StarsTransaction",
+  "ctors": [
+   "starsTransaction"
+  ],
+  "sources": [
+   {
+    "ctor": "payments.starsStatus",
+    "field": "history"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "TEXT NOT NULL"
+   ],
+   [
+    "amount",
+    "FK\u2192StarsAmount"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "peer",
+    "FK\u2192StarsTransactionPeer"
+   ]
+  ],
+  "bools": [
+   "refund",
+   "pending",
+   "failed",
+   "gift",
+   "reaction",
+   "stargift_upgrade",
+   "business_transfer",
+   "stargift_resale",
+   "posts_search",
+   "stargift_prepaid_upgrade",
+   "stargift_drop_original_details",
+   "phonegroup_message",
+   "stargift_auction_bid",
+   "offer"
+  ],
+  "children": [
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "description",
+    "TEXT NOT NULL"
+   ],
+   [
+    "photo",
+    "FK\u2192WebDocument"
+   ],
+   [
+    "transaction_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "transaction_url",
+    "TEXT NOT NULL"
+   ],
+   [
+    "bot_payload",
+    "VARCHAR(255) NOT NULL"
+   ],
+   [
+    "msg_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "extended_media",
+    "1:N child"
+   ],
+   [
+    "subscription_period",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "giveaway_post_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "stargift",
+    "FK\u2192StarGift"
+   ],
+   [
+    "floodskip_number",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "starref_commission_permille",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "starref_peer",
+    "peer_type TINYINT + peer_id BIGINT"
+   ],
+   [
+    "starref_amount",
+    "FK\u2192StarsAmount"
+   ],
+   [
+    "paid_messages",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "premium_gift_months",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "ads_proceeds_from_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "ads_proceeds_to_date",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_sticker_sets": {
+  "tl": "StickerSet",
+  "ctors": [
+   "stickerSet"
+  ],
+  "sources": [
+   {
+    "ctor": "channelFull",
+    "field": "stickerset"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "short_name",
+    "TEXT NOT NULL"
+   ],
+   [
+    "count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "hash",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [
+   "archived",
+   "official",
+   "masks",
+   "emojis",
+   "text_color",
+   "channel_emoji_status",
+   "creator"
+  ],
+  "children": [
+   [
+    "installed_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "thumbs",
+    "1:N child"
+   ],
+   [
+    "thumb_dc_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "thumb_version",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "thumb_document_id",
+    "BIGINT NOT NULL"
+   ]
+  ]
+ },
+ "tf_story_items": {
+  "tl": "StoryItem",
+  "ctors": [
+   "storyItemDeleted",
+   "storyItemSkipped",
+   "storyItem"
+  ],
+  "sources": [
+   {
+    "ctor": "updateStory",
+    "field": "story"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_themes": {
+  "tl": "Theme",
+  "ctors": [
+   "theme"
+  ],
+  "sources": [
+   {
+    "ctor": "updateTheme",
+    "field": "theme"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "slug",
+    "TEXT NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ]
+  ],
+  "bools": [
+   "creator",
+   "default",
+   "for_chat"
+  ],
+  "children": [
+   [
+    "document",
+    "FK\u2192Document"
+   ],
+   [
+    "settings",
+    "1:N child"
+   ],
+   [
+    "emoticon",
+    "TEXT NOT NULL"
+   ],
+   [
+    "installs_count",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_todo_items": {
+  "tl": "TodoItem",
+  "ctors": [
+   "todoItem"
+  ],
+  "sources": [
+   {
+    "ctor": "todoList",
+    "field": "list"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "title",
+    "FK\u2192TextWithEntities"
+   ]
+  ],
+  "bools": [],
+  "children": []
+ },
+ "tf_todo_lists": {
+  "tl": "TodoList",
+  "ctors": [
+   "todoList"
+  ],
+  "base": [
+   [
+    "title",
+    "FK\u2192TextWithEntities"
+   ],
+   [
+    "list",
+    "1:N child"
+   ]
+  ],
+  "bools": [
+   "others_can_append",
+   "others_can_complete"
+  ],
+  "children": []
+ },
+ "tf_users": {
+  "tl": "User",
+  "ctors": [
+   "userEmpty",
+   "user"
+  ],
+  "sources": [
+   {
+    "ctor": "messages.dialogs",
+    "field": "users"
+   },
+   {
+    "ctor": "messages.dialogsSlice",
+    "field": "users"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ]
+  ],
+  "bools": [
+   "self",
+   "contact",
+   "mutual_contact",
+   "deleted",
+   "bot",
+   "bot_chat_history",
+   "bot_nochats",
+   "verified",
+   "restricted",
+   "min",
+   "bot_inline_geo",
+   "support",
+   "scam",
+   "apply_min_photo",
+   "fake",
+   "bot_attach_menu",
+   "premium",
+   "attach_menu_enabled",
+   "bot_can_edit",
+   "close_friend",
+   "stories_hidden",
+   "stories_unavailable",
+   "contact_require_premium",
+   "bot_business",
+   "bot_has_main_app",
+   "bot_forum_view",
+   "bot_forum_can_manage_topics",
+   "bot_can_manage_bots",
+   "bot_guestchat",
+   "bot_guard"
+  ],
+  "children": [
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "first_name",
+    "TEXT NOT NULL"
+   ],
+   [
+    "last_name",
+    "TEXT NOT NULL"
+   ],
+   [
+    "username",
+    "TEXT NOT NULL"
+   ],
+   [
+    "phone",
+    "TEXT NOT NULL"
+   ],
+   [
+    "photo",
+    "FK\u2192UserProfilePhoto"
+   ],
+   [
+    "status",
+    "FK\u2192UserStatus"
+   ],
+   [
+    "bot_info_version",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "restriction_reason",
+    "1:N child"
+   ],
+   [
+    "bot_inline_placeholder",
+    "TEXT NOT NULL"
+   ],
+   [
+    "lang_code",
+    "TEXT NOT NULL"
+   ],
+   [
+    "emoji_status",
+    "FK\u2192EmojiStatus"
+   ],
+   [
+    "usernames",
+    "1:N child"
+   ],
+   [
+    "stories_max_id",
+    "FK\u2192RecentStory"
+   ],
+   [
+    "color",
+    "FK\u2192PeerColor"
+   ],
+   [
+    "profile_color",
+    "FK\u2192PeerColor"
+   ],
+   [
+    "bot_active_users",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "bot_verification_icon",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "send_paid_messages_stars",
+    "BIGINT NOT NULL"
+   ]
+  ]
+ },
+ "tf_wallpapers": {
+  "tl": "WallPaper",
+  "ctors": [
+   "wallPaper",
+   "wallPaperNoFile"
+  ],
+  "sources": [
+   {
+    "ctor": "updatePeerWallpaper",
+    "field": "wallpaper"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "slug",
+    "TEXT NOT NULL"
+   ],
+   [
+    "document",
+    "FK\u2192Document"
+   ]
+  ],
+  "bools": [
+   "creator",
+   "default",
+   "pattern",
+   "dark"
+  ],
+  "children": [
+   [
+    "settings",
+    "FK\u2192WallPaperSettings"
+   ]
+  ]
+ },
+ "tf_web_pages": {
+  "tl": "WebPage",
+  "ctors": [
+   "webPageEmpty",
+   "webPagePending",
+   "webPage",
+   "webPageNotModified"
+  ],
+  "sources": [
+   {
+    "ctor": "messageMediaWebPage",
+    "field": "webpage"
+   }
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "url",
+    "TEXT NOT NULL"
+   ]
+  ]
+ }
+,
+ "tf_channel_updates": {
+  "tl": "updates.ChannelDifference",
+  "ctors": [
+   "updates.channelDifferenceEmpty",
+   "updates.channelDifferenceTooLong",
+   "updates.channelDifference"
+  ],
+  "_key_note": "`position` is part of the IDENTITY, not a payload field. `2026_09_14_200031_create_tf_channel_participants_tables.php:150-157` ships `Schema::create('tf_channel_updates', … $table->bigInteger('channel_id'); $table->smallInteger('position'); … $table->primary(['account_id', 'channel_id', 'position']);` — and every one of its three children (`:160`, `:169`, `:178`) carries the SAME three-column primary plus a composite FK back onto it. `position` is the element ordinal of the `ChannelDifference` row within its page, so two rows for one channel differ only by it. Sibling `tf_update_differences` (below) already declares the same ordinal as its `key` against the same `primary(['account_id','position'])`, and is the precedent this entry was measured against.",
+  "key": [
+   "channel_id",
+   "position"
+  ],
+  "base": [
+   [
+    "channel_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "position",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "constructor",
+    "TEXT NOT NULL"
+   ]
+  ],
+  "bools": [
+   "is_final"
+  ],
+  "children": [
+   [
+    "pts",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "timeout",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "dialog",
+    "FK→Dialog"
+   ]
+  ]
+ },
+ "tf_channels": {
+  "tl": "Chat",
+  "ctors": [
+   "channel",
+   "channelForbidden"
+  ],
+  "key": [
+   "id"
+  ],
+  "base": [
+   [
+    "id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "title",
+    "TEXT NOT NULL"
+   ],
+   [
+    "access_hash",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ]
+  ],
+  "bools": [
+   "creator",
+   "left",
+   "broadcast",
+   "verified",
+   "megagroup",
+   "restricted",
+   "signatures",
+   "min",
+   "scam",
+   "has_link",
+   "has_geo",
+   "slowmode_enabled",
+   "call_active",
+   "call_not_empty",
+   "fake",
+   "gigagroup",
+   "noforwards",
+   "join_to_send",
+   "join_request",
+   "forum",
+   "stories_hidden",
+   "stories_hidden_min",
+   "stories_unavailable",
+   "signature_profiles",
+   "autotranslation",
+   "broadcast_messages_allowed",
+   "monoforum",
+   "forum_tabs"
+  ],
+  "children": [
+   [
+    "username",
+    "TEXT NOT NULL"
+   ],
+   [
+    "photo",
+    "FK→ChatPhoto"
+   ],
+   [
+    "admin_rights",
+    "FK→ChatAdminRights"
+   ],
+   [
+    "banned_rights",
+    "FK→ChatBannedRights"
+   ],
+   [
+    "default_banned_rights",
+    "FK→ChatBannedRights"
+   ],
+   [
+    "restriction_reason",
+    "1:N child"
+   ],
+   [
+    "participants_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "usernames",
+    "1:N child"
+   ],
+   [
+    "stories_max_id",
+    "FK→RecentStory"
+   ],
+   [
+    "color",
+    "FK→PeerColor"
+   ],
+   [
+    "profile_color",
+    "FK→PeerColor"
+   ],
+   [
+    "emoji_status",
+    "FK→EmojiStatus"
+   ],
+   [
+    "level",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "subscription_until_date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "bot_verification_icon",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "send_paid_messages_stars",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "linked_monoforum_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "until_date",
+    "INTEGER NOT NULL"
+   ]
+  ]
+ },
+ "tf_update_differences": {
+  "tl": "updates.Difference",
+  "ctors": [
+   "updates.differenceEmpty",
+   "updates.difference",
+   "updates.differenceSlice",
+   "updates.differenceTooLong"
+  ],
+  "key": [
+   "position"
+  ],
+  "base": [
+   [
+    "position",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "constructor",
+    "TEXT NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "seq",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "pts",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "state",
+    "FK→updates.State"
+   ]
+  ]
+ },
+ "tf_updates": {
+  "tl": "Update",
+  "_folded_scalar_note": "channel_id / chat_id / user_id are COLUMNS here, not children. `Update` declares each as a bare `long` (api.tl:395, :318, :320), so the wire nests nothing there; `2026_10_10_000100_fold_update_scalar_children_onto_the_update_fact.php` dropped the `tf_updates_{channel,chat,user}` child tables and moved the values up here. `tf_updates_from` is deliberately NOT folded: `from_id` is `Peer` on every `Update` ctor that declares it, so that table is a correct nested storage translation and survives.",
+  "ctors": [
+   "updateNewMessage",
+   "updateEditMessage",
+   "updateNewChannelMessage",
+   "updateEditChannelMessage",
+   "updateDeleteMessages",
+   "updateUserStatus",
+   "updateUserTyping",
+   "updateChatUserTyping",
+   "updateChannelUserTyping",
+   "updateChannelParticipant",
+   "updateChannelTooLong"
+  ],
+  "_key_note": "`position` is part of the IDENTITY, not a payload field, and the entry was missing the COLUMN for it entirely. `2026_09_14_200030_create_tf_updates_tables.php:38-46` ships `Schema::create('tf_updates', … $table->integer('seq'); $table->smallInteger('position'); … $table->primary(['account_id', 'seq', 'position']);`, and the migration's own docblock states why in one line — \"seq is the delivering container's seq … and position is the update's index within that container (0 for a lone update)\". All twenty `tf_updates_*` children ship the same three-column primary. `MirrorTableResolver::deriveKeyColumns()` takes an explicit `key` outright, and `MirrorKeySpec::childColumns()` copies it verbatim onto every child, so a `key` of `[\"seq\"]` made the resolver mint `(account_id, seq)` for the parent AND for all twenty children — the resolver was contradicting twenty-one shipped `primary()` declarations. Declaring the ordinal in the key (as sibling `tf_update_differences` already does against the same shape of DDL) is what reconciles them. The value is supplied by `UpdateIngestor`, which writes `position` explicitly rather than reading it from the payload.",
+  "key": [
+   "seq",
+   "position"
+  ],
+  "base": [
+   [
+    "seq",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "position",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "constructor",
+    "TEXT NOT NULL"
+   ],
+   [
+    "channel_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "chat_id",
+    "BIGINT NOT NULL"
+   ],
+   [
+    "user_id",
+    "BIGINT NOT NULL"
+   ]
+  ],
+  "bools": [],
+  "children": [
+   [
+    "pts",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "pts_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "qts",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "date",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "max_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "top_msg_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "folder_id",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "still_unread_count",
+    "INTEGER NOT NULL"
+   ],
+   [
+    "status",
+    "FK→UserStatus"
+   ],
+[
+     "action",
+     "FK→SendMessageAction"
+    ]
+   ]
+  }}

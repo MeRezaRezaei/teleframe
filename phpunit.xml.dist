@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true">
+    <testsuites>
+        <testsuite name="Core">
+            <directory>tests/Core</directory>
+        </testsuite>
+        <testsuite name="Bot">
+            <directory>tests/Bot</directory>
+        </testsuite>
+        <testsuite name="Laravel">
+            <directory>tests/Laravel</directory>
+        </testsuite>
+        <testsuite name="Schema">
+            <directory>tests/Schema</directory>
+        </testsuite>
+        <testsuite name="Ingest">
+            <directory>tests/Ingest</directory>
+        </testsuite>
+        <!-- The warm-lane fences. Registered because an unregistered test
+             directory is decoration: composer verify never runs it, and
+             TestSuiteRegistrationTest enforces exactly that. -->
+        <testsuite name="Live">
+            <directory>tests/Live</directory>
+        </testsuite>
+        <testsuite name="Standalone">
+            <directory>tests/Standalone</directory>
+        </testsuite>
+        <testsuite name="Credentials">
+            <directory>tests/Credentials</directory>
+        </testsuite>
+        <testsuite name="Pg">
+            <directory>tests/Pg</directory>
+        </testsuite>
+        <!--
+            Added by Phase 1 of 2026-10-04-endpoint-coverage-and-mysql-truth.
+            The MySQL track: real FK enforcement on the engine that will hold
+            the data. Default-SKIP, forced ON by TELEFRAME_MYSQL=1, and given a
+            mysql:8.4 CI service so it is not decoration there either.
+        -->
+        <testsuite name="MySql">
+            <directory>tests/MySql</directory>
+        </testsuite>
+        <testsuite name="Supervisor">
+            <directory>tests/Supervisor</directory>
+        </testsuite>
+        <testsuite name="Bus">
+            <directory>tests/Bus</directory>
+        </testsuite>
+        <testsuite name="Console">
+            <directory>tests/Console</directory>
+        </testsuite>
+        <testsuite name="Daemon">
+            <directory>tests/Daemon</directory>
+        </testsuite>
+        <testsuite name="Backfill">
+            <directory>tests/Backfill</directory>
+        </testsuite>
+        <testsuite name="Backup">
+            <directory>tests/Backup</directory>
+        </testsuite>
+        <testsuite name="Handler">
+            <directory>tests/Handler</directory>
+        </testsuite>
+        <testsuite name="Message">
+            <directory>tests/Message</directory>
+        </testsuite>
+        <testsuite name="Identity">
+            <directory>tests/Identity</directory>
+        </testsuite>
+        <testsuite name="Stage">
+            <directory>tests/Stage</directory>
+        </testsuite>
+        <testsuite name="BotMap">
+            <directory>tests/BotMap</directory>
+        </testsuite>
+        <testsuite name="MiniApp">
+            <directory>tests/MiniApp</directory>
+        </testsuite>
+        <testsuite name="Realtime">
+            <directory>tests/Realtime</directory>
+        </testsuite>
+        <testsuite name="Teleframe">
+            <directory>tests/Teleframe</directory>
+        </testsuite>
+        <testsuite name="Control">
+            <directory>tests/Control</directory>
+        </testsuite>
+        <testsuite name="Store">
+            <directory>tests/Store</directory>
+        </testsuite>
+        <testsuite name="Vault">
+            <directory>tests/Vault</directory>
+        </testsuite>
+        <testsuite name="Mirror">
+            <directory>tests/Mirror</directory>
+        </testsuite>
+        <testsuite name="New">
+            <directory>tests/New</directory>
+        </testsuite>
+        <testsuite name="Passport">
+            <directory>tests/Passport</directory>
+        </testsuite>
+        <!--
+            Added 2026-09-27. These six directories existed on disk and were NOT
+            in any <testsuite>, so `composer verify` never ran them: 355 tests,
+            including every Notify and App test. A test directory nobody
+            registered is a test that reads as a safety net and is not one.
+
+            The real fix is tests/Concerns/TestSuiteRegistrationTest.php, which
+            fails if any tests/ subdirectory is ever unregistered again. These
+            entries are the data it checks.
+        -->
+        <testsuite name="App">
+            <directory>tests/App</directory>
+        </testsuite>
+        <testsuite name="Auth">
+            <directory>tests/Auth</directory>
+        </testsuite>
+        <testsuite name="Config">
+            <directory>tests/Config</directory>
+        </testsuite>
+        <testsuite name="DataCore">
+            <directory>tests/DataCore</directory>
+        </testsuite>
+        <testsuite name="Notify">
+            <directory>tests/Notify</directory>
+        </testsuite>
+        <testsuite name="Support">
+            <directory>tests/Support</directory>
+        </testsuite>
+        <testsuite name="Concerns">
+            <directory>tests/Concerns</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+    <!--
+        Coverage source filter is configured above (src/). A report is not
+        wired here so plain `composer verify` runs stay green without a
+        coverage driver; generate one on demand (gitignored target):
+        XDEBUG_MODE=coverage vendor/bin/phpunit coverage-html .phpunit.cache/coverage
+    -->
+</phpunit>
