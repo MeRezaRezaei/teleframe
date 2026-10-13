@@ -52,6 +52,24 @@ use Throwable;
  * A probe (callable(string): ?int) is the optional alternative observed
  * source: when it answers non-null for a topic, check() prefers it over
  * the state's last-seen. Zero regex — str_* and concatenation only.
+ *
+ * THE ALERT HAS TWO PATHS, AND THE ORDER IS THE CONTRACT (F8, 2026-10-13).
+ * emit() writes the durable record (the injected WatchAlertSinkContract)
+ * FIRST and unconditionally, and only then tries the `{topic}.missing`
+ * notification. The old order — PSR-3, then enqueue, and nothing else — meant
+ * the alert rode the same queue and transport it was watching: when a queue or
+ * transport failure was WHY the heartbeat went missing, the alert died with its
+ * subject and all that survived was a PSR-3 line nobody outside the host can
+ * see. A watchdog whose alert rides the failing channel is a comment, not a
+ * watchdog.
+ *
+ * Two consequences, both deliberate:
+ *   - a sink that FAILS does not throw out of emit(). It is logged and the
+ *     notification is still attempted, because "the durable path broke" must
+ *     not become "no alert at all".
+ *   - a notification that FAILS still rethrows (unchanged contract — the
+ *     caller owns recovery, exactly like NotifySender). It no longer costs the
+ *     finding, because the record is already on disk by then.
  */
 final class NoShowWatchdog
 {
@@ -64,9 +82,13 @@ final class NoShowWatchdog
      * @param  \Closure(): int|null  $now  injected clock (default time())
      * @param  LoggerInterface|null  $logger  every alert is logged at alert level
      * @param  (\Closure(): array<array-key, mixed>)|null  $registrationSource  DERIVED registrations
-     *                                                                         (topic ⇒ expected-every), re-read on
-     *                                                                         every check so the expectation
-     *                                                                         survives the process boundary
+     *                                                                          (topic ⇒ expected-every), re-read on
+     *                                                                          every check so the expectation
+     *                                                                          survives the process boundary
+     * @param  WatchAlertSinkContract|null  $alertSink  the OUT-OF-BAND durable record, written
+     *                                                  before the notification is attempted (F8).
+     *                                                  null = no durable path, so the notification
+     *                                                  is all there is — bind a sink.
      */
     public function __construct(
         private readonly WatchState $state,
@@ -74,6 +96,7 @@ final class NoShowWatchdog
         private readonly ?\Closure $now = null,
         private readonly ?LoggerInterface $logger = null,
         private readonly ?\Closure $registrationSource = null,
+        private readonly ?WatchAlertSinkContract $alertSink = null,
     ) {}
 
     /**
@@ -226,12 +249,18 @@ final class NoShowWatchdog
     }
 
     /**
-     * Emit one finding: PSR-3 at alert level (never swallows), then the
-     * no-show notification on the dedicated `{topic}.missing` topic at
-     * Level::Alert (design §8 / ruling §6.5) through the queue seam — a
-     * target chat is NOT carried; the queue consumer resolves it from
-     * the topic registry at consume time (loud when unconfigured, never
-     * a silent drop).
+     * Emit one finding, in a fixed order that is itself the guarantee:
+     *
+     *   1. the durable record — written FIRST, unconditionally, before any
+     *      queue or network call. This is the path whose failure domain is not
+     *      the one being reported (F8).
+     *   2. PSR-3 at alert level (never swallows).
+     *   3. the no-show notification on the dedicated `{topic}.missing` topic
+     *      at Level::Alert (design §8 / ruling §6.5) through the queue seam —
+     *      a target chat is NOT carried; the queue consumer resolves it from
+     *      the topic registry at consume time (loud when unconfigured, never
+     *      a silent drop). This is an ENHANCEMENT of the record above, and it
+     *      is allowed to fail: when it does, step 1 has already happened.
      */
     private function emit(WatchAlert $alert): void
     {
@@ -241,6 +270,8 @@ final class NoShowWatchdog
             'last_seen' => $alert->lastSeen,
             'age_seconds' => $alert->age,
         ];
+
+        $this->recordDurably($alert, $context);
 
         try {
             $this->logger?->alert('notify watchdog: no update arrived for "'.$alert->topic.'"', $context);
@@ -261,13 +292,44 @@ final class NoShowWatchdog
         } catch (Throwable $e) {
             // The alert pipeline must never die silently: log the
             // failure and rethrow — the caller (Temporal activity /
-            // CLI --check) owns recovery, exactly like NotifySender.
+            // CLI --check) owns recovery, exactly like NotifySender. The
+            // durable record above is already written, so this throw costs
+            // the operator the retry, never the evidence.
             $this->logger?->error('notify watchdog: alert emission failed', [
                 'topic' => $alert->topic,
                 'error' => $e->getMessage(),
                 'exception' => $e,
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Step 1 of emit(): make the finding durable on a path that cannot be the
+     * reason the heartbeat is missing.
+     *
+     * A SINK FAILURE IS LOGGED, NEVER RETHROWN — deliberately. Rethrowing here
+     * would skip step 3 entirely, so a full disk would silently become "no
+     * alert at all", which is a strictly worse failure than the one this method
+     * was added to prevent. The sink's own exception is preserved as the log's
+     * 'exception' so nothing is lost.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    private function recordDurably(WatchAlert $alert, array $context): void
+    {
+        if ($this->alertSink === null) {
+            return;
+        }
+
+        try {
+            $this->alertSink->record($alert, $context);
+        } catch (Throwable $e) {
+            $this->logger?->error('notify watchdog: durable alert record failed', [
+                'topic' => $alert->topic,
+                'error' => $e->getMessage(),
+                'exception' => $e,
+            ]);
         }
     }
 

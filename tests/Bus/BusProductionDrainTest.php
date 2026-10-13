@@ -550,12 +550,65 @@ final class BusProductionDrainTest extends TestbenchTestCase
         self::assertSame(0, $this->pendingTotal(), 'and nothing was left pending');
     }
 
+    // ---------------------------------------------------------------- 5.
+
+    /**
+     * Property 5 — D-040: the daemon's bus drain carries NO mirror ingester.
+     *
+     * This is the line the whole of S1 hangs on. `buildBusDrain()` used to
+     * resolve `DaemonCommand::MIRROR_INGESTER_KEY` and hand it to the
+     * consumer, and `TeleframeServiceProvider` binds that key
+     * UNCONDITIONALLY in every Laravel host — so `$this->mirrorIngester` was
+     * non-null in production, `IngestConsumer::handleEntry()` always took the
+     * mirror branch, and the `Teleclient::ingest()` branch below it was dead
+     * code in a default install. The mirror branch writes NO `tf_updates` row,
+     * so there was no committed `(account_id, seq, position)` for the bus to
+     * name and D-039 had nothing to invert.
+     *
+     * Asserted on the REAL builder — not on the source text and not on a
+     * hand-built consumer — because the defect was the wiring. A source-text
+     * assertion would pass while the container still handed back a callable.
+     *
+     * The provider binding STAYS (it still serves the backfill and
+     * RPC-response paths, `MirrorIngesterFactory.php:217-300`); what is
+     * retired is the daemon's BUS path only. This test therefore says nothing
+     * about whether the seam resolves — only that the bus does not take it.
+     */
+    public function test_the_daemons_bus_drain_carries_no_mirror_ingester(): void
+    {
+        $consumer = $this->invoke($this->command(), 'buildBusDrain');
+
+        self::assertInstanceOf(IngestConsumer::class, $consumer);
+
+        // Precondition, or this test could be green for the wrong reason: the
+        // seam the daemon used to resolve really IS still bound in this host.
+        self::assertTrue(
+            $this->app->bound(DaemonCommand::MIRROR_INGESTER_KEY),
+            'precondition: the provider still binds the mirror seam — retiring it from the bus '
+            .'path is not the same as unbinding it',
+        );
+
+        $mirror = new ReflectionProperty(IngestConsumer::class, 'mirrorIngester');
+        $mirror->setAccessible(true);
+
+        self::assertNull(
+            $mirror->getValue($consumer),
+            'D-040: the daemon bus path must run Teleclient::ingest() -> UpdateIngestor, which is '
+            .'the only writer that commits the (account_id, seq, position) row the bus must name',
+        );
+    }
+
     // --------------------------------------------------------- harness.
 
     /**
      * A consumer whose entries always SUCCEED (mirror-ingester seam), so
      * clearStrike() + ack run for every entry and the strike bookkeeping is
      * the only thing under test.
+     *
+     * These entries are v1 — the encoder writes no `v` field — so they keep
+     * draining through the seam. That is deliberate: the v1 drain window is
+     * what the version discriminator protects, and this file's four
+     * properties would all be measuring the ingest branch otherwise.
      */
     private function successfulConsumer(): IngestConsumer
     {

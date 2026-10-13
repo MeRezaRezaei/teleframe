@@ -156,11 +156,20 @@ final class DeclaredKeyCoverageTest extends TestCase
      * teleframe.backup.keep_generations, so 169 declared keys = 159 READ +
      * 5 DEAD + 0 READ-BUT-IGNORED + 5 READ_CONDITIONAL. It is READ by
      * BackupCommand::keepGenerations() — the width of the prune keep-set.
+     *
+     * 2026-10-13 (S6/F7 + F8): three keys added, so 172 declared = 162 READ +
+     * 5 DEAD + 0 READ-BUT-IGNORED + 5 READ_CONDITIONAL. All three are READ by
+     * StoreBackupServiceProvider — schedule.package_schedule.enabled by
+     * scheduleBackupDump(), schedule.package_schedule.daily_at by
+     * dailyAtOrThrow(), watchdog.alert_log by registerWatchdog() via
+     * alertLogPath(). The coverage test caught all three UNCLASSIFIED first,
+     * which is this registry refusing to let a new declaration join the
+     * dead-config class unnoticed — the second time it has done so.
      */
     public function test_the_registry_still_covers_the_whole_declared_surface(): void
     {
-        self::assertCount(169, ConfigKeyRegistry::declaredKeys());
-        self::assertCount(159, ConfigKeyRegistry::READ);
+        self::assertCount(172, ConfigKeyRegistry::declaredKeys());
+        self::assertCount(162, ConfigKeyRegistry::READ);
         self::assertCount(5, ConfigKeyRegistry::DEAD);
         self::assertCount(0, ConfigKeyRegistry::READ_BUT_IGNORED);
         self::assertCount(5, ConfigKeyRegistry::READ_CONDITIONAL);

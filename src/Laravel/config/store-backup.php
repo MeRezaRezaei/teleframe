@@ -91,6 +91,49 @@ return [
            single run per install. With neither, the key REFUSES AT BOOT by
            name and never degrades to 'off' — keep 'null' + cron until then. */
         'publisher' => env('TELEFRAME_STORE_BACKUP_SCHEDULES', 'null'),
+        /* THE PACKAGE-OWNED TRIGGER (F7, 2026-10-13) — added because this was
+           the only capability with no trigger the package owns: the `publisher`
+           above defaults to 'null', so on a default install NOTHING in the
+           package ever fires `teleframe:tstore backup`. The operator named the
+           action — "so it can simply dump the laravel database and make a
+           backup from it in schedules" — and the honest reading of that is
+           `php artisan schedule:run`, not a host hand-written crontab.
+
+           Turn this ON and the package registers the dump on Laravel's own
+           scheduler (StoreBackupServiceProvider::scheduleBackupDump(), console
+           boot, alongside the hourly no-show check). Delete your cron line in
+           the same change — see DOUBLE-FIRE below.
+
+           DOUBLE-FIRE — READ BEFORE ENABLING. Default is FALSE and it has to
+           stay that way, because the two postures are invisible to each other:
+           the shipped posture a host may already have is the one-line cron
+           above, cron is invisible to the Laravel scheduler, and no reading of
+           any config key can discover it. So there is NO way for the package to
+           prove that defaulting this on cannot double-fire — and a double-fired
+           dump is not a harmless duplicate, it is two full database dumps a day
+           into the same bucket with two run-ledger rows. `withoutOverlapping()`
+           and `onOneServer()` protect the package's own trigger against a
+           second scheduler or a second app server; they do nothing against a
+           crontab. Enabling this while your cron line still exists is the one
+           mistake this key cannot protect you from, and it is the operator's
+           to avoid.
+
+           THE MASTER SWITCH DOES NOT GATE THIS, deliberately. `enabled` above
+           governs the WATCHDOG ("what false DOES NOT DO: it does not disable
+           the dump"), so making the dump trigger depend on it would silently
+           repurpose a documented switch. This trigger is gated on its own key
+           and on nothing else. */
+        'package_schedule' => [
+            'enabled' => (bool) env('TELEFRAME_STORE_BACKUP_PACKAGE_SCHEDULE_ENABLED', false),
+            /* H:i, 24-hour. The one time of day the package-owned trigger
+               fires, chosen off the file-vault sibling's 03:17 so a host
+               running both does not stack two database dumps on one minute.
+               An unparseable value THROWS at console boot by name rather than
+               registering at a time you did not ask for — a backup that
+               silently runs at the wrong minute is the same lie as one that
+               silently never runs. */
+            'daily_at' => env('TELEFRAME_STORE_BACKUP_PACKAGE_SCHEDULE_DAILY_AT', '03:47'),
+        ],
         /* Frontend address handed to your bound Temporal client. Nothing in
            this package dials it — your TemporalScheduleClient does. */
         'dsn' => env('TELEFRAME_STORE_BACKUP_TEMPORAL_DSN', '127.0.0.1:7233'),
@@ -101,6 +144,29 @@ return [
         /* Watchdog grace: expect-every = interval × this (default one
            missed cycle + grace); floor 3600 s enforced in the provider. */
         'watchdog_expect_multiplier' => (int) env('TELEFRAME_STORE_BACKUP_WATCHDOG_MULT', 2),
+    ],
+
+    /* WHERE A NO-SHOW FINDING IS WRITTEN DOWN (F8, 2026-10-13) — added because
+       the watchdog's alert rode the queue it was watching: emit() enqueued on
+       `{topic}.missing` through the same queue and transport as the heartbeat
+       it watches, so a queue or transport failure — the operator's own scenario
+       — took the alert with it, and all that survived was a PSR-3 line only
+       the host can see. The finding is now written here FIRST, unconditionally,
+       and the Telegram notification is an enhancement on top of it.
+
+       Read by StoreBackupServiceProvider::registerWatchdog(), which binds a
+       FileWatchAlertSink: one JSON object per line, appended, never rewritten
+       (the directory is created 0700 on first write, the file 0600). It is the
+       dumbest durable thing available on purpose — no cache, no queue, no
+       database, no network — so its failure domain cannot be the failure being
+       reported.
+
+       '' = storage/teleframe/watchdog-alerts.jsonl under the host, falling
+       back to the system temp directory when there is no application base path
+       (a bare console). Point it at a mounted volume if system temp is
+       ephemeral, or at whatever your log shipper already tails. */
+    'watchdog' => [
+        'alert_log' => env('TELEFRAME_STORE_BACKUP_WATCHDOG_ALERT_LOG', ''),
     ],
 
     'target' => [

@@ -107,7 +107,7 @@ peer spine's only fetcher is `users.getUsers`.
 
 **Step 3 cannot execute before step 4, and step 4 is not allowed. The list has no valid start.**
 
-### V1.2 — Telegram as permanent backup storage (ftp / rsync / s3, recorded as "4-GiB chunks")
+### V1.2 — Telegram as permanent backup storage (verbatim names ftp / rsync / s3; only s3 is implemented, recorded as "4-GiB chunks")
 
 V1.2 is a *write* capability: it stores chunks into Telegram and reads them back. It needs the
 document fetcher to round-trip, and a session.
@@ -131,8 +131,8 @@ document fetcher to round-trip, and a session.
 
 **Every step except a hypothetical step 0 is NOT-ALLOWLISTED, and steps 1–4 are all verb-denied
 (`upload`, and none of the others is in the allowlist). V1.2's *read* half is structurally
-impossible under the current policy. Note that V1.2's s3/ftp/rsync *other* drivers do not touch
-Telegram at all and are unaffected — the blocker is specific to "Telegram as the storage".**
+impossible under the current policy. Note that V1.2's `s3` driver does not touch
+Telegram at all and is unaffected — the blocker is specific to "Telegram as the storage".**
 
 ### V1.3 — Laravel DB auto-dump + hash-based backup
 
@@ -258,7 +258,8 @@ boundary of V1.1 under the current policy, and it is a real, if narrow, result.
 chunks requires `messages.search`, `messages.getMessages` and `upload.getFile` in sequence, and
 all three are NOT-ALLOWLISTED, with `upload.getFile` verb-denied twice over
 (`DESTRUCTIVE_VERBS:63`). There is no read-only ordering of three denied methods. **Refuted** as
-to the non-Telegram drivers: `ftp`/`rsync`/`s3` need no Telegram method and are unaffected.
+to the `s3` driver: it needs no Telegram method and is unaffected. (`ftp`/`rsync` are named in
+the verbatim but were never implemented and are not drivers — do not read them into this row.)
 
 **V1.3 — POSSIBLE for the local half, IMPOSSIBLE for the Telegram half.** No allowlist change is
 needed to dump a Laravel DB and chunk it; the dumper ships and `ChunkPlanner` sizes the parts
@@ -380,8 +381,14 @@ circularity (peers), by policy (messages, media, chunks), or by the absence of a
 
 ### Configuration only (a host operator changes a value; no code)
 
-6. **Set `teleframe.backup.driver` to `s3`/`ftp`/`rsync`** — this makes V1.3's Telegram-independent
-   half usable immediately and dodges V1.2's impossible chain entirely.
+6. **Set `teleframe.backup.driver` to `s3`** — this makes V1.3's Telegram-independent
+   half usable immediately and dodges V1.2's impossible chain entirely. `s3` is the only
+   implemented Telegram-independent driver; the accepted values are `memory`, `telegram` and
+   `s3`, and any other value throws `RuntimeException` at bind time
+   (`TeleframeServiceProvider.php:468`). **`ftp` and `rsync` were never implemented** — an
+   earlier revision of this document prescribed them, which sent operators to a config value
+   the provider rejects. They are named in the original verbatim but ship in no code path;
+   do not re-advertise them without implementing them first.
 7. **Set a non-`'null'` DB dumper** — the shipped default cannot dump a production database
    (`.brain/verbatim-goals.md`, V1.3 row).
 8. **Set `teleframe.passport.bot_id`** to a real bot id — without it `botId()` returns 0 and

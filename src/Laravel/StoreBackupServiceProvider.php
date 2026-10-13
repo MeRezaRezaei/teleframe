@@ -9,9 +9,11 @@ use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use InvalidArgumentException;
 use MeRezaRezaei\Teleframe\Handler\InMemoryCache;
 use MeRezaRezaei\Teleframe\Laravel\Console\TstoreCommand;
 use MeRezaRezaei\Teleframe\Notify\FacadeSupport;
+use MeRezaRezaei\Teleframe\Notify\FileWatchAlertSink;
 use MeRezaRezaei\Teleframe\Notify\NoShowWatchdog;
 use MeRezaRezaei\Teleframe\Notify\NotificationQueueContract;
 use MeRezaRezaei\Teleframe\Notify\WatchState;
@@ -85,6 +87,14 @@ use Throwable;
  */
 final class StoreBackupServiceProvider extends ServiceProvider
 {
+    /**
+     * The package-owned dump trigger's default time of day. Deliberately NOT
+     * the file-vault schedule's 03:17 (TeleframeServiceProvider:932-935) so a
+     * host running both gets two dumps in two separate minutes, not two full
+     * database dumps on the same one.
+     */
+    private const DEFAULT_DUMP_TIME = '03:47';
+
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/config/store-backup.php', 'teleframe.store.backup');
@@ -117,6 +127,7 @@ final class StoreBackupServiceProvider extends ServiceProvider
         ]);
 
         $this->scheduleBackupWatchdogCheck();
+        $this->scheduleBackupDump();
     }
 
     /**
@@ -227,6 +238,7 @@ final class StoreBackupServiceProvider extends ServiceProvider
                     notify: $notify,
                     logger: $logger,
                     registrationSource: self::backupWatchSource($config),
+                    alertSink: new FileWatchAlertSink(self::alertLogPath($config, $app)),
                 );
             } catch (Throwable) {
                 return null;
@@ -236,6 +248,34 @@ final class StoreBackupServiceProvider extends ServiceProvider
         // ONE watchdog, two names: producers and checkers must meet on the
         // same object over the same durable state.
         $this->app->alias(BackupSupport::WATCHDOG_KEY, FacadeSupport::WATCHDOG_KEY);
+    }
+
+    /**
+     * Where the durable no-show record is written (F8).
+     *
+     * '' resolves to storage/teleframe/watchdog-alerts.jsonl under the host
+     * application, and only when there is no application base path (a bare
+     * console, the standalone gate) to the system temp directory. Resolution
+     * happens per RESOLVE of the watchdog singleton, so a host that changes the
+     * key and re-resolves gets the new path — nothing is captured at boot.
+     */
+    private static function alertLogPath(ConfigRepository $config, mixed $app): string
+    {
+        $configured = trim((string) ($config->get('teleframe.store.backup.watchdog.alert_log') ?? ''));
+        if ($configured !== '') {
+            return $configured;
+        }
+
+        if (is_object($app) && method_exists($app, 'basePath')) {
+            try {
+                return $app->basePath('storage'.DIRECTORY_SEPARATOR.'teleframe')
+                    .DIRECTORY_SEPARATOR.'watchdog-alerts.jsonl';
+            } catch (Throwable) {
+                // Fall through to the temp-directory posture.
+            }
+        }
+
+        return sys_get_temp_dir().DIRECTORY_SEPARATOR.'teleframe-watchdog-alerts.jsonl';
     }
 
     /**
@@ -645,5 +685,113 @@ final class StoreBackupServiceProvider extends ServiceProvider
             // A host without the scheduling surface still gets the check from
             // Temporal, from cron, or by hand — never a boot failure.
         }
+    }
+
+    /**
+     * THE PACKAGE-OWNED DUMP TRIGGER (F7, 2026-10-13).
+     *
+     * Before this, the DB dump was the ONE capability in the package with no
+     * trigger the package owned: `schedule.publisher` defaults to 'null', so on
+     * a default install nothing in the source tree ever fired
+     * `teleframe:tstore backup`, the documented posture was a hand-written cron
+     * line, and meanwhile the no-show watchdog — armed by default — reported
+     * that run missing, forever, on exactly the hosts that had followed the
+     * shipped instructions. The operator named both halves: "so it can simply
+     * dump the laravel database and make a backup from it in schedules" and "it
+     * can notify if something did not come into a log channel".
+     *
+     * With this flag on, the package registers the dump on Laravel's own
+     * scheduler, so a host runs ONE package-owned command — `php artisan
+     * schedule:run`, which it already needs for the hourly no-show check
+     * registered above — and writes no cron at all.
+     *
+     * IT IS DEFAULT-OFF, and it has to be. The two possible triggers cannot see
+     * each other: the shipped one-line cron posture is invisible to the Laravel
+     * scheduler, and no config key can report it, so the package cannot prove
+     * that defaulting this on cannot double-fire against a crontab a host
+     * already has. Two dumps a day into the same bucket with two run-ledger
+     * rows each is a real cost, and a package that guesses about it is worse
+     * than one that asks the host to delete a line. `withoutOverlapping()` and
+     * `onOneServer()` harden the trigger against the package's own scheduler
+     * and a second app server; neither can see cron. The key's config comment
+     * carries the same ruling, because a comment is what the next reader reads.
+     *
+     * NOT GATED ON THE MASTER SWITCH, on purpose: `enabled` is documented as
+     * governing the WATCHDOG and explicitly not the dump ("WHAT false DOES NOT
+     * DO … it does not disable the dump"), so gating the dump on it would
+     * repurpose a switch whose meaning is pinned by tests. This trigger reads
+     * its own key and nothing else.
+     *
+     * Registered as a command STRING, like the check above, so `schedule:run`
+     * forks one process per tick instead of dumping inside the scheduler's own
+     * process; and at 03:47 rather than the file-vault sibling's 03:17 so a
+     * host running both does not stack two database dumps on one minute.
+     */
+    private function scheduleBackupDump(): void
+    {
+        /** @var ConfigRepository $config */
+        $config = $this->app->make('config');
+
+        if (! (bool) ($config->get('teleframe.store.backup.schedule.package_schedule.enabled') ?? false)) {
+            return;
+        }
+
+        if (! $this->app->bound(Schedule::class)) {
+            return; // no scheduler in this process (a bare console, a worker)
+        }
+
+        // Validated OUTSIDE the catch below, on purpose. The catch exists so a
+        // host without the scheduling surface is never a boot failure; a
+        // misspelled time must NOT be swallowed into "registered at some other
+        // time" or "not registered at all" — both are a backup the host
+        // believes is armed and is not. It throws by name, at console boot,
+        // where the operator is running a command and sees the error.
+        $dailyAt = self::dailyAtOrThrow($config);
+
+        try {
+            $this->app->make(Schedule::class)
+                ->command('teleframe:tstore backup')
+                ->dailyAt($dailyAt)
+                ->withoutOverlapping()
+                ->onOneServer();
+        } catch (Throwable) {
+            // No scheduling surface in this process: the dump is then whatever
+            // the host already runs — Temporal, cron, or by hand. Never a boot
+            // failure, exactly like the no-show check above.
+        }
+    }
+
+    /**
+     * teleframe.store.backup.schedule.package_schedule.daily_at as an H:i
+     * string, or a named throw. Zero regex: length, the separator position and
+     * ctype_digit() are the whole grammar, and the ranges are checked rather
+     * than assumed (so '99:99' is refused too).
+     *
+     * @throws InvalidArgumentException When the value is not a 24-hour H:i time.
+     */
+    private static function dailyAtOrThrow(ConfigRepository $config): string
+    {
+        $value = trim((string) ($config->get('teleframe.store.backup.schedule.package_schedule.daily_at') ?? ''));
+
+        if ($value === '') {
+            return self::DEFAULT_DUMP_TIME;
+        }
+
+        $valid = strlen($value) === 5
+            && $value[2] === ':'
+            && ctype_digit(substr($value, 0, 2))
+            && ctype_digit(substr($value, 3, 2))
+            && (int) substr($value, 0, 2) <= 23
+            && (int) substr($value, 3, 2) <= 59;
+
+        if (! $valid) {
+            throw new InvalidArgumentException(
+                'teleframe.store.backup.schedule.package_schedule.daily_at must be a 24-hour "H:i" time'
+                .' (00:00-23:59), got "'.$value.'". The package-owned dump trigger refuses to register'
+                .' at a time you did not ask for.',
+            );
+        }
+
+        return $value;
     }
 }

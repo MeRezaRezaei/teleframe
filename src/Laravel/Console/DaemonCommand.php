@@ -293,12 +293,27 @@ class DaemonCommand extends Command
     /**
      * The daemon-mode consumer, wired to the same pipeline the standalone
      * ingest loop uses.
+     *
+     * NO MIRROR INGESTER — D-040, 2026-10-13. This used to resolve
+     * `self::MIRROR_INGESTER_KEY` and pass it, and because
+     * `TeleframeServiceProvider` binds that key unconditionally in every
+     * Laravel host, the daemon's bus drain therefore ALWAYS took
+     * `IngestConsumer`'s mirror branch and the `Teleclient::ingest()` branch
+     * below it was unreachable in a default install. The mirror branch writes
+     * no `tf_updates` row at all — it refuses to invent a `(seq, position)`
+     * key for a seq-less payload — so the daemon produced no committed row
+     * carrying `(account_id, seq, position)`, and that row is what the update
+     * bus has to name.
+     *
+     * The binding stays: it still serves the backfill and RPC-response paths
+     * (`MirrorIngesterFactory`). Only the BUS PATH is retired, and
+     * `IngestConsumer` still drains pre-migration v1 entries through the seam
+     * for any host that passes one.
      */
     private function buildBusDrain(): IngestConsumer
     {
         $adapter = new LaravelRedisAdapter(Redis::connection());
         $client = app(Teleclient::class);
-        $mirror = app()->bound(self::MIRROR_INGESTER_KEY) ? app(self::MIRROR_INGESTER_KEY) : null;
         $routed = $this->handlerSink();
 
         return new IngestConsumer(
@@ -308,7 +323,7 @@ class DaemonCommand extends Command
             $routed === null
                 ? null
                 : static fn (array $update, int $accountId): bool => $routed->handle($update, (string) $accountId),
-            $mirror,
+            mirrorIngester: null,
         );
     }
 
@@ -967,7 +982,10 @@ class DaemonCommand extends Command
     {
         $adapter = new LaravelRedisAdapter(Redis::connection());
         $client = app(Teleclient::class);
-        $mirror = app()->bound(self::MIRROR_INGESTER_KEY) ? app(self::MIRROR_INGESTER_KEY) : null;
+        // NO MIRROR INGESTER — D-040, and for the same reason as
+        // buildBusDrain() above: this is the BUS PATH, and the bus is where
+        // `UpdateIngestor` has to be the writer, because its committed row is
+        // what a bus entry names. See that method for the full argument.
         $routed = $this->handlerSink();
         // THE ROUTED BRANCH DELIVERS (2026-09-26 audit fix, BREAK 2). The
         // daemon passed `onRouted: null`, so a host that configured a bus
@@ -987,7 +1005,7 @@ class DaemonCommand extends Command
             $routed === null
                 ? null
                 : static fn (array $update, int $accountId): bool => $routed->handle($update, (string) $accountId),
-            $mirror,
+            mirrorIngester: null,
         );
 
         if ($once) {

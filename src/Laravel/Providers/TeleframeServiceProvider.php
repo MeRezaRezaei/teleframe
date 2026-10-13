@@ -876,8 +876,32 @@ class TeleframeServiceProvider extends ServiceProvider
         UpdateRoutingRule::observe(RoutingSettingsObserver::class);
 
         if ($this->app->runningInConsole()) {
+            // THE UMBRELLA TAG. `vendor:publish --tag=teleframe-config` must land
+            // EVERY config file this package ships, not just one of them: the
+            // per-file tags below (and in the other five providers) are what a
+            // host finds by reading each provider, and a host that published
+            // only the obvious tag used to silently get four configs fewer than
+            // it asked for — no error, just defaults nobody chose.
+            //
+            // This map is the ONE home for the package's config publish surface.
+            // It deliberately lists files owned by the other providers (Notify,
+            // Passport, App, StoreBackup) because the TAG is shared state: any
+            // provider may contribute to a publish group, and keeping the whole
+            // map here means there is exactly one place to count, and exactly one
+            // place a new config file has to be added to be published at all.
+            //
+            // The per-file tags each provider registers still work unchanged;
+            // publishing the umbrella is strictly additive.
+            //
+            // bin/prove-host-install.php asserts this map covers every file in
+            // src/Laravel/config/ and that no config file is unreferenced by ANY
+            // tag, so a config file added without landing here turns the gate red.
             $this->publishes([
                 __DIR__.'/../config/teleframe.php' => config_path('teleframe.php'),
+                __DIR__.'/../config/notify.php' => config_path('teleframe/notify.php'),
+                __DIR__.'/../config/passport.php' => config_path('teleframe/passport.php'),
+                __DIR__.'/../config/app.php' => config_path('teleframe/app.php'),
+                __DIR__.'/../config/store-backup.php' => config_path('teleframe/store/backup.php'),
             ], 'teleframe-config');
 
             $this->publishes([

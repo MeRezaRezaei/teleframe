@@ -82,6 +82,30 @@ const EXPECTED_PUBLISHES = [
 ];
 
 /**
+ * The tag a host reaches for first, and EVERY config file it must land.
+ *
+ * The measured friction this exists for: the package ships N config files but
+ * published them one-per-tag, so a host that published only the obvious
+ * `teleframe-config` tag got one file and silently inherited package defaults
+ * for the rest — no error, no warning. This list is the assertion that the
+ * umbrella tag covers all of them, and the count is asserted below rather than
+ * trusted.
+ *
+ * @var array<string, string> host-relative config path => the config key that
+ *                            file must visibly define (proves it is real config, not a stub).
+ */
+const EXPECTED_CONFIG_FILES = [
+    'config/teleframe.php' => 'api_id',
+    'config/teleframe/notify.php' => 'queue',
+    'config/teleframe/passport.php' => 'enabled',
+    'config/teleframe/app.php' => 'apps',
+    'config/teleframe/store/backup.php' => 'database',
+];
+
+/** The umbrella tag. One command must publish every file in EXPECTED_CONFIG_FILES. */
+const UMBRELLA_TAG = 'teleframe-config';
+
+/**
  * @var list<string> every command the package must contribute to `artisan list`.
  *
  * The check is a `str_contains` over the `php artisan list` output, so every
@@ -418,6 +442,7 @@ declare(strict_types=1);
  */
 
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\ServiceProvider;
 
 $root = __DIR__;
 require $root.'/vendor/autoload.php';
@@ -574,6 +599,24 @@ $out['StoreBackup'] = [
     'transport-backup' => mustThrow(static fn () => $sb::backup(), 'no database driver configured'),
 ];
 
+// --- 7. the publish surface -------------------------------------------------
+// What the package actually registers, read from the HOST's booted ServiceProvider
+// registry rather than from this script's expectations. The parent cross-checks
+// it against EXPECTED_CONFIG_FILES and against the config files on disk.
+$publishGroups = [];
+foreach (ServiceProvider::publishableGroups() as $group) {
+    $paths = ServiceProvider::pathsToPublish(null, $group);
+    if (! is_array($paths)) {
+        continue;
+    }
+    // array_keys(), NOT array_values(): the publish map is source => target, and
+    // this gate compares against the config files on DISK, which are sources.
+    // Reading the values here compares source files against host target paths and
+    // silently misses every file whose published name differs from its source name.
+    $publishGroups[$group] = array_keys($paths);
+}
+$out['publish-surface'] = ['ok' => true, 'value' => 'groups='.count($publishGroups), 'groups' => $publishGroups];
+
 echo '##PROBE##'.json_encode($out, JSON_UNESCAPED_SLASHES)."\n";
 PHP);
 
@@ -728,22 +771,118 @@ $checks['every vendor:publish tag lands its config file'] = static function () u
 };
 
 /**
+ * THE UMBRELLA GATE. One command must publish every config file the package
+ * ships.
+ *
+ * This is the assertion, not the count: the targets are deleted first, the
+ * single umbrella tag is published ONCE, and every file must land. A tag that
+ * quietly covers four of five files fails here instead of being discovered by a
+ * host that never knew to publish the fifth.
+ */
+$checks[sprintf('publishing the umbrella tag "%s" lands ALL %d config files', UMBRELLA_TAG, count(EXPECTED_CONFIG_FILES))] = static function () use ($host, $artisan, &$proveFailures): bool {
+    // Delete EVERY expected target so a file left over from an earlier check's
+    // publish cannot be mistaken for this check's work.
+    foreach (array_keys(EXPECTED_CONFIG_FILES) as $relative) {
+        $target = $host.'/'.$relative;
+        if (is_file($target)) {
+            @unlink($target);
+        }
+    }
+
+    $r = $artisan(['vendor:publish', '--tag='.UMBRELLA_TAG, '--force', '--no-interaction']);
+    if ($r['code'] !== 0) {
+        $proveFailures[] = 'umbrella publish failed (exit '.$r['code'].'): '.proveTail($r, 3);
+
+        return false;
+    }
+
+    $missing = [];
+    foreach (array_keys(EXPECTED_CONFIG_FILES) as $relative) {
+        if (! is_file($host.'/'.$relative)) {
+            $missing[] = $relative;
+        }
+    }
+
+    if ($missing !== []) {
+        $proveFailures[] = sprintf(
+            'the umbrella tag "%s" did NOT land %d of %d config files — missing: %s',
+            UMBRELLA_TAG,
+            count($missing),
+            count(EXPECTED_CONFIG_FILES),
+            implode(', ', $missing),
+        );
+
+        return false;
+    }
+
+    return true;
+};
+
+/**
+ * No config file may be UNREACHABLE by publishing. The tag list is a hand-kept
+ * expectation and can fall behind the tree; this reads the config directory in
+ * THIS repository and the publish groups the host actually booted, and fails if
+ * a file exists on disk that no tag publishes.
+ *
+ * Direction matters and both are asserted: a file missing from the umbrella is
+ * caught by the check above, and a file missing from EVERY tag is caught here.
+ */
+$checks['no config file is unreferenced by any publish tag'] = static function () use ($repoRoot, $probeJson, &$proveFailures): bool {
+    $onDisk = glob($repoRoot.'/src/Laravel/config/*.php') ?: [];
+    if ($onDisk === []) {
+        $proveFailures[] = 'no config files found in src/Laravel/config/ — the scan found nothing to check';
+
+        return false;
+    }
+
+    $groups = $probeJson['publish-surface']['groups'] ?? null;
+    if (! is_array($groups) || $groups === []) {
+        $proveFailures[] = 'the host reported no publish groups at all — nothing can be asserted';
+
+        return false;
+    }
+
+    // Every published SOURCE, from every group, reduced to its basename so the
+    // host's absolute package paths can be compared with this repo's disk.
+    $published = [];
+    foreach ($groups as $paths) {
+        foreach ((array) $paths as $from) {
+            if (is_string($from)) {
+                $published[basename($from)] = true;
+            }
+        }
+    }
+
+    $orphans = [];
+    foreach ($onDisk as $file) {
+        if (! isset($published[basename($file)])) {
+            $orphans[] = basename($file);
+        }
+    }
+
+    if ($orphans !== []) {
+        sort($orphans);
+        $proveFailures[] = 'config file(s) that NO publish tag publishes: '.implode(', ', $orphans);
+
+        return false;
+    }
+
+    return true;
+};
+
+/**
  * The published config must be REAL config, and the host must still boot with
  * it in place — a published file that shadows the provider's mergeConfigFrom
  * and breaks the boot is the failure mode here, not a missing key.
  */
 $checks['the host still boots with the published config in place'] = static function () use ($host, $artisan, &$proveFailures): bool {
-    foreach ([
-        'teleframe.php' => 'api_id',
-        'teleframe/notify.php' => 'queue',
-        'teleframe/passport.php' => 'enabled',
-        'teleframe/app.php' => 'apps',
-        'teleframe/store/backup.php' => 'database',
-    ] as $relative => $key) {
-        $file = $host.'/config/'.$relative;
+    // Driven by EXPECTED_CONFIG_FILES, not by a second hand-written list: the
+    // duplication is what let the tag list and the key list drift apart before.
+    foreach (EXPECTED_CONFIG_FILES as $relative => $key) {
+        $file = $host.'/'.$relative;
         $contents = (string) @file_get_contents($file);
         if ($contents === '' || ! str_contains($contents, "'".$key."'")) {
-            $proveFailures[] = 'config/'.$relative.' does not define '.$key;
+            $proveFailures[] = $relative.' does not define '.$key;
 
             return false;
         }
@@ -873,7 +1012,7 @@ proveLine('  integrator has to perform that the package does not do for them.');
 proveLine();
 $numbered = [
     'composer require the package — the only install step. Nothing else is needed for the boot to work.',
-    'php artisan vendor:publish --tag=teleframe-config (then teleframe-notify-config, teleframe-store-backup-config, teleframe-app-config, teleframe-passport-config) — each tag publishes ONE file; there is no umbrella tag, so a host that publishes only the first is missing four configs.',
+    'php artisan vendor:publish --tag=teleframe-config — ONE umbrella command that publishes every config file the package ships ('.count(EXPECTED_CONFIG_FILES).' in this tree; the check above asserts that each one actually lands). The per-file tags (teleframe-notify-config, teleframe-store-backup-config, teleframe-app-config, teleframe-passport-config) still work and are still asserted, for a host that wants to publish one file at a time.',
     'Set TELEGRAM_API_ID / TELEGRAM_API_HASH in .env before any MTProto call. Unconfigured, Teleframe::user() throws "Telegram API ID and API Hash are required" — the facade resolves, the call does not.',
     'Set TELEGRAM_BOT_TOKEN before Notify sends. Unconfigured, Notify resolves and the send throws — but only on the thread that actually sends (see the queue note below).',
     'Run teleframe:doctor as the first post-install check. It is the one command that tells you whether the host can reach Telegram, and it refuses fast (non-zero, no hang) when the API id/hash are unset.',

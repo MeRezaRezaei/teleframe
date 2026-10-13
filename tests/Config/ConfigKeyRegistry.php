@@ -54,6 +54,14 @@ namespace MeRezaRezaei\Teleframe\Tests\Config;
  * keeps restorable. Declared surface 168 -> 169, READ 158 -> 159. Read by
  * BackupCommand::keepGenerations(), overridden per-run by
  * `--keep-generations=N`.
+ *
+ * WHAT CHANGED 2026-10-13 (S6 / F7 + F8): three keys added. Two are the
+ * package-owned dump trigger — schedule.package_schedule.enabled (read by
+ * StoreBackupServiceProvider::scheduleBackupDump()) and .daily_at (read by
+ * its dailyAtOrThrow()) — and one is the out-of-band no-show record,
+ * watchdog.alert_log (read by registerWatchdog() via alertLogPath()).
+ * Declared surface 169 -> 172, READ 159 -> 162. DeclaredKeyCoverageTest
+ * caught all three UNCLASSIFIED first, which is this registry working.
  */
 final class ConfigKeyRegistry
 {
@@ -201,6 +209,8 @@ final class ConfigKeyRegistry
         'teleframe.store.backup.schedule.dsn',
         'teleframe.store.backup.schedule.enabled',
         'teleframe.store.backup.schedule.interval_seconds',
+        'teleframe.store.backup.schedule.package_schedule.daily_at',
+        'teleframe.store.backup.schedule.package_schedule.enabled',
         'teleframe.store.backup.schedule.publisher',
         'teleframe.store.backup.schedule.task_queue',
         'teleframe.store.backup.schedule.watchdog_expect_multiplier',
@@ -209,6 +219,7 @@ final class ConfigKeyRegistry
         'teleframe.store.backup.target.bucket',
         'teleframe.store.backup.target.passphrase',
         'teleframe.store.backup.targets',
+        'teleframe.store.backup.watchdog.alert_log',
         'teleframe.supervisor.env',
         'teleframe.supervisor.max_backoff_seconds',
         'teleframe.supervisor.max_restarts',

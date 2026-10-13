@@ -81,6 +81,21 @@ final class IngestConsumer
     private const DL_REPLAY_BATCH = 100;
 
     /**
+     * The bus entry version that predates the `v` discriminator.
+     *
+     * A v1 entry is `{account_id, update, ts}` and carries no version field at
+     * all, so an absent `v` IS v1 — absence is the discriminator, not a missing
+     * value to reject.
+     */
+    private const ENTRY_V1 = 1;
+
+    /**
+     * The first entry version that names a committed row instead of carrying a
+     * payload, and therefore must never take the mirror seam.
+     */
+    private const ENTRY_V2 = 2;
+
+    /**
      * Approximate bound on the dead-letter stream. A dead-letter is an
      * operator artifact, not a queue: it is replayed or inspected by hand.
      * Unbounded, it is a slow leak that is invisible until Redis is under
@@ -517,10 +532,15 @@ final class IngestConsumer
                 return true;
             }
 
-            if ($this->mirrorIngester !== null) {
+            if ($this->mirrorIngester !== null && self::entryVersion($fields) < self::ENTRY_V2) {
                 // The verbatim's daily loop: observe → relational DB
                 // (NF5 mirror) → Eloquent models. The ingester classifies
                 // and gates the UpdateStored event itself (cycles 10–12).
+                //
+                // V1 ENTRIES ONLY — see entryVersion(). An entry the migration
+                // has already versioned carries a row, and both writers
+                // converge on the same tables, so running the seam over it
+                // would write the same update twice.
                 ($this->mirrorIngester)($entry['update'], (int) $entry['account_id']);
             } else {
                 // THE FRAME IDENTITY IS SCOPED HERE, and this is the only
@@ -587,6 +607,48 @@ final class IngestConsumer
         $this->ack($entryId);
 
         return true;
+    }
+
+    /**
+     * The bus entry version, read from the entry's own `v` field.
+     *
+     * ## WHY THE SEAM IS GATED RATHER THAN DELETED
+     *
+     * D-040 makes `UpdateIngestor` the daemon's truth writer and retires the
+     * mirror seam from the bus path. It does not delete the branch, and the
+     * reason is the entries already on the stream: a producer that ran before
+     * this change published v1 entries that are sitting in
+     * `tg:stream:updates` right now, and the seam is the writer whose
+     * behaviour those entries were produced under. Deleting the branch would
+     * re-home them on a writer they were never shaped for.
+     *
+     * Leaving it UNCONDITIONAL is the opposite failure and the more dangerous
+     * one, because it is silent. The mirror's `MirrorFactWriter` and
+     * `UpdateIngestor` converge on the same tables: run both over one entry
+     * and the same update is written twice, in two different shapes, with no
+     * error anywhere. So the branch is keyed on the entry's own version, and
+     * a v2 entry — the first version that names a committed row rather than
+     * carrying a payload — is refused the seam outright.
+     *
+     * ABSENCE IS THE DISCRIMINATOR. A v1 entry is `{account_id, update, ts}`
+     * and carries no `v` field at all, so an unmarked entry is v1 — that is
+     * what makes the entries a pre-migration producer already published
+     * drainable rather than dead. An unrecognisable marker is read as v1 for
+     * the same reason: an entry this consumer cannot positively identify as
+     * post-migration must not be handed to a v1-only writer, and the
+     * recoverable direction here is the one that commits a row.
+     *
+     * @param  array<string, string>  $fields  the raw stream entry field map
+     */
+    private static function entryVersion(array $fields): int
+    {
+        $raw = $fields['v'] ?? null;
+
+        if ($raw === null || ! ctype_digit($raw)) {
+            return self::ENTRY_V1;
+        }
+
+        return (int) $raw;
     }
 
     /**
