@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Tests\Notify;
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
 use MeRezaRezaei\Teleframe\Bot\Services\BotClient;
 use MeRezaRezaei\Teleframe\Laravel\NotifyServiceProvider;
 use MeRezaRezaei\Teleframe\Message\MessageCompiler;
@@ -45,6 +47,13 @@ final class ExceptionReporterWiringTest extends TestbenchTestCase
 
         $this->app->singleton(MessageCompiler::class, fn (): MessageCompiler => new MessageCompiler($this->tmp.'/tpl', $this->tmp.'/cache'));
         $this->app->singleton(BotClient::class, fn (): FakeBotClient => new FakeBotClient);
+
+        // D1: an attachment now travels as a real `multipart/form-data` POST,
+        // which BotClient::call() cannot express (it posts JSON). So the HTTP
+        // seam is faked at the layer that actually builds the multipart body —
+        // and the requests it captured are what these tests now read. A local
+        // path in a JSON body would be a 400 from Telegram and a lost report.
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 1]])]);
     }
 
     protected function tearDown(): void
@@ -67,23 +76,20 @@ final class ExceptionReporterWiringTest extends TestbenchTestCase
         // The host's own error path — no Notify::report(), no wiring.
         $handler->report(new RuntimeException('session refused on dc2'));
 
-        $bot = $this->app->make(BotClient::class);
-        self::assertInstanceOf(FakeBotClient::class, $bot);
-        self::assertNotSame([], $bot->calls, 'the exception never reached Telegram');
-
-        $methods = array_map(static fn (array $c): string => $c['method'], $bot->calls);
-        self::assertContains('sendDocument', $methods);
-
-        $document = (string) ($bot->documents[0] ?? '');
+        $document = $this->uploadedAttachment();
         self::assertStringContainsString('RuntimeException', $document);
         self::assertStringContainsString('session refused on dc2', $document);
     }
 
     public function test_a_failing_notification_never_masks_the_original_exception(): void
     {
+        // Armed to fail on EITHER wire: the JSON path (BotClient) and the
+        // multipart path (the HTTP seam) both refuse, so the notification
+        // fails whichever one the exception report takes.
         $bot = $this->app->make(BotClient::class);
         self::assertInstanceOf(FakeBotClient::class, $bot);
         $bot->failure = new RuntimeException('telegram is down');
+        Http::fake(['api.telegram.org/*' => Http::response('gateway down', 502)]);
 
         $handler = $this->app->make(ExceptionHandler::class);
         $original = new RuntimeException('the real failure');
@@ -94,7 +100,7 @@ final class ExceptionReporterWiringTest extends TestbenchTestCase
 
         self::assertSame('the real failure', $original->getMessage());
         self::assertTrue($handler->shouldReport($original), 'the host handler still reports this exception itself');
-        self::assertSame(1, $bot->attempts, 'the send was attempted, not skipped');
+        self::assertSame(1, $bot->attempts + $this->multipartAttempts(), 'the send was attempted, not skipped');
     }
 
     public function test_a_secret_shaped_value_never_reaches_the_chat(): void
@@ -106,14 +112,7 @@ final class ExceptionReporterWiringTest extends TestbenchTestCase
             new RuntimeException("auth failed: auth_key={$session} bot_token={$token}"),
         );
 
-        $bot = $this->app->make(BotClient::class);
-        $sent = '';
-        foreach ($bot->calls as $call) {
-            $sent .= (string) ($call['params']['text'] ?? '')."\n".(string) ($call['params']['caption'] ?? '');
-        }
-        foreach ($bot->documents as $document) {
-            $sent .= "\n".(string) $document;
-        }
+        $sent = $this->everythingSent();
 
         self::assertStringContainsString('auth failed', $sent, 'the operator still needs the message');
         self::assertStringNotContainsString($session, $sent);
@@ -139,6 +138,72 @@ final class ExceptionReporterWiringTest extends TestbenchTestCase
         self::assertSame(5, $bot->calls[0]['params']['message_thread_id'], 'app.error thread');
         self::assertStringContainsString('[CRITICAL] app.error', (string) $bot->calls[0]['params']['text']);
         self::assertStringContainsString('on the floor', (string) $bot->calls[0]['params']['text']);
+    }
+
+    /** @return list<Request> every faked request the notification path dialled */
+    private function sentRequests(): array
+    {
+        $seen = [];
+        Http::assertSent(function (Request $request) use (&$seen): bool {
+            $seen[] = $request;
+
+            return true;
+        });
+
+        return $seen;
+    }
+
+    /** How many of those went out as a multipart attachment POST. */
+    private function multipartAttempts(): int
+    {
+        $count = 0;
+        foreach ($this->sentRequests() as $request) {
+            if (str_contains($request->header('Content-Type')[0] ?? '', 'multipart/form-data')) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * The bytes of the attachment that actually went out on the wire — read
+     * out of the captured multipart body, so this is what Telegram would have
+     * received, not what a test double decided to model.
+     */
+    private function uploadedAttachment(): string
+    {
+        foreach ($this->sentRequests() as $request) {
+            $contentType = $request->header('Content-Type')[0] ?? '';
+            if (! str_contains($contentType, 'multipart/form-data')) {
+                continue;
+            }
+            // The part's own header line is what names the attach:// target.
+            self::assertStringContainsString('filename=', $request->body());
+            self::assertMatchesRegularExpression('/name="document"\\s*\\r\\n\\r\\nattach:\/\//', $request->body());
+
+            return $request->body();
+        }
+
+        self::fail('no multipart/form-data attachment request reached the wire — the report was never uploaded');
+    }
+
+    /** Every byte of every call the notification path made, on either wire. */
+    private function everythingSent(): string
+    {
+        $sent = '';
+        foreach ($this->sentRequests() as $request) {
+            $sent .= $request->body()."\n";
+        }
+
+        $bot = $this->app->make(BotClient::class);
+        if ($bot instanceof FakeBotClient) {
+            foreach ($bot->calls as $call) {
+                $sent .= (string) ($call['params']['text'] ?? '')."\n".(string) ($call['params']['caption'] ?? '')."\n";
+            }
+        }
+
+        return $sent;
     }
 
     private function removeDir(string $dir): void

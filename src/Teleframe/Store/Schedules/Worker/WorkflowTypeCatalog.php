@@ -304,10 +304,41 @@ final class WorkflowTypeCatalog
     /**
      * The same verdict without the `worker: ` label, for use under a heading
      * that already says which subject is being covered.
+     *
+     * WHY THE APP-CALL FAMILY GETS A DIFFERENT SENTENCE (defect: a verdict that
+     * claimed coverage nobody could verify). `serves()` answers "does a workflow
+     * CLASS exist for this type in this package", and for the app-call family
+     * the honest answer is yes — AppRunCallWorkflow exists. But the type string
+     * embeds the app and call names, and TemporalWorker registers it ONLY for
+     * the (app, call) pairs the operator passed on the command line
+     * (`bin/teleframe-worker --app=… --call=…`); it deliberately refuses a
+     * wildcard (registerAppCallTypes). So `served by this package — run X` was
+     * a claim this process cannot check for ANY well-formed pair, including
+     * ones the operator never declared, and the fixed types' one-liner was
+     * reused for them. The schedule still armed and the line still read green.
+     *
+     * So the app-call family now states the REQUIREMENT and says plainly that
+     * this process cannot verify a worker is running. `serves()` is unchanged on
+     * purpose: returning false for a well-formed pair would break the
+     * legitimate single-app install (a worker started for exactly that pair does
+     * serve it) and would report a gap where there is a conditional requirement.
      */
     public function verdict(string $type, string $entryPoint = TemporalWorker::ENTRY_POINT): string
     {
         if ($this->serves($type)) {
+            $appCall = $this->parseAppCall($type);
+
+            if ($appCall !== null) {
+                return sprintf(
+                    'served ONLY IF you started the worker with --app=%s --call=%s (it registers workflow '
+                    .'type %s); this process cannot verify a worker is running, and the app-call family has '
+                    .'no wildcard — an undeclared pair ticks into nothing.',
+                    $appCall[0],
+                    $appCall[1],
+                    $type,
+                );
+            }
+
             return sprintf(
                 'served by this package — run %s (registers workflow type %s)',
                 $entryPoint,

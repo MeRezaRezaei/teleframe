@@ -48,6 +48,12 @@ namespace MeRezaRezaei\Teleframe\Tests\Config;
  * 152 -> 158. The coverage test caught them UNCLASSIFIED first, in GitLab
  * pipeline 810, which is this registry refusing to let a new declaration join
  * the dead-config class unnoticed.
+ *
+ * WHAT CHANGED 2026-10-12 (generation retention): one key added,
+ * teleframe.backup.keep_generations — how many newest generations a prune
+ * keeps restorable. Declared surface 168 -> 169, READ 158 -> 159. Read by
+ * BackupCommand::keepGenerations(), overridden per-run by
+ * `--keep-generations=N`.
  */
 final class ConfigKeyRegistry
 {
@@ -88,6 +94,11 @@ final class ConfigKeyRegistry
         'teleframe.backup.chunk_size',
         'teleframe.backup.max_age_hours',
         'teleframe.backup.driver',
+        // Retention: how many newest generations a prune keeps restorable.
+        // READ by BackupCommand::keepGenerations(), which applies it as the
+        // width of Pruner::retentionKeepHashes() — the keep-set the prune
+        // deletes against. Reached on the `prune` action only.
+        'teleframe.backup.keep_generations',
         'teleframe.backup.passphrase',
         'teleframe.backup.scheduled',
         'teleframe.backup.sets.default.excludes',

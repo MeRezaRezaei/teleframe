@@ -38,18 +38,53 @@ final class LaravelRedisAdapter implements RedisConnectionContract
 {
     public function __construct(private readonly IlluminateConnection $connection) {}
 
+    /**
+     * THE TRIM SEMANTIC, CHOSEN ONCE FOR BOTH DRIVERS: APPROXIMATE.
+     *
+     * Both branches below put `MAXLEN ~ <count>` on the wire — predis by
+     * splicing the literal '~' token inside `$options['trim']`, phpredis by
+     * its `$approx = true` flag — so the ingest path gets one identical
+     * bound on either driver and the count means the same thing.
+     *
+     * Why approximate and not exact (`=`): exact trimming makes the server
+     * walk the stream back to the exact entry count on every single XADD,
+     * which is O(N) in stream length and sits directly on the ingest hot
+     * path. Approximate trimming discards whole macro-node-sized batches, so
+     * it is cheap and the stream retains a bounded overshoot (a few entries
+     * past the target) — never unbounded growth. For a memory-safety ceiling
+     * that is the correct trade: we need "bounded", not "exactly N".
+     */
     public function xadd(string $stream, string $id, array $fields, array $options = []): string
     {
         $maxlen = isset($options['maxlen']) ? (int) $options['maxlen'] : 0;
 
         if ($maxlen > 0) {
-            // `~` is the approximate trim: O(1) on the server and it may keep a
-            // few entries past the bound, which is the right trade for a stream
-            // that is growing without limit. It goes right after the id on
-            // both drivers; the field list follows.
             $result = $this->isPredis()
-                ? $this->connection->command('xadd', [$stream, $fields, $id, 'MAXLEN', '~', $maxlen])
-                : $this->connection->command('xadd', [$stream, $id, $fields, 'MAXLEN', '~', $maxlen]);
+                // predis: the trim is an OPTIONS STRUCTURE, not argv. See
+                // Predis\Command\Redis\XADD::setArguments() (vendor/predis/
+                // predis/src/Command/Redis/XADD.php:33-63): it reads
+                // `$options = $arguments[3] ?? []` and splices
+                // `array_push($args, ...$options['trim'])` at lines 58-59,
+                // emitting those tokens BEFORE the id. Passing a literal
+                // 'MAXLEN' string at index 3 makes $options a string, so
+                // `isset($options['trim'])` is false and the trim is dropped
+                // SILENTLY — XADD succeeds, the stream just never gets
+                // bounded. That is the defect this branch exists to fix.
+                ? $this->connection->command('xadd', [
+                    $stream, $fields, $id,
+                    ['trim' => ['MAXLEN', '~', $maxlen]],
+                ])
+                // phpredis: Redis::xAdd() is FIXED-ARITY with a typed
+                // signature (verified by reflection on ext-redis 6.3.0):
+                //   xAdd(string $key, string $id, array $values,
+                //        int $maxlen = 0, bool $approx = false,
+                //        bool $nomkstream = false)
+                // There is no argv shape that gets a literal 'MAXLEN' past
+                // argument #4: it is declared `int`, so the old
+                // [$stream, $id, $fields, 'MAXLEN', '~', $maxlen] raised
+                // "TypeError: Argument #4 ($maxlen) must be of type int".
+                // $approx=true is what puts `~` on the wire here.
+                : $this->connection->command('xadd', [$stream, $id, $fields, $maxlen, true]);
         } else {
             $result = $this->isPredis()
                 ? $this->connection->command('xadd', [$stream, $fields, $id])

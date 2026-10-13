@@ -6,14 +6,15 @@ namespace MeRezaRezaei\Teleframe\Tests\Passport;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
 use MeRezaRezaei\Teleframe\Laravel\Console\PassportCommand;
 use MeRezaRezaei\Teleframe\Laravel\PassportServiceProvider;
 use MeRezaRezaei\Teleframe\Passport\AuthorizationImporter;
 use MeRezaRezaei\Teleframe\Passport\MemoryBindingWriter;
 use MeRezaRezaei\Teleframe\Passport\MemoryPassportWire;
+use MeRezaRezaei\Teleframe\Passport\NonceRegistry;
 use MeRezaRezaei\Teleframe\Passport\PassportConfig;
 use MeRezaRezaei\Teleframe\Passport\PassportLoginException;
 use MeRezaRezaei\Teleframe\Passport\PassportLoginService;
@@ -320,7 +321,8 @@ final class PassportCommandTest extends TestCase
     public function test_nonce_probe_never_prints_the_nonce_value(): void
     {
         $issued = null;
-        $registry = new class($issued) implements \MeRezaRezaei\Teleframe\Passport\NonceRegistry {
+        $registry = new class($issued) implements NonceRegistry
+        {
             public ?string $issued = null;
 
             public function __construct(?string &$issued)
@@ -351,7 +353,7 @@ final class PassportCommandTest extends TestCase
             public function clear(string $nonce): void {}
         };
 
-        $this->app->instance(\MeRezaRezaei\Teleframe\Passport\PassportSupport::NONCES_KEY, $registry);
+        $this->app->instance(PassportSupport::NONCES_KEY, $registry);
 
         $exit = Artisan::call('teleframe:passport', ['action' => 'nonce', '--user' => '7']);
         $out = Artisan::output();
@@ -379,13 +381,28 @@ final class PassportCommandTest extends TestCase
         self::assertStringContainsString('nonce needs --user=', $out);
     }
 
-    public function test_flush_returns_success(): void
+    /**
+     * `flush` cannot flush, and the command now says so instead of lying.
+     *
+     * `clear()` is PER-NONCE, so the sweep passes an empty string — which is
+     * not a nonce that was ever issued, so neither registry removes a single
+     * key. The old contract printed "Nonce registry flushed" and returned
+     * SUCCESS: an operator who ran it to drop outstanding login nonces was
+     * told the registry was clean while every issued nonce stayed live and
+     * consumable. It cannot honestly claim the opposite either (no registry
+     * exposes a count, so "nothing to flush" would be invented reassurance),
+     * so a sweep that provably deleted nothing is FAILURE.
+     */
+    public function test_flush_reports_failure_when_it_deleted_nothing(): void
     {
         $exit = Artisan::call('teleframe:passport', ['action' => 'flush']);
         $out = Artisan::output();
 
-        self::assertSame(PassportCommand::SUCCESS, $exit);
-        self::assertStringContainsString('Nonce registry flushed', $out);
+        self::assertSame(PassportCommand::FAILURE, $exit);
+        self::assertStringContainsString('NONCE REGISTRY NOT FLUSHED: deleted nothing.', $out);
+        self::assertStringContainsString('outstanding login nonces are still live and still consumable', $out);
+        self::assertStringContainsString('A whole-registry sweep needs a listing surface', $out);
+        self::assertStringNotContainsString('Nonce registry flushed', $out, 'the old false success claim must be gone');
     }
 
     public function test_unconfigured_service_resolves_and_login_stays_loud(): void

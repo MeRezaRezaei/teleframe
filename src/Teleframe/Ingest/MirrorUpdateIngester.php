@@ -50,7 +50,8 @@ final class MirrorUpdateIngester
      *     fkClues: list<string>,
      *     unmappedClues: list<string>,
      *     valueClues: list<string>,
-     *     emitted: bool,
+     *     emit_scheduled: bool,
+     *     emit: array{routed: bool, dispatched: bool, listeners_ran: bool, scheduled: bool, outcome: string}|null,
      * }
      */
     public function ingest(
@@ -63,7 +64,8 @@ final class MirrorUpdateIngester
         $fact = $this->decomposer->decompose($table, $accountId, $payload);
         $write = $this->writer->write($db, $fact['rows']);
 
-        $emitted = false;
+        $emitScheduled = false;
+        $emit = null;
         // THE ONE PLACE IN THE REPO WHERE `inserted` IS ACTED ON, and the limit
         // of that predicate is worth stating where the decision is made.
         //
@@ -86,9 +88,14 @@ final class MirrorUpdateIngester
         if ($write['inserted'] > 0) {
             $mode = $this->classifier->classify($accountId, $payload);
             $model = $hydrate($payload);
-            $emitted = $mode === UpdateRoutingRule::MODE_ACT_ON
-                ? $this->gateway->emit($accountId, $payload, $model, $mode)
-                : false;
+            // `emitOutcome()`, not `emit()`. `emit()` IS `emitOutcome()['routed']`
+            // (RoutingEventGateway.php:147), so `emit_scheduled` below is the
+            // SAME fact under the name its existing contract promises — the
+            // richer array is carried ALONGSIDE it, never in place of it.
+            $emit = $mode === UpdateRoutingRule::MODE_ACT_ON
+                ? $this->gateway->emitOutcome($accountId, $payload, $model, $mode)
+                : null;
+            $emitScheduled = $emit['routed'] ?? false;
         }
 
         return [
@@ -102,7 +109,65 @@ final class MirrorUpdateIngester
             // not fit the column the DDL gives it" axis — must be named here
             // too or it is silently dropped by this layer.
             'valueClues' => $write['valueClues'],
-            'emitted' => $emitted,
+            // `emit_scheduled`, NOT `emitted`. The rename is the fix; the
+            // comment is why the old name was a lie rather than a shortcut.
+            //
+            // Commit 7b7b7c31 put `ShouldDispatchAfterCommit` on UpdateStored, so
+            // `emit()` now hands the event to Illuminate\Events\Dispatcher,
+            // which REGISTERS the listeners as a transaction callback and
+            // RETURNS WITHOUT INVOKING THEM. MEASURED against a real
+            // Illuminate dispatcher over :memory: SQLite with a real
+            // DatabaseTransactionsManager: at the instant `emit()` returned
+            // `true`, the listener log was EMPTY and `transactionLevel()` was
+            // 1; the listener ran only after `commit()`, at level 0. The same
+            // dispatch with NO transaction open ran the listener inline, which
+            // is the control that proves the deferral comes from the open
+            // transaction and not from a listener that silently does nothing.
+            //
+            // So the old name promised the one thing that had stopped being
+            // true: `emitted => true` read as a delivery confirmation while
+            // nothing had run. Nothing in this repo READS the key — the only
+            // production caller, `MirrorIngesterFactory`, folds the report
+            // through `mergeClueReports()`, which reads `inserted` plus the four
+            // `TfIngestClue::buckets()` and structurally drops this one — so
+            // the rename breaks nothing shipped, and a host that DID read it as
+            // confirmation was already reading the lie.
+            //
+            // WHAT TRUE GUARANTEES: the routing decision was act_on, and the
+            // UpdateStored event object was handed to the dispatcher. That
+            // second fact is the same value as `$emit['routed']` below.
+            //
+            // WHAT TRUE DOES NOT GUARANTEE, and this is the point of the name:
+            //   * that ANY listener has run. On the mirror path one always has
+            //     NOT — `MirrorIngesterFactory` opens the transaction, so every
+            //     dispatch here defers to commit.
+            //   * that a dispatcher was even bound. `RoutingEventGateway` is
+            //     constructed with a nullable one and `dispatchStored()` early
+            //     returns on null, so a gateway with no events still returns
+            //     true. "Scheduled" is therefore the routing DECISION, and the
+            //     handoff is conditional on a dispatcher existing.
+            //   * that any listener succeeded. A listener that throws is
+            //     swallowed and logged by the gateway; it cannot make this
+            //     false, because this is reported before it could ever run.
+            //
+            // A tri-state distinguishing "listeners ran" from "dispatch
+            // scheduled" would be strictly more honest, and is NOT buildable
+            // here: the gateway returns a bool and swallows the dispatch's own
+            // return value, so this layer cannot observe deferral. It needs
+            // RoutingEventGateway to surface the dispatch outcome, which is
+            // outside this change. Until then this boolean carries exactly one
+            // of the two meanings, and its name says which.
+            'emit_scheduled' => $emitScheduled,
+
+            // The richer array `emitOutcome()` returned, forwarded under its
+            // own key rather than folded into `emit_scheduled` — the bool is
+            // `emit['routed']` and nothing more, so the four facts that bool
+            // cannot carry (dispatched, listeners_ran, scheduled, outcome) are
+            // dropped here if this key goes. No shipped caller reads it yet
+            // (`MirrorIngesterFactory::mergeClueReports()` folds only
+            // `inserted` and the clue buckets), which is exactly why it must be
+            // present: the layer that computed it can no longer be asked.
+            'emit' => $emit,
         ];
     }
 }

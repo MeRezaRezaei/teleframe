@@ -94,9 +94,39 @@ final class PostgresDumper implements DatabaseDumper
             );
         }
 
+        // EXIT 0 IS NOT SUCCESS. pg_dump reports success by exit code, and a
+        // zero-byte dump exits 0: an empty schema with no matching objects, or
+        // a `tables` whitelist that matches nothing, produces a clean exit and
+        // an empty spool. The DumpResult then carried bytes = 0 all the way
+        // into DatabaseBackupService::backup(), which stored it, wrote an 'ok'
+        // ledger row and — the part that matters — TOUCHED THE WATCHDOG
+        // HEARTBEAT. A failed backup therefore silenced the one no-show check
+        // whose whole job is to notice that backups stopped happening: the
+        // failure refreshed the heartbeat that was supposed to expire.
+        //
+        // Throwing HERE, before the DumpResult is returned, is what makes the
+        // heartbeat unreachable rather than merely un-touched. The service
+        // calls dump() as the FIRST statement of its try block, so a throw
+        // here jumps straight to the catch, which releases the spool and
+        // rethrows; the touch('backup') further down that same try is never
+        // evaluated. The guarantee is structural — it does not depend on the
+        // service remembering to check the size.
+        $bytes = $this->spoolBytes($spool['path']);
+
+        if ($bytes === 0) {
+            throw new BackupException(sprintf(
+                '%s reported success (exit 0) but wrote a ZERO-BYTE dump for database "%s" — nothing reached the spool. '
+                .'An empty dump is the signature of an empty schema or a `tables` whitelist that matches no object, not of a '
+                .'working backup. Nothing was stored, no run was recorded and no watchdog heartbeat was taken, so the no-show '
+                .'check stays armed. Fix the dump scope (or the schema) and re-run.',
+                self::BINARY,
+                $target->database,
+            ));
+        }
+
         return new DumpResult(
             $spool['path'],
-            $this->spoolBytes($spool['path']),
+            $bytes,
             $target->driver,
             $target->database,
             $started,

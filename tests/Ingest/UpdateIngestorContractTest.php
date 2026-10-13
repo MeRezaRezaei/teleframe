@@ -144,8 +144,19 @@ final class UpdateIngestorContractTest extends IngestTestCase
         $update = DB::table('tf_updates')->where('account_id', self::ACCOUNT)->first();
         self::assertNotNull($update);
         self::assertSame(1, DB::table('tf_updates')->where('account_id', self::ACCOUNT)->count());
-        self::assertSame(0, (int) $update->seq);
-        self::assertSame(0, (int) $update->position);
+        // The key is no longer the constant (0, 0) this test used to pin. A
+        // seq-less update ingested with no frame identity is keyed from the
+        // payload's own content, so what is asserted here is the PROPERTY the
+        // constant could not give — a negative seq, disjoint from the
+        // non-negative range real delivering seqs live in — and never a literal
+        // derived value, which would pin an implementation detail rather than
+        // the contract.
+        self::assertLessThan(
+            0,
+            (int) $update->seq,
+            'a frameless seq-less update takes a NEGATIVE seq; real delivering seqs are always >= 0',
+        );
+        self::assertGreaterThanOrEqual(0, (int) $update->position);
         self::assertSame('updateNewMessage', $update->constructor);
 
         self::assertSame(1400, (int) DB::table('tf_updates_pts')->where('account_id', self::ACCOUNT)->value('pts'), 'pts child');
@@ -162,7 +173,20 @@ final class UpdateIngestorContractTest extends IngestTestCase
         self::assertInstanceOf(TfUpdate::class, $root);
         self::assertCount(1, $captured);
         self::assertInstanceOf(TfUpdate::class, $captured[0]->model);
-        self::assertSame(0, (int) $captured[0]->model->getAttribute('seq'));
+        // Was `assertSame(0, ...->getAttribute('seq'))`, which pinned the literal
+        // (0, 0) key. The invariant underneath it is not the value — it is that
+        // the EVENT carries the very row that was written, which is what a
+        // listener reads. So it is asserted as an equality against the stored
+        // row, and holds for whatever key the derivation produces.
+        self::assertSame(
+            (int) $update->seq,
+            (int) $captured[0]->model->getAttribute('seq'),
+            'the UpdateStored event must carry the same key as the row that was written',
+        );
+        self::assertSame(
+            (int) $update->position,
+            (int) $captured[0]->model->getAttribute('position'),
+        );
         self::assertSame('updateNewMessage', $captured[0]->model->getAttribute('constructor'));
     }
 

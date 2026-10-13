@@ -55,13 +55,33 @@ final class AppResponder
      * under a name), so an already-installed app is a no-op: the tag is the
      * proof that this process already has it.
      *
+     * REFUSES AN UNREACHABLE TRIGGER (cross-app shadowing). HandlerMatcher is
+     * first-match-wins over the table sorted by priority desc, stable. So when
+     * two apps declare the SAME match at the SAME priority, the FIRST one
+     * registered runs and the second is dead — with no error, no warning, and
+     * both tags present in the table, so `teleframe:app` lists both apps as
+     * installed. Nothing reported it; the proven case was app-a/app-b both
+     * `on('updateNewMessage')` at default priority 0, matcher resolving
+     * `app:app-a` and app-b's closure never being invoked.
+     *
+     * This install() used to do nothing about it. A silently dead handler is the
+     * exact failure class this repo keeps paying to remove, so it is a HARD
+     * refusal here rather than a warning nobody reads: the app's own triggers
+     * are validated BEFORE anything is registered, so a refusal leaves the table
+     * exactly as it was (no half-installed app).
+     *
      * @return int count of triggers installed (0 when already installed)
+     *
+     * @throws \InvalidArgumentException when another app already holds an equal
+     *                                   match at an equal priority
      */
     public function install(AppDefinition $app): int
     {
         if ($this->isInstalled($app->name)) {
             return 0;
         }
+
+        $this->refuseShadowed($app);
 
         $installed = 0;
 
@@ -78,6 +98,63 @@ final class AppResponder
         }
 
         return $installed;
+    }
+
+    /**
+     * Refuse before registering: for every trigger this app declares, is there
+     * already a registration with the SAME match and the SAME priority that
+     * belongs to somebody else?
+     *
+     * Only exact match + exact priority. A different match is not a conflict
+     * (the two patterns are independent rows in the table), and a deliberately
+     * different priority is the documented way to disambiguate — which of the two
+     * wins is then the host's stated intent, not an accident.
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function refuseShadowed(AppDefinition $app): void
+    {
+        $tag = 'app:'.$app->name;
+
+        foreach ($app->triggers() as $trigger) {
+            foreach ($this->handlerTable->all() as $registered) {
+                if ($registered->match !== $trigger->match) {
+                    continue;
+                }
+
+                if ($registered->priority !== $trigger->priority) {
+                    continue;
+                }
+
+                // A same-app row is this app's own earlier trigger; the
+                // within-app duplicate is AppDefinition's call-name rule's job
+                // for calls, and for triggers the table's own first-match posture
+                // is the host's stated intent.
+                if ($registered->tag === $tag) {
+                    continue;
+                }
+
+                throw new \InvalidArgumentException(sprintf(
+                    'app [%s] trigger [%s] at priority %d is unreachable: [%s] already registered the same '
+                    .'match at the same priority, and handler matching is first-match-wins, so this app\'s '
+                    .'handler would never run. Give one of them a different priority, or a different match.',
+                    $app->name,
+                    $trigger->match,
+                    $trigger->priority,
+                    $this->describeOwner($registered->tag),
+                ));
+            }
+        }
+    }
+
+    /** A readable owner name for the refusal: the tag, or the callable's shape. */
+    private function describeOwner(?string $tag): string
+    {
+        if ($tag === null || $tag === '') {
+            return 'an untagged handler';
+        }
+
+        return 'the tag ['.$tag.']';
     }
 
     /**

@@ -169,11 +169,20 @@ use Illuminate\Support\Facades\Schema;
  * ## down() RESTORES EXACTLY WHAT WAS THERE
  *
  * Each child is recreated with 200030's `factColumns()` block, its value column,
- * its PRIMARY KEY and its `linkChild()` foreign key, so a rollback returns the
- * schema to its pre-migration state rather than reporting a rollback that changed
- * nothing. The restored foreign key is the FALSE one this migration exists to
- * remove, and the docblock at the restore site says so where a reader of `down()`
- * will meet it.
+ * its PRIMARY KEY, and BOTH of the foreign keys it carried before this migration
+ * ran — the `linkChild()` `…_parent_fk` leg AND the `…_acc_tenant_fk` leg
+ * `2026_10_04_000700` added. Restoring one leg and not the other would be a
+ * silent defect rather than a simplification, and it is the reason the tenant leg
+ * is spelled out here at all: `2026_10_04_000700`'s own `down()` runs AFTER this
+ * one (its timestamp is earlier, so reverse-order rollback reaches this file
+ * first) and drops by scanning for a constraint whose parent is
+ * `telegram_accounts`. A child restored with the parent leg alone would slip past
+ * that scan, and the rollback would report clean having dropped three fewer
+ * constraints than it owned. See the restore site for the full argument.
+ *
+ * The restored `…_parent_fk` foreign key is the FALSE one this migration exists
+ * to remove, and the docblock at the restore site says so where a reader of
+ * `down()` will meet it.
  */
 return new class extends Migration
 {
@@ -329,20 +338,34 @@ return new class extends Migration
     }
 
     /**
-     * Put the fabricated table back, with its key and its foreign key.
+     * Put the fabricated table back, with BOTH constraints and the key it had.
      *
-     * The foreign key below is the FALSE one this migration exists to remove: it
-     * makes an update row the parent of a row the wire does not nest. It is
-     * restored because `down()` must be a true inverse, and it is named here so a
-     * reader who rolls this back knows the schema they are returning to is the one
-     * audit row C5 calls a defect.
+     * TWO foreign keys are restored, and both were declared before this
+     * migration ran:
      *
-     * Constraint name is 200030's own convention, `{child}_parent_fk`, and the
-     * longest is 28 characters — well inside MySQL's 64-character cap (MySQL-1059):
+     *  - the `_acc_tenant_fk` leg to `telegram_accounts.user_id`, added by
+     *    `2026_10_04_000700`. `down()` must be a true inverse, so it comes back
+     *    with it. Omitting it is a SILENT defect, not a simplification: the table
+     *    returns holding one constraint instead of two, `2026_10_04_000700`'s own
+     *    tenant scan then `continue`s past it (it looks for a constraint whose
+     *    parent is `telegram_accounts`, finds only the one just restored is gone —
+     *    so it reports a clean rollback having dropped fewer constraints than it
+     *    should), and nothing raises anywhere. The sibling that proves the shape
+     *    is `2026_10_08_000100`'s `restoreChildTable()`, which restores both legs.
      *
-     *   php -r 'echo strlen("tf_updates_channel_parent_fk");'  -> 28
-     *   php -r 'echo strlen("tf_updates_chat_parent_fk");'     -> 25
-     *   php -r 'echo strlen("tf_updates_user_parent_fk");'     -> 25
+     *  - the `_parent_fk` leg, the FALSE one this migration exists to remove: it
+     *    makes an update row the parent of a row the wire does not nest. It is
+     *    restored because `down()` must be a true inverse, and it is named here so
+     *    a reader who rolls this back knows the schema they are returning to is the
+     *    one audit row C5 calls a defect.
+     *
+     * Constraint names are 200030's own convention for the parent leg,
+     * `{child}_parent_fk`, and `2026_10_04_000700`'s `CONSTRAINT_SUFFIX` for the
+     * tenant leg. Both are restated here so no spelling can drift. The longest is
+     * 42 characters — well inside MySQL's 64-character cap (MySQL-1059):
+     *
+     *   php -r 'echo strlen("tf_updates_channel_acc_tenant_fk");'  -> 42
+     *   php -r 'echo strlen("tf_updates_channel_parent_fk");'       -> 34
      */
     private function restoreChildTable(string $child, string $column): void
     {
@@ -352,16 +375,22 @@ return new class extends Migration
 
         // 🔴 `$child` IS CAPTURED and not merely `$column`. A closure that reaches
         // for an uncaptured variable is a RUNTIME error, not a parse error, so
-        // `php -l` passes it silently and the constraint name below comes out as
-        // the bare `'_parent_fk'` — which collides with every other restore in this
-        // family. The static analyser is what caught it in the participants fold; a
-        // syntax check could not have.
+        // `php -l` passes it silently and the two constraint names below come out
+        // as the bare `'_acc_tenant_fk'` / `'_parent_fk'` — two constraints that
+        // collide with every other restore in this family. The static analyser is
+        // what caught it in the participants fold; a syntax check could not have.
         Schema::create($child, function (Blueprint $table) use ($child, $column): void {
             $table->unsignedBigInteger('account_id');
             $table->integer('seq');
             $table->smallInteger('position');
             $table->bigInteger($column);
             $table->primary(self::KEY);
+
+            // 2026_10_04_000700's CONSTRAINT_SUFFIX, restated so no name can drift.
+            $table->foreign('account_id', $child.'_acc_tenant_fk')
+                ->references('user_id')
+                ->on('telegram_accounts')
+                ->cascadeOnDelete();
 
             // 🔴 THE FALSE CONSTRAINT — see the method docblock above.
             $table->foreign(self::KEY, $child.'_parent_fk')

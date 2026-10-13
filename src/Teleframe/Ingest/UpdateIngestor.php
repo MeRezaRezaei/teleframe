@@ -195,6 +195,43 @@ final class UpdateIngestor
     /** tf_messages bits that don't make the wire as explicit booleans. */
     private const TF_MESSAGES_SERVICE = 'tf_messages_service';
 
+    /**
+     * How far a frame key may probe DOWN the negative range when the key it
+     * hashed onto is held by a DIFFERENT constructor.
+     *
+     * See frameKey() for why a probe is the answer to a hash collision and why
+     * it stays deterministic under re-delivery. Eight, not unlimited: the probe
+     * must be bounded so a pathological account cannot turn one write into an
+     * unbounded scan, and the exhaustion branch is loud (a clue) rather than
+     * silent.
+     *
+     * The reserved headroom that makes this bound safe is baked into the
+     * derivation — frameKey() never returns a seq closer than 2^30 to
+     * PHP_INT_MIN, so eight downward steps cannot leave the signed-32-bit range
+     * that `tf_updates.seq` is declared as on MySQL and Postgres.
+     */
+    private const FRAME_KEY_PROBES = 8;
+
+    /**
+     * Namespace tag for an identity derived from a PAYLOAD rather than from a
+     * Redis frame id, so the two identity spaces are disjoint BEFORE the hash.
+     *
+     * A Redis stream entry id is `<ms>-<seq>`, so this prefix can never begin a
+     * real one. Without it, a content identity and a frame identity would be two
+     * bare strings differing only in their bytes, and the frameKey() probe —
+     * which exists to separate two identities that hashed alike — would be the
+     * only thing standing between them. See contentIdentity().
+     */
+    private const CONTENT_IDENTITY_PREFIX = 'payload:';
+
+    /**
+     * Namespace tag for an identity derived from a METHOD plus its response
+     * body, used only by ingestResponse(). Distinct from the other two so all
+     * three identity kinds stay disjoint before hashing. See
+     * responseIdentity().
+     */
+    private const RESPONSE_IDENTITY_PREFIX = 'response:';
+
     /** @var array<string, string> ctor → service message table. */
     private const MESSAGE_TABLES = [
         'messageService' => self::TF_MESSAGES_SERVICE,
@@ -311,6 +348,64 @@ final class UpdateIngestor
      * process. See decomposer() for the build.
      */
     private static ?MirrorFactDecomposer $decomposer = null;
+
+    /**
+     * The frame identity in scope for the ingest happening right now, or null.
+     *
+     * WHY THIS IS AMBIENT RATHER THAN A CONSTRUCTOR OR A THIRD REQUIRED ARG.
+     * `IngestConsumer` already holds the entry's Redis stream id
+     * (`foreach ($batch as $entryId => $fields)` →
+     * `handleEntrySafely(string $entryId, …)` → `handleEntry(string $entryId,
+     * …)`), but the seam it hands the payload to is the BC client face —
+     * `Teleclient::ingest($update, $accountId)` — which is a public API frozen
+     * at two arguments, and `Teleframe::ingest()` above it. Threading a third
+     * argument through both would be a breaking change to two published faces
+     * to serve one caller. So the identity is carried as a SCOPED value for the
+     * duration of one ingest instead: `withinFrame()` sets it, restores the
+     * previous value in a `finally`, and `ingest()` reads it only when the
+     * caller passed no explicit frame of its own.
+     *
+     * Safe because PHP ingest is synchronous and single-threaded: the value is
+     * set immediately before the work and cleared immediately after, so no two
+     * ingests can observe each other's frame, and a throw cannot leak one into
+     * the next entry. It is never read outside an `ingest()`/`ingestBatch()`
+     * call made inside the closure.
+     *
+     * A caller that HAS an identity and wants it explicit does not use this:
+     * `ingest($payload, $accountId, $frameId)` takes it as an argument, and
+     * that argument wins.
+     */
+    private static ?string $frame = null;
+
+    /**
+     * Run one unit of work with a frame identity in scope, and return whatever
+     * it returns.
+     *
+     * The frame identity is what a seq-less update's fact key is derived from
+     * (see frameKey()), so the same Redis entry — however many times the bus
+     * redelivers it — lands on the same `tf_updates` key and UPSERTS, while two
+     * different entries get two different keys and neither can purge the
+     * other's children.
+     *
+     * Nesting restores the previous value rather than clearing, so a frame
+     * scope inside another frame scope is well defined.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $work
+     * @return T
+     */
+    public static function withinFrame(string $frameId, callable $work): mixed
+    {
+        $previous = self::$frame;
+        self::$frame = $frameId;
+
+        try {
+            return $work();
+        } finally {
+            self::$frame = $previous;
+        }
+    }
 
     public function __construct(
         private readonly ?Dispatcher $events = null,
@@ -429,9 +524,38 @@ final class UpdateIngestor
      * model (TfMessage / TfUpdate) after the write commits and UpdateStored
      * has fired, or null when the constructor has no curated surface.
      *
+     * ## $frameId — THE FRAME IDENTITY, AND WHAT HAPPENS WITHOUT ONE
+     *
+     * A seq-less update (a bare `update*` ctor with no container naming a
+     * delivering seq) has no natural key, so one has to be supplied. Supply it
+     * as the Redis stream entry id the payload arrived under: the fact key is
+     * then derived from it, which is what makes a re-delivery an UPSERT rather
+     * than a duplicate row. `IngestConsumer` supplies it automatically for
+     * every bus entry; `withinFrame()` is how it does so without changing the
+     * published two-argument `Teleclient::ingest()` / `Teleframe::ingest()`
+     * faces.
+     *
+     * WITHOUT one this is a DIRECT ingest — a host calling the public API, or a
+     * backfill page — and the seq-less form then derives its key from the
+     * PAYLOAD'S OWN CONTENT instead of a constant. That is deliberate: the
+     * constant it replaced, `(0, 0)`, meant two DIFFERENT frameless seq-less
+     * updates of one account shared one key, and the second arriving one purged
+     * the first's ~14 child tables. A content-derived identity keeps the same
+     * re-delivery stability the frame identity has (same payload + same account
+     * ⇒ same key ⇒ upsert) without the shared-key loss.
+     *
+     * WHAT THAT COSTS, PLAINLY: two frameless updates whose payloads are
+     * BYTE-IDENTICAL now upsert onto one row rather than being stored as two.
+     * That is the accepted trade — see contentIdentity() — and it is strictly
+     * better than destroying the first one's children. It is not reachable on
+     * the bus, which supplies a frame for every entry and therefore keeps two
+     * identical payloads as two rows. Backfill is not exposed to either: its
+     * pages are `messages.messages` envelopes, which route to writeEnvelope(),
+     * not here.
+     *
      * @param  array<string, mixed>  $payload
      */
-    public function ingest(array $payload, int $accountId): ?Model
+    public function ingest(array $payload, int $accountId, ?string $frameId = null): ?Model
     {
         $ctor = (string) ($payload['_'] ?? '');
         if ($ctor === '') {
@@ -440,7 +564,12 @@ final class UpdateIngestor
             );
         }
 
-        $root = DB::transaction(fn (): ?Model => $this->ingestImpl($payload, $accountId, $ctor));
+        $root = DB::transaction(fn (): ?Model => $this->ingestImpl(
+            $payload,
+            $accountId,
+            $ctor,
+            $frameId ?? self::$frame,
+        ));
         if ($root !== null) {
             $this->events?->dispatch(new UpdateStored($root, $accountId));
         }
@@ -452,19 +581,40 @@ final class UpdateIngestor
      * Ingest a batch of payloads under one transaction, one UpdateStored per
      * stored root, in order.
      *
+     * One frame identity for the whole batch, or none: a batch is one unit of
+     * work, so its members share the caller's identity rather than each minting
+     * one. See ingest() for what that identity is for.
+     *
+     * ⚠️ READ THIS BEFORE TRUSTING IT WITH A BATCH OF BARE `update*` PAYLOADS.
+     * "One identity for the batch" is a statement about the FRAME the caller
+     * supplied, and it is a real constraint: N bare updates sharing one frame
+     * id DO land on one key, because the frame — not the payload — decides it.
+     * What this method no longer does is make the frameless case collapse as
+     * well. With no frame id, each member derives its OWN key from its own
+     * content (see contentIdentity()), so a batch of N DIFFERENT frameless
+     * updates is N rows rather than one row with the last member's children.
+     * That is the change from the constant `(0, 0)`, under which every member
+     * of such a batch fought over one key and only the last survived.
+     *
+     * Callers that cannot accept members sharing a key must therefore pass a
+     * frame id per batch, not one for the page — and note that the members of
+     * a batch which are CONTAINERS are unaffected either way, since a container
+     * keys on its own delivering seq and its members' slot positions.
+     *
      * @param  iterable<array<string, mixed>>  $payloads
      * @return list<Model>
      */
-    public function ingestBatch(iterable $payloads, int $accountId): array
+    public function ingestBatch(iterable $payloads, int $accountId, ?string $frameId = null): array
     {
         $roots = [];
-        DB::transaction(function () use ($payloads, $accountId, &$roots): void {
+        $frame = $frameId ?? self::$frame;
+        DB::transaction(function () use ($payloads, $accountId, $frame, &$roots): void {
             foreach ($payloads as $payload) {
                 $ctor = (string) ($payload['_'] ?? '');
                 if ($ctor === '') {
                     continue; // batch skip — same clue rule as ingest(), never throws
                 }
-                $root = $this->ingestImpl((array) $payload, $accountId, $ctor);
+                $root = $this->ingestImpl((array) $payload, $accountId, $ctor, $frame);
                 if ($root !== null) {
                     $roots[] = $root;
                 }
@@ -484,18 +634,66 @@ final class UpdateIngestor
      * response is a payload like any other — update-kind payloads and
      * message envelopes decompose into the curated surface.
      *
+     * ## WHY THIS PASSES AN IDENTITY OF ITS OWN
+     *
+     * This is the one public entry point that reached `writeUpdate()` able to
+     * do NOTHING about its key: it forwarded a two-argument `ingest($response,
+     * $accountId)`, so a seq-less update it stored could only ever land on the
+     * frameless path — which used to be the constant `(0, 0)`, and is now a
+     * content-derived identity (see contentIdentity()).
+     *
+     * Letting it fall through to that would be CORRECT but weaker than what
+     * this method actually knows. The response body alone does not name the
+     * invocation that produced it: the same update is a different fact when it
+     * arrived as the reply to `messages.getHistory` than when it arrived as the
+     * reply to `messages.search`, and here both the method and the response are
+     * in scope. So the identity is derived from BOTH and passed explicitly,
+     * which keeps two such replies as two rows instead of folding them together
+     * on a body that happened to match.
+     *
+     * `$params` IS DELIBERATELY NOT PART OF IT. The params are the QUESTION;
+     * the response is the FACT, and the fact is the thing being written. Two
+     * different questions that produce byte-identical responses describe one
+     * state of the world, so they key together — and, because the response is
+     * in the identity, REPEATING the identical call is still an upsert, which
+     * is the property that actually matters for idempotency.
+     *
+     * Note this passes an explicit identity, so it takes precedence over any
+     * ambient `withinFrame()` scope — correct, because nothing calls this from
+     * inside a bus frame today, and if it ever did, the response's own identity
+     * is the more specific of the two.
+     *
      * @param  array<string, mixed>  $params
      * @param  array<string, mixed>  $response
      */
     public function ingestResponse(string $method, array $params, array $response, int $accountId): ?Model
     {
-        return $this->ingest($response, $accountId);
+        return $this->ingest($response, $accountId, self::responseIdentity($method, $response));
+    }
+
+    /**
+     * The identity for a method response: the method it came from, plus the
+     * canonical form of the response itself.
+     *
+     * Namespaced separately from CONTENT_IDENTITY_PREFIX so the three identity
+     * kinds — a Redis frame id, a bare payload, a method+response pair — are
+     * disjoint strings before any hashing happens, and so a row written on this
+     * path can never be confused with one written on either of the others.
+     *
+     * @param  array<string, mixed>  $response
+     */
+    private static function responseIdentity(string $method, array $response): string
+    {
+        return self::RESPONSE_IDENTITY_PREFIX
+            .$method
+            .':'
+            .hash('sha256', self::canonicalJson($response));
     }
 
     /**
      * @param  array<string, mixed>  $payload
      */
-    private function ingestImpl(array $payload, int $accountId, string $ctor): ?Model
+    private function ingestImpl(array $payload, int $accountId, string $ctor, ?string $frameId = null): ?Model
     {
         if (in_array($ctor, self::MESSAGE_CTORS, true)) {
             return $this->writeMessage($payload, $accountId, $ctor);
@@ -520,7 +718,7 @@ final class UpdateIngestor
         }
 
         if (str_starts_with($ctor, 'update')) {
-            return $this->writeUpdate($payload, $accountId, $ctor);
+            return $this->writeUpdate($payload, $accountId, $ctor, null, 0, $frameId);
         }
 
         $messages = $payload['messages'] ?? null;
@@ -802,24 +1000,19 @@ final class UpdateIngestor
     }
 
     /**
-     * Decompose a single update ctor into tf_updates (keyed (account_id,
-     * seq, position)) plus its hand-authored children, and route a nested
-     * message object to the messages mirror.
+     * The tf_updates fact row for a key: the key itself, the ctor name, and
+     * every scalar the fold moved onto the fact row.
      *
-     * seq / position default to 0 / 0 for a lone update (the seq-less short
-     * dials and any direct update* ingest); a container caller threads the
-     * container's delivering seq and the member's slot position so every
-     * member of a multi-update container lands on a distinct key. The child
-     * set written for a key is a full snapshot of THIS ctor: rows a prior
-     * occupant of the key left behind are purged first (row existence = fact
-     * existence — a stale child must never survive into a different ctor).
+     * Split out of writeUpdate() because the seq-less claim builds the SAME
+     * row at a key that is only known once it has been allocated — building it
+     * in one place keeps the two write paths from drifting.
      *
+     * @param  array{account_id: int, seq: int, position: int}  $key
      * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
      */
-    private function writeUpdate(array $payload, int $accountId, string $ctor, int $seq = 0, int $position = 0): Model
+    private function updateFactRow(array $key, string $ctor, array $payload): array
     {
-        $key = ['account_id' => $accountId, 'seq' => $seq, 'position' => $position];
-
         $row = [...$key, 'constructor' => $ctor];
         foreach (self::UPDATE_FOLDED_SCALARS as $field) {
             $value = $payload[$field] ?? null;
@@ -827,10 +1020,377 @@ final class UpdateIngestor
                 $row[$field] = (int) $value;
             }
         }
-        DB::table('tf_updates')->updateOrInsert($key, $row);
 
-        // The FK parent now exists for the key, so the purge is safe: drop
-        // the prior update's children, then write this ctor's facts fresh.
+        return $row;
+    }
+
+    /**
+     * The identity string for a seq-less update whose caller supplied no frame.
+     *
+     * ## WHAT THIS IS, AND WHY IT IS NOT A CONSTANT
+     *
+     * When no frame identity reaches `writeUpdate()` — a host calling
+     * `Teleframe::ingest()` / `Teleclient::ingest()`, or `ingestResponse()` on
+     * a caller that passes no identity of its own — the row still has to be
+     * keyed, and the key still has to be DETERMINISTIC (same payload + same
+     * account ⇒ same key, forever) or a re-ingest appends a duplicate row. The
+     * only identity such a caller actually HAS is the payload it handed over,
+     * so that is what is hashed.
+     *
+     * The alternative was the constant `(account_id, 0, 0)`, and the constant
+     * is precisely the defect this replaces: every frameless seq-less update of
+     * an account landed on one key, and `deleteUpdateChildren()` — correct in
+     * itself — then took the previous update's hand-authored children with it,
+     * on every arrival. The prior `tf_updates` row survived as a shell with its
+     * facts gone.
+     *
+     * ## THE DERIVATION, IN FULL
+     *
+     *     canonical = a JSON form of the payload with the keys of EVERY array
+     *                 sorted, at EVERY depth (see canonicalJson())
+     *     identity  = "payload:" . sha256(canonical)
+     *
+     * …and that string is then handed to `frameKey()`, which hashes it into the
+     * negative 45-bit key space alongside a real Redis entry id. Deriving the
+     * identity here and the KEY there is deliberate: `frameKey()` is the single
+     * expression of the key space, and a payload identity and a frame identity
+     * are indistinguishable once inside it — same range, same probe, same
+     * re-delivery semantics. Nothing about the key says which kind it came from,
+     * because nothing downstream needs to know.
+     *
+     * THE `payload:` PREFIX is what keeps the two identity spaces apart BEFORE
+     * the hash, rather than relying on the probe to separate two strings that
+     * happen to differ. A Redis entry id is `<ms>-<n>` and cannot collide with a
+     * `payload:`-prefixed string, so no content identity can ever be mistaken
+     * for — or probe against — a frame identity.
+     *
+     * ## THE RESIDUAL, STATED PLAINLY
+     *
+     * Two genuinely DIFFERENT updates whose payloads are BYTE-IDENTICAL after
+     * canonicalisation now upsert onto ONE row instead of being stored as two
+     * rows. That is the accepted trade, and it is strictly better than what it
+     * replaces: sharing a key used to mean the second arrival DESTROYED the
+     * first one's children, whereas now it means the second arrival SUPERSEDES
+     * the first one's children with its own identical values. The loss goes
+     * from "a fact is silently erased" to "a duplicate record is collapsed",
+     * which for an update log keyed on content is the correct direction.
+     *
+     * It is also NOT reachable on the bus, which is the only producer that can
+     * re-deliver and the only one where two identical payloads are genuinely two
+     * facts: `IngestConsumer` supplies the Redis entry id for every entry, so
+     * those two rows stay two rows — see
+     * `tests/Ingest/SeqLessFrameKeyedUpdateTest::test_two_bus_entries_carrying_the_same_payload_are_two_rows`,
+     * which asserts exactly that and must keep passing. What collapses here is
+     * only the case where a caller hands the SAME bytes to the mirror twice with
+     * no identity attached, and there the one row is the right answer anyway.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private static function contentIdentity(array $payload): string
+    {
+        return self::CONTENT_IDENTITY_PREFIX.hash('sha256', self::canonicalJson($payload));
+    }
+
+    /**
+     * A payload in the repo's canonical hashing form: keys sorted at every
+     * depth, so the same update produces the same bytes however its keys were
+     * ordered on the way in.
+     *
+     * WITHOUT THE SORT the identity would depend on an accident of
+     * construction: `['_' => 'updateNewMessage', 'pts' => 5]` and
+     * `['pts' => 5, '_' => 'updateNewMessage']` are the same update, but
+     * `json_encode()` would emit them differently and a re-ingest that rebuilt
+     * the array in a different order would derive a different key and append a
+     * duplicate row — reintroducing, at one remove, the very defect this scheme
+     * exists to close.
+     *
+     * ## THE SCHEME IS THE REPO'S, NOT A SECOND ONE
+     *
+     * This is `RouteIdempotency::keyFor()`'s normalisation, from this same
+     * namespace, which has hashed payloads for dedup since the route tables
+     * were built: a recursive sort followed by `json_encode()`. The recursion
+     * is the point — Telegram payloads nest (`message`, `entities`, `users`),
+     * and a depth-1 sort would leave every nested object's key order to chance.
+     * `JSON_PRESERVE_ZERO_FRACTION` is carried over from there so `1.0` and `1`
+     * do not silently hash alike.
+     *
+     * ONE FLAG DEVIATES FROM THAT SCHEME, and it is load-bearing.
+     * `JSON_INVALID_UTF8_SUBSTITUTE` is added because real Telegram payloads
+     * carry invalid UTF-8 — binary in message text and entities — which is
+     * recorded on `Bus\StreamSchema::encode()` and handled there for exactly
+     * this reason: bare `json_encode()` returns `false` on such a payload, and
+     * this method runs INSIDE the `DB::transaction` that `ingest()` opens, so a
+     * plain `false` here would roll back an update that this class stored
+     * perfectly well before. Substituting U+FFFD is lossy in a way that cannot
+     * matter here (it affects the hash input only, deterministically) and keeps
+     * the mirror able to store binary-bearing updates at all.
+     *
+     * @param  array<array-key, mixed>  $value
+     *
+     * @throws \JsonException when the payload is not encodable even with
+     *                        invalid UTF-8 substituted (recursion past json_encode's
+     *                        depth limit). Named rather than swallowed: a silent
+     *                        fallback to a different key would trade a loud,
+     *                        diagnosable failure for a silent one, and this runs
+     *                        inside a transaction either way.
+     */
+    private static function canonicalJson(array $value): string
+    {
+        $sorted = [];
+        foreach ($value as $key => $member) {
+            $sorted[(string) $key] = is_array($member) ? self::canonicalJson($member) : $member;
+        }
+        ksort($sorted, SORT_STRING);
+
+        return json_encode(
+            $sorted,
+            JSON_THROW_ON_ERROR
+                | JSON_UNESCAPED_SLASHES
+                | JSON_UNESCAPED_UNICODE
+                | JSON_PRESERVE_ZERO_FRACTION
+                | JSON_INVALID_UTF8_SUBSTITUTE,
+        );
+    }
+
+    /**
+     * The fact key for ONE seq-less update, derived from the identity supplied
+     * for it.
+     *
+     * A seq-less update is one written with no delivering seq: a bare `update*`
+     * ctor arriving on its own, with no container around it to name its seq.
+     *
+     * ## WHAT "$frameId" ACTUALLY IS, SINCE IT IS NOT ALWAYS A FRAME
+     *
+     * This parameter is an IDENTITY, and there are three kinds of it, each
+     * namespaced so they are disjoint before hashing (see CONTENT_IDENTITY_PREFIX
+     * / RESPONSE_IDENTITY_PREFIX):
+     *
+     *  - a Redis stream entry id — the bus, via withinFrame(). The best
+     *    identity available and the one that keeps two byte-identical payloads
+     *    as two rows.
+     *  - `payload:<sha256>` — the payload's own content, when the caller
+     *    supplied nothing (see contentIdentity()).
+     *  - `response:<method>:<sha256>` — a method and its reply body, from
+     *    ingestResponse() (see responseIdentity()).
+     *
+     * The KEY space does not care which: they are all hashed by the derivation
+     * below, all land in the same negative range, and all get the same probe.
+     * One place expresses the key space, so no second derivation exists to drift
+     * from this one.
+     *
+     * Four properties, each one a requirement the `MAX(seq) + 1` counter could
+     * not meet:
+     *
+     *  1. DETERMINISTIC — a pure function of (account, identity). The same
+     *     Redis entry redelivered by `xautoclaim` (the exact path that broke
+     *     `MAX(seq) + 1`, which read `MAX` again after the first delivery
+     *     committed and therefore minted a SECOND seq, appending a duplicate
+     *     row where an upsert was required) computes the same key and upserts
+     *     onto the row it already wrote, children included. The same holds for a
+     *     content identity: re-ingesting the same bytes re-derives the same key.
+     *  2. DISTINCT — two different identities hash differently, so two different
+     *     seq-less updates get two different keys and the child purge below can
+     *     only ever reach this identity's own superseded rows.
+     *  3. NEGATIVE, AND DISJOINT FROM REAL DELIVERING SEQS — Telegram delivering
+     *     seqs are positive and the container path reads `$payload['seq'] ?? 0`,
+     *     so every real key is >= 0. Every allocated key is <= -1. The two
+     *     ranges cannot overlap, which is what `MAX(seq) + 1` could NOT say: it
+     *     shared an integer space with real delivering seqs, so a future
+     *     container whose Telegram seq equalled an allocated value would have
+     *     collided with it.
+     *  4. INTEGER-SAFE WITHOUT A MIGRATION — `tf_updates.seq` is declared
+     *     `$table->integer('seq')`, SIGNED, so negatives are legal on all three
+     *     supported backends. `position` is `smallInteger`, which is why it
+     *     carries 15 bits and `seq` 30 — 45 bits of key per account rather than
+     *     the 31 a seq-only hash would manage, and 45 bits is worth the second
+     *     column because the birthday bound is what stands between this scheme
+     *     and the overwrite described below. The 2^30 headroom reserved above
+     *     PHP_INT_MIN is what makes FRAME_KEY_PROBES downward steps impossible to
+     *     push the value out of the signed-32-bit range.
+     *
+     * WHY NOT THE COUNTER. `MAX(seq) + 1` is monotonic and therefore
+     * redelivery-UNSAFE, and because the value was counter-derived two writers
+     * could compute the same one — which is why it needed a claim, a retry loop
+     * and a backoff at all. A deterministic key needs none of that: there is
+     * nothing to race for. SEQ_CLAIM_ATTEMPTS, SEQ_CLAIM_BACKOFF_US,
+     * UNIQUE_VIOLATION_MARKERS, isUniqueViolation(), nextSeqFor() and the
+     * insert() that raised on a duplicate are all deleted with it, rather than
+     * left behind as a "kept for safety" helper nothing calls.
+     *
+     * WHY THE ORDER OF (account, frame) MATTERS. The account leads, so two
+     * accounts carrying the SAME Redis entry id — which happens the moment two
+     * streams, or two consumers with distinct group names, ingest the same
+     * payload — derive different keys. `account_id` is already half the primary
+     * key, so the derivation only has to keep the other half distinct.
+     *
+     *
+     * THE KEY COLLISION POLICY, and it is NOT "overwrite and hope it is rare".
+     *
+     * A fixed-width hash cannot be injective: two distinct frames can hash to
+     * the same key, and one of them then overwrites the other's row and has its
+     * ~14 child tables purged — the original data-loss defect, rarer. So the
+     * probe below makes the collision NON-DESTRUCTIVE whenever it is
+     * distinguishable, and says plainly where it is not:
+     *
+     *  - key FREE                         → this frame owns it.
+     *  - key held by the SAME constructor  → this frame already wrote it (a
+     *    re-delivery), so upserting is exactly right. CONVERGE HERE.
+     *  - key held by a DIFFERENT constructor → this frame did NOT write it (a
+     *    frame does not change its own constructor), so stepping down one is
+     *    both safe and deterministic.
+     *
+     * DETERMINISM SURVIVES THE PROBE. `seq - $step` is a pure function of the
+     * frame plus how many distinct constructors sit above it, so the same frame
+     * re-delivered lands on the same probed key every time and upserts.
+     *
+     * THE RESIDUAL CASE, STATED PLAINLY: a collision between two frames whose
+     * constructor is IDENTICAL is indistinguishable from a re-delivery — the
+     * schema stores no frame identity, and adding one is a migration, which is
+     * out of scope here. That case overwrites, and it requires BOTH a
+     * 45-bit-space collision AND equal constructors.
+     *
+     * WHY A CONSTRUCTOR AND NOT A FRAME ID. Storing the frame id would settle it
+     * outright, and would also let a re-delivery be recognised without
+     * guessing; `tf_updates` has no column for it and `constructor` is a
+     * `string(64)` that the diff, the audit gates and the mirror catalog all
+     * read by value. Overloading it would corrupt the one column that must
+     * stay verbatim.
+     *
+     * @return array{account_id: int, seq: int, position: int}
+     */
+    private static function frameKey(int $accountId, string $frameId, string $ctor): array
+    {
+        // THE DERIVATION, in full:
+        //     digest = sha256("<accountId>:<frameId>")
+        //     seq      = -1 - (bits 0..29)   -> [-1073741824, -1], always negative
+        //     position =       bits 32..46   -> [0, 32767],  always non-negative
+        $digest = hash('sha256', $accountId.':'.$frameId);
+        $seq = -1 - (((int) hexdec(substr($digest, 0, 8))) & 0x3FFFFFFF);
+        $position = ((int) hexdec(substr($digest, 8, 8))) & 0x7FFF;
+
+        $key = ['account_id' => $accountId, 'seq' => $seq, 'position' => $position];
+
+        for ($step = 0; $step < self::FRAME_KEY_PROBES; $step++) {
+            $occupant = self::frameKeyOccupant($key);
+
+            if ($occupant === null || $occupant === $ctor) {
+                return $key; // free, or already ours
+            }
+
+            $key['seq'] = $seq - ($step + 1);
+        }
+
+        return $key;
+    }
+
+    /**
+     * The constructor already stored at a seq-less frame key, or null when the
+     * key is free.
+     *
+     * A read, not a claim: this path no longer takes a lock or retries, because
+     * the key is a pure function of the frame and two frames racing onto one key
+     * are the collision the probe documents rather than a race to lose. The
+     * ambiguity that remains is the same-constructor one frameKey() names, and
+     * it resolves to upsert — which is the safe direction, because the arriving
+     * row carries the authoritative values for the same fact.
+     *
+     * @param  array{account_id: int, seq: int, position: int}  $key
+     */
+    private static function frameKeyOccupant(array $key): ?string
+    {
+        $constructor = DB::table('tf_updates')
+            ->where('account_id', $key['account_id'])
+            ->where('seq', $key['seq'])
+            ->where('position', $key['position'])
+            ->value('constructor');
+
+        return $constructor === null ? null : (string) $constructor;
+    }
+
+    /**
+     * Decompose a single update ctor into tf_updates (keyed (account_id,
+     * seq, position)) plus its hand-authored children, and route a nested
+     * message object to the messages mirror.
+     *
+     * $seq === null MEANS "this is a seq-less update" — a bare `update*` ctor
+     * with no container naming a delivering seq — and is the ONLY case that
+     * derives a key. A container caller ALWAYS passes an int (the container's
+     * delivering seq, 0 when the difference family carries none), so a real
+     * delivering seq keeps its exact key and replay/backfill idempotency is
+     * untouched. $position is the member's slot within that seq, and is
+     * ignored for the seq-less form, which derives its own.
+     *
+     * $frameId is the Redis stream entry id the payload arrived under (see
+     * withinFrame()). With one, the seq-less key is derived from it and is
+     * therefore stable across re-delivery. Without one, the key is derived from
+     * the payload's own content (see contentIdentity()) — which is equally
+     * stable across a re-ingest, and no longer the constant `(0, 0)` that let
+     * two different frameless updates share a key and purge each other's
+     * children. Both kinds of identity go through frameKey(), so the negative
+     * range and the collision probe are shared and stated once.
+     *
+     * WHY the seq-less form derives a key rather than defaulting to 0: the old
+     * `int $seq = 0` default made EVERY seq-less update of an account land on
+     * the one key `(account_id, 0, 0)`, and the child purge below then deleted
+     * the previous update's hand-authored children on each arrival. The prior
+     * row survived as a shell with its facts gone — silent, unbounded loss of
+     * the update log, on ordinary traffic rather than an edge case. The
+     * `MAX(seq) + 1` counter that replaced it fixed that loss and introduced a
+     * worse one: it is not stable across re-delivery, and `xautoclaim`
+     * re-delivers in-flight entries routinely.
+     *
+     * The child set written for a key is a full snapshot of THIS ctor: rows a
+     * prior occupant of the SAME key left behind are purged first (row
+     * existence = fact existence — a stale child must never survive into a
+     * different ctor).
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function writeUpdate(
+        array $payload,
+        int $accountId,
+        string $ctor,
+        ?int $seq = null,
+        int $position = 0,
+        ?string $frameId = null,
+    ): Model {
+        if ($seq === null) {
+            // THE FRAME IDENTITY, OR THE PAYLOAD'S OWN. A supplied frame (the
+            // Redis stream entry id, via withinFrame()) is the better identity
+            // and always wins. With none, the key is derived from the payload's
+            // own content rather than falling back to the constant `(0, 0)`,
+            // which is where the original data-loss defect lived: two DIFFERENT
+            // frameless updates of one account shared that one key, and the
+            // arriving one purged the other's ~14 child tables.
+            //
+            // BOTH identities go through frameKey(), so one place still
+            // expresses the whole key space — the same 45-bit negative range
+            // and the same collision probe. There is deliberately no second
+            // derivation to drift from the first.
+            $key = self::frameKey(
+                $accountId,
+                $frameId === null || $frameId === ''
+                    ? self::contentIdentity($payload)
+                    : $frameId,
+                $ctor,
+            );
+        } else {
+            $key = ['account_id' => $accountId, 'seq' => $seq, 'position' => $position];
+        }
+
+        $seq = $key['seq'];
+        $position = $key['position'];
+
+        DB::table('tf_updates')->updateOrInsert($key, $this->updateFactRow($key, $ctor, $payload));
+
+        // The FK parent now exists for the key, so the purge is safe. It is
+        // safe BECAUSE the key names THIS update and no other: the seq-less
+        // form derives a per-frame key and the container form keys on the
+        // delivering seq plus the member's slot, so the only rows this delete
+        // can ever match are this update's OWN superseded children, written by
+        // an earlier delivery of this same frame. It can no longer reach a
+        // different update's children, which is what the fixed 0/0 key did to
+        // every previous seq-less update of the account.
         $this->deleteUpdateChildren($key);
         $this->writeUpdateChildren($payload, $key);
 

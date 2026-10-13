@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Tests\Notify;
 
 
+use MeRezaRezaei\Teleframe\Notify\NotifyException;
 use MeRezaRezaei\Teleframe\Notify\NotifyService;
 use MeRezaRezaei\Teleframe\Notify\CapabilityCheck;
 use MeRezaRezaei\Teleframe\Notify\CapabilityTable;
@@ -40,6 +41,14 @@ use Stringable;
  * it is the whole fix. `Client` still returns it unchanged — that is pinned as
  * a contract in ClientOfflineContractTest — and only the notify path's reading
  * of it changed.
+ *
+ * AND OFFLINE THROWS (D6). The first version of that fix LOGGED at error and
+ * then RETURNED, which on every async driver is an ACK: the envelope was
+ * deleted, never retried, never dead-lettered, and the temp attachment — the
+ * only copy of the report — was orphaned on disk forever. Returning is not a
+ * neutral choice on a queue consumer; it is a delivery confirmation for a send
+ * that did not happen. An offline send must THROW, so the retry / dead-letter
+ * machinery owns recovery and the artefact stays on disk for the redelivery.
  */
 final class OfflineNotifyDoesNotDestroyArtefactTest extends TestCase
 {
@@ -51,7 +60,17 @@ final class OfflineNotifyDoesNotDestroyArtefactTest extends TestCase
 
         try {
             $service = $this->service($this->offlineReceipt());
-            $service->handle($this->job($path));
+
+            // D6: an offline send must NOT return. On an async driver a
+            // non-throwing consumer is an ACK — the job is gone and the
+            // artefact is stranded with no redelivery ever coming.
+            try {
+                $service->handle($this->job($path));
+                self::fail('an offline send returned normally — the queue will ACK a notification that was never delivered');
+            } catch (NotifyException $e) {
+                self::assertStringContainsString('did not happen', $e->getMessage());
+                self::assertStringContainsString('attachment was kept', $e->getMessage());
+            }
 
             self::assertFileExists(
                 $path,
@@ -63,6 +82,22 @@ final class OfflineNotifyDoesNotDestroyArtefactTest extends TestCase
         }
     }
 
+    /** D6: the retry machinery is only reachable if the consumer refuses the job. */
+    public function test_an_offline_send_throws_so_the_queue_can_retry_or_dead_letter_it(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'tg-offline-throw-');
+        self::assertIsString($path);
+        file_put_contents($path, 'retry me');
+
+        try {
+            $this->expectException(NotifyException::class);
+            $this->service($this->offlineReceipt())->handle($this->job($path));
+        } finally {
+            self::assertFileExists($path, 'the artefact must survive the throw — it is what the retry re-sends');
+            @unlink($path);
+        }
+    }
+
     public function test_an_offline_send_is_reported_as_not_happening(): void
     {
         $path = tempnam(sys_get_temp_dir(), 'tg-offline-');
@@ -70,7 +105,11 @@ final class OfflineNotifyDoesNotDestroyArtefactTest extends TestCase
         $log = new SpyLogger;
 
         try {
-            $this->service($this->offlineReceipt(), $log)->handle($this->job($path));
+            try {
+                $this->service($this->offlineReceipt(), $log)->handle($this->job($path));
+            } catch (NotifyException) {
+                // expected (D6) — the operator is told below either way.
+            }
 
             self::assertStringContainsString(
                 'did not happen',

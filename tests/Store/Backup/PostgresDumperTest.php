@@ -108,6 +108,57 @@ final class PostgresDumperTest extends TestCase
         }
     }
 
+    /**
+     * DEFECT-2, unit level: exit 0 with NOTHING in the spool is a failure,
+     * not a success.
+     *
+     * The fake child is the exact shape of the real accident: it reports a
+     * clean exit and writes no bytes — what pg_dump does against an empty
+     * schema, or with a `tables` whitelist matching no object. Both dumpers
+     * used to return a DumpResult with bytes = 0 here.
+     */
+    public function test_a_zero_byte_dump_on_exit_zero_throws_rather_than_returning(): void
+    {
+        $runner = static function (array $argv, array $env, string $cwd): array {
+            // No file_put_contents: the spool is created by the workspace and
+            // left empty, exactly as an empty-schema dump leaves it.
+            return ['exit' => 0, 'stderr' => ''];
+        };
+
+        try {
+            (new PostgresDumper($runner))->dump(new DatabaseTarget('pgsql', 'appdb'), $this->workspace());
+            self::fail('expected BackupException on a zero-byte dump');
+        } catch (BackupException $e) {
+            self::assertStringContainsString('pg_dump', $e->getMessage());
+            self::assertStringContainsString('ZERO-BYTE', $e->getMessage());
+            self::assertStringContainsString('appdb', $e->getMessage());
+            self::assertStringContainsString('no watchdog heartbeat was taken', $e->getMessage());
+        }
+    }
+
+    /**
+     * NEGATIVE CONTROL for the guard above: a ONE-BYTE dump is not zero, so
+     * it must still succeed. Without this the assertion is unfalsifiable in
+     * the useful direction — it would also pass if the dumper rejected every
+     * dump, which is not a fix but a different outage.
+     */
+    public function test_a_one_byte_dump_still_succeeds(): void
+    {
+        $runner = static function (array $argv, array $env, string $cwd): array {
+            $files = glob($cwd.'/tfbk-*') ?: [];
+            if (count($files) === 1) {
+                file_put_contents($files[0], '.');
+            }
+
+            return ['exit' => 0, 'stderr' => ''];
+        };
+
+        $result = (new PostgresDumper($runner))->dump(new DatabaseTarget('pgsql', 'appdb'), $this->workspace());
+
+        self::assertSame(1, $result->bytes);
+        self::assertSame(0, $result->exitCode);
+    }
+
     public function test_missing_binary_probe_returns_null(): void
     {
         $runner = static fn (array $argv, array $env, string $cwd): array => ['exit' => 127, 'stderr' => 'pg_dump: not found'];

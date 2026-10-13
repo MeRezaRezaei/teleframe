@@ -142,11 +142,34 @@ final class PassportCommand extends Command
 
     private function flush(): int
     {
-        $this->nonces()->clear(''); // whole-registry sweep contract (the interface clear() is per-nonce; the PSR-16 prefix sweep is wave-2 polish)
+        // THE NO-WORK CONTRACT, enforced. `clear()` is PER-NONCE: it forgets
+        // ONE issued nonce. This called clear(''), and an empty string is not
+        // a nonce that was ever issued — so neither shipped registry removed a
+        // single key (MemoryNonceRegistry unsets a literal '' offset;
+        // CacheNonceRegistry deletes prefix.''), yet the command printed
+        // "Nonce registry flushed" and returned SUCCESS. An operator who ran
+        // this to drop outstanding login nonces was told the registry was
+        // clean while every issued nonce stayed live and consumable.
+        //
+        // It cannot report the opposite honestly either: no registry exposes a
+        // count, so this command cannot know whether the registry was empty,
+        // and claiming "nothing to flush" would be its own invented
+        // reassurance. The honest verdict for a sweep that provably performed
+        // no deletion is FAILURE.
+        //
+        // The whole-registry sweep stays a real gap, named rather than papered
+        // over: a genuine fix needs a listing surface on NonceRegistry (which
+        // is src/Teleframe/**, outside this command's zone), not a longer
+        // string passed to a per-nonce delete.
+        $this->nonces()->clear('');
 
-        $this->info('Nonce registry flushed (clear("") sweep — the memory registry is per-process; the PSR-16 prefix sweep is wave-2 polish).');
+        $this->error(
+            'NONCE REGISTRY NOT FLUSHED: deleted nothing. clear() is per-nonce and an empty string is not an issued '
+            .'nonce, so this swept nothing — outstanding login nonces are still live and still consumable. '
+            .'A whole-registry sweep needs a listing surface the NonceRegistry interface does not yet expose.'
+        );
 
-        return self::SUCCESS;
+        return self::FAILURE;
     }
 
     /**

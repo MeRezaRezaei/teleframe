@@ -44,6 +44,7 @@ use MeRezaRezaei\Teleframe\Laravel\Console\IngestGateCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\LoginCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\PollCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\RegenerateCommand;
+use MeRezaRezaei\Teleframe\Laravel\Console\ReindexSearchCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\RelayCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\RoutingModeCommand;
 use MeRezaRezaei\Teleframe\Laravel\Console\SchemaAuditCommand;
@@ -394,7 +395,7 @@ class TeleframeServiceProvider extends ServiceProvider
             );
         });
 
-// Backup vault factory (Phase 2, Task 6): callable(string $setId):
+        // Backup vault factory (Phase 2, Task 6): callable(string $setId):
         // VaultInterface for teleframe:backup. Driver-aware — 'telegram'
         // (the DEFAULT) reuses the backfill SCOPE_RESOLVER_KEY seam (shared
         // daemon.accounts registry, AccountWorker::buildLiveScope) to build
@@ -907,6 +908,11 @@ class TeleframeServiceProvider extends ServiceProvider
                 RelayCommand::class,
                 TstoreCommand::class,
                 RoutingModeCommand::class,
+                // The remediation step for the NFC token normalisation:
+                // MessageSearchIndexer::reindexAccount() had no caller at all
+                // until this command, so tokens written before normalisation
+                // could never be rewritten. See ReindexSearchCommand.
+                ReindexSearchCommand::class,
             ]);
 
             $this->loadMigrationsFrom(dirname(__DIR__).'/Migrations');

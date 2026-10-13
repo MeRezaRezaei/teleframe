@@ -221,6 +221,62 @@ class MtprotoCryptoAndTlTest extends TestCase
         PacketCodec::decryptPacket($packet, $authKey, fromServer: false);
     }
 
+    public function test_decrypt_packet_rejects_mismatched_msg_key(): void
+    {
+        [$authKey, $packet, $realMsgKey] = $this->craftPacketWithMismatchedMsgKey();
+
+        // The ciphertext on this packet really is the plaintext we encrypted, and
+        // it really is sealed under $realMsgKey — only the 16-byte msg_key header
+        // field lies. So decryption itself succeeds and the msg_key verification
+        // branch is the only thing that can reject it.
+        $this->assertSame(16, strlen($realMsgKey));
+
+        try {
+            PacketCodec::decryptPacket($packet, $authKey, fromServer: false);
+            $this->fail('decryptPacket accepted a packet whose msg_key header does not match its payload.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('MTProto packet integrity check failed: msg_key mismatch.', $e->getMessage());
+        }
+    }
+
+    /**
+     * Builds a client->server packet whose AES-IGE ciphertext is encrypted under
+     * the REAL msg_key (so the decrypt succeeds and yields the true plaintext),
+     * but whose 16-byte msg_key header field carries a value differing from it in
+     * exactly one bit. Isolates the msg_key verification branch from every other
+     * rejection path in decryptPacket().
+     *
+     * @return array{0: string, 1: string, 2: string} [authKey, packet, realMsgKey]
+     */
+    private function craftPacketWithMismatchedMsgKey(): array
+    {
+        $authKey = random_bytes(256);
+        $payload = TLSerializer::packString('msg_key mismatch probe');
+        $msgData = pack('P', 9876543210);          // server_salt
+        $msgData .= pack('P', 1234567890);          // session_id
+        $msgData .= pack('P', (time() << 32) | 4); // message_id
+        $msgData .= pack('V', 2);                   // seq_no
+        $msgData .= pack('V', strlen($payload));    // data_len
+        $msgData .= $payload;
+
+        $paddingLen = 16 - (strlen($msgData) % 16);
+        if ($paddingLen < 12) {
+            $paddingLen += 16;
+        }
+        $msgData .= random_bytes($paddingLen);
+
+        $x = 0; // client -> server
+        $realMsgKey = substr(hash('sha256', substr($authKey, 88 + $x, 32).$msgData, true), 8, 16);
+        [$aesKey, $aesIv] = self::deriveKeysForTest($authKey, $realMsgKey, $x);
+        $encrypted = AesIge::encrypt($msgData, $aesKey, $aesIv);
+
+        $headerMsgKey = $realMsgKey;
+        $headerMsgKey[15] = chr(ord($headerMsgKey[15]) ^ 0xFF); // one flipped bit
+        $authKeyId = substr(hash('sha1', $authKey, true), 12, 8);
+
+        return [$authKey, $authKeyId.$headerMsgKey.$encrypted, $realMsgKey];
+    }
+
     /**
      * Hand-crafts a valid client->server packet so decryptPacket's
      * post-decrypt validations can be probed header-field by header-field.

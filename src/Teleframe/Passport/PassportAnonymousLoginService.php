@@ -42,7 +42,12 @@ use Psr\Log\LoggerInterface;
  *
  * The chain then enforces, in order:
  *
- *   (a) the capability is switched on at all (config, default OFF);
+ *   (a) the capability is switched on at all (config, default OFF), AND a
+ *       REAL BOT is configured behind it — `bot_id != 0` and a non-empty
+ *       `bot_username`. Passport is a BOT API feature: the bot's private key
+ *       is what decrypts the envelope and the bot's token is what the element
+ *       hash is taken over, so a host with a key and NO bot is running a login
+ *       endpoint that cannot mean anything. Refused rather than served;
  *   (b) the marker is consumed ONE-TIME — unknown, spent or expired all
  *       return null and the login is refused, so a replay cannot reach
  *       anything downstream and a bad attempt cannot leave a live token
@@ -116,10 +121,11 @@ use Psr\Log\LoggerInterface;
  *
  * POSTURE, as everywhere in this module: inert unless
  * `teleframe.passport.anonymous_login` is true (the shipped default is
- * false); every refusal is loud; failures are PSR-3 logged at error level
- * with method names and timings ONLY and are ALWAYS rethrown, and the package
- * never calls Auth itself — it invokes the injected ride, exactly as the
- * authenticated path does.
+ * false) AND a real bot is configured behind it (`bot_id` non-zero and
+ * `bot_username` non-empty); every refusal is loud; failures are PSR-3 logged at
+ * error level with method names and timings ONLY and are ALWAYS rethrown, and
+ * the package never calls Auth itself — it invokes the injected ride, exactly
+ * as the authenticated path does.
  *
  * Plain-PHP constructible (the standalone-smoke gate): every seam is
  * constructor-injected, no container/facade/config call in the constructor or
@@ -217,7 +223,8 @@ final class PassportAnonymousLoginService
      *                                    "must not replace a live session" refusal cannot
      *                                    be skipped by omitting the argument
      *
-     * @throws PassportLoginException on every refusal — capability off, unknown/spent/
+     * @throws PassportLoginException on every refusal — capability off, no bot
+     *                                configured behind it, unknown/spent/
      *                                expired marker, marker issued to a different
      *                                browser, credentials minted for a different flow,
      *                                a type the host does not allow, no vetted identity
@@ -259,6 +266,49 @@ final class PassportAnonymousLoginService
             );
         }
 
+        // (a2) THE BOT PRESENCE GATE. Enabling the capability is not enough:
+        // Passport is a BOT API feature, so the bot's PRIVATE key is what
+        // decrypts the data envelope and the bot's TOKEN is what the
+        // per-element hash is taken over. A host holding a Passport RSA key
+        // but NO bot therefore runs a live anonymous login endpoint whose
+        // entire premise is absent — "useless but running", which is the worst
+        // of both: it answers requests, it costs the host the attack surface,
+        // and the presence of a working login form is what invites traffic.
+        //
+        // Both halves are required and both are already-read config, so this
+        // makes an IMPLICIT precondition EXPLICIT rather than adding a switch:
+        // `bot_id` is the identity `requestPassport` asks with, and a 0 is
+        // Telegram's own "unconfigured" sentinel (the shipped default);
+        // `bot_username` is what makes `telegram_url` a real destination
+        // rather than the `null` the response degrades to when it is blank.
+        // With either missing the endpoint cannot complete a single real
+        // handshake, so it is refused here — AT the gate, before the pending
+        // marker is consumed, so a refused host never even spends a token.
+        //
+        // Zero-regex: `===` on the int, `trim()` on the string. Names only —
+        // never a bot id value, a username value or any key material.
+        $missing = [];
+
+        if ($this->config->botId() === 0) {
+            $missing[] = 'teleframe.passport.bot_id';
+        }
+
+        if (trim($this->config->botUsername()) === '') {
+            $missing[] = 'teleframe.passport.bot_username';
+        }
+
+        if ($missing !== []) {
+            throw new PassportLoginException(
+                'anonymous passport login requires a configured bot, and '.implode(' and ', $missing)
+                .(count($missing) === 1 ? ' is unset' : ' are unset')
+                .': Telegram Passport is a BOT API feature, so the bot private key'
+                .' (teleframe.passport.private_key_path) is what decrypts the data'
+                .' envelope and the bot token is what the per-element hash is taken'
+                .' over — with no bot behind them this login endpoint is running but'
+                .' cannot complete a handshake, so it is refused rather than served'
+            );
+        }
+
         // (b) ONE-TIME marker consume. Single-use AND expiring, and the
         //     delete happens before the answer is known — so a wrong browser
         //     cannot spend a token and then leave it alive for the right one.
@@ -290,6 +340,21 @@ final class PassportAnonymousLoginService
                 'update carries no passport credentials (message.passport_data.credentials or root data/hash/secret)'
             );
         }
+
+        // (d0) TRANSPORT INTEGRITY, BEFORE ANY DECRYPTION. The envelope's
+        //      `hash` must equal SHA256 of the bytes it decrypts to, compared
+        //      as 32 RAW bytes with `hash_equals` — never as a base64 string,
+        //      never as 64 hexits. See `PassportCredentialsVerifier` for the
+        //      raw-vs-encoded trap this closes and for what it is NOT: it
+        //      authenticates the BLOB, never the identity claim.
+        //
+        //      Same point as `PassportLoginService`'s step (c0) and for the
+        //      same reason: the envelope is whole and unparsed exactly here, so
+        //      a tampered blob is refused before AES runs. It is an explicit
+        //      second assertion, not the only one — the shipped
+        //      `PassportDecryptor` raises the same comparison internally.
+        //      The delivery below is untouched; the check simply gates it.
+        PassportCredentialsVerifier::assertCredentialsEnvelope($credentials, $this->keys->key());
 
         $decrypted = PassportDecryptor::decryptCredentials(
             $credentials->data,

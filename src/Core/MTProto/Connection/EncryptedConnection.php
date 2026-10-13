@@ -546,6 +546,7 @@ class EncryptedConnection
     {
         $results = [];
         $errors = [];
+        $errorContexts = [];
         $strays = 0;
         $frameCap = count($pending) * 3 + 10;
         for ($framesRead = 0; $pending !== []; $framesRead++) {
@@ -566,7 +567,7 @@ class EncryptedConnection
 
             if ($id === 0x73F1F8DC) {
                 foreach (self::parseBareContainerMessages($payload) as $body) {
-                    if ($this->absorbBatchBody($body, $pending, $results, $errors, $strays) === 'bad_server_salt') {
+                    if ($this->absorbBatchBody($body, $pending, $results, $errors, $errorContexts, $strays) === 'bad_server_salt') {
                         return null;
                     }
                 }
@@ -577,7 +578,7 @@ class EncryptedConnection
             $offset = 0;
             $decoded = TLDecoder::decodeObject($payload, $offset);
             $decoded = self::unwrapResultIfGzipped($decoded);
-            if ($this->absorbBatchBody($decoded, $pending, $results, $errors, $strays) === 'bad_server_salt') {
+            if ($this->absorbBatchBody($decoded, $pending, $results, $errors, $errorContexts, $strays) === 'bad_server_salt') {
                 return null;
             }
         }
@@ -588,6 +589,8 @@ class EncryptedConnection
             // TelegramException (FLOOD_WAIT / MIGRATE) and failing-key method
             // context the pre-drain throw carried, minus the stranding of
             // unread frames. Connection stays usable.
+            $this->logSuppressedBatchErrors($errors, $errorContexts);
+
             throw $errors[0];
         }
 
@@ -627,9 +630,10 @@ class EncryptedConnection
      * @param  array<int, string>  $pending  msg_id => key (mutated)
      * @param  array<string, array<string, mixed>>  $results  key => decoded result (mutated)
      * @param  array<int, TelegramException>  $errors  deferred rpc_errors (mutated; first one rethrown after the drain)
+     * @param  array<int, array{method: string|null, code: int, message: string}>  $errorContexts  per-error wire facts (mutated), parallel to $errors
      * @param  int  $strays  running stray rpc_result counter (mutated; skip-with-cap like call())
      */
-    protected function absorbBatchBody(array $body, array &$pending, array &$results, array &$errors, int &$strays): ?string
+    protected function absorbBatchBody(array $body, array &$pending, array &$results, array &$errors, array &$errorContexts, int &$strays): ?string
     {
         $name = (string) ($body['_'] ?? '');
 
@@ -697,6 +701,8 @@ class EncryptedConnection
         $inner = self::unwrapResultIfGzipped((array) $body['result']);
         if (($inner['_'] ?? '') === 'rpc_error') {
             $method = TLRegistry::nameOf(unpack('V', substr((string) $this->batchRequestBodies[$key], 0, 4))[1] ?? 0);
+            $errorCode = (int) ($inner['error_code'] ?? 0);
+            $errorMessage = (string) ($inner['error_message'] ?? 'UNKNOWN');
             // Defer the raise until every sibling's rpc_result has been
             // drained: throwing here aborts the receive loop and strands the
             // remaining frames, whose stale req_msg_ids churn the next
@@ -704,17 +710,68 @@ class EncryptedConnection
             // receiveBatchResults() rethrows the first collected error once
             // $pending is empty — typed TelegramException, so FLOOD_WAIT /
             // MIGRATE semantics survive — and the connection stays usable.
-            $errors[] = RpcExceptionResolver::resolve(
-                (string) ($inner['error_message'] ?? 'UNKNOWN'),
-                (int) ($inner['error_code'] ?? 0),
-                $method
-            );
+            $errors[] = RpcExceptionResolver::resolve($errorMessage, $errorCode, $method);
+
+            // The wire facts are kept alongside the exception because the
+            // resolved type does not uniformly expose them: DcMigrationException
+            // extends TelegramException directly, so an instanceof read at the
+            // throw site would lose method + code for MIGRATE errors. Captured
+            // here, at the source, every error stays fully identifiable.
+            $errorContexts[] = [
+                'method' => $method,
+                'code' => $errorCode,
+                'message' => $errorMessage,
+            ];
 
             return null;
         }
         $results[$key] = $inner;
 
         return null;
+    }
+
+    /**
+     * Surfaces the batch rpc_errors that are NOT the one being thrown.
+     *
+     * $errors[0] becomes the exception, so errors 2..N would otherwise leave no
+     * trace at all — no log, no return value, no side effect — and the caller
+     * cannot know a second item of the batch also failed. Each one is logged
+     * with its method + code + message so a multi-failure batch stays fully
+     * diagnosable, while the throw itself is untouched: still the FIRST error,
+     * still the same typed TelegramException, still raised only after every
+     * sibling has been drained.
+     *
+     * Logging is the only viable carrier here: Exception::$previous is private
+     * with no setter, so the suppressed errors cannot be chained onto the thrown
+     * object after construction without re-wrapping it — which would destroy the
+     * typed class (FloodWaitException / DcMigrationException / ...) that callers
+     * branch on. This class already owns a PSR-3 logger ($this->logger, optional
+     * and NullLogger by default), so no new dependency is introduced.
+     *
+     * @param  array<int, TelegramException>  $errors  every collected rpc_error, in arrival order
+     * @param  array<int, array{method: string|null, code: int, message: string}>  $contexts  per-error wire facts, parallel to $errors
+     */
+    protected function logSuppressedBatchErrors(array $errors, array $contexts): void
+    {
+        if (count($errors) < 2) {
+            return; // single failure: nothing is lost, the exception carries it all
+        }
+
+        $total = count($errors);
+        foreach (array_slice($errors, 1) as $index => $error) {
+            $context = $contexts[$index + 1] ?? ['method' => null, 'code' => 0, 'message' => ''];
+
+            $this->logger->debug('teleframe.mtproto.connection.batch.rpc_error', [
+                'kind' => 'batch_rpc_error',
+                'suppressed_index' => $index + 2,
+                'batch_error_count' => $total,
+                'thrown_index' => 1,
+                'method' => $context['method'],
+                'code' => $context['code'],
+                'message' => $context['message'],
+                'exception_class' => $error::class,
+            ]);
+        }
     }
 
     /**

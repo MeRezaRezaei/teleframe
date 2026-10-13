@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Tests\Notify;
 
+use Closure;
+
 use LogicException;
 use MeRezaRezaei\Teleframe\Message\MessageCompiler;
 use MeRezaRezaei\Teleframe\Notify\AttachmentFile;
@@ -17,6 +19,7 @@ use MeRezaRezaei\Teleframe\Notify\NotificationQueueContract;
 use MeRezaRezaei\Teleframe\Notify\NotificationSender;
 use MeRezaRezaei\Teleframe\Notify\NotifyContext;
 use MeRezaRezaei\Teleframe\Notify\NotifyException;
+use MeRezaRezaei\Teleframe\Notify\BotApiTransport;
 use MeRezaRezaei\Teleframe\Notify\NotifyService;
 use MeRezaRezaei\Teleframe\Notify\PendingNotify;
 use MeRezaRezaei\Teleframe\Notify\SyncNotificationQueue;
@@ -187,12 +190,21 @@ final class PendingNotifyNotifyServiceTest extends TestCase
     public function test_premium_flag_reaches_the_job_payload(): void
     {
         $queue = new RecordingQueue;
-        $service = $this->service(queue: $queue, premium: true);
+
+        // D2: ->to()->queue() runs the SAME budget guard log() runs, so two
+        // sends to one chat inside one second are a refusal, not a free pass.
+        // The clock seam advances past per_chat_rate (1/s) between them so this
+        // test keeps asserting what it is about — the premium flag on the wire.
+        $now = time();
+        $service = $this->service(queue: $queue, premium: true, now: function () use (&$now): int {
+            return $now;
+        });
 
         $service->log(Level::Info, 'x', []);
         self::assertTrue($queue->jobs[0]->premium);
 
         // Per-send override down: the builder can drop premium for one send.
+        $now++;
         $service->to('app.info', 'y')->premium(false)->to('@ops')->queue();
         self::assertFalse($queue->jobs[1]->premium);
     }
@@ -225,7 +237,12 @@ final class PendingNotifyNotifyServiceTest extends TestCase
         self::assertSame('sendDocument', $bot->calls[0]['method']);
         $params = $bot->calls[0]['params'];
         self::assertSame('@ops', $params['chat_id']);
+        // D1: the document goes out as an `attach://` reference in a multipart
+        // body — NEVER as a bare local path, which the Bot API rejects (400)
+        // and which used to cost every install its report.
         self::assertArrayHasKey('document', $params);
+        self::assertStringStartsWith('attach://', (string) $params['document']);
+        self::assertArrayNotHasKey('mime', $params, 'mime is this package\'s hint, not a Bot API field');
         self::assertStringContainsString('Deploy summary', (string) $params['caption']);
         self::assertLessThanOrEqual(1024, mb_strlen((string) $params['caption'])); // caption cap row
 
@@ -236,7 +253,7 @@ final class PendingNotifyNotifyServiceTest extends TestCase
         self::assertStringContainsString('<!DOCTYPE html>', (string) $html);
 
         // ...and the temp attachment the worker owns is cleaned up after the send.
-        self::assertFileDoesNotExist($params['document']);
+        self::assertFileDoesNotExist(substr((string) $params['document'], strlen('attach://')));
     }
 
     /** Leader path: log() with an over-cap brief truncates and keeps the full text in the file. */
@@ -249,6 +266,7 @@ final class PendingNotifyNotifyServiceTest extends TestCase
         self::assertCount(1, $bot->calls);
         self::assertSame('sendDocument', $bot->calls[0]['method']);
         $params = $bot->calls[0]['params'];
+        self::assertStringStartsWith('attach://', (string) $params['document']);
         self::assertStringContainsString('… [truncated]', (string) $params['caption']);
         self::assertLessThanOrEqual(1024, mb_strlen((string) $params['caption']));
         self::assertCount(1, $bot->documents);
@@ -263,7 +281,16 @@ final class PendingNotifyNotifyServiceTest extends TestCase
     private function endToEnd(): array
     {
         $bot = new FakeBotClient;
-        $sender = new NotificationSender(new MessageCompiler($this->tmp.'/tpl', $this->tmp.'/cache'), $bot);
+        // D1: the transport's multipart seam, injected instead of dialled. The
+        // recording lands on the SAME FakeBotClient double, so these tests keep
+        // asserting what went out — now proven to be an `attach://` reference
+        // with the real bytes, not a local path in a JSON body.
+        $transport = new BotApiTransport($bot, static function (string $method, array $fields, array $file) use ($bot): array {
+            $bot->recordMultipart($method, $fields, $file);
+
+            return ['ok' => true, 'result' => ['message_id' => 1]];
+        });
+        $sender = new NotificationSender(new MessageCompiler($this->tmp.'/tpl', $this->tmp.'/cache'), null, null, 120, 3, null, $transport);
         $wiring = new class
         {
             public ?NotifyService $service = null;
@@ -297,6 +324,7 @@ final class PendingNotifyNotifyServiceTest extends TestCase
     private function service(
         ?NotificationQueueContract $queue = null,
         bool $premium = false,
+        ?Closure $now = null,
     ): NotifyService {
         $registry = Topic::defaults();
         foreach (Topic::predefined() as $row) {
@@ -313,6 +341,7 @@ final class PendingNotifyNotifyServiceTest extends TestCase
             inlineBudget: 800,
             attachmentDir: $this->tmp,
             premium: $premium,
+            now: $now,
         );
     }
 

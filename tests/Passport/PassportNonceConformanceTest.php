@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Tests\Passport;
 
+use Illuminate\Database\Eloquent\Model;
 use MeRezaRezaei\Teleframe\Passport\MemoryBindingWriter;
 use MeRezaRezaei\Teleframe\Passport\MemoryNonceRegistry;
 use MeRezaRezaei\Teleframe\Passport\MemoryPendingLoginRegistry;
@@ -13,7 +14,6 @@ use MeRezaRezaei\Teleframe\Passport\PassportKeyLoader;
 use MeRezaRezaei\Teleframe\Passport\PassportLoginException;
 use MeRezaRezaei\Teleframe\Passport\PassportLoginService;
 use MeRezaRezaei\Teleframe\Passport\SessionFingerprint;
-use Illuminate\Database\Eloquent\Model;
 use MeRezaRezaei\Teleframe\Passport\SessionIdentityResolver;
 use PHPUnit\Framework\TestCase;
 
@@ -211,6 +211,12 @@ final class PassportNonceConformanceTest extends TestCase
             'private_key_path' => $this->pemFile,
             'account_id' => 7,
             'allowed_types' => ['personal_details', 'email', 'phone'],
+            // Passport is a BOT API feature: a config with the key but no bot
+            // behind it is refused at the gate, so the conformance tests below
+            // — which are about nonce/flow spend, not about the gate — have to
+            // configure one to reach the checks they are pinning.
+            'bot_id' => 7_700_000_02,
+            'bot_username' => 'teleframe_nonce_test_bot',
         ]);
 
         $pending = new MemoryPendingLoginRegistry(60);
@@ -275,7 +281,6 @@ final class NonceFlowUser extends Model
         return new self;
     }
 
-    /** @param  string  $key */
     public function where(string $key, mixed $value): static
     {
         return $this;

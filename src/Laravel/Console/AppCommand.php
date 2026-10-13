@@ -130,7 +130,35 @@ final class AppCommand extends Command
                 array_keys($status),
                 array_values($status),
             ));
-            $this->info('Probe-installed '.count($status).' app-call schedule(s) through the schedule seam — NullSchedulePublisher reports "skipped (null schedule driver)".');
+
+            // THE NO-WORK CONTRACT, enforced (the same rule as
+            // `teleframe:tstore schedules --install`, which had the identical
+            // hole). `--install` exists to arm these schedules; when the seam
+            // skipped every one of them no job will fire, and the command
+            // returned SUCCESS anyway — so a deploy step read "app-call
+            // schedules armed" over a visible no-op.
+            //
+            // The table above still prints, per-schedule reason included: WHICH
+            // schedules would have been armed is the actionable half of a
+            // refusal.
+            $armed = 0;
+            foreach (array_values($status) as $state) {
+                if (! self::isSkippedStatus((string) $state)) {
+                    $armed++;
+                }
+            }
+
+            if ($status !== [] && $armed === 0) {
+                $this->error(
+                    'NOTHING ARMED: the schedule seam skipped all '.count($status).' app-call schedule(s) — see the status column above for why. '
+                    .'Nothing was installed, so this exits non-zero rather than reporting a successful probe-install.'
+                );
+
+                return self::FAILURE;
+            }
+
+            $this->info($armed.' of '.count($status).' app-call schedule(s) armed through the schedule seam'
+                .' — NullSchedulePublisher reports "skipped (null schedule driver)".');
 
             return self::SUCCESS;
         }
@@ -253,5 +281,19 @@ final class AppCommand extends Command
         }
 
         return $service;
+    }
+
+    /**
+     * Whether a publisher status string reports that NOTHING was armed.
+     *
+     * Mirrors TstoreCommand::isSkippedStatus(), deliberately duplicated
+     * rather than shared: the two commands are separate entry points with
+     * separate seams, and a shared static would couple them for one
+     * two-line prefix test. The rule is the same on both sides — the check
+     * never assumes failure, it only refuses to assume success.
+     */
+    private static function isSkippedStatus(string $status): bool
+    {
+        return str_starts_with($status, 'skipped') || $status === 'not reported by the publisher';
     }
 }

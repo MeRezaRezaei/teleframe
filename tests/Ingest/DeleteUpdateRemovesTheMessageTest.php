@@ -246,8 +246,16 @@ final class DeleteUpdateRemovesTheMessageTest extends TestCase
         self::assertSame(0, $this->rowCount($db, 'tf_messages', self::MESSAGE_ID), 'a channel delete left the message row behind');
         self::assertSame(0, $this->rowCount($db, 'tf_message_search', self::MESSAGE_ID), 'a channel delete left the search tokens behind');
         self::assertSame(0, $this->rowCount($db, 'tf_messages_reactions', self::MESSAGE_ID), 'a channel delete left child rows behind');
+        // The direct path (no frame identity) now derives the update's key from the
+        // payload's own content, so `seq`/`position` are no longer (0, 0) and
+        // cannot be used as a locator. These two assertions previously found
+        // "the" row by (seq 0, position 0); their INTENT is about the ROW —
+        // exactly one fact row exists, and it carries the real channel_id — so
+        // the locator is now the account alone, which is STRICTLY STRONGER:
+        // a stray second row on this account used to pass unnoticed and now
+        // fails the count.
         self::assertSame(1, $db->table('tf_updates')
-            ->where('account_id', self::ACCOUNT)->where('seq', 0)->where('position', 0)->count());
+            ->where('account_id', self::ACCOUNT)->count());
 
         // SCHEMA DRIFT REPAIR (2026-10-10). This chain now EXECUTES
         // `2026_10_10_000100_fold_update_scalar_children_onto_the_update_fact`, so
@@ -263,7 +271,7 @@ final class DeleteUpdateRemovesTheMessageTest extends TestCase
         self::assertSame(
             777,
             (int) $db->table('tf_updates')
-                ->where('account_id', self::ACCOUNT)->where('seq', 0)->where('position', 0)
+                ->where('account_id', self::ACCOUNT)
                 ->value('channel_id'),
             'the channel id the delete named was not folded onto the surviving update fact row as a real value',
         );

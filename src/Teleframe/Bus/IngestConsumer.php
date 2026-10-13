@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use JsonException;
 use LogicException;
+use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
 use MeRezaRezaei\Teleframe\Teleclient;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -522,7 +523,31 @@ final class IngestConsumer
                 // and gates the UpdateStored event itself (cycles 10–12).
                 ($this->mirrorIngester)($entry['update'], (int) $entry['account_id']);
             } else {
-                $root = $this->client->ingest($entry['update'], $entry['account_id']);
+                // THE FRAME IDENTITY IS SCOPED HERE, and this is the only
+                // reason `handleEntry()` threads `$entryId` all the way down.
+                //
+                // A seq-less update (a bare `update*` ctor) has no delivering
+                // seq to key on, so `UpdateIngestor` derives one from the frame
+                // identity. That derivation is what makes `xautoclaim` SAFE:
+                // re-delivering an in-flight entry — which happens routinely,
+                // because the shipped default runs two consumers on one group
+                // and reclaims whatever a slow worker's PEL has been idle for —
+                // re-derives the SAME key and upserts. An earlier allocation
+                // scheme read `MAX(seq) + 1`, so the second delivery of one
+                // entry read MAX after the first delivery had committed, took
+                // the next value, and APPENDED a duplicate row.
+                //
+                // Scoped rather than passed because the seam below is the BC
+                // client face `Teleclient::ingest($update, $accountId)` — a
+                // published two-argument API. `withinFrame()` carries the
+                // identity for the duration of this one call instead of
+                // breaking that face, and restores the previous value in a
+                // `finally` so a throw cannot leak one entry's frame into the
+                // next entry's ingest.
+                $root = UpdateIngestor::withinFrame(
+                    $entryId,
+                    fn (): ?Model => $this->client->ingest($entry['update'], $entry['account_id']),
+                );
 
                 // onStored mirrors UpdateStored: it fires only when the
                 // ingest actually stored a root (null = nothing storeable).

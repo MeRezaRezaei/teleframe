@@ -38,9 +38,6 @@ use Throwable;
  */
 final class NotifyService
 {
-    /** Bot API media caption length (data row `caption` in CapabilityTable — §6). */
-    public const CAPTION_BUDGET = 1024;
-
     /** Key namespace for the durable budget counters (opaque, never renamed). */
     private const BUDGET_PREFIX = 'teleframe.notify.budget.';
 
@@ -168,7 +165,70 @@ final class NotifyService
             context: new NotifyContext(context: $context),
             queue: $this->queue,
             premium: $this->premium ?? false,
+            // D2: the fluent surface gets the SAME gate log()/report() run —
+            // without this it enqueued straight into the queue seam and every
+            // capability row, the split and every rate budget were bypassed.
+            gate: fn (PendingNotify $pending): PendingNotify => $this->gatePending($pending),
         );
+    }
+
+    /**
+     * The send-time gate for the fluent builder (D2) — deliberately the same
+     * sequence `log()` runs, in the same order, so `->to(...)->send()` cannot
+     * behave differently from `log()`:
+     *
+     *   1. the topic row exists (loud, unknown topic),
+     *   2. a target chat is resolvable (the send's own, else the row's),
+     *   3. `checkText` on the brief — trimmed to the cap with the full text
+     *      moved into the attachment, or refused,
+     *   4. `MessageSegmenter::split()` — inline brief+metadata vs a long body
+     *      file, exactly as log() splits,
+     *   5. `guardBudgets()` — send_rate / per_chat_rate / topic_budget.
+     *
+     * It returns a NEW PendingNotify carrying the gated state, so the job
+     * `send()` compiles and enqueues is the gated one, and it throws
+     * NotifyException on any refusal — a refusal the fluent surface can no
+     * longer route around.
+     *
+     * @throws NotifyException
+     */
+    private function gatePending(PendingNotify $pending): PendingNotify
+    {
+        $topic = $pending->topicName();
+        $rows = $this->registry->topics();
+        if (! isset($rows[$topic])) {
+            throw new NotifyException('unknown topic "'.$topic.'"');
+        }
+        $def = $rows[$topic];
+
+        $chat = $pending->targetChatValue() ?? $def->chatOr('');
+        if ($chat === '') {
+            throw new NotifyException('unknown topic "'.$topic.'" — no target chat on the topic row or the send');
+        }
+
+        $status = $this->premiumStatus($pending->isPremium());
+
+        $brief = $pending->briefText();
+        $verdict = $this->checker->checkText($brief, $status);
+        $body = null;
+        if ($verdict->truncated()) {
+            // Same posture as log(): the head ships, the FULL brief survives
+            // in the attachment — never lost, just moved.
+            $body = $brief;
+            $brief = $this->truncateTo($brief, $verdict->effective());
+        } elseif (! $verdict->allowed()) {
+            throw new NotifyException('notify send refused: '.($verdict->reason() ?? 'text exceeds capability'));
+        }
+
+        $segment = $this->segmenter->split($pending->levelEnum(), $brief, $pending->contextPairs(), $body, $this->inlineBudget());
+        $attachment = $pending->attachmentFile();
+        if (isset($segment['attachment'])) {
+            $attachment = AttachmentFile::fromArray($segment['attachment']);
+        }
+
+        $this->guardBudgets($topic, $def, $status);
+
+        return $pending->gatedInto($brief, $attachment, $chat);
     }
 
     /**
@@ -187,13 +247,15 @@ final class NotifyService
             $this->renderer()->render($title, $context, $this->renderSections($sections), $this->attachmentDir()),
         );
 
-        // §7: file upload caps (bot 50 MiB) + the message text cap.
-        $fileVerdict = $this->checker->checkFile($file->bytes(), $status, 'bot');
+        // §7: file upload caps (bot 50 MiB / mtproto 2 GiB) + the caption cap.
+        $fileVerdict = $this->checker->checkFile($file->bytes(), $status, $this->transportKey());
         if (! $fileVerdict->allowed()) {
             throw new NotifyException('notify report refused: '.($fileVerdict->reason() ?? 'attachment exceeds capability'));
         }
 
-        $captionVerdict = $this->checker->checkText($title, $status);
+        // A report ships as `sendDocument`, so the title is its CAPTION: the
+        // caption row, not the text row, is the row that governs it.
+        $captionVerdict = $this->checker->checkCaption($title, $status);
         $caption = $captionVerdict->allowed() ? $title : $this->truncateTo($title, $captionVerdict->effective());
 
         return $this->enqueue('report', Level::Notice, $caption, $context, $file, $premium);
@@ -241,13 +303,25 @@ final class NotifyService
 
         $attachment = $job->attachment;
         if ($attachment !== null) {
-            $fileVerdict = $this->checker->checkFile((int) ($attachment['bytes'] ?? 0), $status, 'bot');
+            // D5: the cap belongs to the transport that will carry the file.
+            // Hardcoding 'bot' refused a legitimate 60 MiB report against the
+            // bot's 50 MiB row on every mtproto user-scope install.
+            $fileVerdict = $this->checker->checkFile((int) ($attachment['bytes'] ?? 0), $status, $this->transportKey());
             if (! $fileVerdict->allowed()) {
                 throw new NotifyException('notify send refused: '.($fileVerdict->reason() ?? 'attachment exceeds capability'));
             }
-            // §7: sendDocument carries the message as the caption — the
-            // 1024-char caption cap applies (data row `caption`).
-            $text = $this->truncateTo($text, self::CAPTION_BUDGET);
+
+            // §7 + D3/D4: sendDocument carries the message as its CAPTION, so
+            // the cap is the `caption` row read off the table — not a const
+            // baked into this file (a host raising its caption row changed
+            // nothing while checkCaption() had zero callers), and it is applied
+            // to the COMPOSED text, which is what actually goes out.
+            $text = $this->capTo($text, $status, true);
+        } else {
+            // D3: the brief was capability-checked, but the text that ships is
+            // header + brief + metadata. Without this the composed 4844-char
+            // message went out against the 4096-char text cap.
+            $text = $this->capTo($text, $status, false);
         }
 
         try {
@@ -303,7 +377,18 @@ final class NotifyService
                 'attachment_kept' => $attachment !== null,
             ]);
 
-            return;
+            // D6: this used to RETURN. On every async driver a non-throwing
+            // handle() is an ACK: the envelope was deleted, never retried,
+            // never dead-lettered — the notification was gone. And because
+            // the job was acked, the temp attachment (the only copy of the
+            // report) was orphaned on disk forever. Throwing hands the
+            // recovery to the queue's retry/dead-letter machinery, which is
+            // the one thing that can keep the artefact and re-try the send.
+            // The attachment is NOT unlinked: the retry needs it.
+            throw new NotifyException(
+                'notify send did not happen: transport is offline (live_mode off) — topic "'.$topic.'" '
+                .'was not delivered, and its attachment was kept for the retry.',
+            );
         }
 
         // Sent: drop the temp attachment the worker owns (retry/DL keep it
@@ -409,17 +494,72 @@ final class NotifyService
         return $text;
     }
 
-    /** @return string  trimmed to the budget, trailed by the truncation marker */
+    /**
+     * The COMPOSED message trimmed to the cap that actually governs it: the
+     * `caption` row when the send carries an attachment (sendDocument puts the
+     * whole message in the caption), the `text_message` row when it does not.
+     * Both are read off the `CapabilityTable`, so a host that raises a row
+     * raises the real limit — which is the whole point of a data-driven
+     * capability table and was not true while a const did the trimming (D4).
+     *
+     * It is applied to the COMPOSED text (header + brief + metadata), not to
+     * the brief alone: `checkText` in `log()` measured the brief, so a 750-char
+     * brief that composed to 4844 chars was checked as 750 and sent as 4844
+     * against a 4096-char cap (D3).
+     *
+     * @throws NotifyException when the composed text is refused outright
+     */
+    private function capTo(string $text, PremiumStatus $status, bool $asCaption): string
+    {
+        $verdict = $asCaption
+            ? $this->checker->checkCaption($text, $status)
+            : $this->checker->checkText($text, $status);
+
+        if ($verdict->allowed()) {
+            return $text;
+        }
+
+        if (! $verdict->truncated()) {
+            throw new NotifyException('notify send refused: '.($verdict->reason() ?? 'text exceeds capability'));
+        }
+
+        return $this->truncateTo($text, $verdict->effective());
+    }
+
+    /**
+     * Which transport's file-upload row this service sends over: 'bot' for
+     * the shipped Bot API default, 'mtproto' for anything the user-scope
+     * transport reports. Derived from `transportName()` rather than
+     * hardcoded, so a 60 MiB report is not refused against the bot's 50 MiB
+     * row on an mtproto install (D5).
+     */
+    private function transportKey(): string
+    {
+        return str_starts_with($this->sender->transportName(), 'mtproto') ? 'mtproto' : 'bot';
+    }
+
+    /**
+     * @return string trimmed to the budget, trailed by the truncation marker
+     *
+     * D7: the budget is a CHARACTER budget (that is what every capability row
+     * is measured in), so the measurement and the slice must both be
+     * multibyte. `strlen()` counted BYTES, so a 900-char Persian caption —
+     * ~1800 bytes — was compared against a 1024-char cap, judged over, then
+     * had only `strlen($marker)` (15) BYTES removed from a CHARACTER room,
+     * and `mb_substr` still returned more characters than the cap allowed:
+     * 900 chars came out as 913, i.e. a truncation marker ADDED 13 characters
+     * to a string that had not actually been over the cap.
+     */
     private function truncateTo(string $value, int $budget): string
     {
-        if ($budget <= 0 || strlen($value) <= $budget) {
+        if ($budget <= 0 || mb_strlen($value) <= $budget) {
             return $value;
         }
 
         $marker = '… [truncated]';
-        $room = $budget - strlen($marker);
+        $room = $budget - mb_strlen($marker);
         if ($room <= 0) {
-            return mb_substr($value, 0, $budget);
+            return mb_substr($value, 0, max(0, $budget));
         }
 
         return mb_substr($value, 0, $room).$marker;

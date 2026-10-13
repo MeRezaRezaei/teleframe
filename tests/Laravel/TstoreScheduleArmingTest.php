@@ -21,8 +21,8 @@ use MeRezaRezaei\Teleframe\Store\Index\MemoryStoreIndex;
 use MeRezaRezaei\Teleframe\Store\Queue\SyncUploadQueue;
 use MeRezaRezaei\Teleframe\Store\Schedules\RecurringScheduleClient;
 use MeRezaRezaei\Teleframe\Store\Schedules\TemporalClientResolver;
-use MeRezaRezaei\Teleframe\Tests\Store\StoreScheduleUpsertDouble;
 use MeRezaRezaei\Teleframe\Store\Schedules\TemporalSchedulePublisher;
+use MeRezaRezaei\Teleframe\Tests\Store\StoreScheduleUpsertDouble;
 use Orchestra\Testbench\TestCase;
 
 /**
@@ -51,7 +51,9 @@ use Orchestra\Testbench\TestCase;
  *      `schedule --install` reaches the BACKUP seam's install, which until
  *      now had a scheduler and no production caller at all.
  *   4. NOT TWICE, AND NOT BY ACCIDENT. The shipped default is still
- *      'null': arming with it reports 'skipped' and the command says so.
+ *      'null': arming with it reports 'skipped', prints what WOULD have
+ *      been armed, and exits FAILURE with 'NOTHING ARMED: …' — an --install
+ *      that armed no schedule must not read as a successful arm.
  *      Re-arming refreshes the same ids.
  */
 final class TstoreScheduleArmingTest extends TestCase
@@ -220,7 +222,7 @@ final class TstoreScheduleArmingTest extends TestCase
 
     // ------------------------------------------------------ 4. null stays the default
 
-    public function test_the_shipped_default_stays_null_and_says_skipped_rather_than_pretending(): void
+    public function test_the_shipped_default_stays_null_says_skipped_and_exits_failure_rather_than_pretending(): void
     {
         // No armTemporalDrivers(): the default config, exactly as shipped.
         (new TeleframeServiceProvider($this->app))->register();
@@ -229,10 +231,30 @@ final class TstoreScheduleArmingTest extends TestCase
         $exit = Artisan::call('teleframe:tstore', ['action' => 'schedules', '--install' => true]);
         $output = Artisan::output();
 
-        self::assertSame(TstoreCommand::SUCCESS, $exit);
+        // THE NO-WORK CONTRACT. `--install` exists to ARM the schedules; the
+        // null driver arms none of them, so no recurring job will ever fire. It
+        // used to exit SUCCESS here, which let a deploy step or a provisioning
+        // script read "schedules armed" over a visible no-op.
+        self::assertSame(TstoreCommand::FAILURE, $exit,
+            'a --install that armed nothing must not exit SUCCESS');
+
+        // The refusal names the count and points at the status column, which is
+        // why the table above it still prints: WHICH schedules WOULD have been
+        // armed, and why each did not, is the actionable half.
+        self::assertStringContainsString(
+            'NOTHING ARMED: the schedule seam skipped all 2 schedule(s)',
+            $output,
+            'the refusal must say plainly that nothing was armed, and how many were skipped',
+        );
+        self::assertStringContainsString('Nothing was installed, so this exits non-zero', $output);
+
+        // Both halves of the old assertion, kept: the per-schedule reason, and
+        // the table that names what would have been armed.
         self::assertStringContainsString('skipped (null schedule driver)', $output);
         self::assertStringContainsString('tstore-hot-cache-prune', $output,
-            'a skipped install must still print what WOULD have been armed');
+            'a refused install must still print what WOULD have been armed');
+        self::assertStringContainsString('tstore-registry-sweep', $output,
+            'a refused install must still print every schedule it could not arm');
     }
 
     public function test_arming_twice_refreshes_the_same_ids_and_never_stacks(): void

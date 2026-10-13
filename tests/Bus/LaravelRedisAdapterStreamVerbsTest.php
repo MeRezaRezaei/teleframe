@@ -10,7 +10,9 @@ use Illuminate\Redis\Connections\PredisConnection;
 use MeRezaRezaei\Teleframe\Bus\LaravelRedisAdapter;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
+use Predis\Command\Redis\XADD;
 use Predis\Command\Redis\XAUTOCLAIM;
+use ReflectionMethod;
 
 /**
  * Argument-shape and reply-shape guard for the stream verbs the Redis
@@ -23,6 +25,13 @@ use Predis\Command\Redis\XAUTOCLAIM;
  * phpredis xadd(stream, id, fields); predis XACK/XDEL need the ids spread,
  * phpredis takes one array argument), so both branches are asserted, not
  * just one.
+ *
+ * XADD's trim is the load-bearing case here: the two drivers disagree on
+ * the SHAPE, not just the order — predis wants an options structure while
+ * phpredis wants typed positional parameters. Both the argv the adapter
+ * hands over AND the wire form each driver derives from it are asserted,
+ * on both drivers, because a mocked-command assertion alone cannot see a
+ * trim being silently dropped.
  */
 final class LaravelRedisAdapterStreamVerbsTest extends TestCase
 {
@@ -89,13 +98,87 @@ final class LaravelRedisAdapterStreamVerbsTest extends TestCase
 
         $this->assertSame(
             [
-                // `~` after MAXLEN is the O(1) approximate trim; the integer
-                // is passed through unquoted (the driver stringifies argv).
-                ['xadd', [self::STREAM, ['a' => '1'], '*', 'MAXLEN', '~', 1000]],
-                ['xadd', [self::STREAM, '*', ['a' => '1'], 'MAXLEN', '~', 1000]],
+                // predis: the trim is an OPTIONS STRUCTURE at argv index 3, not
+                // a literal 'MAXLEN' token in argv — see the wire-form test
+                // below, which runs the real Predis XADD class over this argv.
+                ['xadd', [self::STREAM, ['a' => '1'], '*', ['trim' => ['MAXLEN', '~', 1000]]]],
+                // phpredis: fixed-arity xAdd(key, id, values, maxlen, approx),
+                // so the count is an int at index 3 and `~` is the bool at 4.
+                ['xadd', [self::STREAM, '*', ['a' => '1'], 1000, true]],
             ],
             $this->calls,
         );
+    }
+
+    /**
+     * The wire-form gate for XADD on the predis driver.
+     *
+     * Every other test here asserts only the argv the adapter HANDS OVER,
+     * because connection() stubs command() — predis's own setArguments()
+     * never runs and a wire-invalid argv is indistinguishable from a
+     * wire-valid one. That is exactly how the untrimmed-stream defect
+     * shipped green: a literal 'MAXLEN' at index 3 is silently DROPPED by
+     * XADD::setArguments(), so a mocked-command assertion happily passed
+     * while the real stream grew without bound.
+     *
+     * This feeds the real adapter argv through the real Predis command class
+     * and asserts the exact tokens that go on the wire, MAXLEN and the count
+     * included.
+     */
+    public function test_xadd_maxlen_argv_expands_to_the_wire_form_predis_actually_sends(): void
+    {
+        $this->reply = '1-0';
+        $this->predis()->xadd(self::STREAM, '*', ['a' => '1'], ['maxlen' => 1000]);
+
+        $command = new XADD;
+        $command->setArguments($this->calls[0][1]);
+
+        self::assertSame(
+            [self::STREAM, 'MAXLEN', '~', 1000, '*', 'a', '1'],
+            $command->getArguments(),
+            'predis emits MAXLEN, the approximate marker and the count, BEFORE the id',
+        );
+    }
+
+    /**
+     * The same wire-form gate for the phpredis driver.
+     *
+     * phpredis has no command class to re-parse argv — Redis::xAdd() is a
+     * FIXED-ARITY method with a TYPED signature, so a wrong argv cannot be
+     * "expanded" at all: it is either bound to the right parameter or it
+     * throws. Reflection is the honest proxy for "what the driver receives",
+     * and it fails on a regression that a mere argv snapshot would accept.
+     */
+    public function test_xadd_maxlen_argv_binds_to_the_typed_phpredis_xadd_signature(): void
+    {
+        $this->reply = '1-0';
+        $this->phpredis()->xadd(self::STREAM, '*', ['a' => '1'], ['maxlen' => 1000]);
+
+        $argv = $this->calls[0][1];
+
+        self::assertTrue(
+            extension_loaded('redis'),
+            'ext-redis is required to assert the phpredis wire signature',
+        );
+
+        $signature = (new ReflectionMethod('Redis', 'xAdd'))->getParameters();
+
+        // key, id, values, maxlen, approx — a literal 'MAXLEN' cannot bind to
+        // argument #4, which is declared `int`.
+        self::assertCount(5, $argv, 'xAdd takes key, id, values, maxlen and approx');
+        self::assertSame(self::STREAM, $argv[0]);
+        self::assertSame('*', $argv[1]);
+        self::assertSame(['a' => '1'], $argv[2]);
+        self::assertIsInt($argv[3], 'maxlen is typed int: a literal MAXLEN token raises a TypeError');
+        self::assertSame(1000, $argv[3]);
+        self::assertTrue($argv[4], 'approx=true is what puts the ~ marker on the wire');
+
+        // Same arguments, bound against the real signature.
+        self::assertSame('string', (string) $signature[0]->getType());
+        self::assertSame('string', (string) $signature[1]->getType());
+        self::assertSame('array', (string) $signature[2]->getType());
+        self::assertSame('int', (string) $signature[3]->getType());
+        self::assertSame('bool', (string) $signature[4]->getType());
     }
 
     public function test_xadd_maxlen_of_zero_or_absent_never_trims(): void

@@ -95,6 +95,37 @@ interface VaultInterface
     public function listManifests(int $limit = 10, ?array &$unreadableIds = null): array;
 
     /**
+     * The newest $generations manifest generations and their PLAINTEXT chunk
+     * addresses, newest generation first. The retention keep-set is the UNION
+     * of these rows' chunk_hashes.
+     *
+     * WHY THIS EXISTS ALONGSIDE listManifests(). listManifests() reports
+     * COUNTS and a restorability verdict; it deliberately never hands back a
+     * chunk address, so a keep-set cannot be built from it. Retention needs
+     * the addresses of every RETAINED generation, not just the newest, and
+     * a prune that kept only the newest made every older generation
+     * unrestorable by construction.
+     *
+     * UNION, NOT NEWEST. Two generations that share a chunk name it once in
+     * the keep-set; the same chunk in both rows is counted once, so a
+     * generation is never dropped for "owning" a chunk another also owns,
+     * and one is never double-counted either.
+     *
+     * Addresses are PLAINTEXT content addresses — the same strings
+     * `chunk_hashes` carries in a manifest, and the same the prune compares
+     * before resolving them to wire names (Pruner::keepSetFor asks the vault
+     * for `wireNamesFor()`).
+     *
+     * Rows are ordered newest GENERATION first, the same order and the same
+     * unreadable-post rule as listManifests() (an unreadable post is skipped,
+     * and an unreadable NEWEST post fails loud).
+     *
+     * @param  int  $generations  raised to at least 1
+     * @return list<array{generation: int, created: string, chunk_hashes: list<string>}>
+     */
+    public function listManifestChunkHashes(int $generations = 2): array;
+
+    /**
      * List vault entries whose name starts with $namePrefix; an EMPTY
      * prefix lists everything in the vault (the prune GC walks that —
      * chunk GC needs a full inventory, and the vault API has no other

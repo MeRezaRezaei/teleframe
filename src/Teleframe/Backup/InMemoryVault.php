@@ -126,7 +126,9 @@ final class InMemoryVault implements VaultInterface
      * this fake IS a complete listing (no cap, no index lag).
      *
      * @param  list<int>|null  $unreadableIds
+     *
      * @param-out list<int>  $unreadableIds
+     *
      * @return list<array{generation: int, created: string, files: int, chunks: int, bytes: int, restorable: bool, missing_chunks: int}>
      */
     public function listManifests(int $limit = 10, ?array &$unreadableIds = null): array
@@ -151,6 +153,55 @@ final class InMemoryVault implements VaultInterface
         }
 
         return $rows;
+    }
+
+    /**
+     * The newest $generations generations' PLAINTEXT chunk addresses
+     * (VaultInterface), so a prune can build a retention keep-set that is
+     * wider than one generation. Same walk, same order and same
+     * unreadable-post rule as listManifests() — the addresses are the only
+     * thing this adds, and they are what listManifests() withholds.
+     *
+     * @return list<array{generation: int, created: string, chunk_hashes: list<string>}>
+     */
+    public function listManifestChunkHashes(int $generations = 2): array
+    {
+        $limit = max(1, $generations);
+
+        $unreadable = [];
+        $read = $this->readManifests($unreadable);
+
+        $rows = [];
+        foreach ($read as $manifest) {
+            $rows[] = self::chunkHashRow($manifest['data']);
+            if (count($rows) >= $limit) {
+                break;
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * One retention row: the generation's identity and the PLAINTEXT
+     * addresses its manifest lists. Non-string entries in `chunk_hashes` are
+     * dropped rather than trusted — manifest data is untrusted until its own
+     * hash and AEAD say otherwise, and a keep-set built from a forged entry
+     * is a keep-set that does not keep.
+     *
+     * @param  array<string, mixed>  $manifest
+     * @return array{generation: int, created: string, chunk_hashes: list<string>}
+     */
+    private static function chunkHashRow(array $manifest): array
+    {
+        $hashes = $manifest['chunk_hashes'] ?? [];
+        $hashes = is_array($hashes) ? array_values(array_filter($hashes, 'is_string')) : [];
+
+        return [
+            'generation' => is_int($manifest['generation'] ?? null) ? $manifest['generation'] : 0,
+            'created' => is_string($manifest['created'] ?? null) ? $manifest['created'] : 'unknown',
+            'chunk_hashes' => $hashes,
+        ];
     }
 
     /**

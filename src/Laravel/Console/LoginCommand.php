@@ -310,8 +310,11 @@ class LoginCommand extends Command
             $this->line("<fg=yellow>{$sessionString}</>");
         }
 
+        $savedToEnv = false;
+
         if ($this->confirm("Would you like to save this session to your .env file as {$envKey}?", true)) {
             EnvFile::upsert(base_path('.env'), $envKey, $sessionString);
+            $savedToEnv = true;
             $this->components->info("Saved to .env as {$envKey}.");
             $this->line('The session string is not printed (pass --show-session to print it).');
         } else {
@@ -321,6 +324,33 @@ class LoginCommand extends Command
                     ? 'Re-run with --show-session if you need to copy it out of the vault.'
                     : 'Re-run with --show-session (or --account=LABEL) if you need the string at all — an unsaved session is lost when this process exits.',
             );
+        }
+
+        // A SUCCESS here used to mean "you are logged in", which is true and
+        // useless: what the caller needs to know is whether the credential
+        // still EXISTS after this process exits. Answering no at the prompt
+        // with no --account=LABEL writes the session NOWHERE — not .env, not
+        // the vault — and the default output path deliberately does not print
+        // it, so the auth key is destroyed the moment the process returns. A
+        // provisioning script, a CI step or a `&&` chain reads that 0 as "the
+        // account is provisioned", and re-provisioning costs the operator a
+        // fresh login plus a fresh 2FA.
+        //
+        // So the exit code answers the question the contract is actually about:
+        // did the credential land somewhere durable? Printed to stdout is NOT
+        // durable — that is stdout on a CI log, which this package treats as a
+        // credential leak (see --show-session at :307), not as a store.
+        if (! $savedToEnv && ! $storedInVault) {
+            $this->components->error(
+                'The session was saved NOWHERE — not to .env (declined) and not to the vault '
+                .'(no --account=LABEL given, or the vault write failed).'
+            );
+            $this->line(
+                'This is NOT a logged-in state you can rely on: the auth key is gone when this process exits. '
+                .'Re-run and answer yes, or pass --account=LABEL to store it in the vault.'
+            );
+
+            return self::FAILURE;
         }
 
         return self::SUCCESS;

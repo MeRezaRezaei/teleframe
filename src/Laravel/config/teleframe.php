@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use MeRezaRezaei\Teleframe\Backup\Pruner;
 use MeRezaRezaei\Teleframe\Bus\StreamSchema;
 use MeRezaRezaei\Teleframe\Schema\Generator\SchemaRegenerator;
 use MeRezaRezaei\Teleframe\Store\ReferencePolicy;
@@ -468,6 +469,29 @@ return [
         // one missed daily cycle should be red. See
         // BackupCommand::DEFAULT_MAX_AGE_HOURS for the code-side default.
         'max_age_hours' => (int) env('TELEFRAME_BACKUP_MAX_AGE_HOURS', 24),
+        // How many NEWEST generations a prune leaves RESTORABLE. Retention,
+        // not display: the prune keep-set is the union of these generations'
+        // chunk addresses, so every generation inside the window can still be
+        // restored and everything outside it loses its restorability.
+        //
+        // The shipped default is 3, NOT 1. Chunks are content-addressed and
+        // BackupRunner skips a chunk the previous manifest already references,
+        // so an unchanged file costs ONE document in every generation —
+        // retention adds only what actually CHANGED between the retained
+        // runs, roughly (N-1) runs' worth of delta, not N copies of the set.
+        // Against that, a corrupt or partial generation is undetectable from
+        // the vault and only shows up on a restore attempt, usually a day or
+        // two later. Keeping 2 leaves a single fallback, so one bad newest
+        // generation spends the entire safety net at once; keeping 3 leaves
+        // two independent fallbacks, which is the minimum for this to be a
+        // safety net rather than a coin flip. Minimum is 1 — a lower value is
+        // raised, never honoured as 0, because "keep zero" means deleting
+        // every chunk in the set.
+        //
+        // Overridden per-run by `teleframe:backup prune --keep-generations=N`.
+        // See Pruner::RECOMMENDED_KEEP_GENERATIONS for the same reasoning at
+        // the code site, so the two cannot drift apart silently.
+        'keep_generations' => (int) env('TELEFRAME_BACKUP_KEEP_GENERATIONS', Pruner::RECOMMENDED_KEEP_GENERATIONS),
         // OPT-IN, off by default. When true the package registers its own
         // `teleframe:backup run --set=default` schedule (dailyAt 03:17,
         // withoutOverlapping, onOneServer) so "backups stopped running" is

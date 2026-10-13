@@ -169,6 +169,38 @@ final class TstoreCommandTest extends TestCase
         self::assertStringContainsString('Schedule driver: null', Artisan::output());
     }
 
+    /**
+     * `schedules --install` under the shipped null driver: the operator
+     * asked to ARM the maintenance schedules and NOTHING was armed.
+     *
+     * The setUp binds NullSchedulePublisher, whose install() returns
+     * 'skipped (null schedule driver)' for every id — so the work seam
+     * performed no work at all. Exit 0 here is the "reports success, did
+     * nothing" lie in its purest form: a provisioning script or a deploy
+     * step reads "schedules armed" and no job will ever fire.
+     *
+     * HONEST_FAIL, not LEGITIMATE_NOOP: there was work to do (the operator
+     * explicitly passed --install) and it did not happen. The command's own
+     * docblock already promised "arming with the null driver is a visible
+     * no-op, never a false success" — this test is what holds it to that.
+     */
+    public function test_schedules_install_that_skipped_everything_must_not_report_success(): void
+    {
+        $exit = Artisan::call('teleframe:tstore', ['action' => 'schedules', '--install' => true]);
+        $output = Artisan::output();
+
+        self::assertSame(
+            TstoreCommand::FAILURE,
+            $exit,
+            '--install armed nothing (every status is a skip), so success would report work that never happened.',
+        );
+        self::assertStringContainsString('NOTHING ARMED', $output);
+        // The table is still printed: the operator must be able to SEE what
+        // would have been armed, which is the whole value of a refused arm.
+        self::assertStringContainsString('skipped (null schedule driver)', $output);
+        self::assertStringContainsString('tstore-hot-cache-prune', $output);
+    }
+
     public function test_put_without_source_fails(): void
     {
         $exit = Artisan::call('teleframe:tstore', [

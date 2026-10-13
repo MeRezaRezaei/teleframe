@@ -142,6 +142,29 @@ final class BackupStalenessTest extends TestCase
                 ]];
             }
 
+            /**
+             * Retention: the one row this scripted vault can honestly report
+             * (it holds ONE manifest). Inline rather than the shared
+             * RetentionStubTrait because an anonymous class cannot `use` a
+             * named trait without colliding with this file's own imports.
+             *
+             * @return list<array{generation: int, created: string, chunk_hashes: list<string>}>
+             */
+            public function listManifestChunkHashes(int $generations = 2): array
+            {
+                if ($this->manifest === null) {
+                    return [];
+                }
+
+                $hashes = is_array($this->manifest['chunk_hashes'] ?? null) ? $this->manifest['chunk_hashes'] : [];
+
+                return [[
+                    'generation' => is_int($this->manifest['generation'] ?? null) ? $this->manifest['generation'] : 0,
+                    'created' => is_string($this->manifest['created'] ?? null) ? $this->manifest['created'] : 'unknown',
+                    'chunk_hashes' => array_values(array_filter($hashes, 'is_string')),
+                ]];
+            }
+
             public function findMessagesByName(string $namePrefix): array
             {
                 $out = [];
@@ -262,7 +285,7 @@ final class BackupStalenessTest extends TestCase
             [['id' => '1', 'name' => $orphan]]
         );
 
-        $this->artisan('teleframe:backup', ['action' => 'prune'])
+        $this->artisan('teleframe:backup', ['action' => 'prune', '--force' => true])
             ->expectsOutputToContain('prune set=default ran WITHOUT the lock (Redis unavailable)')
             ->expectsOutputToContain('prune set=default {scanned:1, pruned:1}')
             ->assertExitCode(0);
@@ -270,9 +293,20 @@ final class BackupStalenessTest extends TestCase
 
     /**
      * A HELD lock is a different verdict (an in-flight backup; prune skips):
-     * it must NOT print the no-lock warning, or the message means nothing.
+     * it must NOT print the no-lock warning, or the message means nothing —
+     * that half of the intent is unchanged and is asserted below.
+     *
+     * The exit code is what moved. The lock verdict short-circuits BEFORE the
+     * inventory walk (Pruner::pruneReportingLock returns scanned:0 without
+     * touching a single entry), so `pruned:0` on that line is not a count, it
+     * is the absence of a prune — and returning SUCCESS over it let a cron
+     * read a retention pass that never ran as a clean one. It is now
+     * FAILURE, carrying the same {scanned:0, pruned:0} line plus a SKIPPED
+     * line that names the held lock. This is NOT the Redis-unavailable path:
+     * there prune really walks, `pruned:0` is a true answer, and SUCCESS is
+     * correct — see test_prune_warns_on_the_console_when_the_lock_is_unavailable.
      */
-    public function test_prune_does_not_warn_when_the_lock_is_held_by_a_backup(): void
+    public function test_prune_fails_loudly_when_the_lock_is_held_by_a_backup(): void
     {
         BackupRunner::setLockConnection(new HeldLockConnection);
         BackupRunner::acquireSetLock('default'); // take the lock as a runner would
@@ -280,8 +314,11 @@ final class BackupStalenessTest extends TestCase
         $this->useVault(self::manifestAged(1));
 
         $this->artisan('teleframe:backup', ['action' => 'prune'])
+            ->expectsOutputToContain('SKIPPED: prune set=default was NOT run — a backup holds the set lock, so nothing was scanned and nothing was deleted.')
+            // the misleading no-lock warning stays absent: the lock IS held
+            ->doesntExpectOutputToContain('ran WITHOUT the lock')
             ->expectsOutput('prune set=default {scanned:0, pruned:0}')
-            ->assertExitCode(0);
+            ->assertExitCode(1);
     }
 
     /**

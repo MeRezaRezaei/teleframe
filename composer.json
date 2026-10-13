@@ -29,6 +29,7 @@
         "ext-fileinfo": "*",
         "ext-gmp": "*",
         "ext-hash": "*",
+        "ext-intl": "*",
         "ext-json": "*",
         "ext-libxml": "*",
         "ext-mbstring": "*",

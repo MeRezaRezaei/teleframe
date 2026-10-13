@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Tests\Passport;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use MeRezaRezaei\Teleframe\Passport\EncryptedCredentials;
 use MeRezaRezaei\Teleframe\Passport\FieldIdentityResolver;
@@ -669,6 +668,51 @@ final class PassportIdentityIntakeTest extends TestCase
         self::assertSame([['key' => 'email', 'value' => 'ada@example.test']], IntakeUser::$lookups);
     }
 
+    /**
+     * The other half of the test above, and the reason it now configures a bot:
+     * a host holding a Passport RSA key but NO bot behind it runs a login
+     * endpoint whose entire premise is absent — the bot private key is what
+     * decrypts the envelope and the bot token is what the per-element hash is
+     * taken over — so the chain refuses it at the gate rather than serving it.
+     *
+     * Asserted on SUBSTANCE, not on a sentence: the refusal must happen, and
+     * the message must NAME the missing config key, so a rewording of the
+     * explanation does not turn this into a brittle string test.
+     */
+    public function test_the_anonymous_flow_refuses_a_host_with_no_bot_behind_it(): void
+    {
+        [$service, $pending] = $this->anonymousService(withLookup: true, withBot: false);
+        $ticket = $pending->issue(SessionFingerprint::of('session-a'));
+        IntakeUser::$resolved = IntakeUser::forId(42);
+
+        $update = $this->update(
+            $this->seal([
+                'secure_data' => ['personal_details' => ['first_name' => 'Ada']],
+                'nonce' => $ticket->nonce(),
+            ]),
+            ['email' => 'ada@example.test'],
+        );
+
+        $refused = false;
+        try {
+            $service->login($update, $ticket->token(), SessionFingerprint::of('session-a'));
+        } catch (PassportLoginException $e) {
+            $refused = true;
+            // The KEY is named, not the prose around it.
+            self::assertStringContainsString('teleframe.passport.bot_id', $e->getMessage());
+            self::assertStringContainsString('teleframe.passport.bot_username', $e->getMessage());
+            // A bot-less host is refused for THAT reason and nothing else.
+            self::assertStringNotContainsString('no Laravel user matches', $e->getMessage());
+        }
+
+        self::assertTrue($refused, 'a bot-less passport host must never be served');
+
+        // Refused AT the gate: the marker was never consumed, so a refused
+        // host does not spend the user's flow token.
+        self::assertNotNull($pending->consume($ticket->token()));
+        self::assertSame([], IntakeUser::$lookups, 'the users table is never reached');
+    }
+
     public function test_the_anonymous_flow_refuses_the_old_secure_data_shape(): void
     {
         [$service, $pending] = $this->anonymousService();
@@ -741,7 +785,10 @@ final class PassportIdentityIntakeTest extends TestCase
                 'enabled' => true,
                 'private_key_path' => $this->pemFile,
                 'account_id' => 7,
-                'allowed_types' => PassportPayloadTypes::ALL,
+                // Claims included: this suite drives field-mode identity, which
+                // resolves FROM a verified email/phone claim, so a host that
+                // excluded those types would (correctly) refuse its own fixture.
+                'allowed_types' => PassportPayloadTypes::ALL_WITH_CLAIMS,
                 'user_lookup' => 'field',
                 'require_verified' => true,
             ], $config)),
@@ -765,19 +812,32 @@ final class PassportIdentityIntakeTest extends TestCase
     /**
      * @return array{0: PassportAnonymousLoginService, 1: MemoryPendingLoginRegistry}
      */
-    private function anonymousService(bool $withLookup = false): array
+    private function anonymousService(bool $withLookup = false, bool $withBot = true): array
     {
+        $config = [
+            'enabled' => true,
+            'anonymous_login' => true,
+            'private_key_path' => $this->pemFile,
+            'account_id' => 7,
+            // The anonymous chain resolves its identity field from the §6
+            // claim, so the host's policy has to permit that claim type.
+            'allowed_types' => PassportPayloadTypes::ALL_WITH_CLAIMS,
+        ];
+
+        // Passport is a BOT API feature, so the chain REFUSES a host that has
+        // the key but no bot BEFORE the marker is spent. A fixture that means
+        // to reach any check past that gate therefore has to configure a bot;
+        // the one test that means to reach the gate itself asks for none.
+        if ($withBot) {
+            $config['bot_id'] = 7_700_000_01;
+            $config['bot_username'] = 'teleframe_intake_test_bot';
+        }
+
         $pending = new MemoryPendingLoginRegistry(900);
 
         return [
             new PassportAnonymousLoginService(
-                config: new PassportConfig([
-                    'enabled' => true,
-                    'anonymous_login' => true,
-                    'private_key_path' => $this->pemFile,
-                    'account_id' => 7,
-                    'allowed_types' => PassportPayloadTypes::ALL,
-                ]),
+                config: new PassportConfig($config),
                 keys: new PassportKeyLoader($this->pemFile),
                 pending: $pending,
                 writer: new MemoryBindingWriter,
@@ -792,7 +852,7 @@ final class PassportIdentityIntakeTest extends TestCase
 
                         return IntakeUser::$resolved;
                     }
-                    : null,
+                : null,
             ),
             $pending,
         ];
@@ -829,6 +889,38 @@ final class PassportPayloadTypes
         'rental_agreement',
         'passport_registration',
         'temporary_registration',
+    ];
+
+    /**
+     * `ALL` PLUS the two §6 claim types.
+     *
+     * NEEDED because `PassportValueValidator` now gates the claim channel on
+     * the host's allow-list, exactly as it always gated the `secure_data`
+     * types. A service fixture whose `allowed_types` omits `email` while its
+     * payload carries a verified email claim is — correctly — refused: the
+     * host configured a policy that excludes the very type the login resolves
+     * an identity from.
+     *
+     * `ALL` itself is left as the DOCUMENT list, because it is asserted
+     * verbatim as `fieldsVerified` by the document-only response test, and a
+     * document-only payload carries no claim. The two constants now say what
+     * they mean: "every §5 type" and "every type this host will accept,
+     * claims included".
+     */
+    public const ALL_WITH_CLAIMS = [
+        'personal_details',
+        'passport',
+        'internal_passport',
+        'driver_license',
+        'identity_card',
+        'address',
+        'utility_bill',
+        'bank_statement',
+        'rental_agreement',
+        'passport_registration',
+        'temporary_registration',
+        'email',
+        'phone',
     ];
 }
 

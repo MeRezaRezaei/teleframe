@@ -90,8 +90,17 @@ final class NestedIngestTest extends IngestTestCase
         self::assertInstanceOf(TfUpdate::class, $root);
         self::assertSame('updateNewMessage', $root->getAttribute('constructor'));
         self::assertSame(self::ACCOUNT, (int) $root->getAttribute('account_id'));
-        self::assertSame(0, (int) $root->getAttribute('seq'));
-        self::assertSame(0, (int) $root->getAttribute('position'));
+        // Was `assertSame(0, ...)` twice, which pinned the literal (0, 0) key
+        // this direct path used to fall back to. The invariant underneath is not
+        // the value but that the key is a DERIVED one disjoint from real
+        // delivering seqs, which is asserted as the property rather than as a
+        // constant that can never be right.
+        self::assertLessThan(
+            0,
+            (int) $root->getAttribute('seq'),
+            'a frameless seq-less update takes a NEGATIVE seq; real delivering seqs are always >= 0',
+        );
+        self::assertGreaterThanOrEqual(0, (int) $root->getAttribute('position'));
 
         // Pts facts land in the hand-authored children (row = fact existence).
         $stored = TfUpdate::forAccount(self::ACCOUNT)->sole();
@@ -201,9 +210,20 @@ final class NestedIngestTest extends IngestTestCase
         $this->ingestTree();
         $this->ingestTree();
 
-        // The curated update surface is keyed (account_id, seq, position) —
-        // a lone update always writes the (0, 0) key, so re-ingest UPSERTS
-        // instead of appending. Both update and message rows stay stable.
+        // The curated update surface is keyed (account_id, seq, position), and
+        // this fixture has NO FRAME IDENTITY: ingestTree() calls
+        // UpdateIngestor::ingest() directly, which is the direct path. That
+        // path keys a seq-less update from the PAYLOAD'S OWN CONTENT, so
+        // re-ingesting the same payload re-derives the same key and UPSERTS
+        // instead of appending — which is why both update and message rows stay
+        // stable here.
+        //
+        // This is the same property the bus has, reached a different way: a bus
+        // entry derives its key from the Redis entry id, so ITS re-delivery
+        // upserts too. Two derivations, one key space. See
+        // SeqLessFrameKeyedUpdateTest for the frame path,
+        // SeqLessUpdateKeyCollisionTest for the direct path and the residual it
+        // costs, both pinned.
         self::assertSame(1, TfUpdate::acrossAccounts()->count(), 'update row upsert-stable on (account_id, seq, position)');
         self::assertSame(1, TfMessage::acrossAccounts()->count(), 'message row upsert-stable on (account_id, id)');
 

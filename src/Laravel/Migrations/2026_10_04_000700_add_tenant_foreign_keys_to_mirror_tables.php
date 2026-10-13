@@ -201,14 +201,44 @@ use Illuminate\Support\Facades\Schema;
  * ## THE COST, STATED RATHER THAN DISCOVERED
  *
  * Each `ALTER TABLE … ADD CONSTRAINT` is a separate, non-atomic rebuild on
- * InnoDB, and D-005 measured 265 of them at a 23.35 s floor on empty tables. On
- * a populated `tf_messages` that is a long rebuild needing free disk for a
+ * InnoDB, and D-005 measured 265 of them at a 23.35 s floor on empty tables. On a
+ * populated `tf_messages` that is a long rebuild needing free disk for a
  * shadow copy. The mirror is nearly empty right now — the plan
  * (`docs/superpowers/plans/2026-10-04-foreign-key-structure-plan.md`, §3) records
  * that this is the cheapest window that will ever exist, and that after the
  * history fill this becomes an online-DDL problem. The alternative — a trigger,
  * or a generated-column carrier — is strictly more machinery for a strictly
  * weaker guarantee, and D-005 measured and refuted both.
+ *
+ * ## THE COUNT PIN IS `up()`-ONLY, AND NEVER MOVES TO `down()`
+ *
+ * `EXPECTED_TENANT_TABLES` is 264 because that is what the engine reports at
+ * THIS file's point in the dial — the point `up()` runs at. `down()` runs at a
+ * different point in the same dial, and reverse-order rollback makes that point
+ * hold a DIFFERENT number. `2026_10_10_000100`'s own `down()` runs BEFORE this
+ * file's (its timestamp is later, so `migrate:rollback` reaches it first) and
+ * restores `tf_updates_channel` / `_chat` / `_user`, each carrying `account_id`.
+ * So by the time this `down()` runs, discovery returns exactly THREE tables more
+ * than `up()` ever saw — not because anything is wrong, but because a rollback
+ * is the exact inverse of a sequence in which those three tables did not yet
+ * exist. MEASURED on both engines: MySQL 8.4.11, full dial `up()` then
+ * `2026_10_10_000100->down()` then this `down()`, discovery went 256 -> 259 and
+ * this `down()` completed. The ABSOLUTE count at that point is not written here
+ * on purpose: it drifts with every family that adds or retires a `tf_*` table,
+ * and the one number in this file that must stay a measurement is the pin.
+ *
+ * The pin therefore GUARDS `up()` ONLY, and `down()` discovers without it.
+ * Bumping the constant to the rollback-time count would NOT be a fix and is
+ * refused for the reason the docblock above gives: it would record a number
+ * nobody measured in the direction the constant exists to protect, and it would
+ * make the constant silently direction-dependent — a pin that reads 264 forwards
+ * and 267 backwards is not a measurement, it is two unverified numbers sharing a
+ * name.
+ *
+ * What `down()` still refuses on is the thing that cannot be recovered by
+ * reordering: an unnamed driver, below. The count is the guard against a table
+ * silently joining or leaving the SET; `down()` does not act on the set's size,
+ * it acts on each table's own constraint, so an unmeasured count costs it nothing.
  */
 return new class extends Migration
 {
@@ -323,7 +353,12 @@ return new class extends Migration
             return;
         }
 
-        foreach ($this->tenantTables() as $table) {
+        // NO PIN. See `tenantTables()`'s second argument below for why `down()` is
+        // discovered WITHOUT the count assertion. A legitimate rollback reaches
+        // this line with MORE tables than `up()` ever saw, because
+        // `2026_10_10_000100`'s own `down()` restores three `tf_*` tables that
+        // carry `account_id`, and reverse-order rollback runs it FIRST.
+        foreach ($this->tenantTables(false) as $table) {
             $declared = $this->tenantConstraintOn($table);
 
             if ($declared === null) {
@@ -440,9 +475,10 @@ return new class extends Migration
      * a prefixed sqlite capsule: without stripping, every column lookup returns
      * empty and the discovery silently finds nothing.
      *
+     * @param  bool  $pin  assert the discovered count against EXPECTED_TENANT_TABLES
      * @return list<string>
      */
-    private function tenantTables(): array
+    private function tenantTables(bool $pin = true): array
     {
         $connection = Schema::getConnection();
 
@@ -452,7 +488,9 @@ return new class extends Migration
 
         sort($tables);
 
-        $this->refuseOnUnexpectedCount($tables);
+        if ($pin) {
+            $this->refuseOnUnexpectedCount($tables);
+        }
 
         return $tables;
     }

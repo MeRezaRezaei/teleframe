@@ -6,6 +6,58 @@ describe `src/` as shipped; when docs and code disagree, code wins.
 CI runs on GitHub Actions. GitLab is used only to separate the private
 repository from this public one; it is not a gate.
 
+## Where the upstream is, and how CI is followed — READ THIS BEFORE PUSHING
+
+**`main`'s upstream is the self-hosted GitLab, not GitHub.** Push to `origin`
+and you have pushed to `gitlab.pubg-sell.ir/MeRezaRezaei/teleframe`, which is
+the PRIVATE, full-history repository. Nothing an agent does stops there.
+
+GitLab's `publish-public` job then does the rest of its job by itself:
+
+```
+  agent commits + pushes  ──►  GitLab (private, full history)   ← origin, upstream
+                                     │
+                                     │  publish-public: exports a SANITISED tree
+                                     │  (bin/public-manifest.txt allowlist),
+                                     │  re-gates it, then pushes it
+                                     ▼
+                            GitHub  github.com/MeRezaRezaei/teleframe   (PUBLIC)
+                                     │
+                                     │  GitHub Actions runs here
+                                     ▼
+                              verify-php.yml and the rest
+```
+
+So the full-suite CI lives on **GitHub**, and GitLab is the place the work is
+authored. Three consequences an agent must internalise:
+
+- **Do NOT push to GitHub yourself.** The `public` remote's push URL is
+  `DISABLED://no-direct-push-to-public`. That is deliberate and load-bearing:
+  `.brain/` is tracked, and the mirror — not you — decides what reaches a public
+  remote. Leave it disabled.
+- **To follow CI, wait for the mirror, then use `gh`.** After the push to
+  GitLab, `publish-public` runs (default-branch pushes only) and pushes the
+  public tree. *After that job has succeeded*, GitHub Actions has a branch to
+  run against and `gh` becomes the way to watch it:
+
+  ```bash
+  GITLAB_HOST=gitlab.pubg-sell.ir glab ci status              # is the mirror done?
+  gh run list --repo MeRezaRezaei/teleframe --limit 5        # then GitHub CI
+  gh run watch <run-id> --repo MeRezaRezaei/teleframe
+  ```
+
+  `gh` pointed at GitHub **before** the mirror finishes shows a stale branch and
+  a red build that says nothing about your change. Check the mirror first.
+- **`storage` (`github.com/MeRezaRezaei/teleframe-private`) is the private
+  copy.** It is a separate backup of the full private tree, and it is not
+  pushed by the pipeline — it is pushed explicitly. It is not CI and not a gate.
+
+**A mirror that failed is not a green build.** `publish-public` reports failure
+with a named reason when it cannot publish — most often a missing
+`TF_PUBLIC_REPO_URL` or `TF_PUBLIC_PUSH_TOKEN` CI/CD variable. When the mirror
+fails, GitHub never receives the commit, so GitHub CI never runs, and **the
+absence of a GitHub run is not a pass.** Report the mirror as the gate it is.
+
 ## Single-package layout
 
 `merezarezaei/teleframe` is ONE package: the engine and the merged consumer
@@ -71,6 +123,46 @@ repository root.
   part of the public API — renaming them is a breaking change.
 
 ## Gates
+
+### Never run the full suite locally — that is CI's job, and it blocks development
+
+**This machine cannot run the full automated test suite, and attempting it is a
+defect, not diligence.** GitHub Actions owns the full suite. A local full-suite
+run stalls for 15+ minutes and occupies the machine, which blocks every other
+lane. Never run `composer verify`, never run `vendor/bin/phpunit` with no path
+argument, and never run a whole heavy directory as a verification step.
+
+**Know that "CI will catch it" is only true once the mirror has run.** GitHub
+Actions sees a commit only after GitLab's `publish-public` job pushes the public
+tree, and that job can fail on a missing `TF_PUBLIC_REPO_URL` /
+`TF_PUBLIC_PUSH_TOKEN`. When it does, there is no GitHub run at all — not a red
+one, none — so an unverified change can sit green-looking for as long as the
+mirror stays broken. `glab ci status` is therefore part of verifying a push, and
+a failed mirror is a blocker to report, not a detail to skip.
+
+Verify **your change**, not the app:
+
+```bash
+vendor/bin/phpunit tests/<TheOneAreaYouChanged>   # targeted only
+vendor/bin/phpunit path/to/TheOneTestFile.php     # narrowest form, preferred
+vendor/bin/phpstan analyse --level=5 --no-progress src/<TheOnePackageYouChanged>
+php bin/standalone-smoke.php                       # fast, safe, whole-tree
+php bin/scan-credentials.php                       # fast, safe, whole-tree
+```
+
+Rules that follow from this:
+
+- A whole-directory run is only acceptable for a directory you know is fast
+  (for example `tests/Notify`, `tests/App`, `tests/Core`). `tests/Ingest`,
+  `tests/MySql`, `tests/Pg` and `tests/Schema` are NOT fast — run the single
+  test files you touched.
+- Every command carries `timeout -k 5 <secs> <cmd>`. Size the number to the
+  command's real expected duration. Exit 124 is a named failure to report.
+- Do not add a test whose cost is paid by every future suite run. Booting the
+  full migration dial once per test method costs ~48s and was a rejected change
+  (see `docs/decisions.md` D-035).
+- If your change genuinely cannot be verified without the full suite, say so
+  and stop — do not fall back to running it.
 
 These commands are the gates. Run them from the repository root after
 `composer install`. GitHub Actions runs the credential guard, phpstan, the

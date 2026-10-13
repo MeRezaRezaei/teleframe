@@ -286,14 +286,36 @@ final class EveryClassifiedEndpointIngestsOnMysqlTest extends MySqlTestCase
 
         self::assertSame(self::ENDPOINT_MESSAGE_TEXT, $text, 'the text did not survive the round-trip');
 
+        // Located by account alone, not by (seq 0, position 0). The direct path no
+        // longer falls back to the constant (0, 0) — a frameless seq-less
+        // update's key is derived from the payload's own content — so a
+        // seq/position predicate here would silently match NOTHING and the
+        // assertion would pass on a cast of null. The intent is about the
+        // COLUMN (the discriminator is the constructor the wire sent, not a
+        // constant), so the row is located by its tenant, and the count is
+        // asserted first: exactly one row, or the value below is read off an
+        // ambiguous set.
+        self::assertSame(
+            1,
+            $db->table('tf_updates')->where('account_id', $accountId)->count(),
+            'the update ctor must land exactly one tf_updates row for its tenant',
+        );
+
         self::assertSame(
             'updateNewMessage',
             (string) $db->table('tf_updates')
                 ->where('account_id', $accountId)
-                ->where('seq', 0)
-                ->where('position', 0)
                 ->value('constructor'),
             'the discriminator must be the constructor the wire actually sent',
+        );
+
+        // And the derived key must still be a NEGATIVE seq on this engine too —
+        // `tf_updates.seq` is a SIGNED integer, so a frameless row does not
+        // need a migration to hold one, and that is engine-specific.
+        self::assertLessThan(
+            0,
+            (int) $db->table('tf_updates')->where('account_id', $accountId)->value('seq'),
+            'a frameless seq-less update keys on a negative seq, disjoint from real delivering seqs',
         );
     }
 

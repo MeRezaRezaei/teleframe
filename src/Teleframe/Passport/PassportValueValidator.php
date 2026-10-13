@@ -25,6 +25,15 @@ namespace MeRezaRezaei\Teleframe\Passport;
  *  2. then the host's allow-list, and the required plain field of a present
  *     §5 type.
  *
+ * Both steps above walk `secure_data` ONLY. The §6 verified claims — the
+ * plaintext `email` / `phone_number` Telegram vets, which is where an
+ * identity ACTUALLY comes from — travel on a different door
+ * (`PassportVerifiedClaims`), so they get their own allow-list gate below the
+ * `secure_data` loop. Without it the host's `allowed_types` read as a total
+ * policy while excluding it had no effect at all on the claim channel: a
+ * payload carrying only a verified email passed `validate($payload, [])`, an
+ * allow-list that permits nothing at all.
+ *
  * `plainField()` is the validator-side read of a §5 type's plain scalar
  * (`personal_details.first_name`). It is NOT how an email or a phone is read:
  * those are §6 plaintext claims (`PassportPayload::plainEmail()` /
@@ -44,8 +53,21 @@ final class PassportValueValidator
      * allowed-type list. Throws PassportLoginException when:
      *  - a `secure_data` key is not a §5 type (refused — Telegram never
      *    writes it, so nothing may be read from it);
-     *  - a §5 type is present but not in $allowedTypes (refused); or
-     *  - a present type with a required plain field is missing that field.
+     *  - a §5 type is present but not in $allowedTypes (refused);
+     *  - a present type with a required plain field is missing that field; or
+     *  - a §6 VERIFIED CLAIM (`email` / `phone`) is present but not in
+     *    $allowedTypes (refused).
+     *
+     * The claim gate exists because the §5 loop above iterates ONLY
+     * `verifiedSecureDataTypes()`. §6 claims arrive on a different door — the
+     * `PassportVerifiedClaims` from the intake, never a `secure_data` key — so
+     * without a second loop the host's policy covered the document types and
+     * silently did not cover the channel an identity actually resolves from.
+     *
+     * $allowedTypes is ALLOW-LIST, NEVER DENY-LIST: an empty list means ALLOW
+     * NONE and every present type or claim is refused loud. That is the
+     * pre-existing semantic of the §5 loop and the claim loop mirrors it
+     * rather than inventing a second meaning for the same argument.
      *
      * @param  array<int, string>  $allowedTypes
      */
@@ -74,6 +96,32 @@ final class PassportValueValidator
             if ($required !== null && $payload->plainValue($type) === null) {
                 throw new PassportLoginException(
                     sprintf('Telegram Passport type "%s" is missing its required field "%s".', $type, $required)
+                );
+            }
+        }
+
+        // THE §6 CLAIM CHANNEL IS A SECOND DOOR, SO IT GETS ITS OWN GATE.
+        // `verifiedSecureDataTypes()` above only ever yields `secure_data` keys,
+        // so an allow-list that permitted NOTHING still waved through an
+        // MTProto `securePlainEmail` claim and a Bot API `email`-typed
+        // PassportData element — the host's policy read as configured while the
+        // login resolved an identity from a type the host had excluded. Both
+        // §6 shapes (`secureValue.plain_data` and `PassportData.data[]`) land
+        // here, because both arrive as one PassportVerifiedClaims and are
+        // indistinguishable downstream by construction.
+        //
+        // The comparison is strict, exactly like the secure_data refusal above:
+        // `'0'` is never `0`, and no loose match can smuggle a type past the
+        // allow-list. The empty-list semantics are the ones the secure_data
+        // loop already had — an empty allow-list is ALLOW NONE (refuse all),
+        // NOT allow-all, and a claim is refused exactly as a document type is.
+        foreach ($payload->claims()->types() as $claimType) {
+            if (! in_array($claimType, $allowedTypes, true)) {
+                throw new PassportLoginException(
+                    sprintf(
+                        'Telegram Passport verified claim type "%s" is not allowed by the host.',
+                        $claimType
+                    )
                 );
             }
         }

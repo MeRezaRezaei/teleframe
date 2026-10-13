@@ -151,11 +151,16 @@ final class DeclaredKeyCoverageTest extends TestCase
      * The declared count moved 162 -> 168 because the S3 block was added to
      * the config file earlier today; the coverage test caught all six
      * UNCLASSIFIED first, which is the mechanism doing its job.
+     *
+     * 2026-10-12 (generation retention): one key added,
+     * teleframe.backup.keep_generations, so 169 declared keys = 159 READ +
+     * 5 DEAD + 0 READ-BUT-IGNORED + 5 READ_CONDITIONAL. It is READ by
+     * BackupCommand::keepGenerations() — the width of the prune keep-set.
      */
     public function test_the_registry_still_covers_the_whole_declared_surface(): void
     {
-        self::assertCount(168, ConfigKeyRegistry::declaredKeys());
-        self::assertCount(158, ConfigKeyRegistry::READ);
+        self::assertCount(169, ConfigKeyRegistry::declaredKeys());
+        self::assertCount(159, ConfigKeyRegistry::READ);
         self::assertCount(5, ConfigKeyRegistry::DEAD);
         self::assertCount(0, ConfigKeyRegistry::READ_BUT_IGNORED);
         self::assertCount(5, ConfigKeyRegistry::READ_CONDITIONAL);

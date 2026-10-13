@@ -54,13 +54,78 @@ final class BackupRunner
      */
     public const LOCK_KEY_PREFIX = 'tg:backup:lock:';
 
-    /** Crash-safe lock TTL: a holder that dies without releasing wedges the set for at most this long. */
-    private const LOCK_TTL_SECONDS = 14400;
+    /**
+     * Crash-safe lock TTL, in seconds: 6 h (raised from 4 h).
+     *
+     * This is the FLOOR, not the budget for a backup. The budget is
+     * carried by the refresh below (LOCK_REFRESH_DIVISOR) — the runner
+     * extends the lock from its per-chunk loop, so a backup of any
+     * length keeps its lock as long as it keeps making progress. The TTL
+     * only has to survive the gap between two refreshes plus whatever
+     * stall fits in it, and it is what lets a holder that dies WITHOUT
+     * releasing un-wedge the set (Pruner skips a held set; a wedged set
+     * is a set nobody can prune for hours, which is precisely why the
+     * TTL must stay finite and must never be deleted).
+     *
+     * Why raised 4 h -> 6 h: the arithmetic that motivated the refresh is
+     * `teleframe.backup.chunk_size` = 4 MiB with ONE Telegram message per
+     * chunk, so a 4 GiB source is 1024 sequential round-trips — at ~15 s
+     * each, ~4.3 h, i.e. ALREADY past the old 4 h TTL. A refresh fixes
+     * that on its own, so the raise is deliberately modest: it only has
+     * to cover a slower-than-expected per-chunk upload and a scheduling
+     * hiccup, not a whole backup. Six hours keeps the crash-wedge window
+     * bounded at a number an operator can reason about (an overnight
+     * cron will have cleared it by morning) without pretending the TTL
+     * is what protects a long backup — that is the refresh's job.
+     */
+    private const LOCK_TTL_SECONDS = 21600;
+
+    /**
+     * How often the runner refreshes its lock, as a DIVISOR of the TTL:
+     * every LOCK_TTL_SECONDS / 3 (2 h at the current TTL).
+     *
+     * A third leaves room for TWO consecutive refreshes to be missed
+     * before the lock can actually expire — a refresh that fires at the
+     * TTL itself would guarantee a loss, and one that fires at half the
+     * TTL would tolerate only a single miss. A third is also frequent
+     * enough that the oldest possible expiry after a refresh is 2/3 of
+     * the TTL away, so the prune that respects this lock cannot arrive
+     * in the gap.
+     */
+    private const LOCK_REFRESH_DIVISOR = 3;
 
     /** Compare-and-delete release: only the current holder may drop its own lock. */
     private const RELEASE_SCRIPT = <<<'LUA'
 if redis.call('GET', KEYS[1]) == ARGV[1] then
   return redis.call('DEL', KEYS[1])
+end
+return 0
+LUA;
+
+    /**
+     * Compare-and-REFRESH, atomic in one round trip: read the token and
+     * extend only if it matches, or report 0.
+     *
+     * This is why the script exists rather than a `GET` followed by an
+     * `EXPIRE` from PHP: a read-then-write has a window between the two
+     * calls in which the lock expires and is stolen by someone else —
+     * and then the stale holder's `EXPIRE` would extend the NEW holder's
+     * lock, hiding a lost lock behind a healthy-looking one. Inside Lua
+     * the compare and the EXPIRE are one indivisible step.
+     *
+     * The return value is the whole safety mechanism, and it is tri-state
+     * by construction:
+     *
+     *  - 1 → extended; we still hold the lock;
+     *  - 0 → the key does not hold our token: either it expired and was
+     *    re-acquired, or it was deleted. The lock is DEMONSTRABLY GONE
+     *    and someone else may hold it, so the caller MUST abort;
+     *  - anything else is not proof of anything (a transport failure
+     *    surfaces as false, not 0) and is handled as a blip.
+     */
+    private const REFRESH_SCRIPT = <<<'LUA'
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('EXPIRE', KEYS[1], ARGV[2])
 end
 return 0
 LUA;
@@ -93,11 +158,16 @@ LUA;
      *     raising this to 4 GiB would not "produce one message instead of
      *     a thousand"; it would produce a thousand messages either way, just
      *     1000x more RAM per message.
-     *  2. This path is NOT streaming. BackupRunner::run() slurps each file
-     *     whole (file_get_contents), Chunker::split materialises every
-     *     chunk of it simultaneously, and each chunk is then encrypted
-     *     before upload. A 4 GiB chunk size means several live 4 GiB
-     *     buffers per file — an OOM, not a saving.
+     *  2. This path STREAMS. streamChunks() reads the source in bounded
+     *     blocks of exactly chunk_size and yields each chunk as it is
+     *     read, so the source is never held whole and the chunk list is
+     *     never materialised: peak memory is a function of the CHUNK
+     *     SIZE, not of the file size. (It used to slurp each file with
+     *     file_get_contents and hand the whole string to Chunker::split,
+     *     which held the file AND every chunk of it at once — measured
+     *     peak 2N + 8 MiB for a file of N bytes, i.e. a file larger than
+     *     RAM was an OOM. Chunker::split remains for callers that already
+     *     hold the bytes; it is not on this path.)
      *  3. The chunk is the dedup key. A small chunk dedups finer: a
      *     one-line edit re-uploads one chunk, not a whole 4 GiB blob.
      *
@@ -161,6 +231,12 @@ LUA;
             // Redis unavailable: proceed WITHOUT the lock (see acquireSetLock()).
         }
 
+        // The lock token this runner must present on every refresh, and the
+        // time at which the first refresh is due. null token = we hold no
+        // lock, so there is nothing to refresh and nothing to lose.
+        $lockToken = $lock['acquired'] ? (string) $lock['token'] : null;
+        $refreshDueAt = $lockToken === null ? 0 : time() + self::lockRefreshIntervalSeconds();
+
         try {
             $previous = $vault->getLatestManifest();
             $salt = self::saltForSet($previous);
@@ -179,16 +255,74 @@ LUA;
             $skipped = 0;
             $bytes = 0;
 
-            foreach (self::collectFiles($paths, $excludes) as $absolute => $relative) {
-                $data = file_get_contents($absolute);
-                if ($data === false) {
-                    throw new RuntimeException("unreadable file: {$absolute}");
-                }
+            // A backup that captures no files is NOT a backup. collectFiles()
+            // returns [] for an existing-but-empty directory, and for a
+            // `paths` list whose every file is swallowed by `excludes` — and
+            // it does so WITHOUT throwing, so the run used to walk an empty
+            // loop, write a manifest carrying generation = nextGeneration()
+            // and created = now, and report SUCCESS. `status` then measured
+            // that fresh timestamp against max_age_hours, saw age 0, and
+            // stayed green FOREVER: an empty backup is indistinguishable from
+            // a working one to every consumer of the vault.
+            //
+            // The guard lives HERE, not in the CLI, and that is not a
+            // style preference. `collectFiles()` is PRIVATE and the count is
+            // observable nowhere else: a caller outside this class cannot ask
+            // "what did you collect?" without re-walking the filesystem
+            // itself, and a second walk would be a second implementation of
+            // the exclude semantics that can silently drift from this one.
+            // Anything that can call run() — the console command today, and
+            // any future scheduler — therefore goes through this check, while
+            // a guard bolted onto BackupCommand would protect exactly one
+            // caller and be invisible to the next.
+            //
+            // It must fire BEFORE the manifest write below: a manifest is
+            // what `status`, `verify` and `prune` read, so refusing after the
+            // write would still advance `generation` and still leave the
+            // green timestamp the defect is about.
+            $collected = self::collectFiles($paths, $excludes);
 
-                $bytes += strlen($data);
+            if ($collected === []) {
+                throw new RuntimeException(sprintf(
+                    'backup set "%s" collected NO FILES: paths=[%s] excludes=[%s]. Those paths exist and were readable, '
+                    .'but every file under them was excluded (or each path is an empty directory), so this run would have '
+                    .'written a manifest that captures nothing. A backup that captures no files is not a backup, so this '
+                    .'refuses rather than reporting success — no manifest was written and `generation` was not advanced.',
+                    $setId,
+                    implode(', ', $paths),
+                    implode(', ', array_map(
+                        static fn ($exclude): string => is_string($exclude) ? $exclude : gettype($exclude),
+                        $excludes,
+                    )),
+                ));
+            }
+
+            foreach ($collected as $absolute => $relative) {
+                // Read STREAMED, one bounded chunk at a time (see
+                // streamChunks): the source is never held whole and the
+                // chunk list is never materialised, so peak memory is a
+                // function of the CHUNK SIZE, not of the file size.
+                $fileBytes = 0;
                 $fileChunks = [];
 
-                foreach (Chunker::split($data, $chunkSize) as $chunk) {
+                foreach (self::streamChunks($absolute, $chunkSize) as $chunk) {
+                    $fileBytes += strlen($chunk['data']);
+                    // Lock heartbeat, driven from the PER-CHUNK loop because
+                    // that is the loop that knows how far through the upload
+                    // this run is. A backup's chunks are content-addressed and
+                    // uploaded BEFORE the manifest is written at the very end,
+                    // so a chunk in flight is not in the PREVIOUS manifest,
+                    // therefore not in Pruner's keep-set, therefore DELETABLE
+                    // by a concurrent prune: this lock is the only thing
+                    // standing between an in-flight backup and a prune that
+                    // destroys it. Without a refresh the lock simply expires
+                    // part-way through a large backup and that protection
+                    // evaporates silently.
+                    if ($lockToken !== null && time() >= $refreshDueAt) {
+                        self::refreshLockOrAbort($setId, $lockToken);
+                        $refreshDueAt = time() + self::lockRefreshIntervalSeconds();
+                    }
+
                     $hash = $chunk['hash'];
                     $fileChunks[] = $hash;
                     $chunkHashes[$hash] = true;
@@ -209,7 +343,8 @@ LUA;
                     $uploaded++;
                 }
 
-                $files[] = ['path' => $relative, 'size' => strlen($data), 'chunks' => $fileChunks];
+                $bytes += $fileBytes;
+                $files[] = ['path' => $relative, 'size' => $fileBytes, 'chunks' => $fileChunks];
             }
 
             $manifest = [
@@ -229,9 +364,78 @@ LUA;
 
             return ['uploaded' => $uploaded, 'skipped' => $skipped, 'files' => count($files), 'bytes' => $bytes];
         } finally {
+            // Also correct when the run aborted on a LOST lock: release is a
+            // compare-and-delete on our own token, so a lock that has since
+            // been re-acquired by someone else is left strictly alone.
             if ($lock['acquired']) {
                 self::releaseSetLock($setId, (string) $lock['token']);
             }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Streaming read — the file is never resident
+    // ------------------------------------------------------------------
+
+    /**
+     * Read $absolute in fixed-size blocks, yielding one chunk at a time.
+     *
+     * WHY THIS EXISTS. The runner used to do `file_get_contents($path)`
+     * and pass the whole string to `Chunker::split()`, which returns a
+     * list of every chunk simultaneously. That held the source AND a
+     * full second copy of it (the chunk list) at the same instant, so
+     * measured peak memory was ~2N for a file of N bytes — linear in the
+     * FILE size, unbounded, and a guaranteed OOM (or a silent corrupted
+     * backup, depending on which limit bit first) on any file bigger than
+     * RAM. No test could see it, because every fixture was kilobytes.
+     *
+     * Chunking stays BYTE-IDENTICAL to Chunker::split(): blocks are cut
+     * at the same $chunkSize boundaries from the same offset 0, so every
+     * content address — and therefore the manifest, the dedup index and
+     * every wire name — is unchanged. Only the residency changed.
+     *
+     * A short block (fewer than $chunkSize bytes) means EOF; a
+     * zero-length read before EOF is a read failure, not an empty file,
+     * and is reported as one so a truncated source can never be archived
+     * as if it were whole. An empty FILE yields no chunks at all, which
+     * is the same contract Chunker::split('', $size) has.
+     *
+     * The handle is closed on every exit path, including the generator
+     * being abandoned mid-iteration by an exception from the consumer.
+     *
+     * @return \Generator<int, array{hash: string, data: string}, mixed, void>
+     */
+    private static function streamChunks(string $absolute, int $chunkSize): \Generator
+    {
+        $handle = @fopen($absolute, 'rb');
+        if ($handle === false) {
+            throw new RuntimeException("unreadable file: {$absolute}");
+        }
+
+        try {
+            while (! feof($handle)) {
+                $block = fread($handle, $chunkSize);
+                if ($block === false) {
+                    throw new RuntimeException("unreadable file: {$absolute}");
+                }
+
+                if ($block === '') {
+                    if (feof($handle)) {
+                        break;
+                    }
+
+                    // A short read that is not EOF: the source is not
+                    // readable to its full length, and archiving the
+                    // readable prefix as if it were the whole file would
+                    // publish a manifest that silently describes a
+                    // truncated source.
+                    throw new RuntimeException("unreadable file: {$absolute}");
+                }
+
+                yield ['hash' => hash('sha256', $block), 'data' => $block];
+            }
+        } finally {
+            fclose($handle);
         }
     }
 
@@ -356,6 +560,130 @@ LUA;
                 self::LOCK_TTL_SECONDS,
             ));
         }
+    }
+
+    /**
+     * Refresh (extend) the per-set lock this caller still holds.
+     *
+     * Tri-state result, and the middle value is the one that matters:
+     *
+     * - refreshed=true                → the token matched; the TTL was extended;
+     * - lost=true                     → the script returned 0, meaning the key
+     *                                    does NOT hold our token any more. The
+     *                                    lock is provably gone and someone else
+     *                                    may hold it. THE CALLER MUST ABORT —
+     *                                    continuing would turn a lost lock into
+     *                                    a silent double-run;
+     * - unavailable=true              → we could not find out: no Redis client,
+     *                                    or the call raised. NOT proof of a lost
+     *                                    lock, so the caller warns and carries
+     *                                    on.
+     *
+     * WHY A BLIP DOES NOT ABORT, because this looks like a bug and is not:
+     * chunks are content-addressed, so a run that dies mid-way re-uploads
+     * nothing on the next attempt — the worst outcome of aborting on every
+     * transient Redis error is a backup that cannot complete while Redis has
+     * the occasional hiccup, which trades a WORKING backup for a noisy one.
+     * The genuine hazard is a concurrent prune deleting in-flight chunks, and
+     * that needs a proven-lost lock (0), not a failed round trip. The TTL is
+     * still the backstop: if the blips persist past it, the next refresh
+     * returns 0 and the run aborts then.
+     *
+     * @return array{refreshed: bool, lost: bool, unavailable: bool}
+     */
+    public static function refreshSetLock(string $setId, string $token): array
+    {
+        $connection = self::lockConnection();
+        if ($connection === null) {
+            self::warn(sprintf(
+                'per-set backup lock refresh skipped (no Redis-backed cache store) for set "%s"; the lock TTL (%d s) is the backstop',
+                $setId,
+                self::LOCK_TTL_SECONDS,
+            ));
+
+            return ['refreshed' => false, 'lost' => false, 'unavailable' => true];
+        }
+
+        try {
+            $result = $connection->eval(
+                self::REFRESH_SCRIPT,
+                1,
+                self::LOCK_KEY_PREFIX.$setId,
+                $token,
+                self::LOCK_TTL_SECONDS,
+            );
+        } catch (Throwable $e) {
+            self::warn(sprintf(
+                'per-set backup lock refresh failed for set "%s" (%s); continuing — the lock TTL (%d s) is the backstop',
+                $setId,
+                $e->getMessage(),
+                self::LOCK_TTL_SECONDS,
+            ));
+
+            return ['refreshed' => false, 'lost' => false, 'unavailable' => true];
+        }
+
+        // ONLY an explicit 0 proves the lock is gone. phpredis surfaces a
+        // transport failure as false and a reconnect can surface as null, so
+        // those are blips; treating false as "lost" would abort healthy
+        // backups on a network hiccup.
+        if ($result === 1 || $result === '1' || $result === true) {
+            return ['refreshed' => true, 'lost' => false, 'unavailable' => false];
+        }
+
+        if ($result === 0 || $result === '0') {
+            return ['refreshed' => false, 'lost' => true, 'unavailable' => false];
+        }
+
+        self::warn(sprintf(
+            'per-set backup lock refresh returned an unexpected value (%s) for set "%s"; treating it as unavailable, not as a lost lock',
+            var_export($result, true),
+            $setId,
+        ));
+
+        return ['refreshed' => false, 'lost' => false, 'unavailable' => true];
+    }
+
+    /**
+     * The heartbeat's decision, in one place: a proven-lost lock ABORTS the
+     * run, anything else lets it continue.
+     *
+     * @throws RuntimeException when the lock is demonstrably gone
+     */
+    private static function refreshLockOrAbort(string $setId, string $token): void
+    {
+        $refresh = self::refreshSetLock($setId, $token);
+
+        if (! $refresh['lost']) {
+            return;
+        }
+
+        // The lock was released, expired and was re-acquired by someone else
+        // while this run was still uploading chunks. Those chunks are orphans
+        // by construction (content-addressed, and absent from every published
+        // manifest), so a concurrent prune may delete them at any moment —
+        // and a second backup of the same set is now running. Continuing would
+        // produce a manifest that references chunks another run can delete.
+        throw new RuntimeException(sprintf(
+            'backup set "%s" LOST its lock mid-run (the lock expired and was re-acquired, or was released by another process): '
+            .'aborting rather than continuing unlocked. In-flight chunks are not in any published manifest, so a concurrent '
+            .'prune can delete them and a second backup of this set may be running. Re-run the backup; it re-uploads nothing '
+            .'already stored. The lock TTL is %d s and is refreshed every %d s while chunks are uploading.',
+            $setId,
+            self::LOCK_TTL_SECONDS,
+            self::lockRefreshIntervalSeconds(),
+        ));
+    }
+
+    /**
+     * Seconds between lock refreshes while chunks are uploading: a third of
+     * the TTL (see LOCK_REFRESH_DIVISOR). At least 1 s, so a future TTL
+     * smaller than the divisor cannot produce a zero (and therefore
+     * every-chunk) refresh interval.
+     */
+    private static function lockRefreshIntervalSeconds(): int
+    {
+        return max(1, intdiv(self::LOCK_TTL_SECONDS, self::LOCK_REFRESH_DIVISOR));
     }
 
     /** Pin the Redis client used for the per-set backup lock (shared with Pruner). */

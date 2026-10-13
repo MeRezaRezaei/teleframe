@@ -142,7 +142,24 @@ final class TemporalSchedulePublisher implements SchedulePublisher
             $id = (string) $id;
             $interval = $this->intervalOf($spec);
             $queue = (string) ($spec['task_queue'] ?? $this->taskQueue);
-            $args = (array) ($spec['args'] ?? []);
+
+            // THE PRODUCER→CONSUMER SEAM (the defect this closes). Every producer
+            // keys the WORK on its spec entry: AppCallSpec emits `app`/`call`,
+            // which is the only thing AppRunCallWorkflow::run() reads to route the
+            // tick to a call. This publisher read `args` — a key NO producer emits
+            // — so every app-call schedule was armed with an EMPTY payload and
+            // RunAppCallActivity::runCall() refused by name on EVERY tick, while
+            // the status line read `armed telegram.app.run-call … recurring every
+            // 3600s; worker: served by this package`. It survived because no test
+            // crossed installSpec → publisher → encoded input → the workflow's own
+            // `$payload['app']` read; the tick test hand-supplied ['echo','health',[]].
+            //
+            // So the workflow input is built FROM THE SPEC ENTRY, not from an
+            // optional key nobody sets: every producer-keyed value travels with the
+            // run, and only the control keys the publisher itself consumes
+            // (interval_seconds, activity/workflow, task_queue, args) are held back.
+            // A producer that keys on anything else is routed for free.
+            $args = $this->payloadOf($spec);
 
             // Producers key the work on `activity` (a command/activity string
             // like 'teleframe:tstore backup'); the older surface spelled it
@@ -347,6 +364,52 @@ final class TemporalSchedulePublisher implements SchedulePublisher
         $seconds = (int) $raw;
 
         return $seconds > 0 ? $seconds : null;
+    }
+
+    /**
+     * The workflow input for one spec entry: the entry's producer-keyed values,
+     * minus the control keys this publisher consumes itself.
+     *
+     * WHY NOT JUST `$spec['args']`. `args` is the key the SDK client encodes, not
+     * a key any producer in this tree emits — reading it alone is what armed
+     * `telegram.app.run-call` schedules with an empty payload. `args` is still
+     * honoured and merged first, so a third-party host that DOES set it keeps
+     * working and can override.
+     *
+     * @param  array<string, mixed>  $spec
+     * @return array<string, mixed>
+     */
+    private function payloadOf(array $spec): array
+    {
+        $payload = (array) ($spec['args'] ?? []);
+
+        foreach ($spec as $key => $value) {
+            $key = (string) $key;
+
+            if (self::isControlKey($key)) {
+                continue;
+            }
+
+            $payload[$key] = $value;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Keys the publisher consumes itself and that are NOT the work's payload:
+     * the cadence and the queue are already carried by the schedule/action the
+     * SDK builds, and `activity` is the workflow TYPE (Temporal dispatches on the
+     * string, not on a payload key) — re-sending it as input would be a second,
+     * drifting copy of the truth. `args` is the pre-merged input, not a payload.
+     */
+    private static function isControlKey(string $key): bool
+    {
+        return $key === 'interval_seconds'
+            || $key === 'activity'
+            || $key === 'workflow'
+            || $key === 'task_queue'
+            || $key === 'args';
     }
 
     /**

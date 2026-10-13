@@ -58,6 +58,7 @@ final class AppDefinition
         }
 
         $validatedCalls = [];
+        $seenCallNames = [];
         $callIndex = 0;
         foreach ($calls as $call) {
             if (! $call instanceof AppCall) {
@@ -68,6 +69,31 @@ final class AppDefinition
                     $callIndex,
                 ));
             }
+
+            // CALL NAMES ARE UNIQUE WITHIN AN APP, AND SAY SO AT DECLARE TIME.
+            //
+            // AppCallSpec::installSpec() keys the schedule payload by
+            // callId(app, call) — a function of the (app, call) PAIR — so two
+            // declarations of one name inside one app collide on the SAME key and
+            // the second overwrites the first. Nothing reported it: an app
+            // declaring `status-ping` at 3600s and then again at 60s installed
+            // ONE schedule, at 60s, and `teleframe:app calls` printed that one row
+            // as if it were the whole declaration. The 3600s call was gone,
+            // silently.
+            //
+            // Cross-app reuse of a name is FINE and stays fine — that is what the
+            // digest half of the id exists for, and it was already fixed. This is
+            // only the within-app case, where there is no id to tell the two calls
+            // apart at all.
+            if (array_key_exists($call->name, $seenCallNames)) {
+                throw new \InvalidArgumentException(sprintf(
+                    'app [%s] declares two calls named [%s]; a call id is unique within its app',
+                    $name,
+                    $call->name,
+                ));
+            }
+
+            $seenCallNames[$call->name] = true;
             $validatedCalls[] = $call;
             $callIndex++;
         }

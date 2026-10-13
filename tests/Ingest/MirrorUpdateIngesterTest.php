@@ -188,8 +188,16 @@ final class MirrorUpdateIngesterTest extends TestbenchTestCase
         self::assertSame(1, $result['inserted'], 'the fact is stored');
         self::assertEmpty($result['clues']);
         self::assertEmpty($result['fkClues']);
-        self::assertTrue($result['emitted'], 'peer marked act_on in settings → app input (UpdateStored)');
-        self::assertCount(1, $this->dispatched);
+        self::assertSame(true, $result['emit_scheduled'], 'peer marked act_on in settings → the UpdateStored event was HANDED TO THE DISPATCHER');
+        // NOT "the listeners ran". UpdateStored implements
+        // ShouldDispatchAfterCommit, so on the mirror path — where
+        // MirrorIngesterFactory has an open transaction — Illuminate registers
+        // the listeners as a post-commit callback and returns without
+        // invoking any of them. `UpdateStoredDefersListenersUntilCommitTest`
+        // owns the proof that they have not; asserting it again here would be
+        // a second home for one fact. This test's job is narrower and is the
+        // half the key is actually named for: the event was dispatched.
+        self::assertCount(1, $this->dispatched, 'the boolean and the dispatch are the same fact, not two independent ones');
         self::assertInstanceOf(UpdateStored::class, $this->dispatched[0]);
     }
 
@@ -209,7 +217,7 @@ final class MirrorUpdateIngesterTest extends TestbenchTestCase
         $result = $this->ingester->ingest(DB::connection(), 42, $payload, 'tf_messages', $this->hydrateMessage());
 
         self::assertSame(1, $result['inserted'], 'the fact IS stored (first half of truth)');
-        self::assertFalse($result['emitted'], 'NO event — nobody marked this peer act_on (verbatim default)');
+        self::assertSame(false, $result['emit_scheduled'], 'NO event scheduled — nobody marked this peer act_on (verbatim default)');
         self::assertCount(0, $this->dispatched);
         self::assertSame(1, DB::table('tf_messages')->where('account_id', 42)->where('id', 3)->count());
     }
@@ -230,8 +238,59 @@ final class MirrorUpdateIngesterTest extends TestbenchTestCase
         $result = $this->ingester->ingest(DB::connection(), 42, $payload, 'tf_messages', $this->hydrateMessage());
 
         self::assertSame(1, $result['inserted'], 'the fact IS stored (first half of truth)');
-        self::assertFalse($result['emitted'], 'NO event — reflection of our behaviour (loop prevention)');
+        self::assertSame(false, $result['emit_scheduled'], 'NO event scheduled — reflection of our behaviour (loop prevention)');
         self::assertCount(0, $this->dispatched);
         self::assertSame(1, DB::table('tf_messages')->where('account_id', 42)->where('id', 2)->count());
+    }
+
+    /**
+     * NEGATIVE CONTROL — the rename is real, and the old lying key is GONE.
+     *
+     * The three tests above would all still pass if this change had been made
+     * as an ADDITION rather than a rename: a report carrying both `emitted`
+     * and `emit_scheduled` satisfies every assertion in them. That is exactly
+     * the failure this gate exists to catch — an `emitted` alias left behind
+     * keeps the promise that the listeners ran alive under the old name
+     * forever, which is deprecation of nothing and entrenchment of the lie.
+     *
+     * It also catches the half-applied rename (new key absent, old key left
+     * in place), which would make every assertion above pass against a report
+     * that never earned its name.
+     *
+     * `assertIsBool` rather than `assertTrue` because a truthy non-boolean
+     * (`1`, `'1'`) satisfies `assertTrue` while lying about the type this key
+     * declares in its `@return` shape.
+     */
+    public function test_the_result_carries_the_honest_key_and_not_the_lying_one(): void
+    {
+        $this->migrateMirror();
+
+        DB::table('tg_update_routing')->insert([
+            'account_id' => 42,
+            'peer_type' => 2,
+            'peer_id' => 900,
+            'mode' => UpdateRoutingRule::MODE_ACT_ON,
+        ]);
+
+        $result = $this->ingester->ingest(DB::connection(), 42, [
+            '_' => 'message',
+            'id' => 1,
+            'peer_id' => ['_type' => 2, '_id' => 900],
+            'date' => 1726000000,
+            'message' => 'hello from outside',
+            'out' => false,
+        ], 'tf_messages', $this->hydrateMessage());
+
+        self::assertArrayHasKey('emit_scheduled', $result, 'the honest key must be present');
+        self::assertArrayNotHasKey(
+            'emitted',
+            $result,
+            '`emitted` promised the listeners ran. Commit 7b7b7c31 made that false '
+            .'while the name stayed, so the key is removed rather than aliased: a '
+            .'surviving `emitted` would keep promising delivery to whoever reads it.',
+        );
+        self::assertIsBool($result['emit_scheduled'], 'the key declares bool; a truthy 1 would be a different lie');
+        self::assertSame(true, $result['emit_scheduled']);
+        self::assertCount(1, $this->dispatched, 'and it still tracks a real dispatch');
     }
 }

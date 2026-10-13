@@ -30,6 +30,10 @@ use PHPUnit\Framework\TestCase;
  * Before this test the catalog declared 36 top-level tables and only 27 had
  * a `Schema::create` anywhere in the shipped set; the nine missing ones were
  * only discoverable by reading both files by hand.
+ *
+ * The name set compared here is the RESOLVER's, not the raw JSON's — see
+ * `catalogTables()`, which documents why that distinction is load-bearing and
+ * what it cost when it was ignored (39 declared keys vs 40 resolved tables).
  */
 final class MirrorCatalogShipsInMigrationsTest extends TestCase
 {
@@ -137,7 +141,7 @@ final class MirrorCatalogShipsInMigrationsTest extends TestCase
         $catalogTables = $this->catalogTables();
         $shippedTables = $this->shippedTables();
 
-        self::assertNotEmpty($catalogTables, 'mirror-catalog.json declares no tables — the catalog path moved?');
+        self::assertNotEmpty($catalogTables, 'the resolved catalog declares no tables — the catalog path moved?');
         self::assertNotEmpty($shippedTables, 'no Schema::create found in src/Laravel/Migrations');
 
         $missing = array_values(array_diff($catalogTables, $shippedTables));
@@ -230,8 +234,9 @@ final class MirrorCatalogShipsInMigrationsTest extends TestCase
      * migration — not just the catalog's own top-level parents.
      *
      * This is the hole that let `tf_messages_rich_message` through. The
-     * assertion above compares the catalog's JSON KEYS against the shipped
-     * `Schema::create` names, so it can only ever see the 36 declared parents.
+     * assertion above compares the catalog's RESOLVED name set against the
+     * shipped `Schema::create` names, so it can only ever see the declared
+     * parents.
      * But `MirrorTableResolver` SYNTHESIZES a further ~360 tables from those
      * parents' `base`/`children` entries, named `{parent}_{field}`
      * (MirrorTableResolver.php:255), and `MirrorFactDecomposer::decomposeChildren()`
@@ -499,19 +504,59 @@ final class MirrorCatalogShipsInMigrationsTest extends TestCase
     }
 
     /**
-     * Top-level table names declared by the catalog (the JSON object keys).
+     * Top-level table names the CATALOG RESOLVES, read through
+     * `MirrorCatalog::load()` rather than off the raw JSON object keys.
+     *
+     * ## WHY NOT THE RAW JSON KEYS — this method used to read them, and that
+     * was the defect this whole path existed to catch, hiding behind itself
+     *
+     * `mirror-catalog.json` declares **39** table keys. The RESOLVER produces
+     * **40**, because `MirrorCtorSplitter` (`src/Schema/Mirror/MirrorCtorSplitter.php`)
+     * mechanically derives `tf_messages_service` from the Layer-227
+     * `messageService` ctor and installs it as a 40th entry. Measured on this
+     * tree, 2026-10-13:
+     *
+     *     resolver tableNames(): 40
+     *     raw json keys:        39
+     *     in resolver not raw:  tf_messages_service
+     *     in raw not resolver:  (none)
+     *
+     * So a raw-JSON read of the name set is one short, and
+     * `test_every_catalog_table_is_created_by_a_shipped_migration` — the gate
+     * whose entire stated purpose is "the catalog and the shipped migration set
+     * must agree on table NAMES" — was silently NEVER ASKING ABOUT
+     * `tf_messages_service`. The one table the class's own docblock most wants
+     * covered is the one it could not see: `MirrorCtorSplitter` exists because
+     * Message and MessageService are disjoint ctor variants that must not share
+     * one nullable-column table (spec §4 decision B), which makes it the
+     * highest-consequence table in the file to have an unverified migration.
+     *
+     * It happened to ship (`2026_09_14_200010_create_tf_messages_tables.php`:715),
+     * so the blind spot cost nothing YET. A gate that is blind for the right
+     * reason today is blind for the wrong reason the day the split moves, and
+     * nothing in this class would have noticed.
+     *
+     * The 40 is the number the RESOLVER writes to, so it is the number a
+     * name-set gate must compare. `MirrorCatalog::load()` is also the exact
+     * authority `MirrorCatalog::tableForCtor()` resolves a decoded payload
+     * ctor against — the same class-level contract this test is guarding — so
+     * reading through it makes the gate measure the resolver's own names rather
+     * than a transcription of its input.
+     *
+     * `mirror-catalog.json` is hand-owned and NOT `@generated`; the 39-vs-40
+     * gap is the DESIGN (one merged entry, split mechanically downstream), so
+     * the right fix is to stop reading around the loader, never to add a
+     * hand-written `tf_messages_service` entry that would duplicate — and then
+     * silently override — the mechanical derivation.
      *
      * @return list<string>
      */
     private function catalogTables(): array
     {
-        $raw = file_get_contents(self::CATALOG);
-        self::assertIsString($raw, 'cannot read '.self::CATALOG);
+        $scheme = TlParser::parseFile(self::PACKAGE_ROOT.'/schema/sources/TL_telegram_v227.tl');
+        $catalog = MirrorCatalog::load(self::CATALOG, $scheme);
 
-        $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
-        self::assertIsArray($decoded, 'mirror-catalog.json must decode to an object of table => entry');
-
-        $names = array_map('strval', array_keys($decoded));
+        $names = array_map('strval', $catalog->tableNames());
         sort($names);
 
         return $names;

@@ -452,20 +452,61 @@ final class TstoreCommand extends Command
         $status = $publisher->install($spec->installSpec());
 
         $rows = [];
+        $armed = 0;
         foreach ($spec->installSpec() as $id => $payload) {
+            $state = (string) ($status[$id] ?? 'not reported by the publisher');
+            if (! self::isSkippedStatus($state)) {
+                $armed++;
+            }
+
             $rows[] = [
                 'schedule' => $id,
                 'activity' => $payload['activity'],
                 'interval_seconds' => $payload['interval_seconds'],
-                'status' => (string) ($status[$id] ?? 'not reported by the publisher'),
+                'status' => $state,
             ];
         }
         $this->table(['schedule', 'activity', 'interval_seconds', 'status'], $rows);
 
-        $this->info(count($rows).' schedule(s) handed to '.self::SCHEDULES_KEY
+        // THE NO-WORK CONTRACT, enforced. `--install` exists to ARM these
+        // schedules; when the publisher skipped every one of them, no job will
+        // fire and this command returned SUCCESS anyway, so a deploy step or a
+        // provisioning script read "schedules armed" over a visible no-op. The
+        // docblock above has always promised the opposite ("never a false
+        // success") — this is where that promise is kept.
+        //
+        // The table above still prints, and it still prints the per-schedule
+        // reason: WHICH schedules would have been armed is the actionable half
+        // of a refusal, and the operator's next step is to name a driver.
+        if ($rows !== [] && $armed === 0) {
+            $this->error(
+                'NOTHING ARMED: the schedule seam skipped all '.count($rows).' schedule(s) — see the status column above for why. '
+                .'Nothing was installed, so this exits non-zero rather than reporting a successful arm.'
+            );
+
+            return self::FAILURE;
+        }
+
+        $this->info($armed.' of '.count($rows).' schedule(s) armed through '.self::SCHEDULES_KEY
             .' — re-running --install refreshes the same ids, it never stacks them.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Whether a publisher status string reports that NOTHING was armed.
+     *
+     * The seam returns free text per schedule, so this matches the two
+     * prefixes the shipped publishers actually use: the null driver's
+     * 'skipped (…)', and the CLI's own 'not reported by the publisher'
+     * fallback for an id the publisher omitted entirely. A third-party
+     * publisher that arms things says 'armed …' / 'started …', which this
+     * correctly reads as work done — the check never assumes failure, it
+     * only refuses to assume success.
+     */
+    private static function isSkippedStatus(string $status): bool
+    {
+        return str_starts_with($status, 'skipped') || $status === 'not reported by the publisher';
     }
 
     /**

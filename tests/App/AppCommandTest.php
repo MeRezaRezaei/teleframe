@@ -125,17 +125,37 @@ final class AppCommandTest extends TestCase
         self::assertStringContainsString('InstallSpec preview', $out);
     }
 
-    public function test_calls_install_probes_through_the_null_schedule_seam(): void
+    /**
+     * The null seam is the DEFAULT, and it arms nothing — so `--install` over
+     * it is the exact case a deploy step must not read as "schedules armed".
+     *
+     * The refusal is two-part and BOTH parts are pinned here, because either
+     * alone was the old bug: the per-row 'skipped (null schedule driver)'
+     * status has always been printed (it is the seam's honest report), and
+     * alone it was not enough — the command still returned SUCCESS and said
+     * 'Probe-installed 1 app-call schedule(s)' over a visible no-op. The exit
+     * code is the half that was missing, so it is asserted first, and the
+     * success line is asserted ABSENT so a future refactor cannot re-add the
+     * lie behind a passing exit-code check.
+     *
+     * The empty-registry path is deliberately NOT this case: with no apps the
+     * command returns SUCCESS without refusing, because there was no schedule
+     * to arm and no silent no-op to report.
+     */
+    public function test_calls_install_refuses_loud_when_the_null_schedule_seam_arms_nothing(): void
     {
         $this->seedEchoBot();
 
         $exit = Artisan::call('teleframe:app', ['action' => 'calls', '--install' => true]);
         $out = Artisan::output(); // output() drains — capture once
 
-        self::assertSame(AppCommand::SUCCESS, $exit);
+        self::assertSame(AppCommand::FAILURE, $exit, 'nothing was armed, so a SUCCESS exit would be the lie this guards against');
+        self::assertStringContainsString('NOTHING ARMED', $out);
+        self::assertStringContainsString('the schedule seam skipped all 1 app-call schedule(s)', $out);
+        // Per-row honest report, unchanged: WHICH schedule would have been armed.
         self::assertStringContainsString('app-call-echo-bot-status-ping-', $out);
         self::assertStringContainsString('skipped (null schedule driver)', $out);
-        self::assertStringContainsString('Probe-installed 1 app-call schedule(s)', $out);
+        self::assertStringNotContainsString('armed through the schedule seam', $out, 'the success summary must not print when nothing was armed');
     }
 
     public function test_run_invokes_the_transport_scope_and_reports_success(): void

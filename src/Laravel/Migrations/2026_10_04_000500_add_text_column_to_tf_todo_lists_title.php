@@ -127,9 +127,15 @@ return new class extends Migration
         'text',
     ];
 
+    /** The direction `up()` walks: act on the column that is ABSENT. */
+    private const ADD = 'add';
+
+    /** The direction `down()` walks: act on the column that is PRESENT. */
+    private const DROP = 'drop';
+
     public function up(): void
     {
-        $this->eachMissingColumn(function (string $column): void {
+        $this->eachOwnedColumn(self::ADD, function (string $column): void {
             Schema::table(self::TABLE, function (Blueprint $table) use ($column): void {
                 match ($column) {
                     'text' => $table->text($column)->nullable(),
@@ -147,7 +153,7 @@ return new class extends Migration
     public function down(): void
     {
         // Reverses up() exactly: the same column, dropped.
-        $this->eachMissingColumn(function (string $column): void {
+        $this->eachOwnedColumn(self::DROP, function (string $column): void {
             Schema::table(self::TABLE, function (Blueprint $table) use ($column): void {
                 $table->dropColumn($column);
             });
@@ -155,23 +161,72 @@ return new class extends Migration
     }
 
     /**
-     * Run `$work` once per owned column that is not already present.
+     * Run `$work` once per owned column that is not yet in the state `$work`
+     * would put it in — where WHICH STATE THAT IS depends on the direction.
      *
-     * Guarded on `hasTable`/`hasColumn` in both directions, this family's
-     * established style (2026_09_14_000000, 2026_09_24_000101, 2026_09_26_000100,
-     * 2026_09_27_000100): a re-run of `up()`, or a second `down()`, is a no-op
-     * instead of a duplicate-column or missing-column error.
+     * ## WHY THE DIRECTION IS AN ARGUMENT AND NOT AN INHERITED PREDICATE
      *
+     * This helper used to guard on `hasColumn` unconditionally, which is
+     * correct for an ADDER and exactly INVERTED for a DROPPER. `down()` routed
+     * its dropper through it on a comment saying it "reverses up() exactly", so
+     * the column `up()` had just added was found present, skipped, and never
+     * dropped: `down()` executed ZERO DDL, returned normally, Laravel deleted
+     * the migration row, and the rollback was silently void while every signal
+     * reported success. Measured on :memory: SQLite against this file, before
+     * the fix — `text` still present after `down()`, `removed: []`.
+     *
+     * So the direction is a NAMED ARGUMENT here, and the predicate is derived
+     * from it. ONE place expresses "which state is the one I act on", which is
+     * the whole defence: a second, sibling `eachExistingColumn()` would put the
+     * same inverted-predicate shape in two places and hand the next reader the
+     * harder job.
+     *
+     * The `match` is the second half of the defence and is deliberately
+     * THROWING. This helper serves four directions (add/drop × up/down), and an
+     * unrecognised one must be a loud failure rather than a silently-skipped
+     * column — the failure mode being fixed here is precisely a silent one.
+     * Same idiom, and the same reasoning, as the column-type `match` in
+     * `up()` above.
+     *
+     * Both directions stay guarded on `hasTable`/`hasColumn`, which is this
+     * family's established style (2026_09_14_000000, 2026_09_24_000101,
+     * 2026_09_26_000100, 2026_09_27_000100): a re-run of `up()`, or a second
+     * `down()`, is a no-op instead of a duplicate-column or missing-column
+     * error.
+     *
+     * @param  string  $direction  self::ADD or self::DROP, and nothing else: which
+     *                             state to act on, absent or present. Typed `string`
+     *                             rather than the `self::ADD|self::DROP` union ON
+     *                             PURPOSE — that union would narrow the parameter to
+     *                             `'add'|'drop'`, make the `match` provably exhaustive,
+     *                             and silence the very `default` arm that turns an
+     *                             unrecognised direction into a throw. The runtime
+     *                             `match` is the enforcement; this annotation would
+     *                             remove the enforcement's reason to exist.
      * @param  callable(string): void  $work  receives the column name
      */
-    private function eachMissingColumn(callable $work): void
+    private function eachOwnedColumn(string $direction, callable $work): void
     {
         if (! Schema::hasTable(self::TABLE)) {
             return;
         }
 
+        // true = act on the PRESENT column (drop); false = act on the ABSENT
+        // one (add). Anything else is a defect, not a column to skip.
+        $actWhenPresent = match ($direction) {
+            self::ADD => false,
+            self::DROP => true,
+            default => throw new RuntimeException(sprintf(
+                'unknown direction "%s" passed to eachOwnedColumn() for %s. It must be self::ADD (act on the '
+                .'columns the table is missing) or self::DROP (act on the columns it carries) — an unrecognised '
+                .'direction is a defect, not a reason to walk no columns and silently reverse nothing.',
+                $direction,
+                self::TABLE,
+            )),
+        };
+
         foreach (self::COLUMNS as $column) {
-            if (Schema::hasColumn(self::TABLE, $column)) {
+            if (Schema::hasColumn(self::TABLE, $column) !== $actWhenPresent) {
                 continue;
             }
 

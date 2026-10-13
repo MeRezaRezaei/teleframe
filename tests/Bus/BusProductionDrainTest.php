@@ -387,6 +387,83 @@ final class BusProductionDrainTest extends TestbenchTestCase
      * The bound is asserted from the double's count, which trims exactly. A
      * real server's `~` trim may overshoot by a little, hence `<=`, not `===`.
      */
+    /**
+     * THE DOUBLE MUST MIRROR WHAT THE ADAPTER EMITS.
+     *
+     * `BusArrayRedisConnection::maxlen()` parses the argv the adapter hands over.
+     * When the adapter's xadd spelling changed, this parser was left reading the
+     * REMOVED shape and quietly returned 0 — so the double stopped trimming, and
+     * nothing noticed: the existing bounded-property tests bind the `ArrayRedis`
+     * double directly, bypassing the adapter, and the tests that DO route through
+     * this connection assert counts far below any bound. Nothing exercised
+     * adapter -> double trimming at all.
+     *
+     * So this asserts the mirror directly, on BOTH driver shapes, and includes a
+     * NEGATIVE CONTROL: the removed literal spelling must still parse to 0,
+     * proving the parser is discriminating rather than accepting anything.
+     */
+    public function test_the_connection_double_reads_the_trim_off_both_adapter_argv_shapes(): void
+    {
+        $connection = new BusArrayRedisConnection(new ArrayRedis);
+        $maxlen = new ReflectionMethod($connection, 'maxlen');
+
+        // phpredis: Redis::xAdd() is fixed-arity and typed, so the count is
+        // argument #4 (int) and `~` is argument #5 (bool $approx).
+        self::assertSame(
+            1000,
+            $maxlen->invoke($connection, ['s', '*', ['seq' => '1'], 1000, true]),
+            'phpredis argv shape must carry the trim through the double',
+        );
+
+        // predis: the trim is an OPTIONS STRUCTURE at index 3, spliced ahead of
+        // the id. The parser must understand it even though this double's own
+        // xadd path is phpredis-ordered, so a future swap cannot silently stop
+        // trimming.
+        self::assertSame(
+            1000,
+            $maxlen->invoke($connection, ['s', ['seq' => '1'], '*', ['trim' => ['MAXLEN', '~', 1000]]]),
+            'predis argv shape must carry the trim through the double',
+        );
+
+        // NO TRIM AT ALL — the plain append the adapter emits when maxlen <= 0.
+        self::assertSame(
+            0,
+            $maxlen->invoke($connection, ['s', '*', ['seq' => '1']]),
+            'an unbounded xadd must parse to no trim',
+        );
+
+        // NEGATIVE CONTROL: the spelling the adapter used to emit. If this parsed
+        // to a bound, the parser would be accepting anything and the assertions
+        // above would prove nothing.
+        self::assertSame(
+            0,
+            $maxlen->invoke($connection, ['s', '*', ['seq' => '1'], 'MAXLEN', '~', 1000]),
+            'control: the removed literal spelling must parse to NO trim',
+        );
+    }
+
+    /**
+     * End-to-end through the REAL argv the adapter emits, proving the double
+     * actually bounds the stream rather than merely parsing a number.
+     */
+    public function test_the_double_trims_the_stream_on_the_argv_the_adapter_really_emits(): void
+    {
+        $stream = 'mirror:emit:shape';
+        $bound = 100;
+        $redis = new ArrayRedis;
+        $connection = new BusArrayRedisConnection($redis);
+
+        // Exactly what LaravelRedisAdapter::xadd() hands a phpredis connection.
+        for ($i = 0; $i < $bound + 40; $i++) {
+            $connection->command('xadd', [$stream, '*', ['seq' => (string) $i], $bound, true]);
+        }
+
+        $length = (int) $connection->command('xlen', [$stream]);
+
+        self::assertLessThanOrEqual($bound, $length, 'the double must trim on the emitted shape');
+        self::assertGreaterThan(0, $length, 'and must not have trimmed everything away');
+    }
+
     public function test_appending_past_the_sink_maxlen_leaves_the_stream_bounded(): void
     {
         $bound = RedisStreamSink::DEFAULT_MAXLEN;
@@ -767,12 +844,44 @@ final class BusArrayRedisConnection extends IlluminateConnection
     }
 
     /**
+     * The MAXLEN trim, read back out of the argv the adapter handed over.
+     *
+     * BOTH driver shapes must be understood, because this double exists to
+     * mirror what `LaravelRedisAdapter` actually emits and the two drivers
+     * genuinely differ:
+     *
+     *   predis  — the trim is an OPTIONS STRUCTURE at index 3, spliced onto the
+     *             wire ahead of the id: `[$stream, $fields, $id,
+     *             ['trim' => ['MAXLEN', '~', $maxlen]]]`
+     *   phpredis — `Redis::xAdd()` is fixed-arity and typed, so there is no argv
+     *             that carries a literal 'MAXLEN'; it is `[$stream, $id, $fields,
+     *             $maxlen, true]`
+     *
+     * The old parser here read the removed literal shape and returned 0 against
+     * the current argv, so this double silently stopped trimming — which would
+     * have hidden the very regression it exists to catch.
+     *
      * @param  list<mixed>  $parameters
      */
     private function maxlen(array $parameters): int
     {
-        // [$stream, $id, $fields, 'MAXLEN', '~', $maxlen]
-        return strtoupper((string) ($parameters[3] ?? '')) === 'MAXLEN' ? (int) ($parameters[5] ?? 0) : 0;
+        // predis: index 3 is the options array; the count is the last element
+        // of `trim`, which is `['MAXLEN', '~', $maxlen]`.
+        $options = $parameters[3] ?? null;
+
+        if (is_array($options) && isset($options['trim']) && is_array($options['trim'])) {
+            $trim = array_values($options['trim']);
+            $last = $trim === [] ? null : $trim[count($trim) - 1];
+
+            return is_numeric($last) ? (int) $last : 0;
+        }
+
+        // phpredis: index 3 is the int $maxlen and index 4 is bool $approx.
+        if (isset($parameters[3]) && is_numeric($parameters[3])) {
+            return (int) $parameters[3];
+        }
+
+        return 0;
     }
 
     /**

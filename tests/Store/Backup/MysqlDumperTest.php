@@ -4,11 +4,23 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Tests\Store\Backup;
 
+use MeRezaRezaei\Teleframe\Handler\InMemoryCache;
+use MeRezaRezaei\Teleframe\Notify\NoShowWatchdog;
+use MeRezaRezaei\Teleframe\Notify\WatchState;
 use MeRezaRezaei\Teleframe\Store\Backup\BackupException;
+use MeRezaRezaei\Teleframe\Store\Backup\DatabaseBackupService;
 use MeRezaRezaei\Teleframe\Store\Backup\DatabaseTarget;
 use MeRezaRezaei\Teleframe\Store\Backup\DumpWorkspace;
+use MeRezaRezaei\Teleframe\Store\Backup\MemoryBackupRunIndex;
 use MeRezaRezaei\Teleframe\Store\Backup\MysqlDumper;
+use MeRezaRezaei\Teleframe\Store\Cache\MemoryHotCache;
+use MeRezaRezaei\Teleframe\Store\Index\MemoryStoreIndex;
+use MeRezaRezaei\Teleframe\Store\Queue\SyncUploadQueue;
+use MeRezaRezaei\Teleframe\Store\StoreService;
+use MeRezaRezaei\Teleframe\Store\TelegramStoreChannel;
+use MeRezaRezaei\Teleframe\Tests\Support\FakeStoreApi;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 
 /**
  * MysqlDumper (2026-09-24 backup-store remainder design §2/§3/§9) —
@@ -116,6 +128,162 @@ final class MysqlDumperTest extends TestCase
             $tail = substr($e->getMessage(), strlen('mysqldump failed (exit 2): '));
             self::assertSame(4096, strlen($tail));
         }
+    }
+
+    /**
+     * DEFECT-2, unit level: exit 0 with NOTHING in the spool is a failure.
+     *
+     * The fake child is the exact shape of the real accident: a clean exit and
+     * no bytes — what mysqldump does against an empty database, or with a
+     * `tables` whitelist matching nothing.
+     */
+    public function test_a_zero_byte_dump_on_exit_zero_throws_rather_than_returning(): void
+    {
+        $runner = static function (array $argv, array $env, string $cwd): array {
+            // Deliberately writes nothing: the spool stays zero-length.
+            return ['exit' => 0, 'stderr' => ''];
+        };
+
+        try {
+            (new MysqlDumper($runner))->dump(new DatabaseTarget('mysql', 'appdb'), $this->workspace());
+            self::fail('expected BackupException on a zero-byte dump');
+        } catch (BackupException $e) {
+            self::assertStringContainsString('mysqldump', $e->getMessage());
+            self::assertStringContainsString('ZERO-BYTE', $e->getMessage());
+            self::assertStringContainsString('appdb', $e->getMessage());
+            self::assertStringContainsString('no watchdog heartbeat was taken', $e->getMessage());
+        }
+    }
+
+    /**
+     * NEGATIVE CONTROL: a ONE-BYTE dump is not zero and must still succeed, so
+     * the guard above cannot be "reject every dump" in disguise.
+     */
+    public function test_a_one_byte_dump_still_succeeds(): void
+    {
+        $runner = static function (array $argv, array $env, string $cwd): array {
+            $files = glob($cwd.'/tfbk-*') ?: [];
+            if (count($files) === 1) {
+                file_put_contents($files[0], '.');
+            }
+
+            return ['exit' => 0, 'stderr' => ''];
+        };
+
+        $result = (new MysqlDumper($runner))->dump(new DatabaseTarget('mysql', 'appdb'), $this->workspace());
+
+        self::assertSame(1, $result->bytes);
+        self::assertSame(0, $result->exitCode);
+    }
+
+    /**
+     * DEFECT-2, END TO END — the part that actually defeated the watchdog.
+     *
+     * A real DatabaseBackupService (real StoreService, real ledger, real
+     * NoShowWatchdog over an in-memory cache) driven by the REAL MysqlDumper
+     * with a fake child that reports exit 0 and writes nothing.
+     *
+     * The claim being proved is not merely "the dumper throws". It is that the
+     * heartbeat is NEVER TOUCHED, because a failed backup that refreshes the
+     * 'backup' heartbeat is precisely the failure the no-show check exists to
+     * catch — it would cancel its own alarm. Before the fix this run stored a
+     * zero-byte object, wrote an 'ok' ledger row and touched the heartbeat, so
+     * the alert stayed silent and the operator believed they had DB backups.
+     */
+    public function test_a_zero_byte_dump_never_touches_the_watchdog_heartbeat(): void
+    {
+        $cache = new InMemoryCache;
+        $watchdog = new NoShowWatchdog(new WatchState($cache, 'teleframe.notify.watch.'));
+        $runs = new MemoryBackupRunIndex;
+
+        $service = $this->service(
+            new MysqlDumper(static fn (array $argv, array $env, string $cwd): array => ['exit' => 0, 'stderr' => '']),
+            $watchdog,
+            $runs,
+        );
+
+        try {
+            $service->backup(new DatabaseTarget('mysql', 'appdb', host: 'db.internal', user: 'backup'), false);
+            self::fail('expected the zero-byte dump to abort the run');
+        } catch (BackupException $e) {
+            self::assertStringContainsString('ZERO-BYTE', $e->getMessage());
+        }
+
+        // The alarm stays armed: nothing claimed a backup happened.
+        self::assertNull(
+            $watchdog->lastSeen('backup'),
+            'a zero-byte dump MUST NOT touch the backup heartbeat — that is what silences the no-show alert',
+        );
+
+        // And it left no trace a later reader could mistake for success.
+        self::assertSame([], $runs->listRuns(7, null, 10));
+    }
+
+    /**
+     * NEGATIVE CONTROL for the heartbeat assertion above, and the reason that
+     * assertion carries weight.
+     *
+     * Identical wiring, identical service, real dumper — the ONLY difference
+     * is that the fake child writes a byte. The heartbeat IS then touched and
+     * the ledger DOES get its row. So the previous test's `assertNull` is
+     * measuring the zero-byte guard and not a watchdog that was never wired to
+     * fire in the first place.
+     */
+    public function test_a_non_empty_dump_does_touch_the_watchdog_heartbeat(): void
+    {
+        $cache = new InMemoryCache;
+        $watchdog = new NoShowWatchdog(new WatchState($cache, 'teleframe.notify.watch.'));
+        $runs = new MemoryBackupRunIndex;
+
+        $runner = static function (array $argv, array $env, string $cwd): array {
+            $files = glob($cwd.'/tfbk-*') ?: [];
+            if (count($files) === 1) {
+                file_put_contents($files[0], "CREATE TABLE app (id int);\n");
+            }
+
+            return ['exit' => 0, 'stderr' => ''];
+        };
+
+        $service = $this->service(new MysqlDumper($runner), $watchdog, $runs);
+        $service->backup(new DatabaseTarget('mysql', 'appdb', host: 'db.internal', user: 'backup'), false);
+
+        self::assertNotNull(
+            $watchdog->lastSeen('backup'),
+            'a real dump MUST touch the heartbeat — otherwise the negative control proves nothing',
+        );
+        self::assertCount(1, $runs->listRuns(7, null, 10));
+    }
+
+    /**
+     * The offline chain the two tests above run through: a real StoreService
+     * over FakeStoreApi, a real ledger, the given watchdog. Only the dumper
+     * and the child differ between them.
+     */
+    private function service(
+        MysqlDumper $dumper,
+        NoShowWatchdog $watchdog,
+        MemoryBackupRunIndex $runs,
+    ): DatabaseBackupService {
+        $api = new FakeStoreApi(scope: 'backup');
+
+        $store = new StoreService(
+            accountId: 7,
+            channelFactory: fn (string $bucket): TelegramStoreChannel => new TelegramStoreChannel($bucket, $api->apiMap()),
+            index: new MemoryStoreIndex,
+            cache: new MemoryHotCache(ttlSeconds: 600, maxBytes: 8 * 1024 * 1024),
+            queue: new SyncUploadQueue,
+        );
+
+        return new DatabaseBackupService(
+            accountId: 7,
+            dumper: $dumper,
+            store: $store,
+            runs: $runs,
+            watchdog: $watchdog,
+            logger: new NullLogger,
+            passphrase: 's3cret',
+            bucket: 'teleframe-backup:default',
+        );
     }
 
     public function test_missing_binary_probe_returns_null(): void

@@ -251,6 +251,8 @@ final class VerifierTest extends TestCase
  */
 final class SelectiveVault implements VaultInterface
 {
+    use RetentionStubTrait;
+
     /** @param list<string> $missing @param list<string> $empty */
     private function __construct(
         private readonly VaultInterface $inner,

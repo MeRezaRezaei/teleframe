@@ -6,7 +6,9 @@ namespace MeRezaRezaei\Teleframe\Tests\Store\Backup;
 
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use MeRezaRezaei\Teleframe\Bot\Services\BotClient;
 use MeRezaRezaei\Teleframe\Laravel\NotifyServiceProvider;
 use MeRezaRezaei\Teleframe\Laravel\StoreBackupServiceProvider;
@@ -180,6 +182,14 @@ final class BackupNoShowAlertTest extends TestbenchTestCase
 
     public function test_the_alert_pipeline_delivers_a_long_body_as_a_document(): void
     {
+        // An attachment is NOT a `BotClient::call()`: Telegram's `sendDocument`
+        // accepts only a `file_id`, an HTTP URL, or `attach://<name>` inside a
+        // `multipart/form-data` body, which a JSON POST cannot express. So this
+        // half of the alert pipeline is observed at the HTTP seam that actually
+        // builds that body — and faked there, so the test never reaches the
+        // network. A bare local path in a JSON body was a 400 and a lost report.
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 1]])]);
+
         // The same shared core, a body over the inline budget: the full text
         // survives as an HTML attachment (design §6) — the sendDocument half
         // of the alert pipeline.
@@ -192,13 +202,24 @@ final class BackupNoShowAlertTest extends TestbenchTestCase
             'backup.missing',
         );
 
-        $bot = $this->app->make(BotClient::class);
-        self::assertInstanceOf(FakeBotClient::class, $bot);
+        $sent = [];
 
-        $methods = array_column($bot->calls, 'method');
-        self::assertContains('sendDocument', $methods);
-        self::assertCount(1, $bot->documents);
-        self::assertStringContainsString('backup did not come in time', (string) $bot->documents[0]);
+        Http::assertSent(function (Request $request) use (&$sent): bool {
+            if (str_contains((string) $request->url(), 'sendDocument')) {
+                $sent[] = $request;
+            }
+
+            return true;
+        });
+
+        self::assertCount(1, $sent, 'the alert report never went out as a document');
+        self::assertStringContainsString(
+            'multipart/form-data',
+            (string) $sent[0]->header('Content-Type')[0],
+            'the report must travel as multipart; a JSON body cannot carry a file',
+        );
+        self::assertStringContainsString('attach://', (string) $sent[0]->body());
+        self::assertStringContainsString('backup did not come in time', (string) $sent[0]->body());
     }
 
     public function test_a_fresh_heartbeat_produces_no_notification(): void

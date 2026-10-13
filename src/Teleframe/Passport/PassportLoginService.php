@@ -180,6 +180,25 @@ final class PassportLoginService
             );
         }
 
+        // (c0) TRANSPORT INTEGRITY, BEFORE ANY DECRYPTION. The envelope's
+        //      `hash` must equal SHA256 of the bytes it decrypts to, compared
+        //      as 32 RAW bytes with `hash_equals` — never as a base64 string,
+        //      never as 64 hexits. See `PassportCredentialsVerifier` for why
+        //      that distinction is the whole check.
+        //
+        //      WHY HERE, AND WHY BOTH CHAINS. It sits between the intake and
+        //      the decryptor because that is the only point the envelope is
+        //      whole and unparsed: a tampered blob is refused before AES runs
+        //      at all, and the refusal is raised by a class named for what it
+        //      checks rather than inherited implicitly from a property of the
+        //      call below. It is NOT the only line of defence — the shipped
+        //      `PassportDecryptor` performs the same `hash_equals` internally
+        //      and throws — so this is an explicit, independent consumer-level
+        //      assertion, not a new security boundary. `PassportAnonymousLoginService`
+        //      does the same at its own step (d), because leaving one of the two
+        //      login paths unchecked would be a hole, not a hardening.
+        PassportCredentialsVerifier::assertCredentialsEnvelope($credentials, $this->keys->key());
+
         // (c) decrypt — the SHIPPED PassportDecryptor, consumed unchanged.
         //     RSA-OAEP secret → SHA512(secret+hash) key/iv → AES-256-CBC →
         //     hash_equals. Nonce presence is ENFORCED at construction.

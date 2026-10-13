@@ -553,6 +553,11 @@ final class MtprotoPassportClaimsTest extends TestCase
                 'private_key_path' => $this->pemFile,
                 'account_id' => 7,
                 'allowed_types' => ['personal_details'],
+                // Passport is a BOT API feature, so the chain refuses a host
+                // with no bot behind it before the marker is spent. This test
+                // is about the CREDENTIALS/TRIP binding, so it configures one.
+                'bot_id' => 7_700_000_04,
+                'bot_username' => 'teleframe_mtproto_test_bot',
             ]),
             keys: new PassportKeyLoader($this->pemFile),
             pending: $pending,

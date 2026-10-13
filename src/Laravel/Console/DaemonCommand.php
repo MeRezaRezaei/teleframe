@@ -646,8 +646,26 @@ class DaemonCommand extends Command
 
         foreach ($plan['stop'] as $accountId) {
             $departedConfig = $this->workerEntries[$accountId]['config'] ?? [];
+            // A stop is NOT always a removal. planReseat() also stops an id whose
+            // CONFIG changed — it is still in the registry and is seated again on
+            // the next rotation. Firing AccountRemoved + forgetting the route for
+            // it would tell every listener a live account went away, which is a
+            // different (and larger) lie than the one being fixed here.
+            $stillRegistered = isset($desired[$accountId]);
+
             $daemon->unseat($accountId);
             unset($this->workerEntries[$accountId]);
+
+            if ($stillRegistered) {
+                $this->components->warn(sprintf(
+                    'Restarting AccountWorker for account %d — its tf_accounts row CHANGED, so the seated '
+                    .'config is stale (a rotated credential only takes effect on a rebuilt worker).',
+                    (int) $accountId,
+                ));
+
+                continue;
+            }
+
             $this->announceRemoved((int) $accountId, $departedConfig);
             $this->forgetRoute((int) $accountId);
             $this->components->warn(sprintf(
@@ -809,6 +827,25 @@ class DaemonCommand extends Command
     /**
      * Pure diff between the desired registry set and the seated set.
      *
+     * ADDED, REMOVED, and CHANGED — the third case used to be invisible.
+     * This diff only ever seated ids that were ABSENT and stopped ids that were
+     * REMOVED, so an account whose ROW was EDITED — the case that matters most,
+     * because a ROTATED SESSION is an edit — stayed seated and its worker was
+     * never rebuilt. `Daemon::seat()` early-returns for an already-seated id and
+     * `seatWorker()` early-returns too, so nothing downstream could notice either:
+     * the plan was `seat=[] stop=[]` and the old session stayed dialed until the
+     * daemon was restarted by hand.
+     *
+     * `AccountLifecycleObserver::updated()` publishes `change: 'changed'` on the
+     * reload channel, but `noteReloadPayload()` only flipped a boolean regardless
+     * of `change`, so the signal that specifically announced a rotation was
+     * treated exactly like an add.
+     *
+     * A CHANGED id therefore goes into `stop` like a removed one; the rotation
+     * after this one seats it again from the new config. That costs one rotation
+     * of downtime for a rotated credential, which is the correct trade against
+     * running on a session the operator has already replaced.
+     *
      * @param  array<int, array<string, mixed>>  $desired  desired configs keyed by account_id
      * @param  list<int>  $seatedIds  currently seated account ids
      * @return array{seat: list<array<string, mixed>>, stop: list<int>}
@@ -818,8 +855,16 @@ class DaemonCommand extends Command
         $plan = ['seat' => [], 'stop' => []];
 
         foreach ($desired as $accountId => $config) {
+            $accountId = (int) $accountId;
+
             if (! in_array($accountId, $seatedIds, true)) {
                 $plan['seat'][] = $config;
+
+                continue;
+            }
+
+            if ($this->seatedConfigChanged($accountId, $config)) {
+                $plan['stop'][] = $accountId;
             }
         }
 
@@ -830,6 +875,68 @@ class DaemonCommand extends Command
         }
 
         return $plan;
+    }
+
+    /**
+     * Does the config this daemon seated for `$accountId` differ from the one
+     * now desired?
+     *
+     * No recorded config means UNKNOWN, not changed: `seatWorker()` is what
+     * records it, and a worker built by some other path must not be torn down on
+     * a comparison this process cannot actually make.
+     *
+     * @param  array<string, mixed>  $desired
+     */
+    private function seatedConfigChanged(int $accountId, array $desired): bool
+    {
+        $seated = $this->workerEntries[$accountId]['config'] ?? null;
+
+        if (! is_array($seated)) {
+            return false;
+        }
+
+        return self::configFingerprint($seated) !== self::configFingerprint($desired);
+    }
+
+    /**
+     * A key-ORDER-insensitive digest of one account config.
+     *
+     * Objects compare BY CLASS, not by state: the daemon memoises
+     * session_ref → credentials for the life of the run
+     * (`$this->resolvedCredentials`), so an unchanged ref hands back the same
+     * SessionData instance every rotation. Comparing object state would rebuild
+     * every worker every rotation for a row that did not change — a worse bug
+     * than the one being fixed. A rotated credential arrives as a changed
+     * `session_ref` (or a changed seed field), which IS a scalar and IS compared.
+     *
+     * @param  array<string, mixed>  $config
+     */
+    private static function configFingerprint(array $config): string
+    {
+        return hash('sha256', (string) json_encode(self::normalise($config)));
+    }
+
+    /**
+     * @return array<string, mixed>|string
+     */
+    private static function normalise(mixed $value): mixed
+    {
+        if (is_object($value)) {
+            return 'object:'.$value::class;
+        }
+
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        $normalised = [];
+        foreach ($value as $key => $item) {
+            $normalised[(string) $key] = self::normalise($item);
+        }
+
+        ksort($normalised);
+
+        return $normalised;
     }
 
     /**

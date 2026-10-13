@@ -59,6 +59,62 @@ use Illuminate\Support\Facades\Schema;
  *    or not yet mirrored); never FK'd.
  *
  * All FK columns are NOT NULL (NF5: no nullable FK columns).
+ *
+ * ## down() SPELLS EACH CONSTRAINT WHICHEVER WAY THE ENGINE UNDERSTANDS
+ *
+ * There is no single spelling of `dropForeign()` that works on both engines, and
+ * choosing either one blindly breaks the other. MEASURED on both, on this dial:
+ *
+ *  - By NAME — `dropForeign('tf_reply_markup_buttons_row_fk')` compiles on MySQL
+ *    to `alter table … drop foreign key tf_reply_markup_buttons_row_fk`. On
+ *    sqlite it reaches `SQLiteGrammar::compileDropForeign()`, which refuses
+ *    outright when the command carries no columns:
+ *
+ *      RuntimeException: This database driver does not support dropping foreign
+ *      keys by name.
+ *
+ *    `Blueprint::dropIndexCommand()` populates `columns` ONLY for the array
+ *    form, so the string form always arrives column-less and always throws.
+ *    MEASURED here: `down()` threw on the SECOND of four constraints, after the
+ *    first had already been dropped — a half-completed rollback with the
+ *    migration row never deleted, which is the worst of both outcomes.
+ *
+ *  - By COLUMNS — `dropForeign(['account_id', 'channel_id'])` is the sqlite-safe
+ *    spelling, and on MySQL it compiles to `drop foreign key` against a name
+ *    DERIVED by `Blueprint::createIndexName()` as `{table}_{cols}_foreign`.
+ *    Two of this file's four constraints have no such name, and the derived
+ *    spellings are OVER MySQL's 64-character cap — MEASURED:
+ *
+ *      tf_channel_participants                    53   ok
+ *      tf_messages_entities                      60   ok
+ *      tf_messages_media                         73   ERROR 1059, too long
+ *      tf_messages_reply_markup_rows_buttons     93   ERROR 1059, too long
+ *
+ *    (MySQL's limit, probed one character at a time on a scratch database, is
+ *    exactly 64 accepted / 65 refused: `ERROR 1059 (42000): Identifier name '…'
+ *    is too long`.) So porting the string form to columns is NOT the fix — it
+ *    trades one engine's hard failure for the other's.
+ *
+ * The answer is the same shape the repo already settled twice, in
+ * `2026_10_04_000700_add_tenant_foreign_keys_to_mirror_tables.php` and
+ * `2026_10_04_000200_retarget_tenant_foreign_keys.php`: READ the constraint back
+ * off the live schema, drop BY NAME when the engine reports one, and fall back to
+ * the column list only on an engine that reports none (sqlite, which records
+ * neither constraint names nor any other provenance). `dropDeclaredForeign()`
+ * below is that helper.
+ *
+ * ## WHY THE HELPER IS LOCAL AND NOT SHARED
+ *
+ * Deliberately private to this file, and it should not be lifted into a common
+ * migration helper. sqlite achieves a column-form `dropForeign()` by REBUILDING
+ * the table — disable FK enforcement, copy the rows, drop the original, recreate,
+ * re-enable. A view that references the table is what makes that rebuild fail
+ * hard: the rebuild DROPS the table first, and sqlite refuses the rename because
+ * the view still points at the vanished name, leaving the install with neither
+ * the table nor the view. MEASURED by an earlier lane on this dial. A shared
+ * helper would carry that trap to every table it touched, including the many that
+ * have no view referencing them at all. The four constraints here are the whole
+ * blast radius, so the helper is written once, here, and not generalised.
  */
 return new class extends Migration
 {
@@ -121,20 +177,108 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('tf_channel_participants', function (Blueprint $table) {
-            $table->dropForeign(['account_id', 'channel_id']);
-        });
+        $this->dropDeclaredForeign(
+            'tf_channel_participants',
+            'tf_channels',
+            ['account_id', 'channel_id'],
+        );
 
-        Schema::table('tf_messages_reply_markup_rows_buttons', function (Blueprint $table) {
-            $table->dropForeign('tf_reply_markup_buttons_row_fk');
-        });
+        $this->dropDeclaredForeign(
+            'tf_messages_reply_markup_rows_buttons',
+            'tf_messages_reply_markup_rows',
+            ['account_id', 'peer_type', 'peer_id', 'id', 'parent_position'],
+        );
 
-        Schema::table('tf_messages_entities', function (Blueprint $table) {
-            $table->dropForeign('tf_messages_entities_message_fk');
-        });
+        $this->dropDeclaredForeign(
+            'tf_messages_entities',
+            'tf_messages',
+            ['account_id', 'peer_type', 'peer_id', 'id'],
+        );
 
-        Schema::table('tf_messages_media', function (Blueprint $table) {
-            $table->dropForeign('tf_messages_media_message_fk');
+        $this->dropDeclaredForeign(
+            'tf_messages_media',
+            'tf_messages',
+            ['account_id', 'message_peer_type', 'message_peer_id', 'id'],
+        );
+    }
+
+    /**
+     * Drop the constraint `up()` created on this table, spelled for the engine
+     * that is actually answering.
+     *
+     * The constraint is identified by its PARENT TABLE and its column list, and
+     * both are read back off the live schema rather than assumed — which matters
+     * because three of these four tables carry a second foreign key that leads
+     * with the same `account_id` column: the `…_acc_tenant_fk` leg
+     * `2026_10_04_000700` added. Matching on columns alone would be ambiguous;
+     * matching on parent table and columns together is not, and a table whose
+     * constraint is already gone is left alone rather than made to fail.
+     *
+     * A table with no such constraint is a no-op, so `down()` is re-runnable: an
+     * install where a previous attempt half-completed now finishes instead of
+     * raising on the part that already landed.
+     *
+     * @param  list<string>  $columns  the constraint's local columns, in order
+     */
+    private function dropDeclaredForeign(string $table, string $parent, array $columns): void
+    {
+        $declared = $this->declaredForeign($table, $parent, $columns);
+
+        if ($declared === null) {
+            return;
+        }
+
+        $name = $declared['name'] ?? null;
+
+        Schema::table($table, function (Blueprint $blueprint) use ($name, $columns): void {
+            // By NAME when the engine reports one (MySQL, Postgres). The names are
+            // the ones `up()` wrote, read back rather than retyped, so a
+            // constraint that was renamed by hand still drops.
+            if (is_string($name) && $name !== '') {
+                $blueprint->dropForeign($name);
+
+                return;
+            }
+
+            // By COLUMNS on an engine that reports no name (sqlite) — the only
+            // spelling that works there. Note this is what the DERIVED name would
+            // be on MySQL for two of these four constraints, and both derived names
+            // are over 64 characters; see the docblock. This branch is unreachable
+            // on an engine that names its constraints, which is exactly why the
+            // over-long name cannot bite.
+            $blueprint->dropForeign($columns);
         });
+    }
+
+    /**
+     * The constraint on `$table` whose parent is `$parent` and whose columns are
+     * exactly `$columns` — or null when there is none.
+     *
+     * `getForeignKeys()` is the schema builder's own read, so it answers from the
+     * engine under the migration rather than from anything this file believes.
+     * Its row shape is fixed and non-nullable on `foreign_table` and `columns`
+     * (`name` IS nullable, which is the whole reason `dropDeclaredForeign()`
+     * branches), so nothing here is defensively retyped.
+     *
+     * @param  list<string>  $columns
+     * @return array{name: string|null, columns: list<string>, foreign_table: string}|null
+     */
+    private function declaredForeign(string $table, string $parent, array $columns): ?array
+    {
+        foreach (Schema::getConnection()->getSchemaBuilder()->getForeignKeys($table) as $foreign) {
+            if ($foreign['foreign_table'] !== $parent) {
+                continue;
+            }
+
+            $declared = array_map('strval', $foreign['columns']);
+
+            if ($declared !== $columns) {
+                continue;
+            }
+
+            return $foreign;
+        }
+
+        return null;
     }
 };

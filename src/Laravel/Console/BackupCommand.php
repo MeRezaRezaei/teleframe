@@ -56,12 +56,22 @@ final class BackupCommand extends Command
      */
     private const HISTORY_ROWS = 10;
 
+    /**
+     * How many orphaned chunk names a prune report prints before it
+     * summarises the rest. A display cap on the REPORT, never a cap on what
+     * the prune deletes.
+     */
+    private const PRUNE_NAME_ROWS = 10;
+
     protected $signature = 'teleframe:backup
         {action : run|restore|verify|status|prune}
         {--set=default : Backup set id (key under teleframe.backup.sets)}
         {--passphrase-file= : Read the vault passphrase from this file (never an argument — argv is visible in `ps` and shell history)}
         {--target= : Restore target directory (restore action)}
         {--sample=5 : Chunk sample size for verify}
+        {--dry-run : With `prune`, report what WOULD be pruned and delete nothing (this is also the default)}
+        {--force : With `prune`, actually delete the orphaned chunks — required once the prune reports any}
+        {--keep-generations= : With `prune`, how many newest generations stay restorable (default: teleframe.backup.keep_generations = 3; minimum 1)}
         {--list : With `status`, print the backup HISTORY (one line per generation, newest first) as well as freshness}';
 
     protected $description = 'Encrypted Telegram-channel backup vault: run, restore, verify or show status of a backup set';
@@ -243,10 +253,40 @@ final class BackupCommand extends Command
     }
 
     /**
-     * Chunk GC (night W1-3, P4-carried M): the latest manifest's
-     * chunk_hashes is the keep-set; every other chunk-shaped vault entry
+     * Chunk GC (night W1-3, P4-carried M): the keep-set is the union of
+     * the RETAINED generations' chunk_hashes (the newest
+     * `keepGenerations()` of them); every other chunk-shaped vault entry
      * (files deleted between runs) is deleted. Keyless — chunk names are
      * plaintext hashes — so it is cron-safe like plain verify.
+     *
+     * RETENTION, NOT ONE GENERATION. The keep-set used to be the LATEST
+     * manifest alone, which made every older generation unrestorable by
+     * construction: a daily prune left exactly one restorable generation
+     * and no safety net. `keepGenerations()` — --keep-generations, else
+     * teleframe.backup.keep_generations, else
+     * Pruner::RECOMMENDED_KEEP_GENERATIONS — spans the union instead, and a
+     * default of 1 would have made the whole feature a no-op by default.
+     *
+     * STILL BEHIND A GATE, because retention changed WHAT is kept and not
+     * WHETHER deletion needs consent. The mechanism was documented — but
+     * only on `status --list`, where an operator has gone looking. On the
+     * prune path itself a run used to delete every chunk the newest
+     * manifest did not reference and print a clean success line. An
+     * irreversible, history-destroying action therefore reported itself
+     * exactly like a routine one.
+     *
+     * WITHOUT `--force` this is a COUNTING PASS: the same walk, the same
+     * count, and zero deletes. The count is what the gate acts on, and it
+     * is the identical walk so the gate cannot be argued with — a dry run
+     * that disagreed with a real prune would be worse than no gate.
+     * `--dry-run` is the explicit spelling of that default, for scripts
+     * and cron entries that want the report stated rather than implied.
+     *
+     * SCOPE, stated plainly: this fixes OVER-deletion (deleting more
+     * than intended) by making the deletion opt-in and naming what it
+     * costs. It does NOT fix UNDER-deletion — a vault that holds orphans
+     * a prune cannot SEE (an inventory surface that hides them) still
+     * keeps them. That is a separate defect with a separate cause.
      */
     private function pruneAction(string $setId): int
     {
@@ -259,11 +299,38 @@ final class BackupCommand extends Command
             return self::FAILURE;
         }
 
-        $keepHashes = $manifest['chunk_hashes'] ?? [];
-        $keepHashes = is_array($keepHashes) ? array_values(array_filter($keepHashes, 'is_string')) : [];
+        $force = (bool) $this->option('force');
+        $explicitDryRun = (bool) $this->option('dry-run');
+        // No --force IS the counting pass; --dry-run only spells that default
+        // out, so both reach Pruner with $dryRun = true and differ only in
+        // how the refusal is worded.
+        $dryRun = ! $force;
 
-        $stats = Pruner::pruneReportingLock($vault, $keepHashes);
-        $prune = $stats['stats'];
+        if ($force && $explicitDryRun) {
+            $this->error('--dry-run and --force contradict each other: one deletes nothing, the other authorises the deletion. Pass exactly one.');
+
+            return self::FAILURE;
+        }
+
+        $keepGenerations = $this->keepGenerations();
+        $latestHashes = $manifest['chunk_hashes'] ?? [];
+        $latestHashes = is_array($latestHashes) ? array_values(array_filter($latestHashes, 'is_string')) : [];
+
+        // The keep-set is the UNION over the retained generations, not the
+        // newest manifest's own list — the fix for a prune that left exactly
+        // one restorable generation. $latestHashes is unioned in as well (the
+        // helper does it), so a keep-set can never come out NARROWER than
+        // what the newest manifest already holds.
+        $keepHashes = Pruner::retentionKeepHashes($vault, $latestHashes, $keepGenerations);
+
+        // Restorability BEFORE the prune, which is the only thing that makes
+        // the destruction reportable: a generation restorable now and
+        // unrestorable after is one this run destroyed, and NOTHING in the
+        // vault records which generations a given prune cost.
+        $restorableBefore = $this->restorableGenerations($vault);
+
+        $result = Pruner::pruneReportingLock($vault, $keepHashes, null, $dryRun);
+        $prune = $result['stats'];
 
         // The Redis-unavailable degradation PROCEEDS WITHOUT the LOCK, which
         // is exactly the race the lock exists to prevent: chunks an in-flight
@@ -274,16 +341,250 @@ final class BackupCommand extends Command
         // clean success line and said nothing. Printed HERE, on the console,
         // with the same $this->warn convention the volatile-vault warning
         // above uses: no logger required, so it cannot be silenced.
-        if ($stats['lock']['unavailable']) {
+        if ($result['lock']['unavailable']) {
             $this->warn(sprintf(
                 'WARNING: prune set=%s ran WITHOUT the lock (Redis unavailable) — an in-flight backup may now reference deleted chunks.',
                 $setId,
             ));
         }
 
+        // The other lock verdict was silent too: a prune that skipped because
+        // a backup holds the set reports scanned:0 / pruned:0, which reads
+        // like a healthy no-op. It is a no-op with a cause, and the cause is
+        // the whole reason the operator ran this.
+        //
+        // And it used to return SUCCESS over it. THE NO-WORK CONTRACT: the
+        // lock verdict short-circuits BEFORE the inventory walk
+        // (Pruner::pruneReportingLock returns scanned:0 without touching a
+        // single entry), so `pruned:0` here is not a count — it is the absence
+        // of a prune. A cron shelling out to prune read "retention is keeping
+        // up" for a retention pass that never ran. It is a FAILURE, and it is
+        // distinguished from the lock-UNAVAILABLE case above (Redis down), where
+        // the prune really did walk and really did count, and where zero is a
+        // true answer that stays SUCCESS.
+        if (! $result['lock']['acquired'] && ! $result['lock']['unavailable']) {
+            $this->error(sprintf(
+                'SKIPPED: prune set=%s was NOT run — a backup holds the set lock, so nothing was scanned and nothing was deleted. '
+                .'Re-run once that backup finishes; this exits non-zero so a cron does not read a prune that never ran as a clean one.',
+                $setId,
+            ));
+        }
+
         $this->line(sprintf('prune set=%s {scanned:%d, pruned:%d}', $setId, $prune['scanned'], $prune['pruned']));
 
-        return self::SUCCESS;
+        if (! $result['lock']['acquired'] && ! $result['lock']['unavailable']) {
+            return self::FAILURE;
+        }
+
+        if ($prune['pruned'] === 0) {
+            return self::SUCCESS;
+        }
+
+        $this->reportDoomedChunks($setId, $result['doomed'], $force);
+        $destroyed = $this->reportDestroyedGenerations($setId, $vault, $restorableBefore, $force, $keepGenerations);
+
+        if ($force) {
+            return self::SUCCESS;
+        }
+
+        // Both refusals exit non-zero, and both say so: either the operator
+        // asked for a prune and did not get one, or they asked for a report
+        // and the report's answer is "there is pending destruction". A cron
+        // that shells out to either gets a non-zero code for work that is
+        // waiting on a decision, which is the state worth alerting on.
+        if ($explicitDryRun) {
+            $this->error(sprintf(
+                'DRY RUN: prune set=%s found %d orphaned chunk(s) and up to %d generation(s) at risk. Nothing was deleted. '
+                .'Re-run with --force (and without --dry-run) to apply.',
+                $setId,
+                $prune['pruned'],
+                count($destroyed),
+            ));
+
+            return self::FAILURE;
+        }
+
+        $this->error(sprintf(
+            'REFUSED: prune set=%s would DELETE %d orphaned chunk(s) and cost %d generation(s) their restorability. '
+            .'Nothing was deleted. Re-run with --force to accept that, or with --dry-run to repeat this report without deleting anything.',
+            $setId,
+            $prune['pruned'],
+            count($destroyed),
+        ));
+
+        return self::FAILURE;
+    }
+
+    /**
+     * NAME the orphaned chunks a prune destroyed (or would destroy).
+     *
+     * A count alone cannot tell an operator what was lost, and the names are
+     * the only record that will ever exist of them: once the documents are
+     * gone the vault cannot list them. Capped by PRUNE_NAME_ROWS for width —
+     * a display cap on the REPORT, never a cap on what the prune deletes.
+     *
+     * @param  list<string>  $doomed
+     */
+    private function reportDoomedChunks(string $setId, array $doomed, bool $deleted): void
+    {
+        $this->line(sprintf(
+            '%s set=%s {orphaned_chunks:%d}',
+            $deleted ? 'prune-deleted' : 'prune-would-delete',
+            $setId,
+            count($doomed),
+        ));
+
+        foreach (array_slice($doomed, 0, self::PRUNE_NAME_ROWS) as $name) {
+            $this->line(sprintf('  orphan chunk %s', $name));
+        }
+
+        $rest = count($doomed) - self::PRUNE_NAME_ROWS;
+        if ($rest > 0) {
+            $this->line(sprintf('  ... and %d more', $rest));
+        }
+    }
+
+    /**
+     * Which generations this prune destroyed, BY GENERATION NUMBER, and the
+     * warning that says so out loud.
+     *
+     * After a real prune the answer is exact: a generation restorable before
+     * and unrestorable after is one this run destroyed. A generation that
+     * shared every chunk with a RETAINED generation is still restorable, and
+     * is correctly NOT reported — the keep-set is chunk-shaped, so "older
+     * generations are not kept" is a statement about chunks, and a
+     * generation that happens to share all of them survives.
+     *
+     * On a counting pass there is no "after" to compare against, so the
+     * at-risk set is reported as what it is: every currently-restorable
+     * generation that falls OUTSIDE the retention window (the newest
+     * $keepGenerations), minus the shared-chunk exception, which is named
+     * rather than silently folded in. Claiming an exact count the counting
+     * pass cannot compute would be the same class of defect as printing a
+     * clean success line over a destructive action.
+     *
+     * @param  array<int, bool>  $restorableBefore  generation => restorable, before the prune
+     * @return list<int> generations destroyed (or, on a counting pass, at risk)
+     */
+    private function reportDestroyedGenerations(string $setId, VaultInterface $vault, array $restorableBefore, bool $deleted, int $keepGenerations = 1): array
+    {
+        if ($restorableBefore === []) {
+            return [];
+        }
+
+        // The RETAINED window: the newest $keepGenerations generation numbers,
+        // newest first. A generation in it is inside the keep-set by
+        // construction; anything older is at risk on a counting pass.
+        $ordered = array_keys($restorableBefore);
+        rsort($ordered);
+        $retained = array_slice($ordered, 0, max(1, $keepGenerations));
+
+        $restorableAfter = $deleted ? $this->restorableGenerations($vault) : [];
+
+        $destroyed = [];
+        foreach ($restorableBefore as $generation => $wasRestorable) {
+            if (! $wasRestorable) {
+                // Already unrestorable before this run — not this prune's doing.
+                continue;
+            }
+
+            if ($deleted) {
+                if (($restorableAfter[$generation] ?? false) === true) {
+                    continue; // shared every chunk with a retained generation
+                }
+
+                $destroyed[] = $generation;
+
+                continue;
+            }
+
+            if (! in_array($generation, $retained, true)) {
+                $destroyed[] = $generation;
+            }
+        }
+
+        if ($destroyed === []) {
+            return [];
+        }
+
+        sort($destroyed);
+
+        if ($deleted) {
+            $this->warn(sprintf(
+                'WARNING: prune set=%s DESTROYED %d generation(s) (gen %s) — a prune keeps the newest %d generation(s), so those '
+                .'generations can no longer be restored.',
+                $setId,
+                count($destroyed),
+                implode(', ', $destroyed),
+                $keepGenerations,
+            ));
+
+            return $destroyed;
+        }
+
+        $this->warn(sprintf(
+            'WARNING: prune set=%s WOULD destroy up to %d generation(s) (gen %s) — a prune keeps the newest %d generation(s), so '
+            .'those generations could no longer be restored once --force is used. Any generation that shares EVERY chunk with a '
+            .'retained generation survives.',
+            $setId,
+            count($destroyed),
+            implode(', ', $destroyed),
+            $keepGenerations,
+        ));
+
+        return $destroyed;
+    }
+
+    /**
+     * HOW MANY newest generations a prune keeps restorable.
+     *
+     * `--keep-generations` overrides `teleframe.backup.keep_generations`,
+     * which overrides Pruner::RECOMMENDED_KEEP_GENERATIONS. The shipped
+     * default is that constant's 3, NOT 1: a default of 1 makes the whole
+     * retention feature a no-op on an unconfigured install, which is worse
+     * than not having it — an operator would have to know the key exists to
+     * get any safety net at all.
+     *
+     * A value below 1 is RAISED to 1, never honoured as 0. "Keep zero
+     * generations" is a phrase with exactly one meaning — delete every chunk
+     * in the set, leaving manifests that reference nothing — and it is not
+     * something an operator should be able to reach by typing a small
+     * number at a flag without also saying --force on the same command.
+     */
+    private function keepGenerations(): int
+    {
+        $option = (string) ($this->option('keep-generations') ?? '');
+        $configured = $option !== ''
+            ? $option
+            : (string) $this->getLaravel()->make('config')->get(
+                'teleframe.backup.keep_generations',
+                Pruner::RECOMMENDED_KEEP_GENERATIONS,
+            );
+
+        return max(1, (int) $configured);
+    }
+
+    /**
+     * generation => restorable, as the vault itself reports it.
+     *
+     * Capped at the same width as `status --list`: this is a diagnostic about
+     * the newest generations, and the generations a prune can destroy are by
+     * definition older than the newest, so a wider walk would cost a full
+     * channel inventory to report rows that are already known-safe.
+     *
+     * @return array<int, bool>
+     */
+    private function restorableGenerations(VaultInterface $vault): array
+    {
+        $unreadable = [];
+        $rows = $vault->listManifests(self::HISTORY_ROWS + 1, $unreadable);
+
+        $restorable = [];
+        foreach ($rows as $row) {
+            $restorable[(int) $row['generation']] = (bool) $row['restorable'];
+        }
+
+        return $restorable;
     }
 
     /**
@@ -453,10 +754,12 @@ final class BackupCommand extends Command
         if ($unrestorable !== []) {
             $this->warn(sprintf(
                 'WARNING: set=%s has %d generation(s) referencing chunks the vault no longer holds (generation %s) — '
-                .'a prune deleted them, so those generations CANNOT be restored. Only the newest generation is kept by a prune.',
+                .'a prune deleted them, so those generations CANNOT be restored. A prune keeps the newest %d generation(s) BY '
+                .'DEFAULT (teleframe.backup.keep_generations); a run that passed --keep-generations kept a different number.',
                 $setId,
                 count($unrestorable),
                 implode(', ', $unrestorable),
+                $this->keepGenerations(),
             ));
         }
 

@@ -330,7 +330,16 @@ final class PassportAnonymousLoginServiceTest extends TestCase
 
     private function onConfig(): PassportConfig
     {
-        return new PassportConfig(['enabled' => true, 'anonymous_login' => true]);
+        // `enabled` + `anonymous_login` is the CAPABILITY half of the gate; the
+        // bot is the other half, and without one the chain refuses before the
+        // marker is spent. These tests are about what happens PAST the gate, so
+        // the fixture configures a real bot.
+        return new PassportConfig([
+            'enabled' => true,
+            'anonymous_login' => true,
+            'bot_id' => 7_700_000_03,
+            'bot_username' => 'teleframe_chain_test_bot',
+        ]);
     }
 
     private function service(PassportConfig $config, ?PendingLoginRegistry $pending = null): PassportAnonymousLoginService

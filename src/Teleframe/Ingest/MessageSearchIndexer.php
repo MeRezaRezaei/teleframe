@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Ingest;
 
 use Illuminate\Support\Facades\DB;
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
+use Normalizer;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -91,6 +93,75 @@ use Psr\Log\LoggerInterface;
  * ASCII map covers the punctuation that actually appears in Telegram message
  * text (ASCII punctuation, newlines, tabs) and is a strict improvement over the
  * status quo, which was a full scan of the whole table.
+ *
+ * TOKENS ARE NFC-NORMALISED, AND THIS IS NOT OPTIONAL
+ *
+ * The invariant this file exists to protect is that the writer's tokenizer and
+ * the reader's tokenizer produce the SAME token set — see tokenize(). Canonical
+ * equivalence breaks that invariant silently, and in the dangerous direction.
+ * A precomposed "é" (U+00E9, 2 bytes) and a canonically-decomposed "é"
+ * (U+0065 U+0301, 3 bytes) are the SAME character to a human and DIFFERENT
+ * byte strings to this tokenizer, so they became two different tokens and
+ * neither matched the other: a FALSE NEGATIVE, a silently unfindable message.
+ * That is exactly the failure UAX #15 exists to prevent — "If two strings x and
+ * y are canonical equivalents, then toNFC(x) = toNFC(y)" (Unicode Standard
+ * Annex #15, https://unicode.org/reports/tr15/). Nothing about the defect was
+ * visible: under MySQL's utf8mb4_unicode_ci an equality test WOULD fold the two
+ * forms, under SQLite's default BINARY collation it would NOT, so the same code
+ * passed on one engine and failed on another.
+ *
+ * WHY NFC AND NOT NFKC. UAX #15 is explicit: "Normalization Forms KC and KD
+ * must not be blindly applied to arbitrary text. Because they erase many
+ * formatting distinctions, they will prevent round-trip conversion." This
+ * index is built from arbitrary user text and the token is meant to be found
+ * again by a later search of the same text, so round-tripping is exactly the
+ * property that must survive. NFKC would additionally fold "①" to "1",
+ * "ﬁ" to "fi" and full-width "Ａ" to "A" — a query for the literal string
+ * would then match text that does not contain it. NFD was rejected for the
+ * mirror-image reason: it is a canonical form, but it MAXIMISES length, so it
+ * pushes tokens toward MAX_TOKEN_BYTES for no matching benefit. NFC is the only
+ * form that is both canonical and length-minimal.
+ *
+ * WHERE IT SITS, AND WHY THE ORDER IS LOAD-BEARING
+ *
+ * mb_strtolower() FIRST, then NFC, then the separator map, then the 255-byte
+ * cut. Both halves of that order are measured, not assumed:
+ *
+ *   - NFC AFTER lowercasing, because lowercasing can REINTRODUCE a decomposed
+ *     sequence. mb_strtolower("\u{0130}") returns "i" + U+0307 — two code
+ *     points, not one — so a normalise-then-lowercase pipeline would emit a
+ *     non-canonical token after having normalised. Lowercase-then-NFC cannot:
+ *     the final operation is always the one that establishes canonicity.
+ *   - NFC BEFORE the byte cut, because NFC CHANGES STRING LENGTH. Cut first and
+ *     the two canonically-equivalent spellings of the same text are cut at
+ *     different points and yield different tokens — measured: a 255-byte cut of
+ *     200 precomposed "é" yields 254 bytes / 127 chars, while the same cut of
+ *     the decomposed spelling yields 255 bytes / 170 chars and ENDS ON A
+ *     DANGLING COMBINING MARK (a U+0301 with no base to attach to), because
+ *     mb_strcut() is character-boundary safe but is not combining-sequence
+ *     aware. Normalising first makes both spellings collapse to one canonical
+ *     form, after which the cut is a function of that one form and the two
+ *     sides agree byte for byte.
+ *
+ * ONE CHOKE POINT, SO BOTH SIDES ARE NORMALISED BY CONSTRUCTION
+ *
+ * This is the whole reason the fix is one call in one method rather than two
+ * edits in two classes. `index()` (the only writer — the only INSERT into
+ * tf_message_search is this file) and `MessageSearchQuery::search()` (the only
+ * reader) both reach the text through tokenizeWithReport() below, and this
+ * class is final. Normalising inside tokenizeWithReport() therefore normalises
+ * BOTH sides simultaneously and makes drift structurally impossible, which is
+ * strictly stronger than normalising at the two call sites and remembering to
+ * keep them equal. A one-sided fix is not merely incomplete here: normalising
+ * only the query cannot help at all, because NFC of a DECOMPOSED token yields
+ * the PRECOMPOSED spelling, which still does not equal the decomposed bytes
+ * already sitting in the column — the reader would be searching for a token
+ * that is guaranteed not to be there.
+ *
+ * THE DEPENDENCY IS DECLARED, NOT ASSUMED. Normalizer is an ext-intl class,
+ * not an ext-mbstring one, so composer.json requires ext-intl explicitly and
+ * a missing extension is a loud failure at index/search time rather than a
+ * silent skip back to the unnormalised behaviour this section exists to remove.
  */
 final class MessageSearchIndexer
 {
@@ -209,8 +280,17 @@ final class MessageSearchIndexer
      */
     public static function tokenizeWithReport(string $text, ?int $limit = self::MAX_TOKENS): array
     {
+        // Order is load-bearing, and documented on the class: lowercase can
+        // reintroduce a decomposed sequence (U+0130 -> "i" + U+0307), so the
+        // operation that ESTABLISHES canonicity has to be the last of the two.
         $folded = mb_strtolower($text, 'UTF-8');
-        $spaced = strtr($folded, self::separators());
+
+        // Normalise BEFORE the separator map and BEFORE truncate(). The cut is a
+        // function of the canonical form, which is what makes the writer and the
+        // reader agree byte for byte on the same text; see the class docblock
+        // for the measured 254-vs-255 byte divergence that cutting first causes.
+        $canonical = self::toNfc($folded);
+        $spaced = strtr($canonical, self::separators());
 
         $tokens = [];
 
@@ -478,6 +558,44 @@ final class MessageSearchIndexer
         } while ($batch->count() === $batchSize);
 
         return ['messages' => $messages, 'tokens' => $tokens, 'lastId' => $lastId];
+    }
+
+    /**
+     * Apply Unicode Normalization Form C (canonical composition).
+     *
+     * THE FALLBACK IS DELIBERATE, AND IT IS NOT A SILENT SKIP. ext-intl is a
+     * declared composer requirement, so a missing Normalizer is a broken
+     * install, not a supported configuration — and it THROWS rather than
+     * quietly returning its input. The alternative, returning the text
+     * unnormalised whenever intl is absent, is precisely the silent
+     * correctness bug this method exists to remove: the indexer would keep
+     * working, keep returning plausible row counts, and keep making
+     * canonically-equivalent messages unfindable with no signal at all. A
+     * loud failure at the first write is recoverable; a year of silently
+     * unsearchable messages is not.
+     *
+     * The one case that returns the input unchanged is Normalizer returning
+     * false, which intl does for input that is not well-formed UTF-8. That is
+     * not reachable from a well-formed caller, because mb_strtolower() has
+     * already substituted invalid sequences (measured: "\xC3\x28" becomes
+     * "?(" = 3f 28) by the time anything reaches here. If it ever DID fire,
+     * the result is byte-identical to what this class stored before NFC was
+     * introduced — i.e. no worse than the status quo, never a new divergence.
+     */
+    private static function toNfc(string $text): string
+    {
+        if (! class_exists(Normalizer::class)) {
+            throw new TelegramException(
+                'ext-intl is required to normalise message search tokens: Normalizer is '
+                .'unavailable, so canonically-equivalent text would be indexed in two '
+                .'different spellings and become unfindable. Install ext-intl rather '
+                .'than disabling normalisation.'
+            );
+        }
+
+        $nfc = Normalizer::normalize($text, Normalizer::FORM_C);
+
+        return $nfc === false ? $text : $nfc;
     }
 
     /**

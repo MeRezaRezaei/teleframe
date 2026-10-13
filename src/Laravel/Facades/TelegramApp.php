@@ -40,8 +40,10 @@ use MeRezaRezaei\Teleframe\Store\Schedules\SchedulePublisher;
  *             if ($text === '') {
  *                 return;
  *             }
- *             // read the conversation…
- *             $recent = TelegramApp::read($u->accountId, 20);
+ *             // read the conversation… AppRuntime::read()'s first argument is
+ *             // the PEER (chat id / username / peer array) — NOT the account id,
+ *             // which only answer() takes.
+ *             $recent = TelegramApp::read($u->array['message']['peer_id'], 20);
  *             // …and answer it through the same account.
  *             TelegramApp::answer($u->accountId, $u->array['message']['peer_id'], 'you said: '.$text);
  *         }),
