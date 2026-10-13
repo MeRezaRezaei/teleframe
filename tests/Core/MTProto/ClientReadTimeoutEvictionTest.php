@@ -45,9 +45,11 @@ use Throwable;
  * hand-types a timeout message, so every assertion below is a statement about
  * StreamSocket::isReadTimeout() rather than about a string literal.
  *
- * A HANG IS A RED TEST, NOT A WEDGED SUITE: the bounded-retry probe runs in a
- * forked child that the parent SIGKILLs at DEADLINE_S, mirroring the spirit of
- * StreamSocketReadTimeoutTest.
+ * A HANG IS A RED TEST, NOT A WEDGED SUITE: the bounded probes run under a real
+ * deadline — forked and SIGKILLed where the host allows it, measured against the
+ * same budget where it does not — so an unbounded ladder FAILS instead of wedging
+ * the suite, and a host that cannot enforce a deadline says so in the canonical
+ * UNBOUNDED token rather than passing quietly.
  */
 final class ClientReadTimeoutEvictionTest extends TestCase
 {
@@ -91,7 +93,7 @@ final class ClientReadTimeoutEvictionTest extends TestCase
     {
         $answer = self::nearestDc();
         $conn = $this->scripted([self::transportTimeout(), $answer]);
-        $logger = new ArrayLogger();
+        $logger = new ArrayLogger;
         $client = new ScriptedDialClient([$conn], $this->session(), $logger);
 
         $got = $client->call('help.getNearestDc');
@@ -181,9 +183,13 @@ final class ClientReadTimeoutEvictionTest extends TestCase
     /**
      * THE BOUND. Two attempts, no more: the script holds a THIRD answer, and it
      * must never be consumed — otherwise the retry ladder is unbounded and a slow
-     * DC is a silent hang instead of a bounded failure. Run in a forked child the
-     * parent SIGKILLs at DEADLINE_S, so an unbounded ladder FAILS instead of
-     * wedging the suite.
+     * DC is a silent hang instead of a bounded failure.
+     *
+     * Run under a deadline so an unbounded ladder FAILS instead of wedging the
+     * suite. Where the host can fork, the parent SIGKILLs the child at DEADLINE_S.
+     * Where it cannot, the probe runs inline and is MEASURED against the same
+     * budget — a weaker guarantee (it can name an overrun, not prevent one) but a
+     * real one, and every assertion below still runs. Never a skip.
      */
     public function test_the_retry_is_bounded_and_gives_up_after_one_resend(): void
     {
@@ -194,7 +200,7 @@ final class ClientReadTimeoutEvictionTest extends TestCase
         ]);
         $client = new ScriptedDialClient([$conn], $this->session(), new ArrayLogger);
 
-        $outcome = $this->inBoundedChild(static function () use ($client, $conn): array {
+        $outcome = $this->underDeadline(static function () use ($client, $conn): array {
             $thrown = null;
             try {
                 $client->call('help.getNearestDc');
@@ -277,6 +283,11 @@ final class ClientReadTimeoutEvictionTest extends TestCase
      * fails with an explicit UNBOUNDED message, in about a second. Without this,
      * the bound would be a comment — an unbounded ladder would simply hang the
      * suite instead of failing it.
+     *
+     * On a host WITHOUT pcntl the deadline cannot be enforced at all, so the harness
+     * reports itself UNBOUNDED and this test verifies THAT reporting contract instead
+     * of the SIGKILL: a real guarantee on such a host, never a vacuous green and never
+     * a skip.
      */
     public function test_the_deadline_fails_a_hang_instead_of_wedging_the_suite(): void
     {
@@ -412,18 +423,94 @@ final class ClientReadTimeoutEvictionTest extends TestCase
     }
 
     /**
-     * Runs $probe in a FORKED child and returns what it reported plus the elapsed
-     * seconds. The parent SIGKILLs on overrun, so an unbounded retry is a FAILING
-     * test rather than a wedged suite (the spirit of VaultMtprotoAnswererHandshakeBudgetTest).
+     * Runs $probe in a FORKED child that is KILLED at the deadline. Strict: a host
+     * that cannot fork cannot honour a deadline at all, so this runner FAILS
+     * UNBOUNDED rather than pretending — see inBoundedChild().
      *
      * @return array<string, mixed>
      */
     private function inBoundedChild(callable $probe, float $deadlineSeconds = self::DEADLINE_S): array
     {
         if (! function_exists('pcntl_fork')) {
-            self::markTestSkipped('pcntl_fork required to bound the probe with a real deadline');
+            // A probe that cannot bound itself must ANNOUNCE that in the canonical
+            // UNBOUNDED token — the very word this harness's own overrun branch
+            // (readReport) uses — and not merely in prose. Otherwise a reader (or a
+            // machine) cannot tell an UNBOUNDED probe from a bounded one that merely
+            // complained. It is a real failure, not a skip: the honest report of a
+            // host that cannot enforce a deadline is that the probe is UNBOUNDED,
+            // said loudly.
+            self::fail(
+                'UNBOUNDED: pcntl_fork is required to bound the probe with a real deadline'
+                .' — this host cannot enforce a deadline, so the probe is UNBOUNDED'
+            );
         }
 
+        return $this->forkedProbe($probe, $deadlineSeconds);
+    }
+
+    /**
+     * The SAME deadline, degraded honestly on a host that cannot fork — used by a
+     * probe whose own contract is "this terminates on its own, inside the budget".
+     *
+     * Forked, the deadline KILLS the probe at the budget. Inline, nothing can kill
+     * it, but the property under test still holds and is still measured: the ladder
+     * must finish BY ITSELF and INSIDE the budget. A skip would drop every
+     * assertion the caller makes about the report (the attempt count above all),
+     * and a skipped gate is indistinguishable from a green one in the CI rollup —
+     * so it runs degraded instead, and says which degradation it took.
+     *
+     * @return array<string, mixed>
+     */
+    private function underDeadline(callable $probe, float $deadlineSeconds = self::DEADLINE_S): array
+    {
+        if (! function_exists('pcntl_fork')) {
+            return $this->inlineProbe($probe, $deadlineSeconds);
+        }
+
+        return $this->forkedProbe($probe, $deadlineSeconds);
+    }
+
+    /**
+     * Runs $probe inline and MEASURES it. An overrun is reported as UNBOUNDED
+     * rather than left silent — the honest limit is stated here and nowhere is it
+     * papered over: an inline probe that overruns is detected only AFTER it
+     * returns, so this runner cannot rescue a wedged suite, it can only name one.
+     * What it does guarantee is that the probe TERMINATED, at the same budget the
+     * forked path enforces.
+     *
+     * @return array<string, mixed>
+     */
+    private function inlineProbe(callable $probe, float $deadlineSeconds): array
+    {
+        $startedAt = microtime(true);
+
+        try {
+            $report = ['ok' => true] + $probe();
+        } catch (Throwable $e) {
+            $report = ['ok' => false, 'error' => $e->getMessage(), 'class' => $e::class];
+        }
+
+        $elapsed = microtime(true) - $startedAt;
+        $report['elapsed'] = $elapsed;
+
+        if ($elapsed >= $deadlineSeconds) {
+            self::fail(sprintf(
+                'UNBOUNDED: the probe ran %.3fs inline against a %.1fs budget on a host with no pcntl_fork to '
+                .'kill it — the ladder did not terminate on its own inside the budget',
+                $elapsed,
+                $deadlineSeconds,
+            ));
+        }
+
+        /** @var array<string, mixed> $report */
+        return $report;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function forkedProbe(callable $probe, float $deadlineSeconds): array
+    {
         [$reportRead, $reportWrite] = self::socketPair();
         $startedAt = microtime(true);
 

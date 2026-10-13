@@ -200,6 +200,38 @@ jobs:
           # dependency; the official php:*-cli images ship none of this, exactly
           # like bcmath/gmp/zip above.
           docker-php-ext-install bcmath gmp zip pdo_pgsql sockets intl >/dev/null
+          # `redis` is here for a named reason, not for tidiness:
+          # tests/Bus/LaravelRedisAdapterStreamVerbsTest.php asserts the phpredis WIRE
+          # SHAPE by reflecting on Redis::xAdd()'s TYPED signature (key, id, values,
+          # maxlen:int, approx). A wrong argv cannot be "expanded" against a fixed-arity
+          # method — only a typed binding catches a MAXLEN-token regression — so without
+          # ext-redis that test dies on its own `extension_loaded('redis')` precondition.
+          # markTestSkipped() is NOT the fix: in this repo's rollup a skipped gate reads
+          # the same as a green one, which is the failure this workflow exists to prevent.
+          # So it is INSTALLED, not skipped.
+          #
+          # PECL, not a bundled PHP source ext, so it cannot ride docker-php-ext-install.
+          # No apt package is added, and that is measured rather than assumed: redis 6.3.0's
+          # package.xml declares min PHP 7.4.0, and every optional block in its config.m4
+          # (igbinary/lzf/zstd/msgpack/lz4) sits behind `if test "$PHP_REDIS_*" != "no"`,
+          # so with all six defaulting to no none of them — nor their system-library
+          # lookups — ever execute. phpize/make/gcc come from the official php:*-cli
+          # image's own PHPIZE_DEPS (autoconf gcc g++ make libc-dev pkg-config re2c),
+          # which is why docker-php-ext-install above needs no apt additions either.
+          #
+          # The 6 prompts are answered EXPLICITLY with their defaults rather than left to
+          # PEAR's undefined non-tty/EOF behaviour: measured 6 configureoption prompts in
+          # the 6.3.0 package.xml (igbinary, lzf, zstd, msgpack, lz4, system-liblz4).
+          # `printf |` not `yes |` on purpose — under this step's `set -o pipefail`, a
+          # `yes` killed by SIGPIPE when pecl exits early would fail the job spuriously.
+          printf '\n\n\n\n\n\n' | pecl install redis && docker-php-ext-enable redis
+          # PROVE it loaded, FATALLY. `pecl install` can exit 0 on a build that then fails
+          # to enable, so an absent extension here would be SILENT — the degraded-runner
+          # shape the comment at the top of this step is about. Same intent and shape as
+          # db-tracks.yml's PDO::getAvailableDrivers() print: prove it HERE, where a
+          # broken runner is still recognisable, not as a test failure much later. The
+          # non-zero exit becomes a NAMED setup failure under `set -euo pipefail`.
+          php -r 'printf("ext-redis loaded: %s\n", extension_loaded("redis") ? "YES" : "NO"); exit(extension_loaded("redis") ? 0 : 1);'
           # The official php:*-cli images ship memory_limit=128M. The full suite
           # peaks around 235M (it fatals in guzzlehttp/psr7 Stream inside
           # AwsSdkS3GatewayTest at 128M), so raise it before anything runs rather
@@ -453,6 +485,38 @@ jobs:
           # dependency; the official php:*-cli images ship none of this, exactly
           # like bcmath/gmp/zip above.
           docker-php-ext-install bcmath gmp zip pdo_pgsql sockets intl >/dev/null
+          # `redis` is here for a named reason, not for tidiness:
+          # tests/Bus/LaravelRedisAdapterStreamVerbsTest.php asserts the phpredis WIRE
+          # SHAPE by reflecting on Redis::xAdd()'s TYPED signature (key, id, values,
+          # maxlen:int, approx). A wrong argv cannot be "expanded" against a fixed-arity
+          # method — only a typed binding catches a MAXLEN-token regression — so without
+          # ext-redis that test dies on its own `extension_loaded('redis')` precondition.
+          # markTestSkipped() is NOT the fix: in this repo's rollup a skipped gate reads
+          # the same as a green one, which is the failure this workflow exists to prevent.
+          # So it is INSTALLED, not skipped.
+          #
+          # PECL, not a bundled PHP source ext, so it cannot ride docker-php-ext-install.
+          # No apt package is added, and that is measured rather than assumed: redis 6.3.0's
+          # package.xml declares min PHP 7.4.0, and every optional block in its config.m4
+          # (igbinary/lzf/zstd/msgpack/lz4) sits behind `if test "$PHP_REDIS_*" != "no"`,
+          # so with all six defaulting to no none of them — nor their system-library
+          # lookups — ever execute. phpize/make/gcc come from the official php:*-cli
+          # image's own PHPIZE_DEPS (autoconf gcc g++ make libc-dev pkg-config re2c),
+          # which is why docker-php-ext-install above needs no apt additions either.
+          #
+          # The 6 prompts are answered EXPLICITLY with their defaults rather than left to
+          # PEAR's undefined non-tty/EOF behaviour: measured 6 configureoption prompts in
+          # the 6.3.0 package.xml (igbinary, lzf, zstd, msgpack, lz4, system-liblz4).
+          # `printf |` not `yes |` on purpose — under this step's `set -o pipefail`, a
+          # `yes` killed by SIGPIPE when pecl exits early would fail the job spuriously.
+          printf '\n\n\n\n\n\n' | pecl install redis && docker-php-ext-enable redis
+          # PROVE it loaded, FATALLY. `pecl install` can exit 0 on a build that then fails
+          # to enable, so an absent extension here would be SILENT — the degraded-runner
+          # shape the comment at the top of this step is about. Same intent and shape as
+          # db-tracks.yml's PDO::getAvailableDrivers() print: prove it HERE, where a
+          # broken runner is still recognisable, not as a test failure much later. The
+          # non-zero exit becomes a NAMED setup failure under `set -euo pipefail`.
+          php -r 'printf("ext-redis loaded: %s\n", extension_loaded("redis") ? "YES" : "NO"); exit(extension_loaded("redis") ? 0 : 1);'
           # The official php:*-cli images ship memory_limit=128M. The full suite
           # peaks around 235M (it fatals in guzzlehttp/psr7 Stream inside
           # AwsSdkS3GatewayTest at 128M), so raise it before anything runs rather
@@ -635,6 +699,38 @@ jobs:
           # dependency; the official php:*-cli images ship none of this, exactly
           # like bcmath/gmp/zip above.
           docker-php-ext-install bcmath gmp zip pdo_pgsql sockets intl >/dev/null
+          # `redis` is here for a named reason, not for tidiness:
+          # tests/Bus/LaravelRedisAdapterStreamVerbsTest.php asserts the phpredis WIRE
+          # SHAPE by reflecting on Redis::xAdd()'s TYPED signature (key, id, values,
+          # maxlen:int, approx). A wrong argv cannot be "expanded" against a fixed-arity
+          # method — only a typed binding catches a MAXLEN-token regression — so without
+          # ext-redis that test dies on its own `extension_loaded('redis')` precondition.
+          # markTestSkipped() is NOT the fix: in this repo's rollup a skipped gate reads
+          # the same as a green one, which is the failure this workflow exists to prevent.
+          # So it is INSTALLED, not skipped.
+          #
+          # PECL, not a bundled PHP source ext, so it cannot ride docker-php-ext-install.
+          # No apt package is added, and that is measured rather than assumed: redis 6.3.0's
+          # package.xml declares min PHP 7.4.0, and every optional block in its config.m4
+          # (igbinary/lzf/zstd/msgpack/lz4) sits behind `if test "$PHP_REDIS_*" != "no"`,
+          # so with all six defaulting to no none of them — nor their system-library
+          # lookups — ever execute. phpize/make/gcc come from the official php:*-cli
+          # image's own PHPIZE_DEPS (autoconf gcc g++ make libc-dev pkg-config re2c),
+          # which is why docker-php-ext-install above needs no apt additions either.
+          #
+          # The 6 prompts are answered EXPLICITLY with their defaults rather than left to
+          # PEAR's undefined non-tty/EOF behaviour: measured 6 configureoption prompts in
+          # the 6.3.0 package.xml (igbinary, lzf, zstd, msgpack, lz4, system-liblz4).
+          # `printf |` not `yes |` on purpose — under this step's `set -o pipefail`, a
+          # `yes` killed by SIGPIPE when pecl exits early would fail the job spuriously.
+          printf '\n\n\n\n\n\n' | pecl install redis && docker-php-ext-enable redis
+          # PROVE it loaded, FATALLY. `pecl install` can exit 0 on a build that then fails
+          # to enable, so an absent extension here would be SILENT — the degraded-runner
+          # shape the comment at the top of this step is about. Same intent and shape as
+          # db-tracks.yml's PDO::getAvailableDrivers() print: prove it HERE, where a
+          # broken runner is still recognisable, not as a test failure much later. The
+          # non-zero exit becomes a NAMED setup failure under `set -euo pipefail`.
+          php -r 'printf("ext-redis loaded: %s\n", extension_loaded("redis") ? "YES" : "NO"); exit(extension_loaded("redis") ? 0 : 1);'
           # The official php:*-cli images ship memory_limit=128M. The full suite
           # peaks around 235M (it fatals in guzzlehttp/psr7 Stream inside
           # AwsSdkS3GatewayTest at 128M), so raise it before anything runs rather

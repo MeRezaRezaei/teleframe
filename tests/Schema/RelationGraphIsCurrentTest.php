@@ -126,6 +126,50 @@ final class RelationGraphIsCurrentTest extends TestCase
             .'Regenerate it: php bin/generate-relation-graph.php');
     }
 
+    /**
+     * The provenance stamp is a digest of the MIGRATION SET, not of history.
+     *
+     * WHY THIS IS ITS OWN TEST. The stamp used to be
+     * `git log -1 --format=%h -- src/Laravel/Migrations/`, which is a fact about
+     * ONE repository's history. This suite runs on two trees — the private
+     * repository and the sanitised public mirror (`bin/public-manifest.txt`) —
+     * and that SHA exists in only one of them: on the mirror, `git log` over a
+     * published path returns the last PUBLISH commit. Measured 2026-10-13:
+     * private `7a06e62b`, mirror `41c3ca4`, and a fresh mirror run differed from
+     * the committed document in exactly those two provenance lines and nothing
+     * else. Because the gate above is byte-for-byte, that made it red on the
+     * mirror permanently, with no fix reachable from the private side.
+     *
+     * So the stamp is now `sha256` over (basename, content hash) of every
+     * executed migration file in apply order, and this test re-derives that
+     * digest HERE, from the files this class already executes, and requires the
+     * document to carry it. That is what makes the stamp load-bearing rather
+     * than decorative: reverting the generator to a commit SHA cannot pass,
+     * because no commit SHA equals a content digest of the migration set.
+     *
+     * It also pins the drift direction for free. A migration whose bytes change
+     * changes this digest, so the document stops matching and the byte gate goes
+     * red naming the stamp — which is the same signal, from the same file, as a
+     * changed table count.
+     */
+    public function test_the_provenance_stamp_is_a_digest_of_the_executed_migration_set(): void
+    {
+        self::assertMatchesRegularExpression(
+            '/^<!-- measured against migration set [0-9a-f]{12} -->$/m',
+            $this->graphDocument(),
+            'the document must carry a migration-set digest stamp, not a commit SHA. '
+            .'A commit SHA cannot be this stamp: it names one repository\'s history, and this '
+            .'suite runs on two trees that share no commits'
+        );
+
+        self::assertSame(
+            $this->migrationSetDigest(),
+            $this->claimedStamp(),
+            'the stamp does not describe the migration set this class just executed. '
+            .'Regenerate: php bin/generate-relation-graph.php'
+        );
+    }
+
     public function test_every_shipped_table_appears_in_the_generated_graph(): void
     {
         $measured = $this->measuredTables();
@@ -884,5 +928,49 @@ final class RelationGraphIsCurrentTest extends TestCase
         }
 
         return (string) file_get_contents(self::GRAPH_DOC);
+    }
+
+    /**
+     * The stamp the committed document claims, read out of the provenance line.
+     *
+     * Read rather than hardcoded, so a document that names no stamp at all is a
+     * parse failure here rather than a silent pass.
+     */
+    private function claimedStamp(): string
+    {
+        $doc = $this->graphDocument();
+
+        if (preg_match('/^<!-- measured against migration set ([0-9a-f]{12}) -->$/m', $doc, $match) !== 1) {
+            throw new RuntimeException(
+                'no `measured against migration set <digest>` stamp in '.self::GRAPH_DOC
+                .' — regenerate it: php bin/generate-relation-graph.php'
+            );
+        }
+
+        return $match[1];
+    }
+
+    /**
+     * The digest over the executed migration set, derived HERE from the files.
+     *
+     * This mirrors bin/generate-relation-graph.php's stamp on purpose: both walk
+     * the same directory, in the same apply order, hashing the same bytes. It is
+     * a second copy of a four-line formula, and that is the point — the stamp's
+     * entire claim is "these exact bytes were executed", so the witness for it is
+     * a recomputation over those bytes, not a git object from one tree.
+     */
+    private function migrationSetDigest(): string
+    {
+        $files = glob(self::MIGRATION_DIR.'/*.php') ?: [];
+        sort($files);
+
+        if ($files === []) {
+            throw new RuntimeException('no shipped migrations found at '.self::MIGRATION_DIR);
+        }
+
+        return substr(hash('sha256', implode('', array_map(
+            static fn (string $file): string => basename($file)."\0".hash_file('sha256', $file)."\n",
+            $files,
+        ))), 0, 12);
     }
 }
