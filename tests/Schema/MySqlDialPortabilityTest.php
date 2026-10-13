@@ -453,8 +453,26 @@ final class MySqlDialPortabilityTest extends TestCase
      * commit: **if and when it is committed, this constant goes to 61 in that
      * same commit.** A pin and the file set it counts must move as one — in
      * either direction.
+     *
+     * RAISED 60 -> 61, and the precondition above has now actually fired:
+     * `2026_10_08_000200_widen_bytes_columns_to_unbounded_text.php` is no
+     * longer untracked. `git ls-files src/Laravel/Migrations/ | wc -l` = 61 and
+     * that path is tracked, so a clean clone of HEAD carries 61 migrations and
+     * the old pin failed on CI with "curated dial count drifted from 60 files"
+     * / "actual size 61 matches expected size 60" at this file's line 462. The
+     * correction described above was therefore not a judgement about whether
+     * the 61st file was worth shipping — it never was — only about the pin and
+     * the file set moving together. They now move together, in the same commit,
+     * with the sibling ceiling in tests/Schema/ShipDialGoldenTest.php raised
+     * 61 -> 62 for the same reason.
+     *
+     * WHAT WOULD MAKE THE 61 WRONG: this is an EXACT `assertCount`, so it is
+     * correct only while exactly 61 migration files exist. Any further curated
+     * addition or removal — including a revert of the bytes-widening migration
+     * above — changes the number and must move this constant in the same
+     * commit, in whichever direction the dial moved.
      */
-    private const CURATED_DIAL_COUNT = 60;
+    private const CURATED_DIAL_COUNT = 61;
 
     public function test_curated_dial_count_is_pinned(): void
     {

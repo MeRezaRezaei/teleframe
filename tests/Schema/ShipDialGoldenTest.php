@@ -388,12 +388,24 @@ final class ShipDialGoldenTest extends TestCase
         // dial has never been below 16, so `assertGreaterThanOrEqual(16, ...)` still bites
         // if the dial is ever gutted rather than merely grown.
         //
-        // WHAT WOULD MAKE THIS WRONG: the 61st file is still UNTRACKED and belongs to a
-        // concurrent lane. If that lane reverts or renames it rather than committing it, the
-        // honest ceiling is 60 again and this bound must come back down with the sibling
-        // pin. A ceiling left one above a 60-file dial is the same defect as an exact pin
-        // left one above, so the two move as one.
-        self::assertLessThanOrEqual(61, $files, 'curated dial must stay under 62 migrations total');
+        // RAISED 61 -> 62, in the same commit as the sibling exact pin, because the
+        // precondition this file recorded as outstanding has now been met:
+        // `2026_10_08_000200_widen_bytes_columns_to_unbounded_text.php` is no longer
+        // UNTRACKED. `git ls-files src/Laravel/Migrations/ | wc -l` = 61 and that exact
+        // path is tracked, so the dial is 61 files on a clean clone of HEAD rather than
+        // 60 committed files plus one dirty working-tree file. The 2026-10-11 record above
+        // deliberately left this ceiling at 61 because it was written against a dirty
+        // tree — it correctly refused to count an uncommitted file. Now that the file is
+        // committed, a ceiling of 61 sits one below a 61-file dial, which is the exact
+        // defect that class of ceiling exists to prevent: it would let the dial be
+        // "correct" while admitting zero room for the file that is actually shipped.
+        // The sibling `CURATED_DIAL_COUNT` moved 60 -> 61 on the same evidence.
+        //
+        // WHAT WOULD MAKE 62 WRONG: a revert or rename of the bytes-widening migration
+        // returns the dial to 60, and this ceiling must come back down to 61 with the
+        // sibling exact pin, in the same commit. The two move as one, in either
+        // direction, for the same reason.
+        self::assertLessThanOrEqual(62, $files, 'curated dial must stay at or under 62 migrations total');
     }
 
     public function test_shipped_subset_contains_curated_domains(): void

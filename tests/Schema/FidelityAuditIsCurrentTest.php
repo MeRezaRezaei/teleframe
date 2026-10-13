@@ -102,6 +102,39 @@ use RuntimeException;
  *     MySQL service and no `pdo_mysql` — the test does NOT skip. It asserts the
  *     engine-independent measurement still matches, and that a named CI job owns
  *     the cross-engine `--check`. See `driftIsOwnedByAGate()`.
+ *
+ *     ## AND THE PROBE THAT FOUND THAT OUT WAS WRONG UNTIL 2026-10-13
+ *
+ *     `auditOn()` classified "this engine is not reachable from here" by testing
+ *     whether the tool had produced NO output — and that probe fails in exactly
+ *     the environment the paragraph above is about. `regen-gates.yml` builds no
+ *     `pdo_mysql`, so `bootDialect()` throws; but WHERE PHP prints an uncaught
+ *     fatal depends on `display_errors`, and on the runner it prints to
+ *     **STDOUT**. So `trim($stdout) === ''` was false, the connection-level
+ *     branch was never entered, `decode()` was handed a stack trace,
+ *     `json_decode` returned null, and the shard died with "Failed asserting that
+ *     null is of type array" at :990, called from :858, called from :665. The
+ *     failure message carries the captured stdout, which is why the CI log shows
+ *     the fatal text immediately above the failure.
+ *
+ *     The tool emits nothing on stdout before its JSON — `$out`
+ *     (bin/audit-fidelity.php:2142) returns early in `json` format, so a
+ *     successful run's stdout IS the JSON document and nothing else. That makes
+ *     both halves decidable: a run that produced no JSON at all is classified by
+ *     its DIAGNOSTICS rather than by the absence of output, and a run that DID
+ *     start emitting JSON is never mistaken for an unreachable engine. That is
+ *     `classifyRun()`, pinned against the exact bytes the failing job produced by
+ *     `test_a_missing_pdo_driver_is_an_unreachable_engine_and_not_a_broken_tool`.
+ *
+ *     THE ESCALATION, and the reason there is still no `markTestSkipped()`. A
+ *     FORCED lane — `TELEFRAME_MYSQL=1`, the flag
+ *     `RunsMysqlMigrations::mysqlTrackEnabled()` honours — must never delegate: it
+ *     fails with the tool's real stderr, which is the same philosophy as that
+ *     method returning `true` BEFORE it opens a socket. An UNFORCED lane that
+ *     cannot reach the committed report's engine does not skip either; it answers
+ *     through `driftIsOwnedByAGate()`, which returns a verdict rather than
+ *     declining to. A skip would delete that verdict from the CI rollup, which is
+ *     the whole failure mode this file exists to prevent.
  */
 final class FidelityAuditIsCurrentTest extends TestCase
 {
@@ -113,6 +146,18 @@ final class FidelityAuditIsCurrentTest extends TestCase
 
     /** Verdict vocabulary. Three, and there is no fourth. */
     private const VERDICTS = ['COPYING-GAP', 'STORAGE-TRANSLATION', 'DELIBERATE', 'UNEXPLAINED'];
+
+    /** What a subprocess run turned out to be. Three, and there is no fourth. */
+    private const RUN_OK = 'ok';
+
+    private const RUN_UNREACHABLE = 'unreachable';
+
+    private const RUN_BROKEN = 'broken';
+
+    /** What an unreachable engine does next. Forced fails; unforced delegates. */
+    private const RUN_ESCALATE = 'escalate';
+
+    private const RUN_DELEGATE = 'delegate';
 
     /**
      * Memoised audit runs, keyed by the argv that produced them.
@@ -747,6 +792,95 @@ final class FidelityAuditIsCurrentTest extends TestCase
     }
 
     /**
+     * A MISSING PDO DRIVER IS AN UNREACHABLE ENGINE, NOT A BROKEN TOOL.
+     *
+     * A regression gate for a green-looking gate. The classification of a failed
+     * subprocess used to be "the tool printed nothing", and on the runner that is
+     * false: PHP writes an uncaught fatal to STDOUT whenever `display_errors` is
+     * on, so a missing `pdo_mysql` produced 409 bytes of stack trace on the pipe
+     * the test reads as its report. The empty-output branch was skipped, the
+     * stack trace was handed to `json_decode`, and the shard failed with a
+     * message about `null` that said nothing about the actual cause — while the
+     * honest question ("is this engine reachable here at all?") went unasked.
+     *
+     * The bytes below are the failing job's, transcribed: the fatal on stdout
+     * with an empty stderr, the same fatal on stderr with an empty stdout (how a
+     * host with `display_errors=stderr` reports it), and a refused connection.
+     * Each must read as UNREACHABLE, so that `driftIsOwnedByAGate()` gets to
+     * answer the question it was written to answer.
+     *
+     * The last three are the other half of the contract and the reason this is
+     * not a licence to absorb every failure: a truncated JSON document and a PHP
+     * parse error are a broken TOOL, and folding them into "unreachable" would
+     * turn a real defect into a silent pass. A run that has STARTED emitting JSON
+     * is never unreachable — it got past the connection — so a fatal that lands
+     * after the payload is reported stays BROKEN.
+     */
+    public function test_a_missing_pdo_driver_is_an_unreachable_engine_and_not_a_broken_tool(): void
+    {
+        $fatal = 'Fatal error: Uncaught PDOException: could not find driver in '
+            .'/__w/teleframe/teleframe/bin/audit-fidelity.php:382'.PHP_EOL
+            .'Stack trace:'.PHP_EOL
+            .'#0 bin/audit-fidelity.php(382): PDO->__construct()'.PHP_EOL
+            .'#1 bin/audit-fidelity.php(1032): bootDialect()';
+
+        self::assertSame(
+            self::RUN_UNREACHABLE,
+            $this->classifyRun(PHP_EOL.$fatal, ''),
+            'an uncaught "could not find driver" fatal on STDOUT is the exact failure that took the '
+                .'unreachable branch out of reach — PHP prints it on stdout whenever display_errors is on, '
+                .'so classifying on the ABSENCE of output cannot see it',
+        );
+        self::assertSame(
+            self::RUN_UNREACHABLE,
+            $this->classifyRun('', 'PHP '.$fatal),
+            'the same fatal on stderr is the same unreachable engine — the classification must not '
+                .'depend on which stream PHP happened to choose',
+        );
+        self::assertSame(
+            self::RUN_UNREACHABLE,
+            $this->classifyRun('', 'SQLSTATE[HY000] [2002] Connection refused for user'),
+            'a refused connection is an unreachable engine, not a broken tool',
+        );
+
+        self::assertSame(
+            self::RUN_BROKEN,
+            $this->classifyRun('PHP Parse error: syntax error, unexpected token "}"', ''),
+            'a parse error is a broken tool, and calling it "unreachable" would turn a real defect into '
+                .'a silent pass — which is what this file exists to prevent',
+        );
+        self::assertSame(
+            self::RUN_BROKEN,
+            $this->classifyRun('{"counts":', 'Fatal error: Uncaught Error: Call to undefined method Foo()'),
+            'a fatal AFTER the payload has started means the engine WAS reached, so the run is broken and '
+                .'must not be filed as an unreachable server',
+        );
+        self::assertSame(
+            self::RUN_OK,
+            $this->classifyRun('{"counts":{"comparisons":36},"findings":[]}', ''),
+            'a complete JSON document on stdout is a run that happened — the tool writes nothing else to '
+                .'stdout in json format, so this is the whole of a successful run',
+        );
+
+        // The escalation is part of the same contract: a forced lane must surface
+        // the real error instead of handing the question to another job, and an
+        // unforced one must hand it over rather than skip.
+        self::assertSame(
+            self::RUN_ESCALATE,
+            $this->unreachableDisposition(true),
+            'a FORCED run must never delegate its failure — that is the same reason '
+                .'RunsMysqlMigrations::mysqlTrackEnabled() returns true on TELEFRAME_MYSQL=1 before it '
+                .'opens a socket',
+        );
+        self::assertSame(
+            self::RUN_DELEGATE,
+            $this->unreachableDisposition(false),
+            'an unforced run must delegate rather than skip: markTestSkipped would report no verdict, so a '
+                .'rotting cross-engine gate would look identical to a green one',
+        );
+    }
+
+    /**
      * THE COMMITTED REPORT MUST NAME ITS OWN ENGINE, and the engine must be one
      * the tool can actually be run on.
      *
@@ -794,22 +928,104 @@ final class FidelityAuditIsCurrentTest extends TestCase
     // ---------------------------------------------------------------- helpers
 
     /**
+     * WHAT A RUN OF THE TOOL ACTUALLY WAS.
+     *
+     * The distinction between "unreachable" and "ran and disagreed" is the whole
+     * point, and it is also the distinction this file used to get wrong: it was
+     * drawn from whether the tool had printed anything, and "printed anything" is
+     * a property of PHP's `display_errors`, not of the tool. On a runner with no
+     * `pdo_mysql` — `regen-gates.yml` builds `bcmath gmp zip pdo_pgsql sockets
+     * intl` and no MySQL service — the uncaught `PDOException` is written to
+     * STDOUT, so a run that never reached its engine still "had output", the
+     * connection-level branch was skipped, and the stack trace was decoded as if
+     * it were the report.
+     *
+     * So the classifier asks the two questions that are actually decidable:
+     *
+     *   1. DID IT EMIT THE DOCUMENT? `bin/audit-fidelity.php`'s text writer
+     *      (`$out`, :2142) returns immediately in `json` format, so a successful
+     *      run's stdout IS the JSON payload and nothing else. JSON parses ⇒ the
+     *      tool ran. A run that has STARTED emitting JSON therefore got past the
+     *      connection, and no fatal after that point may be filed as an
+     *      unreachable server.
+     *   2. IF NOT, WHAT DID IT SAY? The diagnostics — BOTH streams, because which
+     *      one PHP chose is not ours to decide — are matched against the same
+     *      connection-level vocabulary the empty-output branch always used.
+     *      Absent a marker from that vocabulary it is a broken tool, and a broken
+     *      tool is a hard failure here: that is a defect in this repository, not
+     *      a missing server, and delegating it would report a verdict nobody
+     *      earned.
+     *
+     * @see test_a_missing_pdo_driver_is_an_unreachable_engine_and_not_a_broken_tool
+     */
+    private function classifyRun(string $stdout, string $stderr): string
+    {
+        if (is_array(json_decode($stdout, true))) {
+            return self::RUN_OK;
+        }
+
+        $startedEmitting = str_starts_with(ltrim($stdout), '{');
+
+        if (! $startedEmitting && $this->isConnectionFailure(trim($stdout."\n".$stderr))) {
+            return self::RUN_UNREACHABLE;
+        }
+
+        return self::RUN_BROKEN;
+    }
+
+    /**
+     * Whether a failed run names a connection the environment could not make,
+     * as opposed to a defect in the tool.
+     *
+     * The vocabulary is deliberately short, unchanged from the branch this
+     * replaces, and literal: it names ways of failing to CONNECT and nothing
+     * else, so no new failure mode can quietly be reclassified as "the server is
+     * not here". These are whole phrases, not patterns, so `str_contains()` is
+     * the whole matcher — no regex, which this repository bans outside
+     * `src/Laravel`, `src/Schema` and `src/Bot`.
+     */
+    private function isConnectionFailure(string $diagnostics): bool
+    {
+        foreach (['could not find driver', 'PDOException', 'Connection refused', 'getaddrinfo', 'Access denied'] as $marker) {
+            if (str_contains($diagnostics, $marker)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * What an unreachable engine does next.
+     *
+     * FORCED (`TELEFRAME_MYSQL=1`, the flag
+     * `RunsMysqlMigrations::mysqlTrackEnabled()` honours) escalates: an opt-in
+     * run that quietly delegates proves nothing, and that method returns `true`
+     * on the flag BEFORE it opens a socket for the same reason. UNFORCED
+     * delegates, and notably does NOT skip — see `driftIsOwnedByAGate()`.
+     */
+    private function unreachableDisposition(bool $forced): string
+    {
+        return $forced ? self::RUN_ESCALATE : self::RUN_DELEGATE;
+    }
+
+    private function mysqlLaneIsForced(): bool
+    {
+        return (string) (getenv('TELEFRAME_MYSQL') ?: '') === '1';
+    }
+
+    /**
      * Run the tool on a named engine, or return null when that engine is not
      * reachable from here.
      *
-     * The distinction between "unreachable" and "ran and disagreed" is the whole
-     * point. This shard has no MySQL service and no `pdo_mysql` — measured:
-     * `.github/workflows/verify-php.yml`, the file that owns `verify-shards`,
-     * contains zero `services:` blocks, zero `pdo_mysql`, and no occurrence of
-     * the string `mysql` at all. A `--engine=mysql` run there dies in
-     * `bootDialect()` before a single migration runs.
-     *
-     * So a connection failure is returned as null and handled by
-     * `driftIsOwnedByAGate()`. Any OTHER failure — the tool crashing, emitting
-     * nothing, or emitting non-JSON on an engine it DID reach — is still a hard
-     * failure, because that is a broken tool rather than a missing server, and
-     * swallowing it would be the exact "silently disabled gate" this file
-     * exists to prevent.
+     * Null means "this environment cannot answer the question", and it is
+     * returned for exactly one reason: the run failed while CONNECTING (see
+     * `classifyRun()`). The caller hands it to `driftIsOwnedByAGate()`, which
+     * answers the question this shard cannot. Every other failure is a hard
+     * failure, and a FORCED lane never delegates at all — an unreachable server
+     * under `TELEFRAME_MYSQL=1` is the real error, surfaced with the tool's own
+     * diagnostics, because a run nobody forced must not be allowed to pass
+     * silently and a run somebody forced must not be allowed to pretend.
      *
      * @return array<string, mixed>|null
      */
@@ -837,25 +1053,36 @@ final class FidelityAuditIsCurrentTest extends TestCase
             fclose($pipes[2]);
             $exit = proc_close($process);
 
-            if (trim($stdout) === '') {
-                // No output at all. The ONLY failures permitted to explain that
-                // are connection-level: the driver is absent (the sharded suite
-                // builds no `pdo_mysql`), or the driver is present and the server
-                // refuses / cannot be resolved. Both mean "this engine is not
-                // reachable from here". Anything else — a parse error, a missing
-                // file, a bug in the tool — is a real failure and is left to fail.
-                self::assertMatchesRegularExpression(
-                    '/could not find driver|PDOException|Connection refused|getaddrinfo|Access denied/', $stderr,
-                    self::TOOL.' produced no output while trying to run on '.$engine.', and the failure was '
-                    .'not a connection-level one. This is a broken tool, not a missing server, and '
-                    .'treating it as "engine unreachable" would turn a real defect into a silent pass. '
-                    .'stderr: '.$stderr,
-                );
+            $verdict = $this->classifyRun($stdout, $stderr);
 
-                return self::$runs[$key] = null;
+            if ($verdict === self::RUN_OK) {
+                return self::$runs[$key] = $this->decode($stdout);
             }
 
-            self::$runs[$key] = $this->decode($stdout);
+            // Both streams, because "PHP wrote it to stdout" is not a fact this
+            // file may assume — it is `display_errors`, and the same defect
+            // arrived as stdout on one host and as stderr on another.
+            $diagnostics = trim($stdout."\n".$stderr);
+
+            if ($verdict === self::RUN_BROKEN) {
+                self::fail(
+                    self::TOOL.' failed while trying to run on '.$engine.', and the failure was not a '
+                    .'connection-level one. This is a broken tool, not a missing server, and treating it as '
+                    .'"engine unreachable" would turn a real defect into a silent pass. exit='.$exit
+                    .'. output: '.$diagnostics,
+                );
+            }
+
+            if ($this->unreachableDisposition($this->mysqlLaneIsForced()) === self::RUN_ESCALATE) {
+                self::fail(
+                    'TELEFRAME_MYSQL=1 forces this lane to measure '.$engine.', and it cannot: '
+                    .self::TOOL.' never reached the engine. A forced run that quietly delegates proves '
+                    .'nothing, so the real error is surfaced here instead. exit='.$exit
+                    .'. output: '.$diagnostics,
+                );
+            }
+
+            return self::$runs[$key] = null;
         }
 
         return self::$runs[$key];
