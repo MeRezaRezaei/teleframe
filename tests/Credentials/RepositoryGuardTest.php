@@ -20,6 +20,15 @@ use PHPUnit\Framework\TestCase;
  * set-equality between the baseline file and the guard's ACCEPTED lines, so an
  * honest receipt can be added without rotting the suite while a silenced receipt
  * — or a finding pardoned by anything other than the baseline — still fails.
+ *
+ * THIS FILE RUNS ON TWO TREES, and both are asserted rather than one of them
+ * skipped. The private repository carries .credential-guard-baseline; the public
+ * mirror is a sanitised export that deliberately does not (bin/public-manifest.txt
+ * :58, never-publish). A skipped credential-gate test is indistinguishable from a
+ * green one in the CI rollup, which is the failure this suite exists to prevent,
+ * so each test branches on the file's existence and asserts the invariant that
+ * is TRUE on the tree it is standing on: equality of the two sets when receipts
+ * are on file, emptiness of both plus a positive control when they are not.
  */
 final class RepositoryGuardTest extends TestCase
 {
@@ -57,6 +66,39 @@ final class RepositoryGuardTest extends TestCase
         fclose($pipes[2]);
 
         return self::$runs[$key] = ['code' => proc_close($proc), 'out' => $out, 'err' => $err, 'all' => $out.$err];
+    }
+
+    /**
+     * The receipt file, whose ABSENCE is meaningful rather than incidental:
+     * bin/public-manifest.txt:58 lists it under never-publish, so it is a
+     * private-repo artefact and the public mirror does not carry it.
+     */
+    private static function baseline(): string
+    {
+        return dirname(__DIR__, 2).'/.credential-guard-baseline';
+    }
+
+    /** @return list<string> the receipted blob shas, comments and blanks dropped */
+    private static function receipts(): array
+    {
+        $path = self::baseline();
+        if (! is_file($path)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            array_map('trim', explode("\n", (string) file_get_contents($path))),
+            static fn (string $l): bool => $l !== '' && ! str_starts_with($l, '#'),
+        ));
+    }
+
+    /** @return list<string> every line the guard marked ACCEPTED, in either output shape */
+    private static function acceptedLines(string $out): array
+    {
+        return array_values(array_filter(
+            explode("\n", $out),
+            static fn (string $l): bool => str_contains($l, 'ACCEPTED')
+        ));
     }
 
     public function test_this_repository_passes_the_guard(): void
@@ -103,34 +145,101 @@ final class RepositoryGuardTest extends TestCase
         // something other than the baseline is the same regression wearing a
         // different hat). Equality of the two sets is strictly stronger than
         // either half alone and cannot rot when an honest receipt is added.
-        $baseline = dirname(__DIR__, 2).'/.credential-guard-baseline';
-        self::assertFileExists($baseline);
+        //
+        // WHICH TREE THIS RUNS ON IS PART OF THE INVARIANT, not an excuse. The
+        // receipt file is deliberately NOT published: bin/public-manifest.txt:58
+        // lists it under never-publish as "a RECEIPT for this repo's own
+        // un-purged SEC-1 history exposure, including blob SHAs", and :20 names
+        // it among the files a denylist would forget. The public mirror is
+        // therefore a SANITISED export — it does not carry the receipt AND it
+        // does not carry the exposure the receipt was for, because that exposure
+        // lived in history the mirror does not publish. Asserting the private
+        // tree's cardinality there could never pass, and skipping it would hide
+        // that. So both halves of the SAME equality are asserted, and the branch
+        // is the file's existence, which is a fact about the tree and not a
+        // guess about the environment.
+        //
+        // Note what is deliberately NOT asserted here: the run's VERDICT. "Green"
+        // is a fact about whether this tree carries an UNRECEIPTED exposure, not
+        // about the baseline, and the two come apart: on the public mirror the
+        // verdict is green because nothing is exposed, while on this repository
+        // with the baseline removed it is red because the exposure is exposed and
+        // unreceipted — which is the guard working. The verdict is pinned where it
+        // belongs, in test_this_repository_passes_the_guard, on a tree that is in
+        // its proper state. What is asserted below is the equality, and the
+        // equality does not care which verdict came back.
+        $present = is_file(self::baseline());
 
         $r = self::guard_run();
 
-        self::assertSame(0, $r['code'], 'receipted exposures do not fail the gate');
-        self::assertStringContainsString('ACCEPTED', $r['out']);
-        self::assertStringContainsString('still reachable', $r['out']);
-        self::assertStringContainsString('SEC-3', $r['out'], 'the debt is named on every run');
+        $entries = self::receipts();
+        // Read from BOTH streams: the FAIL path prints its findings and its
+        // coverage lines on stderr, the clean path on stdout. A test that read
+        // only one of them would pass vacuously on the other path.
+        $printed = self::acceptedLines($r['all']);
 
-        $entries = array_values(array_filter(
-            array_map('trim', explode("\n", (string) file_get_contents($baseline))),
-            static fn (string $l): bool => $l !== '' && ! str_starts_with($l, '#'),
-        ));
+        if ($present) {
+            self::assertFileExists(self::baseline());
+            self::assertSame(0, $r['code'], 'receipted exposures do not fail the gate');
+            self::assertStringContainsString('ACCEPTED', $r['out']);
+            self::assertStringContainsString('still reachable', $r['out']);
+            self::assertStringContainsString('SEC-3', $r['out'], 'the debt is named on every run');
 
-        $printed = array_values(array_filter(
-            explode("\n", $r['out']),
-            static fn (string $l): bool => str_contains($l, 'ACCEPTED')
-        ));
+            self::assertNotSame([], $entries, 'the baseline must receipt something');
+            self::assertSame(
+                count($entries),
+                count($printed),
+                'every baseline receipt is printed AND nothing else claims ACCEPTED: '.count($entries).' receipt(s), '.count($printed).' ACCEPTED line(s)'
+            );
+            foreach ($entries as $entry) {
+                self::assertStringContainsString(substr(explode(' ', $entry)[0], 0, 12), $r['out'], 'each receipt names its blob');
+            }
 
-        self::assertNotSame([], $entries, 'the baseline must receipt something');
+            return;
+        }
+
+        // The inverse invariant, which the public mirror has never had asserted
+        // and which is therefore the half that could hide a regression. With no
+        // receipts on file, the printed set must be empty: a printed-but-
+        // unreceipted finding — something pardoned by a mechanism other than the
+        // baseline — is the same defect as a silenced receipt, and an ABSENT
+        // baseline must never become a way to be quiet.
+        self::assertFileDoesNotExist(self::baseline(), 'this branch is the absent-baseline branch');
+        self::assertSame([], $entries, 'no receipt file means no receipts');
         self::assertSame(
-            count($entries),
-            count($printed),
-            'every baseline receipt is printed AND nothing else claims ACCEPTED: '.count($entries).' receipt(s), '.count($printed).' ACCEPTED line(s)'
+            [],
+            $printed,
+            'nothing may claim ACCEPTED when there are no receipts: '.count($printed).' ACCEPTED line(s)'
         );
-        foreach ($entries as $entry) {
-            self::assertStringContainsString(substr(explode(' ', $entry)[0], 0, 12), $r['out'], 'each receipt names its blob');
+        self::assertStringNotContainsString('still reachable', $r['all'], 'no exposure is still reachable, so none may be claimed as such');
+        self::assertStringNotContainsString('SEC-3', $r['all'], 'no exposure is receipted, so no purge debt may be named');
+        self::assertStringContainsString('coverage:', $r['all'], 'the absent baseline must not have muted the coverage statement either');
+
+        // Asserting emptiness is only half a proof: a guard that reported NOTHING
+        // on every tree would satisfy every line above. So this is the positive
+        // control — the one assertion that actually says "an absent baseline does
+        // not mean a silenced finding". A synthetic tree holding one
+        // credential-shaped run, scanned with no baseline in sight, must come back
+        // RED and must print the finding. It costs one small file and no history
+        // scan, and it is portable: it depends on the guard's behaviour, never on
+        // which tree the suite happens to run on.
+        $root = sys_get_temp_dir().'/teleframe-guard-absent-'.getmypid();
+        try {
+            @mkdir($root, 0777, true);
+            self::assertDirectoryExists($root, 'the control tree must be creatable');
+            file_put_contents(
+                $root.'/probe.txt',
+                self::guardAlphabet().str_repeat(self::guardAlphabet(), 12)."\n"
+            );
+
+            $c = self::guard_run(['--root='.$root, '--history=0', '--min=32']);
+
+            self::assertSame(1, $c['code'], "an absent baseline must not silence a finding:\n".$c['all']);
+            self::assertStringContainsString('probe.txt', $c['all'], 'the finding is printed, not merely counted');
+            self::assertStringNotContainsString('ACCEPTED', $c['all'], 'with no baseline nothing may claim to be receipted');
+        } finally {
+            @unlink($root.'/probe.txt');
+            @rmdir($root);
         }
     }
 
@@ -138,7 +247,39 @@ final class RepositoryGuardTest extends TestCase
     {
         // Proves the ACCEPTED lines are load-bearing and not decoration: with the
         // baseline refused, the guard is red on this repo.
+        //
+        // On the mirror this has no exposure to load — the sanitised export does
+        // not carry the blobs, so refusing a baseline that was never there must
+        // change NOTHING. That is the honest assertion there, and it is not a
+        // weaker one: it pins the two configurations to the SAME verdict and the
+        // SAME accepted set, which is what stops a future change from making
+        // "no baseline" behave differently from "default baseline" — the exact
+        // seam where a finding could start disappearing without anyone noticing.
+        // It is asserted as agreement between two runs rather than as a hardcoded
+        // exit code, because the verdict legitimately differs between the mirror
+        // (green: nothing exposed) and this repository with the baseline removed
+        // (red: exposed and unreceipted). What must not differ is the effect of
+        // refusing a baseline that was not there.
         $r = self::guard_run(['--history-baseline=none']);
+
+        if (! is_file(self::baseline())) {
+            $d = self::guard_run();
+
+            self::assertSame(
+                $d['code'],
+                $r['code'],
+                'refusing a baseline that does not exist must not change the verdict'
+            );
+            self::assertSame(
+                self::acceptedLines($d['all']),
+                self::acceptedLines($r['all']),
+                'refusing an absent baseline must not change what the guard accepts'
+            );
+            self::assertSame([], self::acceptedLines($r['all']), 'nothing is receipted, so nothing may claim to be');
+            self::assertStringNotContainsString('ACCEPTED', $r['all'], 'nothing is receipted, so nothing may claim to be');
+
+            return;
+        }
 
         self::assertSame(1, $r['code'], 'history hits must fail when nothing is receipted');
         self::assertStringContainsString('docs/verbatim/2026-09-14-nf5-schema-remediation-and-progress-rally.md', $r['all']);

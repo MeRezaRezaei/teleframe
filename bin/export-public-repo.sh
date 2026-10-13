@@ -39,7 +39,22 @@
 #
 # WHAT IT PRINTS
 #
-#   files exported, files excluded, and the exact `git push` command.
+#   files exported, files actually present in the export commit, files excluded,
+#   and the exact `git push` command.
+#
+# THE TWO DIRECTIONS, AND WHY ONE OF THEM IS NOT THE GATE'S JOB
+#
+#   The gate answers ONE question: is the public surface CLEAN? That is a
+#   leak question — is anything present that should not be? It is a filesystem
+#   walk, and it is the right tool for that job.
+#
+#   It cannot answer the other question: did everything we PROMISED to publish
+#   actually get published? That is a completeness question, and it can only be
+#   answered against the commit, not against the directory — a file can be on
+#   disk and absent from the commit, which is precisely the defect step 6 of
+#   this script now refuses to publish. Both directions matter, and they are
+#   checked by different tools, at different moments, against different
+#   sources of truth.
 #
 set -euo pipefail
 
@@ -103,6 +118,14 @@ rm -rf "$TARGET"
 mkdir -p "$TARGET"
 
 EXPORTED=0
+EXPORTED_LIST="$(mktemp "${TMPDIR:-/tmp}/teleframe-exported-list.XXXXXX")"
+MISSING_LIST="$(mktemp "${TMPDIR:-/tmp}/teleframe-missing-list.XXXXXX")"
+COMMITTED_LIST="$(mktemp "${TMPDIR:-/tmp}/teleframe-committed-list.XXXXXX")"
+trap 'rm -f "$EXPORTED_LIST" "$MISSING_LIST" "$COMMITTED_LIST"' EXIT
+
+# Newline-delimited, which is what `--pathspec-from-file` consumes by default
+# and what the gate's own `--list` prints. This file is the PROMISE: it is what
+# step 5 force-adds and what the post-condition in step 6 asserts against.
 while IFS= read -r path; do
     [ -n "$path" ] || continue
     # A path the gate lists but HEAD does not have is a path that is not yet
@@ -111,6 +134,7 @@ while IFS= read -r path; do
     if git cat-file -e "HEAD:$path" 2>/dev/null; then
         mkdir -p "$TARGET/$(dirname -- "$path")"
         git show "HEAD:$path" > "$TARGET/$path"
+        printf '%s\n' "$path" >> "$EXPORTED_LIST"
         EXPORTED=$((EXPORTED + 1))
     fi
 done <<< "$PUBLIC_LIST"
@@ -146,7 +170,26 @@ say "==> initialising the public repository in $TARGET"
 (
     cd "$TARGET"
     git init -q -b main
+    # `git add` HONOURS THE IGNORE RULES OF THE TREE IT RUNS IN — and this tree
+    # contains the repository's own root `.gitignore`, because that file is
+    # itself published. Measured on this checkout: `.gitignore:19` carries
+    # `bootstrap/cache/` (with the comment about orchestral/testbench booting a
+    # Laravel app rooted here), which is exactly right FOR THE PRIVATE WORKING
+    # TREE — a cache directory is build output and must never be committed there.
+    # It is also exactly wrong for the publish, because `bootstrap/cache/` is a
+    # directory and git does not descend into an ignored one, so the tracked
+    # sentinel `bootstrap/cache/.gitignore` — the ONLY reason the directory
+    # exists after checkout, and therefore the only reason Laravel's
+    # PackageManifest will find `/bootstrap/cache` present and writable — was
+    # dropped on the floor by `git add -A`. Nothing reported it: the loop had
+    # copied it, the gate had listed it, and the summary counted it.
+    #
+    # So the publish does not negotiate with the ignore rules. `-f` overrides
+    # them for exactly the paths the gate promised, and nothing else: the set
+    # force-added here is the same set that was copied from HEAD, so `-f` cannot
+    # introduce a path the manifest never listed.
     git add -A
+    git add -f --pathspec-from-file="$EXPORTED_LIST"
     git -c user.name="teleframe export" \
         -c user.email="export@localhost" \
         commit -q -m "chore(public): export the public surface of teleframe
@@ -155,13 +198,77 @@ Produced by bin/export-public-repo.sh from the private repository.
 Source of the file list: $SOURCE."
 )
 
+# ------------------------------------------------------------------------------
+# 6. POST-CONDITION: every path we promised to publish is IN THE COMMIT.
+#
+#    THE DEFECT THIS EXISTS TO CLOSE. Steps 1-5 had a one-directional promise.
+#    The gate in step 4 answers "is the public surface CLEAN?" and it is a
+#    filesystem walk (`walkTree` in check-public-surface.php), so it sees the
+#    file on disk and passes. It cannot see a path lost between "written to
+#    disk" and "recorded as a blob", because in --tree mode it never reads git
+#    at all. The gate was green, the exporter reported "exported 5112", and the
+#    commit held 5111. A path that is allowlisted, exported, counted in the
+#    summary and then absent from the commit is not a leak — it is a build that
+#    cannot run — and no leak-detector is going to notice it, because a leak
+#    detector looks for what SHOULDN'T be there.
+#
+#    So completeness is asserted here, against the commit's own tree, by set
+#    difference rather than by counting. Counting is what let this through:
+#    $EXPORTED is incremented when the file is COPIED, never when it is
+#    COMMITTED, so the summary could only ever describe the copy.
+# ------------------------------------------------------------------------------
+say "==> asserting every exported path is present in the export commit"
+git -C "$TARGET" ls-tree -r --name-only HEAD > "$COMMITTED_LIST"
+COMMITTED="$(grep -c . "$COMMITTED_LIST" || true)"
+
+# LC_ALL=C on BOTH sides, because `comm` requires its two inputs sorted under a
+# single collation and will silently produce nonsense under two.
+#
+# NEWLINE-delimited, not NUL-delimited, and that is a measured decision rather
+# than a stylistic one. The obvious NUL form (`comm -23 <(sort -z a) <(sort -z
+# b)`) is WRONG on this machine: `comm` here is uutils coreutils 0.10.0, the
+# Rust rewrite, whose `-z` handling is broken — given two files that differ by a
+# single record it reports ALL of file one as missing, and `grep -z -F -x -v -f`
+# fails the same way. Both were measured against a commit that was genuinely
+# missing exactly one path and both claimed 5112 missing. An assertion that
+# cannot count correctly is worse than no assertion, because the day it reports
+# a clean tree nobody can tell which of the two it did. Newline mode is also
+# what the rest of this pipeline already assumes: .gitlab-ci.yml parses
+# `git ls-tree` output as newline-delimited records, and the gate's own --list
+# prints newline-delimited paths.
+LC_ALL=C sort -o "$EXPORTED_LIST" "$EXPORTED_LIST"
+LC_ALL=C sort -o "$COMMITTED_LIST" "$COMMITTED_LIST"
+comm -23 "$EXPORTED_LIST" "$COMMITTED_LIST" > "$MISSING_LIST"
+MISSING_COUNT="$(grep -c . "$MISSING_LIST" || true)"
+
+if [ "$MISSING_COUNT" -ne 0 ]; then
+    say "" >&2
+    printf 'export-public-repo: the export commit is MISSING %s path(s) the gate published.\n' "$MISSING_COUNT" >&2
+    printf 'export-public-repo: each of these was copied into %s and then dropped by the\n' "$TARGET" >&2
+    printf 'export-public-repo: commit — almost certainly by an ignore rule in a .gitignore\n' >&2
+    printf 'export-public-repo: that is itself published. Nothing has been published.\n' >&2
+    say "" >&2
+    while IFS= read -r lost; do
+        [ -n "$lost" ] && printf 'export-public-repo:   %s\n' "$lost" >&2
+    done < "$MISSING_LIST"
+    say "" >&2
+    fail "the exported commit does not contain everything the gate said to publish"
+fi
+
 say ""
 say "================================================================"
 say " PUBLIC TREE READY — nothing has been published."
 say "================================================================"
 say " target        : $TARGET"
 say " exported      : $EXPORTED files"
+say " in the commit : $COMMITTED files (every exported path, asserted in step 6)"
 say " excluded      : $EXCLUDED files (private by $MANIFEST)"
+# Printed because it was computed and thrown away: a path the gate PUBLISHES
+# that is not yet committed in the private repository is silently not published,
+# which is the same silent-loss class as the missing-path defect above. It is
+# not fatal (an uncommitted new file is a normal transient state), but it is not
+# something to compute silently either.
+say " not committed : $SKIPPED published path(s) absent from private HEAD (not published)"
 say " list source   : $SOURCE"
 say ""
 say " To publish, read the tree first, then run:"

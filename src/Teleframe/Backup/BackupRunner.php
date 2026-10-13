@@ -158,16 +158,24 @@ LUA;
      *     raising this to 4 GiB would not "produce one message instead of
      *     a thousand"; it would produce a thousand messages either way, just
      *     1000x more RAM per message.
-     *  2. This path STREAMS. streamChunks() reads the source in bounded
-     *     blocks of exactly chunk_size and yields each chunk as it is
-     *     read, so the source is never held whole and the chunk list is
-     *     never materialised: peak memory is a function of the CHUNK
-     *     SIZE, not of the file size. (It used to slurp each file with
-     *     file_get_contents and hand the whole string to Chunker::split,
-     *     which held the file AND every chunk of it at once — measured
-     *     peak 2N + 8 MiB for a file of N bytes, i.e. a file larger than
-     *     RAM was an OOM. Chunker::split remains for callers that already
-     *     hold the bytes; it is not on this path.)
+     *  2. This path STREAMS. streamChunks() reads the source in blocks of
+     *     at most READ_BLOCK_SIZE and accumulates them until the buffer is
+     *     exactly $chunkSize bytes, so the source is never held whole and
+     *     the chunk list is never materialised: peak memory is
+     *     min($chunkSize, fileSize) + READ_BLOCK_SIZE. (It used to slurp
+     *     each file with file_get_contents and hand the whole string to
+     *     Chunker::split, which held the file AND every chunk of it at
+     *     once — measured peak 2N + 8 MiB for a file of N bytes, i.e. a
+     *     file larger than RAM was an OOM. Chunker::split remains for
+     *     callers that already hold the bytes; it is not on this path.)
+     *
+     *     The min() is the load-bearing half. A previous revision read with
+     *     `fread($handle, $chunkSize)`, which PRE-ALLOCATES the REQUESTED
+     *     length rather than the bytes actually available — so a 5-byte
+     *     fixture at the 4 GiB premium cap asked for 4 GiB and killed the
+     *     process under a 1 GiB limit. The peak here tracks the SOURCE when
+     *     the source is the smaller of the two, so a cap-sized chunk_size
+     *     no longer implies a cap-sized allocation.
      *  3. The chunk is the dedup key. A small chunk dedups finer: a
      *     one-line edit re-uploads one chunk, not a whole 4 GiB blob.
      *
@@ -179,6 +187,21 @@ LUA;
      * modules cannot drift apart into a second, divergent constant.
      */
     public const DEFAULT_CHUNK_SIZE = 4 * 1024 * 1024; // 4 MiB — dedup granularity, not a document cap
+
+    /**
+     * Bounded read block for streamChunks(), in BYTES: 1 MiB.
+     *
+     * A read never requests more than this, however large $chunkSize is, so
+     * the ALLOCATION a chunk_size can force is capped at the block rather
+     * than at the chunk. The size of this block is a throughput knob only —
+     * it never appears on the output, because streamChunks() accumulates
+     * whole $chunkSize buffers across however many blocks that takes, so the
+     * boundaries (and therefore every content address) are unchanged by it.
+     *
+     * It must be >= 1: a zero-length read request has its own meaning to
+     * fread() and is not a no-op.
+     */
+    private const READ_BLOCK_SIZE = 1024 * 1024;
 
     /**
      * @param  array<string, mixed>  $setConfig  {paths: list<string>, excludes?: list<string>, chunk_size?: int, set?: string}
@@ -394,11 +417,40 @@ LUA;
      * content address — and therefore the manifest, the dedup index and
      * every wire name — is unchanged. Only the residency changed.
      *
-     * A short block (fewer than $chunkSize bytes) means EOF; a
-     * zero-length read before EOF is a read failure, not an empty file,
-     * and is reported as one so a truncated source can never be archived
-     * as if it were whole. An empty FILE yields no chunks at all, which
-     * is the same contract Chunker::split('', $size) has.
+     * A short buffer at EOF (fewer than $chunkSize bytes) is the last chunk
+     * and is yielded as-is; a zero-length read that is NOT EOF is a read
+     * failure, not an empty file, and is reported as one so a truncated
+     * source can never be archived as if it were whole. An empty FILE yields
+     * no chunks at all, which is the same contract Chunker::split('', $size)
+     * has.
+     *
+     * WHY THE READ IS BOUNDED, and this is a bug that was shipped and fixed,
+     * not a precaution. The read used to be
+     *
+     *     $block = fread($handle, $chunkSize);
+     *
+     * which PRE-ALLOCATES the REQUESTED length, not the number of bytes
+     * actually available. fread() on a 5-byte source asking for $chunkSize
+     * bytes still reserves $chunkSize — so a run at the premium cap
+     * (ChunkPlanner::PREMIUM_CAP, 4194304000 bytes) allocated ~4 GiB to read
+     * five bytes and died with "Allowed memory size exhausted" under any
+     * sane limit. The earlier claim that peak memory was flat across the
+     * chunk-size band was measured only between 16 MiB and 256 MiB, where
+     * 4x the chunk fits comfortably; it was never measured AT the cap, and
+     * the cap is precisely the value the module's own assertChunkSize()
+     * accepts.
+     *
+     * So the read is now capped at READ_BLOCK_SIZE and the accumulator
+     * carries bytes across blocks until the buffer is exactly $chunkSize.
+     * Peak is min($chunkSize, fileSize) + READ_BLOCK_SIZE: the chunk size
+     * still governs the residency of a real chunk, but a chunk_size that
+     * exceeds the source no longer costs a chunk_size of memory.
+     *
+     * The boundaries are what must not move: blocks are cut at the same
+     * $chunkSize boundaries from the same offset 0 as Chunker::split(), so
+     * every content address — and therefore the manifest, the dedup index
+     * and every wire name — is unchanged. READ_BLOCK_SIZE divides nothing;
+     * it is invisible on the output.
      *
      * The handle is closed on every exit path, including the generator
      * being abandoned mid-iteration by an exception from the consumer.
@@ -412,9 +464,17 @@ LUA;
             throw new RuntimeException("unreadable file: {$absolute}");
         }
 
+        // Bytes still owed before the buffer is a whole chunk; the buffer is
+        // reset to $chunkSize after every yield.
+        $pending = $chunkSize;
+        $buffer = '';
+
         try {
             while (! feof($handle)) {
-                $block = fread($handle, $chunkSize);
+                // Never request more than is useful: the remainder of the
+                // pending chunk, capped at the read block.
+                $want = $pending < self::READ_BLOCK_SIZE ? $pending : self::READ_BLOCK_SIZE;
+                $block = fread($handle, $want);
                 if ($block === false) {
                     throw new RuntimeException("unreadable file: {$absolute}");
                 }
@@ -432,7 +492,22 @@ LUA;
                     throw new RuntimeException("unreadable file: {$absolute}");
                 }
 
-                yield ['hash' => hash('sha256', $block), 'data' => $block];
+                $buffer .= $block;
+                $pending -= strlen($block);
+
+                if ($pending === 0) {
+                    yield ['hash' => hash('sha256', $buffer), 'data' => $buffer];
+                    $buffer = '';
+                    $pending = $chunkSize;
+                }
+            }
+
+            // EOF with bytes still owed: the last chunk is SHORT by exactly
+            // the same amount Chunker::split() would have made it — a
+            // partial tail, never a partial read. Nothing is yielded for an
+            // empty remainder, so an empty file yields no chunks.
+            if ($buffer !== '') {
+                yield ['hash' => hash('sha256', $buffer), 'data' => $buffer];
             }
         } finally {
             fclose($handle);

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Tests\Backup;
 
 use MeRezaRezaei\Teleframe\Backup\BackupRunner;
+use MeRezaRezaei\Teleframe\Backup\Chunker;
 use MeRezaRezaei\Teleframe\Backup\InMemoryVault;
 use MeRezaRezaei\Teleframe\Backup\VaultCrypto;
 use MeRezaRezaei\Teleframe\Backup\VaultInterface;
+use MeRezaRezaei\Teleframe\Store\ChunkPlanner;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -451,6 +453,119 @@ final class BackupRunnerTest extends TestCase
             );
         } finally {
             @unlink($source);
+            @rmdir($root);
+        }
+    }
+
+    /**
+     * BYTE-IDENTITY, hash-for-hash, against Chunker::split() itself.
+     *
+     * The test above proves the archive REASSEMBLES to the source, which a
+     * near-miss could satisfy: concatenating chunks cut at slightly wrong
+     * boundaries still reproduces the file. That is exactly the failure this
+     * is here to catch. A boundary shift by even one byte keeps the whole-file
+     * hash intact and changes every content address after the shift — so the
+     * manifest, the dedup index and every wire name would change while every
+     * existing test stayed green. Only a hash-FOR-hash comparison against the
+     * reference chunker can see it.
+     *
+     * The chunk sizes below are chosen to straddle the bounded read block, and
+     * each is deliberately NOT a multiple of it:
+     *
+     *  - 3000003 (> 2 read blocks, prime, odd remainder) — chunks span
+     *    several read blocks and the last chunk is a short tail;
+     *  - 1000001 (exactly one byte over a block) — the carry across a block
+     *    boundary is exercised, and a naive "read a block, yield it" chunker
+     *    would split mid-chunk here;
+     *  - 7 (far smaller than a block, so several chunks per read) — the
+     *    buffer must yield many times inside one read;
+     *  - 4194304000 (ChunkPlanner::PREMIUM_CAP, a multiple of nothing) — the
+     *    value that made a 5-byte fixture request ~4 GiB. Asserted here at
+     *    full width so the cap is covered on BOTH sides: the boundaries must
+     *    still be right, and (above) the memory must still be bounded.
+     *
+     * Comparison is on the chunk hashes the manifest publishes, which is the
+     * observable the wire actually depends on; the reference side is
+     * Chunker::split(file_get_contents($f), $size) — the exact expression the
+     * runner replaced, kept verbatim as the oracle.
+     */
+    public function test_streamed_chunk_boundaries_match_the_reference_chunker_hash_for_hash(): void
+    {
+        $root = sys_get_temp_dir().'/p4-ident-'.bin2hex(random_bytes(6));
+        mkdir($root, 0700, true);
+
+        // The two paths are derived from $root and therefore exist from here,
+        // BEFORE the try, so the cleanup in the finally can never reference an
+        // assignment that a mid-body throw skipped. They are pure path
+        // expressions; hoisting them costs nothing and makes the finally total.
+        $source = $root.'/src.bin';
+        $small = $root.'/small.bin';
+
+        try {
+            // Non-repeating content: identical chunks would dedup away and
+            // hide a boundary error behind fewer manifest entries. Seeded from
+            // a rolling 32-byte chain, so generation is linear — hashing the
+            // whole accumulator each round would be O(n^2) and cost more than
+            // the test it supports.
+            $contents = '';
+            $seed = 'teleframe-boundary-probe';
+            while (strlen($contents) < 7000003) {
+                $seed = hash('sha256', $seed, true);
+                $contents .= $seed;
+            }
+
+            $source = $root.'/src.bin';
+            file_put_contents($source, $contents);
+
+            // The 7-byte chunk size is checked against its OWN small source:
+            // against the 7 MB one it would be ~1,000,000 encrypted chunks in
+            // a vault that deliberately retains every upload, which measures
+            // the test's own footprint rather than the boundary rule.
+            file_put_contents($small, substr($contents, 0, 9973));
+
+            foreach ([[$source, 3000003], [$source, 1000001], [$small, 7], [$source, ChunkPlanner::PREMIUM_CAP]] as [$file, $chunkSize]) {
+                $vault = new InMemoryVault;
+
+                $stats = BackupRunner::run(
+                    ['paths' => [$file], 'set' => 'ident', 'chunk_size' => $chunkSize],
+                    $vault,
+                    'pw',
+                );
+
+                $expected = Chunker::split(file_get_contents($file), $chunkSize);
+                $actual = $vault->getLatestManifest()['files'][0]['chunks'];
+
+                self::assertSame(
+                    array_column($expected, 'hash'),
+                    $actual,
+                    sprintf(
+                        'streamed chunk boundaries must be byte-identical to Chunker::split at chunk_size %d '
+                        .'(%d expected chunks, %d streamed)',
+                        $chunkSize,
+                        count($expected),
+                        count($actual),
+                    ),
+                );
+                self::assertSame(strlen((string) file_get_contents($file)), $stats['bytes'], 'every byte is accounted for at chunk_size '.$chunkSize);
+            }
+
+            // The degenerate contract, on the streaming path: an empty file is
+            // no chunks, exactly as Chunker::split('', $size) is. A chunker
+            // that flushed its buffer unconditionally would yield one empty
+            // chunk here, which encrypts and uploads as a real document.
+            file_put_contents($root.'/empty.bin', '');
+            $empty = new InMemoryVault;
+            $emptyStats = BackupRunner::run(
+                ['paths' => [$root.'/empty.bin'], 'set' => 'empty', 'chunk_size' => 1024],
+                $empty,
+                'pw',
+            );
+            self::assertSame(0, $emptyStats['uploaded'], 'an empty file must upload nothing');
+            self::assertSame([], $empty->getLatestManifest()['files'][0]['chunks'], 'an empty file yields no chunks');
+        } finally {
+            @unlink($source);
+            @unlink($small);
+            @unlink($root.'/empty.bin');
             @rmdir($root);
         }
     }
