@@ -6,6 +6,47 @@ describe `src/` as shipped; when docs and code disagree, code wins.
 CI runs on GitHub Actions. GitLab is used only to separate the private
 repository from this public one; it is not a gate.
 
+## TWO STANDING RULES — bind every session, including one that opens with no instruction
+
+### 1. Set the goal that is given to you
+
+When the operator states an objective, set it with the goal tool **before doing any work**, not
+after the first task and not only if asked. A session that reads an objective and keeps working
+without recording it has no stop condition, so it cannot tell finished from unfinished.
+
+- `goal_set` / `set_goal` with the operator's objective as the text.
+- **`maxTurns`, `maxTokens`, `maxDurationMs`, `maxCostUsd` must be set to their largest accepted
+  value explicitly.** Blank is not infinite — blank hands the decision to the harness default, and
+  the default is a limit.
+- The goal is **resumed, not restarted**, after a crash or a provider error:
+  `goal_resume`, then `update_goal` to replace the objective text if it changed.
+- Update it when the objective genuinely changes. Do not silently drift the work past the goal.
+
+### 2. You must collect every subagent you dispatch — there is no auto-notify
+
+**Nothing tells you a subagent finished.** There is no wake-up, no callback, no inbox. An agent you
+dispatched and did not collect is a **silent result**: the work happened, and its output lives
+somewhere you never see. There is no notification to wait for, because the mechanism does not
+exist.
+
+So the obligation is yours, immediately, at dispatch:
+
+```
+delegate_to_agent(...)  ->  returns task_id
+get_delegation_status(task_ids=[id], wait_ms=55000)   # re-arm until terminal
+```
+
+- **Re-arm, do not poll once.** After each return, if any task is not `completed`/`failed`/`canceled`,
+  call `get_delegation_status` again. Do not substitute `sleep`, `tail -f`, or a status-file loop.
+- **Poll 1-2 task ids per call.** Six or more times out at the MCP layer, so a wide fan-out is
+  collected in small batches.
+- **Never end a turn with a dispatched task still `running`.** The words "waiting", "in flight" and
+  "re-arming" are not a stopping point — they describe the next tool call you owe.
+- **A quiet lane is not a dead lane.** Cancel only on real evidence: a terminal status plus a tree
+  with no file on disk. Never cancel a lane merely for being slow or silent.
+- **A lane with no file on disk is not evidence of anything**, and a completion report with no
+  artifact is not evidence either.
+
 ## Where the upstream is, and how CI is followed — READ THIS BEFORE PUSHING
 
 **`main`'s upstream is the self-hosted GitLab, not GitHub.** Push to `origin`
