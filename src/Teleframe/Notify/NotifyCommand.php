@@ -11,6 +11,7 @@ use MeRezaRezaei\Teleframe\Store\Schedules\SchedulePublisher;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 use RuntimeException;
+use Throwable;
 
 /**
  * artisan teleframe:notify (design §2, relocated by the assembly plan from
@@ -33,7 +34,9 @@ use RuntimeException;
  * FacadeSupport::WATCHDOG_KEY (the store backup module does, with the
  * backup no-show derived from the durable schedule spec), else one built
  * from the container seams here (PSR-16 cache → WatchState, queue → alert
- * sender, optional PSR-3 logger) with the InMemoryCache fallback.
+ * sender, optional PSR-3 logger, FileWatchAlertSink → durable record) with
+ * the InMemoryCache fallback. BOTH paths carry the sink: a watchdog whose
+ * alert rides the queue it is watching is a comment, not a watchdog (F8).
  *
  * WHERE THE CHECK RUNS. `teleframe:notify watch --check` is the check, and
  * it is now safe to run in ANY process on ANY cadence: the expectations it
@@ -272,7 +275,10 @@ final class NotifyCommand extends Command
     /**
      * Build a watchdog from the container seams (no dedicated bind key):
      * PSR-16 cache → WatchState (InMemoryCache fallback, Teleframe.php
-     * pattern), the notify queue → alert sender, optional PSR-3 logger.
+     * pattern), the notify queue → alert sender, optional PSR-3 logger, and
+     * the out-of-band FileWatchAlertSink (the durable record, written before
+     * any queue or network call — see alertLogPath() for why this fallback
+     * must not be deleted as redundant).
      * Plain-PHP constructible — no provider change needed.
      */
     private function buildWatchdog(mixed $app): NoShowWatchdog
@@ -292,7 +298,68 @@ final class NotifyCommand extends Command
             state: new WatchState($cache),
             notify: $notify,
             logger: $logger,
+            alertSink: new FileWatchAlertSink(self::alertLogPath($app)),
         );
+    }
+
+    /**
+     * WHY THIS FALLBACK MUST NOT BE DELETED AS REDUNDANT.
+     *
+     * It looks redundant: when a real Laravel host has the package installed,
+     * StoreBackupServiceProvider binds FacadeSupport::WATCHDOG_KEY and
+     * watchdog() returns THAT singleton, never this. But the two paths are not
+     * the same build. This is the bare-console / no-store-backup-module path,
+     * and it was left sink-less by accident of history: NoShowWatchdog grew a
+     * durable out-of-band record (F8, D-045.6) precisely because a watchdog
+     * whose alert rides the queue it is watching is "a comment, not a
+     * watchdog", and this fallback was not migrated with it. That made it
+     * strictly WORSE than before the fix — not merely quiet, but actively
+     * misleading, because a reader of this method would now assume the sink is
+     * always present. So the sink is wired here too, and the deletion
+     * argument is exactly backwards: deleting this fallback restores a
+     * sink-less watchdog rather than removing a duplicate one.
+     *
+     * WHERE A NO-SHOW FINDING LANDS HERE. The path resolution deliberately
+     * mirrors StoreBackupServiceProvider::alertLogPath() — same config key,
+     * same storage/teleframe/watchdog-alerts.jsonl default, same temp-directory
+     * posture for a host with no base path — so a finding is in the file the
+     * config comment promises on BOTH paths. The duplication is load-bearing:
+     * this method is reached precisely when that provider is absent, so it
+     * cannot call into it.
+     *
+     * THE CONFIG KEY IS THE STORE-BACKUP ONE (teleframe.store.backup.watchdog.alert_log)
+     * because that is the only key that names this file. It is read
+     * defensively: no config repository bound, or a repository that throws, is
+     * the unconfigured posture, and it must degrade to the path default rather
+     * than take the command down. A blank resolved path is still refused by
+     * FileWatchAlertSink — loudly, which is correct: a watchdog that cannot name
+     * its record is a wiring error, never a silently discarded alert.
+     */
+    private static function alertLogPath(mixed $app): string
+    {
+        $configured = '';
+        if (is_object($app) && $app->bound('config')) {
+            try {
+                $configured = trim((string) ($app->make('config')->get('teleframe.store.backup.watchdog.alert_log') ?? ''));
+            } catch (Throwable) {
+                // No readable config repository: the documented default below.
+            }
+        }
+
+        if ($configured !== '') {
+            return $configured;
+        }
+
+        if (is_object($app) && method_exists($app, 'basePath')) {
+            try {
+                return $app->basePath('storage'.DIRECTORY_SEPARATOR.'teleframe')
+                    .DIRECTORY_SEPARATOR.'watchdog-alerts.jsonl';
+            } catch (Throwable) {
+                // Fall through to the temp-directory posture.
+            }
+        }
+
+        return sys_get_temp_dir().DIRECTORY_SEPARATOR.'teleframe-watchdog-alerts.jsonl';
     }
 
     /** Print the registration status table (registrations, last-seen, age, state). */

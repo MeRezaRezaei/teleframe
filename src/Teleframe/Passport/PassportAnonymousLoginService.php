@@ -160,6 +160,8 @@ final class PassportAnonymousLoginService
         private $finder = null,
         private readonly ?LoggerInterface $logger = null,
         private readonly ?\Closure $onLogin = null,
+        private readonly ?PassportDocumentResolver $documents = null,
+        private readonly ?PassportWireContract $wire = null,
     ) {}
 
     /**
@@ -378,6 +380,15 @@ final class PassportAnonymousLoginService
         // (e) allowed-types + required-field rules (zero-regex allow-list).
         (new PassportValueValidator)->validate($payload, $this->config->allowedTypes());
 
+        // (e1) THE DOCUMENT TABLE — the same unconditional build the attach
+        //      chain does at its own step (d1), and for the same reasons: an
+        //      opt-in would reproduce the defect (the default ships), a throw
+        //      would turn "four of eleven documents arrived" into a failed
+        //      login, and a log line nobody reads is no line at all. It is a
+        //      value on the LoginResult, computed before anything below can
+        //      touch a session.
+        $coverage = $this->documentCoverage($payload, $update);
+
         // (f) no live session may be REPLACED by a claim. The attach flow
         //     owns the authenticated case; an anonymous login that swapped
         //     one account for another would be a takeover wearing a login
@@ -450,6 +461,29 @@ final class PassportAnonymousLoginService
             user: $user,
             binding: $bindingRow,
             fieldsVerified: $this->fieldsVerified($payload),
+            documents: $coverage,
+        );
+    }
+
+    /**
+     * THE DOCUMENT TABLE — deliberately the same five lines as the attach
+     * chain's own `documentCoverage()`, and deliberately NOT extracted into a
+     * shared base class, for the reason both chains already duplicate their
+     * transport-integrity step: this service does not extend `PassportLoginService`
+     * and the two chains are independent implementations that must stay
+     * readable one at a time. A shared helper would hide the one fact that
+     * matters — that BOTH chains build the table unconditionally.
+     */
+    private function documentCoverage(PassportPayload $payload, array $update): PassportDocumentCoverage
+    {
+        $resolver = $this->documents
+            ?? new PassportDocumentResolver(null, $this->wire);
+
+        return PassportDocumentCoverage::build(
+            $this->config->allowedTypes(),
+            $payload,
+            PassportDocumentSource::fromUpdate($update, $payload->secureData()),
+            $resolver->withPrivateKey($this->keys->key()),
         );
     }
 

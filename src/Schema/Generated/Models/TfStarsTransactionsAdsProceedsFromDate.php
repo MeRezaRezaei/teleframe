@@ -14,8 +14,13 @@ use MeRezaRezaei\Teleframe\Schema\Eloquent\TfMirrorModel;
  * Eloquent model for the shipped mirror table `tf_stars_transactions_ads_proceeds_from_date`.
  *
  * Columns, casts and relations are REFLECTED from the executed shipped DDL, not
- * transcribed and not inferred from names — see ModelGenerator. A relation
- * appears here only where the engine DECLARES a foreign key.
+ * transcribed and not inferred from names — see ModelGenerator.
+ *
+ * A relation appears here in one of two shapes, and the docblock on each says
+ * which: one where the engine DECLARES a foreign key, and one HORIZONTAL — an
+ * entity-to-entity edge derived from an inline `{base}_type` + `{base}_id` peer
+ * pair or from a catalog-declared scalar entity column, which no constraint can
+ * express. See HorizontalEntityRelations for why those are not FKs.
  *
  * Relations declared on this table: 1.
  */

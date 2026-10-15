@@ -199,17 +199,19 @@ see the boundaries section of the root README.
 php artisan vendor:publish --tag=teleframe-config
 ```
 
-There are **five** publishable config files, across four separate tags.
-Each publishes to a path whose filename chain matches the config key its
-provider merges under, so editing a published file takes effect.
+There are **five** publishable config files. `--tag=teleframe-config` is an
+**umbrella tag and lands all five** — that is what the command above does, and
+it is the whole onboarding step. Each file also has its own per-file tag if you
+want exactly one. Each publishes to a path whose filename chain matches the
+config key its provider merges under, so editing a published file takes effect.
 
-| Tag | Publishes to | Merged under key | Registered by |
+| Publishes to | Merged under key | Registered by | Tags that land it |
 | --- | --- | --- | --- |
-| `teleframe-config` | `config/teleframe.php` | `teleframe` | `TeleframeServiceProvider` |
-| `teleframe-notify-config` | `config/teleframe/notify.php` | `teleframe.notify` | `NotifyServiceProvider` |
-| `teleframe-store-backup-config` | `config/teleframe/store/backup.php` | `teleframe.store.backup` | `StoreBackupServiceProvider` |
-| `teleframe-app-config` | `config/teleframe/app.php` | `teleframe.app` | `AppServiceProvider` |
-| `teleframe-passport-config` | `config/teleframe/passport.php` | `teleframe.passport` | `PassportServiceProvider` |
+| `config/teleframe.php` | `teleframe` | `TeleframeServiceProvider` | `teleframe-config`, umbrella (**all five**) |
+| `config/teleframe/notify.php` | `teleframe.notify` | `NotifyServiceProvider` | `teleframe-config`, `teleframe-notify-config` |
+| `config/teleframe/store/backup.php` | `teleframe.store.backup` | `StoreBackupServiceProvider` | `teleframe-config`, `teleframe-store-backup-config` |
+| `config/teleframe/app.php` | `teleframe.app` | `AppServiceProvider` | `teleframe-config`, `teleframe-app-config` |
+| `config/teleframe/passport.php` | `teleframe.passport` | `PassportServiceProvider` | `teleframe-config`, `teleframe-passport-config` |
 
 > ### Migrating from the old flat publish targets
 >
@@ -283,7 +285,7 @@ provider merges under, so editing a published file takes effect.
 | `daemon.accounts` | `[]` | The multi-account supervisor's dialable set. Each row needs `account_id` (positive int) and `session_string` (**credential**); `dc`, `api_id`, `api_hash` optional. |
 | `backfill.request_budget` | `env('TELEFRAME_BACKFILL_BUDGET', 25)` | Per-run request budget; the headroom rule halves it. |
 | `backfill.flood_cap_seconds` | `3600` | Flood-wait ceiling. |
-| `backup.driver` | `env('TELEFRAME_BACKUP_DRIVER', 'telegram')` | `telegram` (default, the only DURABLE driver — real private-channel vault) or `memory` (process-local, stores nothing, needs `TELEFRAME_BACKUP_ALLOW_VOLATILE=1`). |
+| `backup.driver` | `env('TELEFRAME_BACKUP_DRIVER', 'telegram')` | The accepted set is exactly **`memory`**, **`telegram`** and **`s3`** — nothing else. Any other value is refused by name at bind time (`unknown backup driver "…" — expected memory\|telegram\|s3`). `telegram` is the default: a real private-channel vault. `s3` is the durable tier that stores **off** Telegram, over the `teleframe.tstore.s3` object gateway (endpoint/region/bucket/key/secret live there, so `tstore.cache=minio` and `backup.driver=s3` address one bucket). `memory` is process-local, stores nothing, and needs `TELEFRAME_BACKUP_ALLOW_VOLATILE=1` to be used at all. `ftp` and `rsync` were **never** implemented — do not set them. |
 | `backup.account` | `env('TELEFRAME_BACKUP_ACCOUNT')` = `null` | The `daemon.accounts` `account_id` the `telegram` driver resolves its session through. |
 | `backup.chunk_size` | `env('TELEFRAME_BACKUP_CHUNK_SIZE', 4194304)` | Content-addressed chunk split (4 MiB). |
 | `backup.sets` | one `default` set with `paths => []`, `excludes => []` | Each set lists `paths` (walked recursively) and substring `excludes`. **The runner refuses to upload with an empty `paths`.** |
@@ -343,6 +345,9 @@ provider merges under, so editing a published file takes effect.
 | `schedule.publisher` | `env('TELEFRAME_STORE_BACKUP_SCHEDULES', 'null')` | `null` (the one-line cron posture) or `temporal`. **`temporal` is no longer "wave 2" and no longer a wall**: a host-bound `RecurringScheduleClient` wins verbatim, otherwise the package's own `temporal/sdk`-backed client is used. `temporal/sdk ^2.19` is in **`require`**, so it is already installed — there is nothing to `composer require`, and nothing dials at boot. With neither client available the key **refuses at boot by name** and never degrades to `null`. **No live-Temporal-server verification exists in this repo** — the path is pinned by tests with an injected client and by the lazy/no-dial construction gate. |
 | `schedule.dsn` | `env('TELEFRAME_STORE_BACKUP_TEMPORAL_DSN', '127.0.0.1:7233')` | Temporal DSN. |
 | `schedule.watchdog_expect_multiplier` | `env('TELEFRAME_STORE_BACKUP_WATCHDOG_MULT', 2)` | Expect-every = interval × this. Floor of 3600 s enforced in the provider. |
+| `schedule.package_schedule.enabled` | `env('TELEFRAME_STORE_BACKUP_PACKAGE_SCHEDULE_ENABLED', false)` | **`false` by default, and it has to stay that way.** When `true`, the package registers `teleframe:tstore backup` on **Laravel's own scheduler** (`dailyAt` → `withoutOverlapping()` → `onOneServer()`), so a host runs `php artisan schedule:run` and **deletes its cron line**. It is gated on this key and nothing else: `schedule.enabled` above governs the *watchdog*, and reusing it would silently repurpose a documented switch. Turn it on only after reading the double-fire note in [host-install.md](host-install.md) — the shipped posture is a hand-written crontab line, cron is invisible to the Laravel scheduler, and **no config key can discover it**, so a double-fire is the operator's to avoid. |
+| `schedule.package_schedule.daily_at` | `env('TELEFRAME_STORE_BACKUP_PACKAGE_SCHEDULE_DAILY_AT', '03:47')` | 24-hour `H:i`, deliberately off the file-vault sibling's `03:17` so a host running both does not stack two database dumps on one minute. An unparseable value (including `99:99`) **throws at console boot by name** rather than registering at a time you did not ask for. |
+| `watchdog.alert_log` | `env('TELEFRAME_STORE_BACKUP_WATCHDOG_ALERT_LOG', '')` | **Where the no-show finding is written down.** `''` = `storage/teleframe/watchdog-alerts.jsonl` under the host, falling back to the system temp directory when there is no application base path (a bare console). A `FileWatchAlertSink` appends one JSON object per line and never rewrites it — the dumbest durable thing available on purpose, because its failure domain must not be the queue failure being reported. The record is written **first and unconditionally**; the `{topic}.missing` Telegram notification is an enhancement on top and is allowed to fail. Point it at a mounted volume if system temp is ephemeral, or at whatever your log shipper already tails. `teleframe:notify`'s bare-console fallback watchdog resolves the **same** key to the same default, so a finding is in the same file on either path. |
 | `target.account_id` | `env('TELEFRAME_STORE_BACKUP_ACCOUNT', 0)` | `0` = reuse `teleframe.tstore.account_id`. |
 | `target.bucket` | `env('TELEFRAME_STORE_BACKUP_BUCKET', 'default')` | Registry title becomes `teleframe-backup:default`. |
 | `target.peer_type` | `env('TELEFRAME_STORE_BACKUP_PEER_TYPE', 'channel')` | `channel` or `group`. |
@@ -1168,11 +1173,16 @@ is app-relative.
 `teleframe.backup.sets.*.paths` is empty by default and **the runner
 refuses to upload with no paths**. Add `base_path('…')` entries (the config
 comments suggest `env('TELEFRAME_BACKUP_PATHS')`). Also check
-`teleframe.backup.driver`: the default is `telegram` (the only **durable**
-driver). `memory` is offline and proves nothing — reach for it only with
-`TELEFRAME_BACKUP_ALLOW_VOLATILE=1`. If you want the durable driver, point
-`teleframe.backup.account`
-at a `daemon.accounts` `account_id`.
+`teleframe.backup.driver`: the default is `telegram`. The accepted set is
+exactly `memory`, `telegram` and `s3`; anything else throws at bind time
+naming all three. Two of those are **durable**: `telegram` (a private
+channel) and `s3` (the `teleframe.tstore.s3` gateway — the one tier that
+keeps the backup off Telegram entirely). `memory` is offline and proves
+nothing — reach for it only with `TELEFRAME_BACKUP_ALLOW_VOLATILE=1`. If
+the driver is `telegram`, point `teleframe.backup.account` at a
+`daemon.accounts` `account_id`; if it is `s3`, configure
+`teleframe.tstore.s3` instead (its default endpoint is a **local MinIO**,
+`http://127.0.0.1:9010`, and `us-east-1` is MinIO's region, not AWS's).
 
 ### `StoreBackup::backup()` throws on first use
 

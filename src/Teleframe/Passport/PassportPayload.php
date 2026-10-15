@@ -184,6 +184,29 @@ final class PassportPayload
     }
 
     /**
+     * The decrypted `Credentials.secure_data` table — upstream's per-type §4
+     * `DataCredentials` index, and NOTHING else.
+     *
+     * Added for the document half: "Credentials contain the data_hash and
+     * data_secret from each element of Telegram Passport to which the user has
+     * allowed access", so this table is what the nested decrypt resolves a
+     * ciphertext against. It is returned raw on purpose — the entries carry
+     * base64 `data_hash` / `secret` strings that
+     * `PassportDocumentSource` decodes once, at the boundary, and nothing in
+     * this class ever guesses at that encoding.
+     *
+     * It is the SAME array `toArray()` exposes under `secure_data`; this
+     * accessor exists so the document reader does not have to copy a payload's
+     * whole public shape (nonce included) to reach one key of it.
+     *
+     * @return array<string, mixed>
+     */
+    public function secureData(): array
+    {
+        return $this->secureData;
+    }
+
+    /**
      * The verified `secure_data` type NAMES — the §5 document types Telegram
      * actually sent. Evidence for the host, never storage of a value.
      *

@@ -47,6 +47,102 @@ get_delegation_status(task_ids=[id], wait_ms=55000)   # re-arm until terminal
 - **A lane with no file on disk is not evidence of anything**, and a completion report with no
   artifact is not evidence either.
 
+## THE BRAIN LOOP — read before you stop, park, or report "done"
+
+The `brain` skill stack is the operating contract for this repo's agent work. Its rules bind
+every session, including one that opens with no instruction. **These are not optional, and none
+of them waits on a human.**
+
+### 0. PROBE FIRST — the router's paths are relative to the skill-stack repo, not to here
+
+This repo is an **application repo**, so the router's relative paths (`brain-doctrine/SKILL.md`,
+`scripts/brain-query.py`, …) are **dead links here**. Probe before following any of them:
+
+```bash
+timeout -k 5 30 bash -c 'test -f brain-doctrine/SKILL.md && echo "LOCAL: stack present" || echo "LOCAL: absent"'
+timeout -k 5 30 bash -c 'for d in ~/.config/opencode/skills ~/.agents/skills ~/.claude/skills; do test -d "$d/brain-doctrine" && echo "GLOBAL: $d"; done'
+```
+
+⛔ **Measured on this host: the skill roots hold 88 symlinked entries and only 30 real
+directories.** `find -maxdepth 1 -type d -name X` matches **none** of them, because `-type d`
+excludes symlinks. Measured on the same directory: `find -type d` → **30**, plain `find` → **119**,
+shell glob → **117**. ⛔ **Never conclude a skill is absent from a `find` that carried `-type d`.**
+Use `test -f "<root>/<name>/SKILL.md"`, which follows the link. An agent that hit this once
+reported 13 of 13 skills "unresolved" and diagnosed a broken install **while every skill was
+loadable**.
+
+⛔ **A failed lookup means the rule is elsewhere, never that it does not exist.** That is the
+router's own negative contract, and it is what fires when every path fails.
+
+⛔ **Printing a required marker is not performing the action.** `nmem-skill-used: brain` on a
+commit does not mean the skill ran, and a gate named in a document that you cannot execute is an
+unverifiable claim — obeying it while being unable to detect that you cannot is the failure.
+
+### 1. The seven-stage ladder — no stage stops
+
+```
+VERBATIM ─▶ MISSION ─▶ GOAL ─▶ PLAN +logs ─▶ EXECUTION ─▶ VERIFY ─▶ back UP
+```
+
+`PLAN` carries **four logs** in `.brain/plans/logs/` — summary · changelog · risks ·
+considerations — stored **separately**, so a risk buried in a paragraph of achievement is still
+findable.
+
+⛔ **An empty stage is a RE-READ of the stage above it, never a park.** A finished task, a passing
+gate, one empty round, or a per-mission completion is **none** of them a finished mission. Read an
+early stop as a **broken gate, not a finished mission** — diagnose the gate, fix it, continue.
+
+### 2. The never-stop invariant — the only condition that ends this
+
+The goal may be declared achieved **only** when **both** hold:
+
+- **(a)** three consecutive fan-out extraction rounds, agents launched in **ONE step in parallel**,
+  in which **every** agent returned *"no other goal"*, evidenced by the round logs; **AND**
+- **(b)** the verbatim **compared against reality**, double checked, working, verified.
+
+⛔ **Do not stop to ask for the next instruction.** Findings, never a request. The cycle's exit is
+the exhausted hunt, not an empty queue.
+
+### 3. Routing — load exactly the ONE skill your loop point names
+
+`brain-doctrine` (the seventeen laws, exact wording) · `brain-orient` (work-item selection) ·
+`brain-verbatim` (capture and re-read the operator's raw words) · `brain-ladder` (phases, the loop
+itself) · `brain-agents` (levels, registration, the dispatch prompt block) · `brain-recovery` (a
+failed lane) · `brain-verify` (the independent verifier, evidence before claims) · `brain-gates`
+(CI offload, the ask gate, the figure-it-out gate) · `brain-friction` (extraction returned nothing) ·
+`brain-private-state` · `brain-report` · `brain-debug` (root cause before any fix) · `brain-audit`
+(is a doc value an operational contract or an incidental mention, **before writing a gate**).
+
+⛔ **Never ask what you can find.** Deciding what is derivable is the agent's job. Only a genuine
+fork — no derivable answer by any route — reaches the operator.
+
+⛔ **ADHD skills and plugins are banned in this project** by the operator's decision, not by
+preference. Adding one back is a regression: those instructions tell the agent to **stop and ask**
+things, which is the opposite of this stack's doctrine. Do not install one globally, vendor one,
+or re-create the content under another filename.
+
+### 4. VERIFY is independent, and evidence precedes every done-claim
+
+The judge is **never the executor**. A done-claim without a pasted command output is a claim, not
+evidence. ⛔ **A gate never observed failing is not a gate** — break it, paste the red, restore,
+paste the green. A hand-fixed instance proves the sweep was **incomplete**, never that it was
+thorough.
+
+### 5. Stack integrity, run from the skill-stack repo (`~/Documents/projects/brain`)
+
+```bash
+timeout -k 5 120 python3 scripts/brain-query.py verify       # PASS required
+timeout -k 5 120 python3 scripts/check-citations.py          # exit non-zero is reported, not worked around
+timeout -k 5 120 python3 scripts/check-one-home.py           # report-only unless --fail
+```
+
+**Known, measured, recorded 2026-10-13:** `check-citations.py` is **red with 4656 findings, and 0
+of them are in a live skill directory** — every one is in `docs/` provenance (verbatim archives,
+lane sweeps, dated audits, coverage records) citing pre-split names. The gate is working as
+designed; its exemption is deliberately narrow (`docs/verify-evidence*` only). **A gate that is
+permanently red at that scale trains you to ignore it**, which is the failure
+`brain-audit` exists to prevent. Treat this as **gate scope to fix**, not a broken skill.
+
 ## Where the upstream is, and how CI is followed — READ THIS BEFORE PUSHING
 
 **`main`'s upstream is the self-hosted GitLab, not GitHub.** Push to `origin`

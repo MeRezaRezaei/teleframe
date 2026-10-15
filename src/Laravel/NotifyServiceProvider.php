@@ -585,21 +585,35 @@ final class NotifyServiceProvider extends ServiceProvider
      * posture, not inline. `auto` takes the best async transport the host
      * actually has and never silently degrades:
      *
-     *   1. the host's own queue connection is async (anything but `sync`, on
+     *   1. ext-amqp loaded AND the operator named a broker — TELEFRAME_NOTIFY_AMQP_HOST
+     *      set AND not 127.0.0.1/localhost (`amqpUsable()`) →
+     *      AmqpNotificationQueue (durable tframe.notify + tframe.notify.dl).
+     *      Both halves matter: a machine that merely HAS ext-amqp must not
+     *      start publishing to a broker nobody runs.
+     *   2. the host's own queue connection is async (anything but `sync`, on
      *      teleframe.notify.queue_connection or falling back to the host's
      *      `queue.default`) → LaravelQueueNotificationQueue.
      *      illuminate/queue ships with laravel/framework and its `database`
      *      driver needs a TABLE, not a broker, so a stock install that set
      *      QUEUE_CONNECTION=database (what the Laravel installer writes) is
      *      queue-shaped with zero new infrastructure.
-     *   2. ext-amqp loaded AND the operator named a broker (TELEFRAME_NOTIFY_AMQP_HOST
-     *      set) → AmqpNotificationQueue (durable tframe.notify + tframe.notify.dl).
-     *      Both halves matter: a machine that merely HAS ext-amqp must not
-     *      start publishing to a broker nobody runs.
      *   3. nothing async configured → teleframe.notify.queue_fallback:
      *      'sync' (default) keeps notifications working inline, ONCE, with a
      *      loud warning; 'throw' is the strict opt-in for a host that must not
      *      block. Never a silent inline block.
+     *
+     * AUTHORITY: the BODY below is the contract; this docblock describes it.
+     * They disagreed once — the comment ordered 1 Laravel, 2 amqp while the
+     * code tried amqp first — and the comment was the wrong one, so a fix to
+     * either must change both or the body wins.
+     *
+     * WHY amqp is FIRST and not after the host queue: durability. A host that
+     * explicitly named a broker is asking for broker semantics (durable queue
+     * + DL, a real consumer across restarts). A Laravel queue connection only
+     * *looks* async, and on a stock install QUEUE_CONNECTION=database, which
+     * the installer itself writes — so queue-first meant the named broker was
+     * silently ignored on exactly the installs that paid for one. Order by
+     * intent: an explicit broker beats an incidental queue shape.
      *
      * `laravel` and `amqp` force a driver (loud when unusable); `sync` remains
      * the explicit, documented opt-in inline path.

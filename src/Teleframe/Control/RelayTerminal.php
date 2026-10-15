@@ -18,8 +18,12 @@ use RuntimeException;
  * The scope is resolved lazily ONLY on the first outbound dispatch (never at
  * construction, never for INBOUND), mirroring the AccountRelay seam's "never
  * dialed until asked" rule. Inbound updates do not belong here — they flow
- * across AccountUpdateStream (BUS → INBOUND → filters → publisher), which
- * runs the identical RelayFilter/RelyPipeline onion.
+ * across AccountUpdateStream (BUS → committed key → hydrator → INBOUND →
+ * filters → publisher), which runs the identical RelayFilter/RelyPipeline
+ * onion. That leg carries the COMMITTED IDENTITY ROW, not the raw wire update
+ * (D-044: `tf_updates` stores zero JSON, so the decoded update array is not
+ * reconstructible from the row); this terminal never sees it and never needs
+ * to.
  *
  * Plain PHP, no facades, no credentials: the scope resolver (production:
  * AccountRelay::scope() over the RelayFactory, which yields a RelayScope
@@ -55,7 +59,8 @@ final class RelayTerminal
     /**
      * RelayPipeline terminal contract: dispatch OUTBOUND against the bound
      * client and return the produced reply; pass INBOUND straight through
-     * (it belongs to AccountUpdateStream's leg, not this terminal).
+     * (it belongs to AccountUpdateStream's leg — the committed identity row —
+     * not this terminal).
      */
     public function __invoke(RelayMessage $message): RelayMessage
     {

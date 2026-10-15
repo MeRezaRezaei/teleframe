@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MeRezaRezaei\Teleframe\Mirror\Models\ResolvesEntityPeer;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TfMirrorModel;
 
@@ -14,13 +15,20 @@ use MeRezaRezaei\Teleframe\Schema\Eloquent\TfMirrorModel;
  * Eloquent model for the shipped mirror table `tf_stars_transactions_stargift`.
  *
  * Columns, casts and relations are REFLECTED from the executed shipped DDL, not
- * transcribed and not inferred from names — see ModelGenerator. A relation
- * appears here only where the engine DECLARES a foreign key.
+ * transcribed and not inferred from names — see ModelGenerator.
  *
- * Relations declared on this table: 1.
+ * A relation appears here in one of two shapes, and the docblock on each says
+ * which: one where the engine DECLARES a foreign key, and one HORIZONTAL — an
+ * entity-to-entity edge derived from an inline `{base}_type` + `{base}_id` peer
+ * pair or from a catalog-declared scalar entity column, which no constraint can
+ * express. See HorizontalEntityRelations for why those are not FKs.
+ *
+ * Relations declared on this table: 5.
  */
 final class TfStarsTransactionsStargift extends TfMirrorModel
 {
+    use ResolvesEntityPeer;
+
     use AccountScoped;
 
     protected $table = 'tf_stars_transactions_stargift';
@@ -101,9 +109,33 @@ final class TfStarsTransactionsStargift extends TfMirrorModel
         'host_id_id' => 'int',
     ];
 
+    /** HORIZONTAL, not a foreign key. `tf_stars_transactions_stargift`.`host_id_type` is a `tinyint` discriminator and `tf_stars_transactions_stargift`.`host_id_id` the Telegram peer id beside it, and one FK cannot branch on a type int (2026_09_14_299999:25-31). Resolves against `tf_users` by the discriminator, pinned to this account. Null when the discriminator is 0 — Telegram did not send a peer — and RAISES on a discriminator outside the enum rather than returning an empty relation, which is what a wrong key produces. */
+    public function hostId(): ?BelongsTo
+    {
+        return $this->entityPeer('host_id_type', 'host_id_id');
+    }
+
+    /** HORIZONTAL, not a foreign key. `tf_stars_transactions_stargift`.`owner_id_type` is a `tinyint` discriminator and `tf_stars_transactions_stargift`.`owner_id_id` the Telegram peer id beside it, and one FK cannot branch on a type int (2026_09_14_299999:25-31). Resolves against `tf_users` by the discriminator, pinned to this account. Null when the discriminator is 0 — Telegram did not send a peer — and RAISES on a discriminator outside the enum rather than returning an empty relation, which is what a wrong key produces. */
+    public function ownerId(): ?BelongsTo
+    {
+        return $this->entityPeer('owner_id_type', 'owner_id_id');
+    }
+
+    /** HORIZONTAL, not a foreign key. `tf_stars_transactions_stargift`.`released_by_type` is a `tinyint` discriminator and `tf_stars_transactions_stargift`.`released_by_id` the Telegram peer id beside it, and one FK cannot branch on a type int (2026_09_14_299999:25-31). Resolves against `tf_users` by the discriminator, pinned to this account. Null when the discriminator is 0 — Telegram did not send a peer — and RAISES on a discriminator outside the enum rather than returning an empty relation, which is what a wrong key produces. */
+    public function releasedBy(): ?BelongsTo
+    {
+        return $this->entityPeer('released_by_type', 'released_by_id');
+    }
+
     /** Declared foreign key: `tf_stars_transactions_stargift`(account_id, id) -> `tf_stars_transactions`(account_id, id). Keyed on `id` = `id`; the `account_id` leg is enforced by AccountScope and the full constraint by the database. */
     public function starsTransactions(): BelongsTo
     {
         return $this->belongsTo(TfStarsTransactions::class, 'id', 'id');
+    }
+
+    /** HORIZONTAL, not a foreign key. `tf_stars_transactions_stargift`.`theme_peer_type` is a `tinyint` discriminator and `tf_stars_transactions_stargift`.`theme_peer_id` the Telegram peer id beside it, and one FK cannot branch on a type int (2026_09_14_299999:25-31). Resolves against `tf_users`, `tf_chats` or `tf_channels` by the discriminator, pinned to this account. Null when the discriminator is 0 — Telegram did not send a peer — and RAISES on a discriminator outside the enum rather than returning an empty relation, which is what a wrong key produces. */
+    public function themePeer(): ?BelongsTo
+    {
+        return $this->entityPeer('theme_peer_type', 'theme_peer_id');
     }
 }

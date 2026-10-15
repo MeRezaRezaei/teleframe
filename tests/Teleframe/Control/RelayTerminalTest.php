@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Tests\Teleframe\Control;
 
+use Illuminate\Database\Eloquent\Model;
 use MeRezaRezaei\Teleframe\Control\AccountRelay;
 use MeRezaRezaei\Teleframe\Control\AccountUpdateStream;
 use MeRezaRezaei\Teleframe\Control\RelayContext;
@@ -19,8 +20,10 @@ use RuntimeException;
  * outbound, never at construction), the RPC reply returns as the produced
  * INBOUND RelayMessage, and BOTH directions pass through the same
  * RelayFilter onion — outbound via AccountRelay::send(), inbound via
- * AccountUpdateStream::next(). Pure plain-PHP: fake client / fake resolver
- * only, no network, no credentials.
+ * AccountUpdateStream::next(). That inbound leg carries the COMMITTED
+ * IDENTITY ROW (D-044: the reader yields a key, the hydrator resolves it to
+ * the model), never a decoded update array. Pure plain-PHP: fake client /
+ * fake resolver only, no network, no credentials.
  */
 final class RelayTerminalTest extends TestCase
 {
@@ -205,11 +208,20 @@ final class RelayTerminalTest extends TestCase
             $terminal,
         );
 
-        $payload = [['_' => 'updateNewMessage', 'seq' => 9]];
+        $keys = [['account_id' => 1, 'seq' => 9, 'position' => 0]];
         $stream = new AccountUpdateStream(
             accountId: 1,
-            reader: static function () use (&$payload): ?array {
-                return array_shift($payload);
+            reader: static function () use (&$keys): ?array {
+                return array_shift($keys);
+            },
+            hydrate: static function (array $key): ?Model {
+                $row = new class extends Model
+                {
+                    protected $guarded = [];
+                };
+                $row->setRawAttributes(['constructor' => 'updateNewMessage']);
+
+                return $row;
             },
             filters: [$shared],
         );

@@ -10,8 +10,9 @@ The Phase 4 surface: configured local sets → content-addressed chunks →
 Argon2id + secretstream encryption → a private Telegram channel per set
 via a dedicated session — manifest-first restore, no server-side index,
 and a staleness verifier. `php teleframe:backup <action>` drives
-everything; the offline `memory` driver is the default so nothing touches
-the network until you opt in.
+everything; the shipped `driver` default is `telegram`, so a default install
+either performs a real channel backup (once `account` is set) or refuses
+loudly — it never stores nothing and prints green.
 
 > **Warning — passphrase rotation trap.** Dedup keys on the *plaintext*
 > chunk hash and the runner reuses the set's salt, so giving an existing
@@ -72,12 +73,13 @@ starve ingestion.
 ```php
 // config/teleframe.php
 'backup' => [
-    // 'telegram' is the ONLY durable driver and the default. 'memory' is a
-    // process-local InMemoryVault: a backup taken with it is gone when the
-    // process exits, so it now requires an explicit
-    // TELEFRAME_BACKUP_ALLOW_VOLATILE=1 acknowledgement and still prints a
-    // WARNING. A green run that stored nothing is not reachable.
-    'driver' => env('TELEFRAME_BACKUP_DRIVER', 'telegram'), // telegram|memory(volatile)
+    // The accepted set is memory|telegram|s3 (any other value throws at bind
+    // time). 'telegram' is the DEFAULT and 'telegram' and 's3' are both
+    // DURABLE: each survives the process. 'memory' is the one non-durable
+    // driver — a process-local InMemoryVault, gone when the process exits, so
+    // it requires an explicit TELEFRAME_BACKUP_ALLOW_VOLATILE=1
+    // acknowledgement and still prints a WARNING.
+    'driver' => env('TELEFRAME_BACKUP_DRIVER', 'telegram'), // memory|volatile, telegram, s3
     'account' => env('TELEFRAME_BACKUP_ACCOUNT'),         // daemon.accounts account_id (telegram driver)
     'chunk_size' => env('TELEFRAME_BACKUP_CHUNK_SIZE', 4194304),
     'sets' => [
@@ -89,9 +91,12 @@ starve ingestion.
 ],
 ```
 
-`driver => 'memory'` (default) is the offline driver: an in-memory vault
-that persists nothing — smoke tests and CI only. Real backups need
-`driver => 'telegram'` + `account` pointing at a daemon.accounts entry.
+`driver => 'telegram'` is the default, so a backup is real out of the box
+and needs `account` pointing at a daemon.accounts entry; without it the
+command refuses loudly. `driver => 's3'` is the other durable option — one
+bucket, no Telegram method at all. `driver => 'memory'` is the offline
+driver, NOT the default: an in-memory vault that persists nothing, for smoke
+tests and CI only.
 
 ## CLI
 

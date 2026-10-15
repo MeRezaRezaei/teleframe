@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Mirror\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TfMirrorModel;
 
@@ -48,6 +50,7 @@ use MeRezaRezaei\Teleframe\Schema\Eloquent\TfMirrorModel;
 final class TfDialog extends TfMirrorModel
 {
     use AccountScoped;
+    use ResolvesEntityPeer;
 
     protected $table = 'tf_dialogs';
 
@@ -126,5 +129,44 @@ final class TfDialog extends TfMirrorModel
     public function folder(): Builder
     {
         return $this->child(TfDialogsFolder::class);
+    }
+
+    // -----------------------------------------------------------------------
+    // HORIZONTAL — the entity axis the declared foreign keys cannot carry.
+    // See HorizontalEntityRelations for why this is a model-layer declaration
+    // and not a constraint.
+    // -----------------------------------------------------------------------
+
+    /**
+     * The entity this dialog is WITH — `tf_users`, `tf_chats` or `tf_channels`,
+     * chosen by the row's own `peer_type`.
+     *
+     * This is the relation the operator's requirement turns on. A dialog IS a
+     * peer: `2026_09_14_200004_create_tf_dialogs_tables.php` keys the table
+     * `(account_id, peer_type, peer_id)`, which makes this the one table in the
+     * mirror whose IDENTITY is a reference to another entity — and it was the
+     * one table with no way to follow it.
+     *
+     * Three answers, kept apart on purpose:
+     *
+     *  - **`null`** — `peer_type` is 0. Telegram did not send a peer, and the
+     *    migrations say the writer stores that as a real `(0, 0)` rather than
+     *    omitting it.
+     *  - **a `BelongsTo`** — `peer_type` is 1, 2 or 3, against the matching
+     *    identity table and pinned to this account. An empty result from it
+     *    means that entity row is not mirrored yet, which is a different fact
+     *    from an unmapped leg and is visible as such.
+     *  - **an exception** — `peer_type` is outside the enum. That is the mirror
+     *    and the data disagreeing, and it is raised rather than swallowed: see
+     *    {@see UnmappedEntityPeer} for why a `null` there would be the exact
+     *    wrong answer.
+     *
+     * @return BelongsTo<Model, $this>|null
+     *
+     * @throws UnmappedEntityPeer
+     */
+    public function peer(): ?BelongsTo
+    {
+        return $this->entityPeer('peer_type', 'peer_id');
     }
 }

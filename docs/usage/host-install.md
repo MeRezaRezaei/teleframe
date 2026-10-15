@@ -50,14 +50,21 @@ be a green run by accident.
 
 - all six providers are auto-discovered by the host's real `PackageManifest`;
 - every declared provider class actually exists in `src/`;
-- all six facade aliases are declared, and the host alias loader registers them;
-- **every** `vendor:publish` tag lands its config file, and the host still
-  boots with that published config in place;
+- all seven facade aliases are declared, and the host alias loader registers
+  them (seven aliases, **six** facades — `TF` and `Teleframe` are two names for
+  one facade, which is why the count of aliases and the count of facades below
+  differ);
+- **every** `vendor:publish` tag lands its config file, the single umbrella tag
+  lands **all five** of them, and the host still boots with that published
+  config in place;
 - `teleframe:doctor` *terminates* and fails loudly non-interactively — a hang
   is a distinct failure from an error;
-- `php artisan list` carries the gate's 20 expected `teleframe:*` commands
-  (a deliberate subset — the gate does not assert `teleframe:notify`,
-  `teleframe:tstore` or `teleframe:routing`);
+- `php artisan list` carries the gate's 22 expected `teleframe:*` commands.
+  *(This line used to claim 20, and to name `teleframe:notify`,
+  `teleframe:tstore` and `teleframe:routing` as deliberately NOT asserted.
+  All three have since been added — dropping a command from a provider's
+  `$this->commands([...])` was invisible until it was gated — so the count and
+  the exclusion list were both wrong.)*
 - all six facades **resolve, are callable, throw on first real transport use,
   and never silently drop** (below).
 
@@ -91,17 +98,24 @@ do for them**, in the order they hit it.
    auto-discover and all seven aliases register, with no manual
    `providers.php` / `aliases.php` edit.
 
-2. **`php artisan vendor:publish` — five separate tags, no umbrella tag.**
-   `--tag=teleframe-config` publishes **one** file
-   (`config/teleframe.php`). The other four are
-   `--tag=teleframe-notify-config` (`config/teleframe/notify.php`),
-   `--tag=teleframe-store-backup-config` (`config/teleframe/store/backup.php`),
-   `--tag=teleframe-app-config` (`config/teleframe/app.php`) and
-   `--tag=teleframe-passport-config` (`config/teleframe/passport.php`).
-   A host that publishes only the first is **missing four config files** and
-   will not find out until it edits a setting in one of them. The package
-   works without publishing (it merges its own defaults), so this is
-   invisible until it matters.
+2. **`php artisan vendor:publish --tag=teleframe-config` — one umbrella tag
+   publishes all five config files.** `--tag=teleframe-config` lands **all
+   five** (`config/teleframe.php`, `config/teleframe/notify.php`,
+   `config/teleframe/passport.php`, `config/teleframe/app.php`,
+   `config/teleframe/store/backup.php`). **This item used to say the opposite**
+   — *"five separate tags, no umbrella tag"* — and it was true when written,
+   then false: `TeleframeServiceProvider::publishes()` now registers all five
+   sources under `teleframe-config`, and `bin/prove-host-install.php` asserts
+   the umbrella tag lands every one of them *and* that **no config file is
+   unreferenced by any tag** (the tag list is hand-kept and can fall behind the
+   tree). The per-file tags still exist and still land their file —
+   `--tag=teleframe-notify-config`, `--tag=teleframe-store-backup-config`,
+   `--tag=teleframe-app-config`, `--tag=teleframe-passport-config` — so a host
+   that wants one file may still name one, but **a host that publishes only
+   `teleframe-config` is no longer missing anything.** Publishing is still
+   optional (the package merges its own defaults), which is why a host that
+   publishes nothing discovers a settings file it never wrote only when it
+   needs it.
 
 3. **Set `TELEGRAM_API_ID` / `TELEGRAM_API_HASH` before any MTProto call.**
    Unconfigured, `Teleframe::user()` throws
@@ -179,6 +193,26 @@ do for them**, in the order they hit it.
     registered, healthy, and never called. See
     [handlers.md §6](../handlers.md).
 
+11. **The database backup schedule: pick ONE trigger, and delete the loser.**
+    The package can own the `teleframe:tstore backup` dump itself, but it
+    ships **default-off**, and the reason is worth stating before you flip it:
+    the two triggers are **invisible to each other**. The posture a host may
+    already have is a hand-written crontab line; cron is invisible to the
+    Laravel scheduler; and no config key can report it. So the package cannot
+    prove that enabling its own trigger will not double-fire. Set
+    `TELEFRAME_STORE_BACKUP_PACKAGE_SCHEDULE_ENABLED=1` (time from
+    `TELEFRAME_STORE_BACKUP_PACKAGE_SCHEDULE_DAILY_AT`, default `03:47`,
+    deliberately off the file-vault sibling's `03:17` so a host running both
+    does not stack two dumps on one minute) **and delete your cron line in the
+    same change** — the host still needs `php artisan schedule:run` on its own
+    cron for the trigger to fire. `withoutOverlapping()` and `onOneServer()`
+    protect the package's trigger against a second scheduler or a second app
+    server; they do nothing against a crontab, and a double-fired dump is two
+    full database dumps a day into the same bucket with two run-ledger rows.
+    This key is deliberately **not** gated by
+    `teleframe.store.backup.schedule.enabled`, which governs the *watchdog*;
+    it has its own gate and nothing else.
+
 ---
 
 ## Findings this gate surfaced (with the fix that shipped alongside it)
@@ -202,26 +236,30 @@ silent drop the facade's own docblock forbids. Fixed in
 where the target chat is known, for **every** driver. A correctly configured
 host is unaffected.
 
-**C. The in-repo twin of this gate was a false proof.**
-`tests/Laravel/Support/ZeroConfigBootTest.php:160` calls
-`$service->log(Level::Error, …)` but the file has no `use …\Notify\Level;`, so
+**C. The in-repo twin of this gate was a false proof — SINCE FIXED.**
+`tests/Laravel/Support/ZeroConfigBootTest.php` called
+`$service->log(Level::Error, …)` with no `use …\Notify\Level;`, so
 `Level::Error` resolved to a non-existent class and raised `Error: Class not
 found` — which satisfies `expectException(Throwable::class)` without ever
 reaching the notify core. It also ran under Testbench's `QUEUE_CONNECTION=sync`,
-a state a real host does not have, which is the single difference that hid
-finding **B**. The host-install gate is the proof that does not have that
-escape hatch. *(Left in place: it is not this change's job to rewrite another
-gate's assertions, but it should not be trusted as evidence.)*
+a state a real host does not have, which was the single difference that hid
+finding **B**. Both halves are now repaired in that file: the import is
+present, and the test proves the failure came from the transport rather than
+from a name that failed to resolve. *(This entry used to end "left in place …
+it should not be trusted as evidence" — that is no longer true, and a finding
+recorded as open when it is closed is the same defect as a claim that was
+never true.)*
 
-**D. Two advertised facade methods do not exist.** `Notify::service()` and
-`TStore::service()` are in their docblocks (`Notify.php:35`, `TStore.php:22`)
-and in the `Notify` example, but neither `NotifyService` nor `StoreService`
-implements `service()`, and a Laravel `Facade` is not `Macroable` — so both
-raise `Error: Call to undefined method …`. `StoreBackup::service()` and
-`Passport::service()` **are** real. The gate asserts only the ones that
-exist. **This is an open documentation-vs-code defect, not fixed here** — the
-fix is to add the two accessors or drop the two `@method` lines, and it
-belongs to whoever owns the notify/store surfaces.
+**D. Two advertised facade methods did not exist — SINCE FIXED.**
+`Notify::service()` and `TStore::service()` were in their docblocks and in the
+`Notify` example, but neither `NotifyService` nor `StoreService` implemented
+`service()`, and a Laravel `Facade` is not `Macroable` — so both raised
+`Error: Call to undefined method …`. `StoreBackup::service()` and
+`Passport::service()` were real throughout. The gap is now closed at the
+facade itself: `src/Laravel/Facades/Notify.php:54` and
+`src/Laravel/Facades/TStore.php:53` each define a real static `service()`
+rather than relying on the `@method` annotation, and each throws by name when
+the facade root is not the expected service. All four accessors are now real.
 
 **E. A `git status` drift is now a first-class failure (exit 4).** The gate
 compares `git status --porcelain` before and after and fails if the bytes

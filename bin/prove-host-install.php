@@ -737,11 +737,16 @@ $checks['every composer.json provider class exists in src/'] = static function (
     return $undeclaredHere === [];
 };
 
-// The six aliases must all be declared in composer.json.
-$checks['all six facade aliases are declared in composer.json'] = static function () use ($repoRoot, &$proveFailures): bool {
+/** @var list<string> the composer.json facade aliases this gate names. */
+const GATED_FACADE_ALIASES = ['TF', 'Teleframe', 'TStore', 'Notify', 'StoreBackup', 'TelegramApp', 'Passport'];
+
+// Every alias this gate names must be declared in composer.json. The count is
+// DERIVED from the list, not written as a word: a hand-typed "six" beside a
+// seven-item loop is how this label became a lie in the first place.
+$checks[sprintf('all %d facade aliases are declared in composer.json', count(GATED_FACADE_ALIASES))] = static function () use ($repoRoot, &$proveFailures): bool {
     $composer = json_decode((string) file_get_contents($repoRoot.'/composer.json'), true);
     $aliases = $composer['extra']['laravel']['aliases'] ?? [];
-    foreach (['TF', 'Teleframe', 'TStore', 'Notify', 'StoreBackup', 'TelegramApp', 'Passport'] as $alias) {
+    foreach (GATED_FACADE_ALIASES as $alias) {
         if (! isset($aliases[$alias])) {
             $proveFailures[] = 'alias '.$alias.' is not declared';
 

@@ -15,10 +15,15 @@ use MeRezaRezaei\Teleframe\Schema\Eloquent\TlAnchorModel;
  * Eloquent model for the shipped mirror table `tf_channel_participants`.
  *
  * Columns, casts and relations are REFLECTED from the executed shipped DDL, not
- * transcribed and not inferred from names — see ModelGenerator. A relation
- * appears here only where the engine DECLARES a foreign key.
+ * transcribed and not inferred from names — see ModelGenerator.
  *
- * Relations declared on this table: 4.
+ * A relation appears here in one of two shapes, and the docblock on each says
+ * which: one where the engine DECLARES a foreign key, and one HORIZONTAL — an
+ * entity-to-entity edge derived from an inline `{base}_type` + `{base}_id` peer
+ * pair or from a catalog-declared scalar entity column, which no constraint can
+ * express. See HorizontalEntityRelations for why those are not FKs.
+ *
+ * Relations declared on this table: 5.
  */
 final class TlChannelParticipant extends TlAnchorModel
 {
@@ -85,5 +90,11 @@ final class TlChannelParticipant extends TlAnchorModel
     public function channels(): BelongsTo
     {
         return $this->belongsTo(TlChannel::class, 'channel_id', 'id');
+    }
+
+    /** HORIZONTAL, not a foreign key. `tf_channel_participants`.`user_id` is a bare `long` in the `Tf` union that `MirrorCatalog` declares on this table, so it names `tf_users`.`id` directly and carries no discriminator. No FK is declared on it because the column exists on every row of the table whether or not that ctor sent one — the value is 0 when it did not. */
+    public function userId(): BelongsTo
+    {
+        return $this->belongsTo(TlUser::class, 'user_id', 'id');
     }
 }

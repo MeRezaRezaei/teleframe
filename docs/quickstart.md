@@ -213,8 +213,9 @@ Flag details and v1 report-only semantics: [bus.md](bus.md).
 ### (i) Encrypted backup of a directory to a Telegram channel
 
 ```php
-// config/teleframe.php — real backups need the telegram driver;
-// driver 'memory' (default) is the offline smoke-test driver.
+// config/teleframe.php — 'telegram' is the default and the real driver; it
+// needs `account`. 'memory' is the offline smoke-test driver and is NOT the
+// default ('s3' is the third accepted value, and is also durable).
 'backup' => [
     'driver' => 'telegram',
     'account' => env('TELEFRAME_BACKUP_ACCOUNT'), // daemon.accounts id

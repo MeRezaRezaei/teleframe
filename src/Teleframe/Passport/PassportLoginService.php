@@ -37,6 +37,12 @@ final class PassportLoginService
      * @param  PasswordConfirmer|null  $confirmer  optional SRP 2FA confirm (G5, default-off)
      * @param  LoggerInterface|null  $logger  PSR-3, silent when unset (NullLogger posture)
      * @param  \Closure(Model): void|null  $onLogin  host hook — the auth ride (never Auth::login here)
+     * @param  PassportDocumentResolver|null  $documents  the document seam; when
+     *                                                    null one is built per
+     *                                                    run from $keys + $wire,
+     *                                                    so the document table
+     *                                                    is NEVER skipped
+     * @param  PassportWireContract|null  $wire  download seam for §4 files
      */
     public function __construct(
         private readonly PassportConfig $config,
@@ -47,6 +53,8 @@ final class PassportLoginService
         private readonly ?PasswordConfirmer $confirmer = null,
         private readonly ?LoggerInterface $logger = null,
         private readonly ?\Closure $onLogin = null,
+        private readonly ?PassportDocumentResolver $documents = null,
+        private readonly ?PassportWireContract $wire = null,
     ) {}
 
     /**
@@ -221,6 +229,24 @@ final class PassportLoginService
         // (d) allowed-types + required-field rules (zero-regex allow-list).
         (new PassportValueValidator)->validate($payload, $this->config->allowedTypes());
 
+        // (d1) THE DOCUMENT TABLE — built UNCONDITIONALLY, for every login,
+        //      before the nonce is consumed and long before anything is bound.
+        //
+        //      WHY HERE AND WHY ALWAYS. Every `allowed_types` value must produce
+        //      a document or a NAMED refusal, and the only way that can be true
+        //      rather than merely intended is for the table to exist on every
+        //      run. Opting in would reproduce the defect (the default ships),
+        //      throwing would turn "the user supplied four of eleven documents"
+        //      into a failed login, and logging alone would make it
+        //      unassertable. So it is a value, computed here and carried on the
+        //      LoginResult — where the host can read it and where
+        //      PassportErrorReporter can name the failures to Telegram.
+        //
+        //      It is computed BEFORE the nonce consume on purpose: it touches
+        //      no session state, so paying for it costs a login nothing when a
+        //      later step refuses.
+        $coverage = $this->documentCoverage($payload, $update);
+
         // (e) ONE-TIME consume — the replay guard (design §11): a replayed
         //     webhook (queue redelivery) hits an unknown nonce here and is
         //     refused loud — never a second login.
@@ -334,6 +360,33 @@ final class PassportLoginService
             user: $user,
             binding: $binding,
             fieldsVerified: $this->fieldsVerified($payload),
+            documents: $coverage,
+        );
+    }
+
+    /**
+     * THE DOCUMENT TABLE, built from the three seams this service owns: the
+     * decrypted payload (the §4 credentials index), the raw update (the
+     * ciphertext and the file references), and the host's `allowed_types`.
+     *
+     * The key is materialised HERE, per run, by `PassportKeyLoader` — never at
+     * construction — and `withPrivateKey()` only ever adds it to a resolver
+     * that does not have one, so an injected resolver with its own key keeps
+     * it. A missing wire seam is NOT a reason to skip the table: it is the
+     * reason every file slot carries
+     * {@see PassportDocumentRefusal::WIRE_UNAVAILABLE}, which is the whole
+     * point.
+     */
+    private function documentCoverage(PassportPayload $payload, array $update): PassportDocumentCoverage
+    {
+        $resolver = $this->documents
+            ?? new PassportDocumentResolver(null, $this->wire);
+
+        return PassportDocumentCoverage::build(
+            $this->config->allowedTypes(),
+            $payload,
+            PassportDocumentSource::fromUpdate($update, $payload->secureData()),
+            $resolver->withPrivateKey($this->keys->key()),
         );
     }
 

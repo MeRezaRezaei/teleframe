@@ -7,6 +7,7 @@ namespace MeRezaRezaei\Teleframe\Mirror\Models;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerShapeTool;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TfMirrorModel;
 
 /**
@@ -55,9 +56,8 @@ use MeRezaRezaei\Teleframe\Schema\Eloquent\TfMirrorModel;
  */
 final class TfUser extends TfMirrorModel
 {
-    use PinsDeclaredForeignKeyLegs;
-
     use AccountScoped;
+    use PinsDeclaredForeignKeyLegs;
 
     protected $table = 'tf_users';
 
@@ -202,5 +202,35 @@ final class TfUser extends TfMirrorModel
     public function sendPaidMessagesStars(): HasOne
     {
         return $this->hasOne(TfUsersSendPaidMessagesStars::class, 'id', 'id');
+    }
+
+    // -----------------------------------------------------------------------
+    // HORIZONTAL — the entity axis the declared foreign keys cannot carry.
+    //
+    // This is the MANDATE set for the hand-maintained layer. The generated
+    // anchor (`TlUser`) carries the COMPLETE derived set, and the difference
+    // between the two is MEASURED by
+    // `tests/Schema/Mirror/HorizontalEntityRelationsTest` rather than left to
+    // drift: a thinner surface nobody measures is how a host concludes a
+    // relation does not exist.
+    //
+    // Method names are the GENERATOR's — the peer base plus the child table's stem
+    // — so both surfaces are greppable by one string and the two cannot be told
+    // apart by shape alone. `HorizontalEntityRelations` owns that rule.
+    // -----------------------------------------------------------------------
+
+    /** Every `tf_dialogs` row whose `peer_type` is PEER_USER — a dialog with this user. */
+    public function peerDialogs(): HasMany
+    {
+        $relation = $this->hasMany(TfDialog::class, 'peer_id', 'id');
+        $relation->getQuery()->where('tf_dialogs.peer_type', PeerShapeTool::PEER_USER);
+
+        return $relation;
+    }
+
+    /** Every `tf_updates` row naming this user in `user_id`. */
+    public function userIdUpdates(): HasMany
+    {
+        return $this->hasMany(TfUpdate::class, 'user_id', 'id');
     }
 }

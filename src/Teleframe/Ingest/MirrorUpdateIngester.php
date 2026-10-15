@@ -137,26 +137,64 @@ final class MirrorUpdateIngester
             // UpdateStored event object was handed to the dispatcher. That
             // second fact is the same value as `$emit['routed']` below.
             //
-            // WHAT TRUE DOES NOT GUARANTEE, and this is the point of the name:
-            //   * that ANY listener has run. On the mirror path one always has
-            //     NOT — `MirrorIngesterFactory` opens the transaction, so every
+            // WHAT TRUE DOES NOT GUARANTEE, and this is the point of the name.
+            // A bare `true` is the routing decision, so none of the following
+            // may be read into it:
+            //   * that ANY listener has run. On the mirror path one has NOT —
+            //     `MirrorIngesterFactory` opens the transaction, so every
             //     dispatch here defers to commit.
             //   * that a dispatcher was even bound. `RoutingEventGateway` is
-            //     constructed with a nullable one and `dispatchStored()` early
-            //     returns on null, so a gateway with no events still returns
-            //     true. "Scheduled" is therefore the routing DECISION, and the
+            //     constructed with a nullable one, and `emitOutcome()` returns
+            //     OUTCOME_NO_DISPATCHER without dispatching
+            //     (RoutingEventGateway.php:192), so a gateway with no events
+            //     still returns true. "Scheduled" is the routing DECISION; the
             //     handoff is conditional on a dispatcher existing.
             //   * that any listener succeeded. A listener that throws is
             //     swallowed and logged by the gateway; it cannot make this
-            //     false, because this is reported before it could ever run.
+            //     false, and no key below stands in for success.
             //
-            // A tri-state distinguishing "listeners ran" from "dispatch
-            // scheduled" would be strictly more honest, and is NOT buildable
-            // here: the gateway returns a bool and swallows the dispatch's own
-            // return value, so this layer cannot observe deferral. It needs
-            // RoutingEventGateway to surface the dispatch outcome, which is
-            // outside this change. Until then this boolean carries exactly one
-            // of the two meanings, and its name says which.
+            // THE TRI-STATE IS BUILT — it is the `emit` key. An earlier
+            // revision of this comment claimed it was NOT buildable here
+            // ("the gateway returns a bool and swallows the dispatch's own
+            // return value"). That was false when written:
+            // `RoutingEventGateway::emitOutcome()` exists, and the call above
+            // already uses it. It reports which of five things happened, via
+            // RoutingEventGateway::OUTCOME_*:
+            //   routed        — this bool, unchanged, and its contract intact.
+            //   dispatched    — an UpdateStored object reached a dispatcher.
+            //   listeners_ran — the dispatcher invoked the listeners DURING
+            //     THIS CALL.
+            //   scheduled     — a post-commit callback now holds the dispatch;
+            //     the listeners have NOT run yet.
+            //   outcome       — one of RoutingEventGateway::OUTCOME_*:
+            //     not_routed, no_dispatcher, listeners_ran,
+            //     scheduled_after_commit, dispatch_failed, or unknown.
+            //
+            // HOW THE TWO MIDDLES ARE TOLD APART, because `dispatch()`'s own
+            // return cannot: it yields `null` on the deferral path
+            // (Dispatcher.php:290) AND on the after-commit path
+            // (Dispatcher.php:303), and that after-commit path runs the
+            // listeners INLINE anyway when there is no transaction to wait for
+            // — `addCallback()` falls through to `$callback()`
+            // (DatabaseTransactionsManager.php:219) — so `null` alone cannot
+            // separate "deferred" from "already ran". The discriminator is
+            // whether the transaction manager's callback queue GREW across the
+            // call: growth ⇒ genuinely deferred; no growth ⇒ ran inline.
+            //
+            // WHAT IS STILL NOT OBSERVABLE, and is not claimed by any key
+            // above: the POST-COMMIT outcome.
+            // `DatabaseTransactionRecord::$callbacks` is protected and
+            // `executeCallbacks()` returns void during the commit, so nothing
+            // in this layer can report whether deferred listeners later
+            // succeeded. Three consequences worth stating plainly:
+            //   * `listeners_ran` describes THIS CALL ONLY. It is not a claim
+            //     about the listener set, and not a delivery confirmation.
+            //   * `scheduled` promises nothing about AFTER the commit. It says
+            //     a callback holds the dispatch; not that the commit happens,
+            //     and not what runs if it does.
+            //   * `unknown` means the answer is honestly unavailable — NOT that
+            //     nothing ran. Both `listeners_ran` and `scheduled` stay false
+            //     there, because either would be a fabrication.
             'emit_scheduled' => $emitScheduled,
 
             // The richer array `emitOutcome()` returned, forwarded under its

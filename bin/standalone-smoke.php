@@ -195,7 +195,7 @@ final class SmokeRedis implements RedisConnectionContract
     public function command(string $command, array $arguments = []): mixed
     {
         if (strtolower($command) !== 'xgroup') {
-            throw new \RuntimeException('SmokeRedis does not implement '.$command);
+            throw new RuntimeException('SmokeRedis does not implement '.$command);
         }
 
         // XGROUP CREATE <stream> <group> <id> [MKSTREAM] — arguments[0] is
@@ -204,7 +204,7 @@ final class SmokeRedis implements RedisConnectionContract
         $group = (string) ($arguments[2] ?? '');
 
         if (isset($this->groups[$group][$stream])) {
-            throw new \RuntimeException('BUSYGROUP Consumer Group name already exists');
+            throw new RuntimeException('BUSYGROUP Consumer Group name already exists');
         }
 
         $this->groups[$group][$stream] = true;
@@ -1475,12 +1475,23 @@ $checks = [
             && count(PassportSupport::seams()) === 12;
     },
     'Passport\PassportWireContract carries the official layer-227 ids' => static function (): bool {
+        // EXACT equality, not a subset: this check exists so an id cannot enter
+        // `OFFICIAL_IDS` uncited, and a subset test would let one in silently.
+        // The two ids below were added with the Passport document half — they
+        // are the §4 download (`upload.getFile#be5335be`, paired with
+        // `inputSecureFileLocation#cbc7ee28`) and the error reporter
+        // (`users.setSecureValueErrors#90c894b5`), both quoted verbatim from
+        // `src/Schema/schema/sources/api_full.tl`. `help.getFile` is NOT here
+        // because it is not a Telegram method at all: it 404s upstream and is
+        // absent from both the mirror and the layer-229 catalogue.
         return [
             'auth.exportAuthorization' => 'e5bfffcd',
             'auth.importAuthorization' => 'a57a7dad',
             'help.getPassportConfig' => 'c661ad08',
             'account.getAuthorizationForm' => 'a929597a',
             'account.acceptAuthorization' => 'f3ed4c73',
+            'upload.getFile' => 'be5335be',
+            'users.setSecureValueErrors' => '90c894b5',
         ] === PassportWireContract::OFFICIAL_IDS;
     },
     'Passport\MemoryPassportWire records a dispatch and refuses an unscripted one' => static function (): bool {

@@ -158,8 +158,9 @@ php artisan teleframe:backup prune    --set=default
   history, so it is never logged or echoed.
 - `restore` writes into `--target` (a directory).
 - The set holds `paths` (runner requires ≥ 1 path) under
-  `teleframe.backup.sets.<id>`; driver is `memory` (offline default) or
-  `telegram`; `chunk_size` defaults to 4194304.
+  `teleframe.backup.sets.<id>`; `driver` is one of `memory`, `telegram` or
+  `s3`, defaults to `telegram` (needs `account`; `memory` is the volatile
+  offline driver, `s3` a durable bucket); `chunk_size` defaults to 4194304.
 
 **Programmatic** — the compose facade resolves a vault factory per set:
 

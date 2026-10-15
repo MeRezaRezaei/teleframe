@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace MeRezaRezaei\Teleframe\Schema\Generated\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped;
 use MeRezaRezaei\Teleframe\Schema\Eloquent\TfMirrorModel;
@@ -14,10 +15,15 @@ use MeRezaRezaei\Teleframe\Schema\Eloquent\TfMirrorModel;
  * Eloquent model for the shipped mirror table `tf_channel_updates`.
  *
  * Columns, casts and relations are REFLECTED from the executed shipped DDL, not
- * transcribed and not inferred from names — see ModelGenerator. A relation
- * appears here only where the engine DECLARES a foreign key.
+ * transcribed and not inferred from names — see ModelGenerator.
  *
- * Relations declared on this table: 3.
+ * A relation appears here in one of two shapes, and the docblock on each says
+ * which: one where the engine DECLARES a foreign key, and one HORIZONTAL — an
+ * entity-to-entity edge derived from an inline `{base}_type` + `{base}_id` peer
+ * pair or from a catalog-declared scalar entity column, which no constraint can
+ * express. See HorizontalEntityRelations for why those are not FKs.
+ *
+ * Relations declared on this table: 4.
  */
 final class TfChannelUpdates extends TfMirrorModel
 {
@@ -54,6 +60,12 @@ final class TfChannelUpdates extends TfMirrorModel
         'constructor' => 'string',
         'is_final' => 'boolean',
     ];
+
+    /** HORIZONTAL, not a foreign key. `tf_channel_updates`.`channel_id` is a bare `long` in the `Tf` union that `MirrorCatalog` declares on this table, so it names `tf_channels`.`id` directly and carries no discriminator. No FK is declared on it because the column exists on every row of the table whether or not that ctor sent one — the value is 0 when it did not. */
+    public function channelId(): BelongsTo
+    {
+        return $this->belongsTo(TlChannel::class, 'channel_id', 'id');
+    }
 
     /** Declared foreign key (1:N): `tf_channel_updates_dialog`(account_id, channel_id, position) -> `tf_channel_updates`(account_id, channel_id, position), ON DELETE CASCADE. Keyed on `position` = `position`; the `account_id` leg is enforced by AccountScope and the full constraint by the database. */
     public function channelUpdatesDialog(): HasMany

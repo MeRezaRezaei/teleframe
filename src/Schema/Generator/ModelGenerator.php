@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace MeRezaRezaei\Teleframe\Schema\Generator;
 
 use MeRezaRezaei\Teleframe\Schema\Generator\Model\TlScheme;
+use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorCatalog;
 use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorShape;
+use MeRezaRezaei\Teleframe\Schema\SchemaArtifacts;
 
 /**
  * Emits the Eloquent model layer for the mirror, and for every foreign key
@@ -33,6 +35,32 @@ use MeRezaRezaei\Teleframe\Schema\Mirror\MirrorShape;
  * input relations are built from — and a table with no declared constraint
  * gets no relation, because inventing one would fabricate a relationship
  * Telegram does not have.
+ *
+ * ## …AND WHERE A NAME *IS* READ — THE HORIZONTAL HALF
+ *
+ * The rule above governs the VERTICAL relations, which were the whole of what
+ * this class emitted until 2026-10-13. The HORIZONTAL half —
+ * {@see HorizontalEntityRelations} — is where a NAME is read, and the difference
+ * matters:
+ *
+ *  - the `{base}_type` / `{base}_id` pairing is not a table-name prefix
+ *    heuristic. It is the SHAPE the shipped migrations declare for every peer,
+ *    and the discriminator's ENGINE-REPORTED TYPE is checked through the same
+ *    `castFor()` the generated casts come from before anything is emitted — which
+ *    is what keeps `venue` (a `GeoPoint` in TEXT columns) out;
+ *  - a bare entity column (`user_id`, `chat_id`, `channel_id`) is never accepted
+ *    on its name. `MirrorCatalog` must DECLARE the field on that table, which is
+ *    what separates `tf_updates.user_id` (a `long` the `Update` union carries)
+ *    from `tf_messages_media.user_id` — a "scalar residue of each ctor", nested
+ *    objects deferred, holding 0 on essentially every row;
+ *  - a column the engine ALREADY constrains is skipped, because the declared-FK
+ *    pass emitted a relation for it on both sides and two accessors for one edge
+ *    is how a host ends up reading the unconstrained one.
+ *
+ * The failure this guards is specific and was named by the owner: a `belongsTo`
+ * on a column that holds 0 returns an EMPTY relation, and an empty relation is
+ * indistinguishable from "genuinely no rows". Confidently wrong is worse than
+ * absent. `tests/Schema/Mirror/HorizontalEntityRelationsTest` is the gate.
  *
  * ## Why composite constraints produce a two-sided shape
  *
@@ -90,6 +118,14 @@ final class ModelGenerator
     private readonly ?MirrorShape $shape;
 
     /**
+     * The committed field-level catalog, or null when it could not be read.
+     *
+     * Only mechanism 2 of {@see HorizontalEntityRelations} reads it; the
+     * declared-foreign-key relations below do not, and never did.
+     */
+    private readonly ?MirrorCatalog $catalog;
+
+    /**
      * Domains that have PeerResolution trait (types with peer_id/from_id columns).
      *
      * @var array<string, true>
@@ -102,9 +138,31 @@ final class ModelGenerator
         'channel_participants' => true,
     ];
 
-    public function __construct(?MirrorShape $shape = null)
+    public function __construct(?MirrorShape $shape = null, ?MirrorCatalog $catalog = null)
     {
         $this->shape = $shape;
+        $this->catalog = $catalog ?? self::defaultCatalog();
+    }
+
+    /**
+     * The committed catalog, loaded the one way it is loaded everywhere else.
+     *
+     * Read from the committed artifact rather than passed in, so the two entry
+     * points — `bin/generate-mirror-shape.php` and `artisan teleframe:regenerate` —
+     * cannot hand this generator different views of which field belongs to which
+     * table. Null when the artifacts are unreadable, which leaves mechanism 2
+     * silent and every other mechanism intact.
+     */
+    private static function defaultCatalog(): ?MirrorCatalog
+    {
+        try {
+            return MirrorCatalog::load(
+                SchemaArtifacts::path('mirror-catalog.json'),
+                TlParser::parseFile(SchemaArtifacts::source('api_full.tl')),
+            );
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public static function modelFqcn(string $class): string
@@ -336,7 +394,7 @@ final class ModelGenerator
         return 'Tf'.self::studlyStem($table);
     }
 
-    private static function studlyStem(string $table): string
+    public static function studlyStem(string $table): string
     {
         $stem = str_starts_with($table, 'tf_') ? substr($table, 3) : $table;
 
@@ -382,7 +440,6 @@ final class ModelGenerator
     {
         /** @var array<string,array<string,true>> $used method-name guard, per table */
         $used = [];
-        /** @var array<string,list<array{method:string,signature:string,body:string,doc:string}>> */
         $relations = [];
 
         foreach ($shape->tableNames() as $child) {
@@ -476,6 +533,32 @@ final class ModelGenerator
             $relations[$table] = $list;
         }
 
+        // The HORIZONTAL half, derived from the same executed shape.
+        //
+        // Merged here rather than in `generateFromShape()` so both halves pass
+        // through `uniqueMethod()`: a horizontal name and a declared-FK name can
+        // collide on one table (`peerTfMessages` against an FK-derived
+        // `tfMessages`), and a name that silently overwrote another would make
+        // one of the two relations unreachable.
+        foreach ((new HorizontalEntityRelations($shape, $this->catalog))->relationsFor($classFor) as $table => $list) {
+            foreach ($list as $relation) {
+                $relation['method'] = self::uniqueMethod(
+                    $used,
+                    $table,
+                    $relation['method'],
+                    // No constraint name to disambiguate with — these edges have
+                    // none by definition — so the edge itself is the tiebreak.
+                    'horizontal:'.$table.'.'.$relation['method'],
+                );
+                $relations[$table][] = $relation + ['nullable' => false, 'usesPeerTrait' => false];
+            }
+        }
+
+        foreach ($relations as $table => $list) {
+            usort($list, static fn (array $a, array $b): int => strcmp($a['method'], $b['method']));
+            $relations[$table] = $list;
+        }
+
         return $relations;
     }
 
@@ -489,13 +572,13 @@ final class ModelGenerator
             && array_diff($primaryKey, $foreignKey) === [];
     }
 
-/**
+    /**
      * The trailing non-tenant leg pair — the one column pair that is total
      * WITHIN an account — or null when the constraint carries nothing but the
      * tenant leg.
      *
-     * @param  list<string> $from
-     * @param  list<string> $to
+     * @param  list<string>  $from
+     * @param  list<string>  $to
      * @return array{0:string,1:string}|null
      */
     private static function tenantPair(array $from, array $to): ?array
@@ -567,8 +650,13 @@ final class ModelGenerator
         $doc[] = ' * Eloquent model for the shipped mirror table `'.$table.'`.';
         $doc[] = ' *';
         $doc[] = ' * Columns, casts and relations are REFLECTED from the executed shipped DDL, not';
-        $doc[] = ' * transcribed and not inferred from names — see ModelGenerator. A relation';
-        $doc[] = ' * appears here only where the engine DECLARES a foreign key.';
+        $doc[] = ' * transcribed and not inferred from names — see ModelGenerator.';
+        $doc[] = ' *';
+        $doc[] = ' * A relation appears here in one of two shapes, and the docblock on each says';
+        $doc[] = ' * which: one where the engine DECLARES a foreign key, and one HORIZONTAL — an';
+        $doc[] = ' * entity-to-entity edge derived from an inline `{base}_type` + `{base}_id` peer';
+        $doc[] = ' * pair or from a catalog-declared scalar entity column, which no constraint can';
+        $doc[] = ' * express. See HorizontalEntityRelations for why those are not FKs.';
         if ($relations !== []) {
             $doc[] = ' *';
             $doc[] = ' * Relations declared on this table: '.count($relations).'.';
@@ -636,21 +724,52 @@ final class ModelGenerator
             $body[] = '    ];';
         }
 
+        $needsPeerTrait = false;
         foreach ($relations as $relation) {
+            // The two flags are DERIVED from the body rather than read off the
+            // entry. The body is the ground truth actually emitted, so deriving
+            // keeps the render step from having to trust a flag that a
+            // declared-FK entry simply does not carry.
+            //
+            // `entityPeer()` is the only relation that is BOTH nullable and
+            // peer-trait-bearing: it is the only body that can return null
+            // (discriminator 0 — Telegram sent no peer) and the only one that
+            // calls the trait's resolver. Every other body is a plain
+            // HasMany/HasOne/BelongsTo that always yields a relation.
+            $isPeerTrait = str_contains((string) $relation['body'], 'entityPeer(');
+
             $body[] = '';
             $body[] = '    /** '.$relation['doc'].' */';
-            $body[] = '    public function '.$relation['method'].'(): '.$relation['signature'];
+            $body[] = '    public function '.$relation['method'].'(): '
+                .($isPeerTrait ? '?' : '').$relation['signature'];
             $body[] = '    {';
             $body[] = '        '.$relation['body'];
             $body[] = '    }';
+
+            $needsPeerTrait = $needsPeerTrait || $isPeerTrait;
         }
 
         $body[] = '}';
+
+        // The peer trait is emitted PER MODEL, only where an inline peer pair
+        // actually exists, rather than on the two shared bases
+        // (`TfMirrorModel` / `TlAnchorModel`) — a base is not this slice's to
+        // change, and most of the 257 models carry no peer pair at all.
+        //
+        // Index 3 is directly after `use AccountScoped;`: `renderModel()` has
+        // pushed the class line, `{`, the trait line and a blank, in that order,
+        // immediately above.
+        if ($needsPeerTrait) {
+            array_splice($body, 3, 0, ['    use ResolvesEntityPeer;', '']);
+        }
 
         $imports = [
             'MeRezaRezaei\Teleframe\Schema\Eloquent\AccountScoped',
             'MeRezaRezaei\Teleframe\Schema\Eloquent\\'.$base,
         ];
+        if ($needsPeerTrait) {
+            $imports[] = 'MeRezaRezaei\Teleframe\Mirror\Models\ResolvesEntityPeer';
+        }
         foreach ($relations as $relation) {
             $imports[] = 'Illuminate\Database\Eloquent\Relations\\'.$relation['signature'];
         }

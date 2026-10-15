@@ -11,7 +11,7 @@
         "requests": 1,
         "events": 1,
         "models": 257,
-        "model_relations": 406,
+        "model_relations": 660,
         "mirror_tables": 257
     },
     "tables": [],
@@ -46,7 +46,7 @@
             "computed": "393b120f"
         }
     },
-    "hash": "58d760b1ef4c753c7e20de4cdf2e9a5ade427168b6f928564c6f98ae429f8b8e",
+    "hash": "33dcdbbbfdc0b30d067319a838600b77bb81fe7ce552ca34b4a414003cb7172d",
     "sources": [
         "TL_mtproto_v1.tl",
         "TL_secret.tl",

@@ -115,6 +115,15 @@ final class AccountWorker
         while (! $shouldStop()) {
             $poller = new AccountPoller($sink);
 
+            // D-041: the frames the producer mints are stamped with the TENANCY
+            // account id, which is this config's `account_id` — the same value
+            // DaemonCommand hands to RedisStreamSink's constructor and that the
+            // ingest will carry as the row's `account_id`. NOT the Telegram user
+            // id the poller can see on its own scope. This is the composition
+            // root that holds both the poller and the account config, which is
+            // why the injection lives here and not in the poller.
+            $poller->setProducerAccountId($this->accountId());
+
             if ($state !== null) {
                 $poller->setSequenceState($state);
             }

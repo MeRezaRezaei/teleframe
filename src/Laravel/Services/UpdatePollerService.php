@@ -58,6 +58,16 @@ class UpdatePollerService
     protected const KIND_EMPTY = 'empty';
 
     /**
+     * Frame-identity prefix for a PRODUCER-minted frame (D-041).
+     *
+     * Under the S1 inversion there is no Redis stream entry id at the moment
+     * a `tf_updates` key must be derived: the bus entry is published AFTER the
+     * row commits, so the identity the old scheme keyed on does not exist
+     * yet. The producer therefore mints its own — see mintProducerFrame().
+     */
+    public const PRODUCER_FRAME_PREFIX = 'producer';
+
+    /**
      * Loop error reactions returned by errorLoopAction().
      */
     /** Bot API error code for a token Telegram does not accept. */
@@ -100,6 +110,44 @@ class UpdatePollerService
      */
     protected bool $gapPending = false;
 
+    /**
+     * The TENANCY account id minted frames belong to, or 0 when no host
+     * injected one.
+     *
+     * **NOT `$user->session->userId`, and NOT `$source`.** Both of those are
+     * the TELEGRAM user id (`fetchUserDifference()` reads `$source` from the
+     * live session at :464, and names that same session id `$accountId` at
+     * :465 — it is a Telegram id and is used only for `TelegramGapDetected`
+     * / `TelegramResynced` attribution). The tenancy id is the account the
+     * daemon was configured with — `DaemonCommand`'s
+     * `(int) $config['account_id']` (i.e. `tf_accounts.id`), the same value
+     * handed to `RedisStreamSink`'s constructor and to
+     * `UpdateIngestor::ingest()` as the row's `account_id`. `AccountWorker`
+     * injects it here because it is the one place holding both the poller and
+     * the account config.
+     *
+     * 0 means "no tenancy account was injected" (a host that polls without
+     * the daemon). It is not a fold risk in itself: `frameKey()` hashes
+     * `sha256($accountId.':'.$frameId)` with the INGESTOR's account id, and
+     * the row is keyed by that same account id, so this component adds
+     * nothing to key uniqueness — it is there to be readable.
+     */
+    protected int $producerAccountId = 0;
+
+    /**
+     * The producer frame in scope for the update being handled right now, or
+     * null. Read it with getProducerFrame() from inside the sink.
+     *
+     * SCOPED, NOT STICKY: `processUpdate()` sets it immediately before the
+     * sink sees the update and restores the previous value in a `finally`, so
+     * a frameless caller — the Bot API loop at :265, a host calling
+     * `processUpdate()` directly — can never observe a stale frame, and a
+     * throw cannot leak one into the next update. The same discipline, and
+     * the same safety argument, as `UpdateIngestor::withinFrame()`: PHP
+     * ingest is synchronous and single-threaded.
+     */
+    protected ?string $producerFrame = null;
+
     public function __construct(?UpdateSinkInterface $sink = null, private ?SignalSink $signalSink = null)
     {
         $this->sink = $sink ?? new EventDispatcherSink;
@@ -123,6 +171,63 @@ class UpdatePollerService
     public function getSink(): UpdateSinkInterface
     {
         return $this->sink;
+    }
+
+    /**
+     * Tell the poller which TENANCY account it is producing frames for. See
+     * $producerAccountId for what this is and, emphatically, what it is not.
+     *
+     * Fluent, like every other setter on this class. No call site inside this
+     * file sets it: the poller cannot know a tenancy account id, and the
+     * daemon's worker is the composition root that has both.
+     */
+    public function setProducerAccountId(int $accountId): self
+    {
+        $this->producerAccountId = $accountId;
+
+        return $this;
+    }
+
+    /**
+     * Mint the producer frame identity for one update of one fetched window:
+     * `producer:<accountId>:<fromPts>:<ordinal>` (D-041).
+     *
+     * $fromPts is the pts the window was REQUESTED from — the window's left
+     * edge, not its result. $ordinal is the index of the update among the
+     * UNWRAPPED updates of that window, in delivery order; see
+     * streamUserPayload() for how that is counted and why it must not be a
+     * container index.
+     *
+     * WHY IT IS SAFE ACROSS A CRASH-RESTART, which is the entire reason the
+     * producer is allowed to mint its own identity: the difference cursor
+     * `{pts,date,qts,seq}` is persisted by the host only AFTER
+     * `AccountWorker::run()` ends (`lastSequenceState()`; nothing inside
+     * `run()` writes it anywhere durable). So a process that dies mid-window
+     * restarts from the cursor that was in force when that window was
+     * REQUESTED — the same $fromPts — Telegram replays the same vector in the
+     * same order, the same ordinals re-derive these same strings, and
+     * `UpdateIngestor` UPSERTS onto the rows the dead process committed
+     * instead of appending a duplicate.
+     *
+     * **THE PUBLISHED `seq` IS A HASHED NEGATIVE NUMBER, NOT TELEGRAM'S.**
+     * `UpdateIngestor::frameKey()` turns this string into `seq` in
+     * `[-1073741824, -1]` and `position` in `[0, 32767]`. No consumer may
+     * read the published `seq` as a Telegram sequence number.
+     */
+    public function mintProducerFrame(int $fromPts, int $ordinal): string
+    {
+        return self::PRODUCER_FRAME_PREFIX.':'.$this->producerAccountId.':'.$fromPts.':'.$ordinal;
+    }
+
+    /**
+     * The producer frame in scope for the update the sink is handling right
+     * now, or null. Valid ONLY for the duration of the `handle()` call (and
+     * the inline callback) that `processUpdate()` is making — see
+     * $producerFrame. Copy it if it must outlive the call.
+     */
+    public function getProducerFrame(): ?string
+    {
+        return $this->producerFrame;
     }
 
     /**
@@ -481,14 +586,14 @@ class UpdatePollerService
 
         switch ($kind) {
             case 'updates.difference':
-                $this->streamUserPayload($diff, $source, $onUpdate);
+                $this->streamUserPayload($diff, $source, $onUpdate, $requestedPts);
                 $this->adoptState($diff['state'] ?? null);
                 $this->finishResync($accountId);
 
                 return self::KIND_COMPLETE;
 
             case 'updates.differenceSlice':
-                $this->streamUserPayload($diff, $source, $onUpdate);
+                $this->streamUserPayload($diff, $source, $onUpdate, $requestedPts);
                 $this->adoptState($diff['intermediate_state'] ?? null);
 
                 if ($this->sequenceState['pts'] > $requestedPts) {
@@ -568,26 +673,61 @@ class UpdatePollerService
      * through raw — channel_id context is never stripped — and any update
      * carrying channel_id + pts advances the per-channel pts map.
      *
+     * $fromPts is the pts this window was REQUESTED from (the value
+     * `fetchUserDifference()` captured before the RPC), and it is what makes
+     * the minted frames stable across a crash-restart — see
+     * mintProducerFrame(). Only the two streaming kinds pass it; the
+     * streaming branches are the only ones that emit updates.
+     *
+     * ## THE ORDINAL: THE INDEX OF THE UNWRAPPED UPDATE INSIDE THE WINDOW
+     *
+     * One counter, incremented once per update the sink is about to see, in
+     * MadelineProto delivery order, ACROSS all three loops. It is reset per
+     * fetched window, because a re-fetch of the same window must re-derive
+     * the same ordinals.
+     *
+     * NOT one counter per loop, and NOT the container index. This method
+     * UNWRAPS: `other_updates` entries pass through raw, while
+     * `new_encrypted_messages` and `new_messages` entries are each WRAPPED
+     * into a single `update*` ctor (`updateNewEncryptedMessage`,
+     * `updateNewMessage` / `updateNewChannelMessage`). So the sink sees ONE
+     * bare `update*` per call carrying NO delivering seq — which is exactly
+     * the payload that cannot key itself. A per-loop counter would hand
+     * `other_updates[0]` and `new_encrypted_messages[0]` the same ordinal,
+     * i.e. the same minted frame, and fold two different updates onto one
+     * `tf_updates` row. Two updates in ONE container collide the same way
+     * under any scheme that ignores the other two loops.
+     *
+     * The counter advances for every update emitted, INCLUDING one the filter
+     * rejects (the increment is here, not in `processUpdate()`): the ordinal
+     * must re-derive identically on the re-fetch that follows a crash,
+     * whatever the filter did on the previous attempt.
+     *
      * @param  array<string, mixed>  $diff
      * @param  (Closure(array<string, mixed>): void)|null  $onUpdate
      */
-    protected function streamUserPayload(array $diff, string $source, ?Closure $onUpdate): void
+    protected function streamUserPayload(array $diff, string $source, ?Closure $onUpdate, int $fromPts): void
     {
+        $ordinal = 0;
+
         foreach ($diff['other_updates'] ?? [] as $upd) {
             $this->trackChannelPts($upd);
-            $this->processUpdate($upd, $source, $onUpdate);
+            $this->processUpdate($upd, $source, $onUpdate, $this->mintProducerFrame($fromPts, $ordinal));
+            $ordinal++;
         }
 
         foreach ($diff['new_encrypted_messages'] ?? [] as $encrypted) {
             $update = ['_' => 'updateNewEncryptedMessage', 'message' => $encrypted];
-            $this->processUpdate($update, $source, $onUpdate);
+            $this->processUpdate($update, $source, $onUpdate, $this->mintProducerFrame($fromPts, $ordinal));
+            $ordinal++;
         }
 
         foreach ($diff['new_messages'] ?? [] as $msg) {
             $constructor = self::isChannelMessage($msg) ? 'updateNewChannelMessage' : 'updateNewMessage';
             $update = ['_' => $constructor, 'message' => $msg];
             $this->trackChannelPts($update);
-            $this->processUpdate($update, $source, $onUpdate);
+            $this->processUpdate($update, $source, $onUpdate, $this->mintProducerFrame($fromPts, $ordinal));
+            $ordinal++;
         }
     }
 
@@ -712,21 +852,32 @@ class UpdatePollerService
      *
      * @param  array<string, mixed>  $update
      * @param  (Closure(array<string, mixed>): void)|null  $onUpdate
+     * @param  string|null  $frame  the producer frame minted for THIS update (D-041), in
+     *                              scope for the sink's handle() and the callback below
      */
-    public function processUpdate(array $update, ?string $source = null, ?Closure $onUpdate = null): void
+    public function processUpdate(array $update, ?string $source = null, ?Closure $onUpdate = null, ?string $frame = null): void
     {
-        if ($this->filter !== null && ! ($this->filter)($update)) {
-            return;
-        }
+        // Scoped, not sticky — see $producerFrame. Restored on every exit path,
+        // including a throw out of the sink, so no frame survives its update.
+        $previousFrame = $this->producerFrame;
+        $this->producerFrame = $frame;
 
-        // Send to pluggable sink (EventDispatcher, Redis, Postgres, etc.)
-        if (! $this->sink->handle($update, $source)) {
-            return;
-        }
+        try {
+            if ($this->filter !== null && ! ($this->filter)($update)) {
+                return;
+            }
 
-        // Invoke optional inline callback
-        if ($onUpdate !== null) {
-            $onUpdate($update);
+            // Send to pluggable sink (EventDispatcher, Redis, Postgres, etc.)
+            if (! $this->sink->handle($update, $source)) {
+                return;
+            }
+
+            // Invoke optional inline callback
+            if ($onUpdate !== null) {
+                $onUpdate($update);
+            }
+        } finally {
+            $this->producerFrame = $previousFrame;
         }
     }
 }

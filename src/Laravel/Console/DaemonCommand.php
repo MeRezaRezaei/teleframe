@@ -12,6 +12,8 @@ use MeRezaRezaei\Teleframe\AccountLifecycle\AccountAdded;
 use MeRezaRezaei\Teleframe\AccountLifecycle\AccountLifecycleObserver;
 use MeRezaRezaei\Teleframe\AccountLifecycle\AccountRemoved;
 use MeRezaRezaei\Teleframe\AccountLifecycle\BotAdded;
+use MeRezaRezaei\Teleframe\App\AppRuntime;
+use MeRezaRezaei\Teleframe\App\AppSupport;
 use MeRezaRezaei\Teleframe\Bus\IngestConsumer;
 use MeRezaRezaei\Teleframe\Bus\LaravelRedisAdapter;
 use MeRezaRezaei\Teleframe\Bus\RedisConnectionContract;
@@ -67,6 +69,21 @@ use Throwable;
  * a live one. The per-rotation tf_accounts registry re-read is therefore
  * the real hot-reload path; it needs no pub/sub at all.
  *
+ * APPS RE-SEAT ON THE SAME ROTATION (F10). Accounts re-seated; APP definitions
+ * and their scheduled calls did not, so an app's config change needed a
+ * RESTART — which made the operator's capability 6 (a bot/user app framework
+ * whose apps are registered at runtime) half a feature next to capability 1.
+ * reseatApps() now runs on the same rotation: it re-reads
+ * teleframe.app.apps, installs any app that is not yet on the shared handler
+ * table, and re-arms the composed scheduled-call payload when — and only
+ * when — it changed. A {kind:'apps'} payload on the same reload channel is what
+ * ANNOUNCES the reseat; the per-rotation re-read is still the real path, for
+ * the same reason it is for accounts. TWO STATED LIMITS, both reported out
+ * loud rather than hidden: the shared handler table is APPEND-ONLY (a removed
+ * app's triggers need a restart to un-install them), and a changed trigger
+ * BODY is invisible to the change-detector (a Closure is compared as
+ * 'closure', never executed).
+ *
  * Auto-registration on discovery (Cycle-5 item 2): when a NEW account is
  * seated, the daemon (1) dispatches AccountAdded / BotAdded on the event
  * dispatcher, and (2) pre-seeds the account's default route through the
@@ -85,7 +102,15 @@ use Throwable;
  */
 class DaemonCommand extends Command
 {
-    /** Container seam: callable(array<string,mixed>, int): void — the NF5 mirror ingester (verbatim daily loop). */
+    /**
+     * The `kind` that marks a reload payload as an APP-definition change, as
+     * opposed to `AccountLifecycleObserver::RELOAD_KIND` ('accounts'). A frozen
+     * wire value on a frozen channel (`tg:bus:reload`), paired with the accounts
+     * kind: same channel, discriminated by `kind`, never by omission.
+     */
+    public const RELOAD_KIND_APPS = 'apps';
+
+    /** Container seam: callable(array<string, mixed>, int): void — the NF5 mirror ingester (verbatim daily loop). */
     public const MIRROR_INGESTER_KEY = 'teleclient.ingest.mirror-ingester';
 
     /**
@@ -134,6 +159,80 @@ class DaemonCommand extends Command
     private bool $reloadRequested = false;
 
     /**
+     * F10 — hot reload covers ACCOUNTS but not APP definitions.
+     *
+     * `AppServiceProvider::boot()` installs every seeded app's triggers onto the
+     * shared HandlerRegistry ONCE, and the app registry itself is a lazily
+     * resolved singleton built from `teleframe.app.apps`. So an app added or
+     * changed at runtime never reached this long-lived process: the provider
+     * boot had already run, the singleton was already resolved, and the shared
+     * handler table — read live at dispatch — carried only the apps that
+     * existed at boot. The operator's capability 6 (a bot/user app framework
+     * whose apps are registered at runtime) therefore needed a RESTART for a
+     * config change, while capability 1 (accounts) had a real no-restart path.
+     *
+     * This flag is the apps half of the reload signal. It is SEPARATE from
+     * `$reloadRequested` on purpose: an accounts nudge must not re-arm
+     * schedules, and an apps nudge must not re-seat workers — the two registries
+     * are independent and each reseat is announced in its own terms.
+     *
+     * NOTE THE GAP IS THE PAYLOAD, NOT ONLY THE WATCHER (F10): the watcher
+     * itself works (it is armed and, on the in-memory double, delivered). What
+     * was missing is that `{kind:'accounts', account_id, change}` is the only
+     * shape `noteReloadPayload()` recognised, so ANY app-definition signal was
+     * dropped on the floor — silently, because an unrecognised payload returns
+     * without a word. The signal this daemon now acts on for apps is
+     * `{kind:'apps', app?: string, change?: string}`:
+     *
+     *   - `kind:'apps'` is REQUIRED and is the discriminator. Without it the
+     *     payload is an accounts payload by omission, and guessing would
+     *     re-seat accounts on an app write.
+     *   - `app` names WHICH app changed, when the publisher knows it — the
+     *     daemon only reports the name it acted on, never an unverified one.
+     *   - `change` is free-form provenance ('added' | 'changed' | 'removed').
+     *     The daemon does NOT branch on it: the per-rotation config re-read is
+     *     the authority, exactly as it is for accounts, so a missing or
+     *     misspelled `change` cannot make the reseat lie. It is carried for the
+     *     operator's log line only.
+     *
+     * No publisher for `{kind:'apps'}` exists yet — apps are config, and config
+     * has no Eloquent observer to hang one on. That is why the per-rotation
+     * re-read below is the real path and this flag only makes the reseat
+     * announced: a host that mutates `teleframe.app.apps` in-process gets the
+     * reseat on the next rotation with no pub/sub at all.
+     */
+    private bool $appsReloadRequested = false;
+
+    /**
+     * app name => the digest of the definition this process last acted on
+     * (triggers + calls + mode). In-process memory, never persisted: it is a
+     * change-detector, not a source of truth, and a fresh daemon re-seats from
+     * config on its first rotation with no history.
+     *
+     * @var array<string, string>
+     */
+    private array $appSeats = [];
+
+    /**
+     * The composed installSpec payload (schedule id => spec) this process last
+     * handed to the schedule seam. Change-detector for the SCHEDULED-CALL half
+     * only: re-arming dials Temporal, so it must happen when the call set
+     * changes and NOT on every rotation.
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    private array $seatedAppCalls = [];
+
+    /**
+     * Config-declared app names already REPORTED as missing from the live
+     * registry. One warning per name, not one per rotation: a gap that is
+     * reported every tick trains the operator to scroll past it.
+     *
+     * @var array<string, true>
+     */
+    private array $reportedAppConfigGaps = [];
+
+    /**
      * In-process memo of session_ref → credentials from the resolver seam:
      * a registry-only account that stays seated is NOT re-resolved on every
      * rotation. Reset per command run (a fresh handle() re-dials the vault).
@@ -176,10 +275,11 @@ class DaemonCommand extends Command
         $this->newLine();
 
         // Warm the reload watcher best-effort: when the bus honors the
-        // loopback subscribe semantic (in-memory double), 'accounts' reload
-        // payloads nudge the next rotation to re-read the registry. A real
-        // pub/sub loop needs its own process, so this is never fatal — the
-        // per-rotation registry re-read is the reliable no-restart path.
+        // loopback subscribe semantic (in-memory double), 'accounts' and
+        // 'apps' reload payloads nudge the next rotation to re-read their
+        // registries. A real pub/sub loop needs its own process, so this is
+        // never fatal — the per-rotation re-reads are the reliable no-restart
+        // path.
         $this->armReloadWatch();
 
         // Supervise only configs with a valid positive account_id.
@@ -556,6 +656,7 @@ class DaemonCommand extends Command
         // existed.
         $daemon->onLoop(function () use ($daemon): void {
             $this->reseatAccounts($daemon);
+            $this->reseatApps();
             $this->drainBusOnce();
         });
 
@@ -563,8 +664,9 @@ class DaemonCommand extends Command
     }
 
     /**
-     * Best-effort reload watcher: {kind:'accounts'} payloads on the reload
-     * channel nudge the next rotation.
+     * Best-effort reload watcher: {kind:'accounts'} and {kind:'apps'} payloads
+     * on the reload channel nudge the next rotation. `kind` is the
+     * discriminator and it is REQUIRED — see noteReloadPayload().
      *
      * Two shapes, tried in order:
      *
@@ -580,8 +682,8 @@ class DaemonCommand extends Command
      * to be swallowed, which made the whole pub/sub half look alive while
      * `reloadRequested` could never be set and the "Reload signal
      * received" line was unreachable — in production hot reload was dead.
-     * The per-rotation tf_accounts re-read in reseatAccounts() remains the
-     * real no-restart path; the warning says so out loud.
+     * The per-rotation re-reads in reseatAccounts() and reseatApps() remain
+     * the real no-restart path; the warning says so out loud.
      */
     private function armReloadWatch(): void
     {
@@ -618,8 +720,16 @@ class DaemonCommand extends Command
     }
 
     /**
-     * Consume a reload payload (never throws): only a well-formed
-     * {kind:'accounts', ...} nudge counts.
+     * Consume a reload payload (never throws). Two kinds count, and they are
+     * NOT interchangeable:
+     *
+     *  - `{kind:'accounts', ...}` → re-seat workers from tf_accounts
+     *  - `{kind:'apps', ...}`    → re-seat APP DEFINITIONS + scheduled calls
+     *
+     * Before this, only the accounts shape was recognised, so an app-definition
+     * signal was silently dropped — the F10 half of the feature. Anything else
+     * still returns without a word: an unrecognised payload is somebody else's
+     * channel traffic, not this daemon's business.
      */
     private function noteReloadPayload(string $payload): void
     {
@@ -629,9 +739,15 @@ class DaemonCommand extends Command
             return;
         }
 
-        if (is_array($decoded) && ($decoded['kind'] ?? null) === AccountLifecycleObserver::RELOAD_KIND) {
-            $this->reloadRequested = true;
+        if (! is_array($decoded)) {
+            return;
         }
+
+        match ($decoded['kind'] ?? null) {
+            AccountLifecycleObserver::RELOAD_KIND => $this->reloadRequested = true,
+            self::RELOAD_KIND_APPS => $this->appsReloadRequested = true,
+            default => null,
+        };
     }
 
     /**
@@ -707,6 +823,339 @@ class DaemonCommand extends Command
                 ));
             }
         }
+    }
+
+    /**
+     * The APP half of the hot re-seat (F10). Accounts re-seated every rotation;
+     * app definitions and their scheduled calls did not, so an app's config
+     * change needed a restart — which made the operator's capability 6 (apps
+     * registered at runtime) half a feature: capability 1 had a no-restart path
+     * and capability 6 did not.
+     *
+     * WHAT IT SEATS, and why each half needs its own mechanism:
+     *
+     *  1. TRIGGERS. An app's triggers live on the SHARED, APPEND-ONLY
+     *     HandlerRegistry (a hard rule: the shipped registry has no removal
+     *     API). `AppResponder::install()` is idempotent per app name, so
+     *     installing an app that is already installed is a safe no-op — but it
+     *     means install() alone can only ever ADD reachability, never take it
+     *     away. An app that was REMOVED from config therefore keeps its live
+     *     triggers for the life of this process. That is a deliberate,
+     *     stated limit, not an oversight: this daemon will not rewrite the
+     *     shared table. It is reported loudly instead of being hidden.
+     *
+     *  2. SCHEDULED CALLS. `AppRuntime::installCalls()` composes each app's
+     *     calls into SchedulePublisher payloads keyed by
+     *     `app-call-{app}-{call}-{digest}` — a DETERMINISTIC function of the
+     *     (app, call) pair. So re-installing refreshes the same schedule id in
+     *     place rather than stacking a second one, and a changed interval
+     *     takes effect on the next rotation with no restart. This is why the
+     *     scheduled calls DO hot-reload where the triggers only add.
+     *
+     * WHY THIS RUNS EVERY ROTATION rather than on the signal alone: the pub/sub
+     * half is best-effort and, with the production adapter, refused outright (see
+     * armReloadWatch()). The accounts reseat is the real path for exactly this
+     * reason, and the apps reseat follows the same rule — the registry is
+     * re-read, so an app defined at runtime is covered with no signal at all.
+     * The signal only makes the reseat ANNOUNCED.
+     *
+     * THE SOURCE OF TRUTH IS THE RESOLVED REGISTRY, NOT THE CONFIG ROWS — and
+     * that difference is reported, never papered over. `teleclient.app.registry`
+     * is a lazily resolved singleton seeded from `teleframe.app.apps` at FIRST
+     * resolve, so a config row added after that resolve is in config and NOT in
+     * the registry. This daemon will not forgetInstance() that singleton to force
+     * a re-seed: doing so would DISCARD every app a host defined at runtime,
+     * which is the exact use this reseat exists to serve. So a config row with
+     * no registry entry is reported as a gap, once, by name.
+     *
+     * THE FIRST ROTATION IS NOT A CHANGE. The provider's boot() already
+     * installed the seeded apps, so the very first pass would otherwise print
+     * "installed app X" for apps the operator never touched. The digest of what
+     * this process has acted on is recorded on the first pass WITHOUT
+     * announcing, so only a genuine change is ever reported.
+     *
+     * Unconfigured hosts are a no-op: `AppSupport::SERVICE_KEY` is not bound, so
+     * the registry is never even resolved — the same cost posture
+     * `AppServiceProvider::installTriggers()` takes.
+     */
+    private function reseatApps(): void
+    {
+        if ($this->appsReloadRequested) {
+            $this->appsReloadRequested = false;
+            $this->components->info('Reload signal received — re-reading the app definitions.');
+        }
+
+        if (! app()->bound(AppSupport::SERVICE_KEY)) {
+            return; // no app framework in this process — nothing to reseat
+        }
+
+        try {
+            $runtime = app(AppSupport::SERVICE_KEY);
+        } catch (Throwable $e) {
+            $this->components->warn(sprintf(
+                'Could not resolve %s to re-seat app definitions: %s',
+                AppSupport::SERVICE_KEY,
+                $e->getMessage(),
+            ));
+
+            return;
+        }
+
+        if (! $runtime instanceof AppRuntime) {
+            return;
+        }
+
+        $desired = $this->appDigests($runtime);
+        $firstPass = $this->appSeats === [];
+
+        $this->reportAppConfigGaps($desired);
+
+        foreach ($desired as $name => $digest) {
+            $seated = $this->appSeats[$name] ?? null;
+
+            if ($seated === $digest) {
+                continue;
+            }
+
+            // Added (null) or CHANGED (a different digest under the same name).
+            // Both install: install() is idempotent per name, so a changed app
+            // re-registers its triggers as a no-op and the DEFINITION CHANGE
+            // ITSELF is reported rather than silently half-applied.
+            $installed = $this->installApp($runtime, $name);
+
+            $this->appSeats[$name] = $digest;
+
+            if ($firstPass) {
+                continue; // the provider's boot() already installed these
+            }
+
+            $this->components->info(sprintf(
+                'Re-seated app [%s] — %d trigger(s) installed (app definitions are re-read every rotation).',
+                $name,
+                $installed,
+            ));
+        }
+
+        // A REMOVED app cannot be un-installed: the shared handler table is
+        // append-only by hard rule. Say so out loud instead of letting the
+        // operator believe the removal took.
+        foreach (array_keys($this->appSeats) as $name) {
+            if (isset($desired[$name])) {
+                continue;
+            }
+
+            unset($this->appSeats[$name]);
+
+            if ($firstPass) {
+                continue;
+            }
+
+            $this->components->warn(sprintf(
+                'App [%s] is gone from teleframe.app.apps, but its triggers stay installed: the shared handler '
+                .'table is append-only and has no removal API, so a restart is the only way to un-install them.',
+                $name,
+            ));
+        }
+
+        $this->reseatAppCalls($runtime, $firstPass);
+    }
+
+    /**
+     * Report a config-declared app that the LIVE registry does not hold, once
+     * per name.
+     *
+     * This is the honest form of F10's second half. The registry is a lazily
+     * resolved singleton seeded at first resolve, so a `teleframe.app.apps` row
+     * written after that resolve is invisible to the daemon — the app is in
+     * config, it has no triggers on the shared table, it has no schedule armed,
+     * and nothing anywhere says so. The daemon cannot fix that here (re-seeding
+     * would discard every runtime-defined app), so it NAMES the gap instead of
+     * re-reading config and printing a healthy-looking nothing.
+     *
+     * @param  array<string, string>  $seated  app name => digest, from the live registry
+     */
+    private function reportAppConfigGaps(array $seated): void
+    {
+        foreach ((array) config('teleframe.app.apps', []) as $row) {
+            $name = is_array($row) ? (string) ($row['name'] ?? '') : '';
+
+            if ($name === '' || isset($seated[$name]) || isset($this->reportedAppConfigGaps[$name])) {
+                continue;
+            }
+
+            $this->reportedAppConfigGaps[$name] = true;
+
+            $this->components->warn(sprintf(
+                'App [%s] is declared in teleframe.app.apps but the live app registry does not hold it — its '
+                .'triggers and scheduled calls are NOT installed in this process. The registry is seeded at first '
+                .'resolve; a host that writes config after that needs the app defined through the registry (or a '
+                .'restart) for it to be reachable here.',
+                $name,
+            ));
+        }
+    }
+
+    /**
+     * Install one app's triggers onto the shared handler table.
+     *
+     * Never throws: a shadowed trigger (AppResponder's refuse-loud) or a
+     * malformed definition must not take the daemon's rotation down with it —
+     * the account reseat warns and continues for the same reason.
+     *
+     * @return int triggers installed (0 when already installed, or on refusal)
+     */
+    private function installApp(AppRuntime $runtime, string $name): int
+    {
+        try {
+            $app = $runtime->resolve($name);
+        } catch (Throwable $e) {
+            $this->components->warn(sprintf('Could not resolve app [%s]: %s', $name, $e->getMessage()));
+
+            return 0;
+        }
+
+        try {
+            return $runtime->responder()->install($app);
+        } catch (Throwable $e) {
+            $this->components->warn(sprintf('Could not install app [%s]: %s', $name, $e->getMessage()));
+
+            return 0;
+        }
+    }
+
+    /**
+     * Re-arm every registered app's SCHEDULED CALLS onto the schedule seam.
+     *
+     * Separate from reseatApps() on purpose: this DIALS the schedule host
+     * (Temporal) and must not run on every rotation. It runs only when the
+     * composed call set actually changed, which is the event that needs it —
+     * AppCallSpec::callId() is a deterministic function of the (app, call) pair,
+     * so a re-install refreshes that schedule in place instead of stacking a
+     * duplicate, and a CHANGED interval takes effect without a restart.
+     *
+     * THE FIRST PASS DOES NOT ARM. Arming app schedules is the host's explicit
+     * `teleframe:app calls --install` gesture, and it is NOT this daemon's boot
+     * behaviour today. Making the daemon arm them at startup would be a
+     * behaviour change wearing a hot-reload's clothes — a fresh dial to Temporal
+     * in the rotation path of every host that declared a call. The first pass
+     * only RECORDS, so the daemon's boot cost and behaviour are unchanged and a
+     * later change to the call set re-arms as intended.
+     *
+     * Never throws: a schedule host that is down or unbound must not take the
+     * rotation down. It warns, exactly as the account half does.
+     */
+    private function reseatAppCalls(AppRuntime $runtime, bool $firstPass): void
+    {
+        $spec = $runtime->calls();
+
+        if ($spec === $this->seatedAppCalls) {
+            return; // unchanged — never re-dial the schedule host for nothing
+        }
+
+        $this->seatedAppCalls = $spec;
+
+        if ($firstPass || $spec === []) {
+            return; // record only; an empty call set has nothing to arm
+        }
+
+        try {
+            $status = $runtime->installCalls();
+        } catch (Throwable $e) {
+            $this->components->warn(sprintf(
+                'Could not re-arm %d app scheduled call(s): %s',
+                count($spec),
+                $e->getMessage(),
+            ));
+
+            return;
+        }
+
+        $this->components->info(sprintf(
+            'Re-armed %d app scheduled call(s) onto the schedule seam.',
+            count($status),
+        ));
+
+        // The no-work contract AppCommand::calls() already enforces: a driver
+        // that skipped every schedule means no job will fire, and saying
+        // "re-armed" over that is the same visible no-op this half exists to
+        // remove.
+        foreach ($status as $id => $state) {
+            if (! str_starts_with($state, 'skipped')) {
+                continue;
+            }
+
+            $this->components->warn(sprintf(
+                'App scheduled call [%s] was NOT armed (%s) — no job will fire for it.',
+                $id,
+                $state,
+            ));
+        }
+    }
+
+    /**
+     * A stable digest per registered app: its mode, its triggers (match,
+     * priority, on-own and the handler's SHAPE — a Closure is identified as
+     * "closure", never serialized) and its calls (name, interval, method and
+     * params). Change-detector input only, so it must not embed anything that
+     * varies run to run: `spl_object_id` on a handler would make an unchanged
+     * config look changed on every rotation.
+     *
+     * Zero regex — the shape is assembled by type, not by pattern.
+     *
+     * @return array<string, string> app name => digest
+     */
+    private function appDigests(AppRuntime $runtime): array
+    {
+        $digests = [];
+
+        foreach ($runtime->registry()->all() as $app) {
+            $shape = ['mode' => $app->mode->value];
+
+            foreach ($app->triggers() as $trigger) {
+                $shape['triggers'][] = [
+                    $trigger->match,
+                    $trigger->priority,
+                    $trigger->onOwn ? 1 : 0,
+                    $this->handlerShape($trigger->handler),
+                ];
+            }
+
+            foreach ($app->calls() as $call) {
+                $shape['calls'][] = [
+                    $call->name,
+                    $call->intervalSeconds,
+                    $call->method,
+                    $call->params,
+                ];
+            }
+
+            $digests[$app->name] = hash('sha256', (string) json_encode($shape));
+        }
+
+        return $digests;
+    }
+
+    /**
+     * The COMPARABLE shape of one handler reference — a PSR-11 string is itself,
+     * a [Class, method] pair is its two strings, a Closure is the literal
+     * 'closure'. Deliberately coarse: a changed closure BODY is invisible to
+     * the digest (it cannot be compared without executing it), which is a
+     * stated limit, not a silent one — the next section says so.
+     */
+    private function handlerShape(string|array|\Closure $handler): string
+    {
+        if ($handler instanceof \Closure) {
+            return 'closure';
+        }
+
+        if (is_array($handler)) {
+            return 'callable:'.implode('::', array_map(
+                static fn (mixed $part): string => is_scalar($part) ? (string) $part : get_debug_type($part),
+                $handler,
+            ));
+        }
+
+        return 'service:'.$handler;
     }
 
     /**

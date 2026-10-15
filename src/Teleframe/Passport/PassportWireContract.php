@@ -46,6 +46,37 @@ interface PassportWireContract
     public const METHOD_ACCEPT_AUTHORIZATION = 'account.acceptAuthorization';
 
     /**
+     * upload.getFile#be5335be flags:# precise:flags.0?true cdn_supported:flags.1?true
+     *   location:InputFileLocation offset:long limit:int = upload.File
+     *
+     * THE PASSPORT DOCUMENT DOWNLOAD — and the reason it is NOT `help.getFile`.
+     *
+     * `help.getFile` is not a Telegram method. It 404s on
+     * `core.telegram.org/method/help.getFile`, it is absent from the layer-229
+     * catalogue (`src/Schema/schema/methods-mtproto.json`: 823 methods, and the
+     * eighteen `help.get*` entries it carries include no file getter), and it is
+     * absent from the layer-227 mirror. Upstream's own Passport page routes the
+     * download through the ordinary file path, and the location constructor it
+     * uses is `inputSecureFileLocation#cbc7ee28 id:long access_hash:long`,
+     * which IS in both. See `PassportFileEnvelope` for the full chain.
+     *
+     * @see PassportFileEnvelope for the download chain this is the middle of.
+     */
+    public const METHOD_GET_FILE = 'upload.getFile';
+
+    /**
+     * users.setSecureValueErrors#90c894b5 id:InputUser
+     *   errors:Vector<SecureValueError> = Bool
+     *
+     * The MTProto twin of the Bot API's `setPassportDataErrors`, and the one
+     * this seam dispatches: it is in both the mirror and the catalogue, so it is
+     * callable here in a way the Bot API method is not (that one is HTTP, and
+     * this module's only wire seam is MTProto). Both live in the nine-member
+     * `secureValueError*` family `PassportFieldError` already models.
+     */
+    public const METHOD_SET_SECURE_VALUE_ERRORS = 'users.setSecureValueErrors';
+
+    /**
      * The official layer-227 constructor id per method, verbatim.
      *
      * @var array<string, string>
@@ -56,6 +87,8 @@ interface PassportWireContract
         self::METHOD_PASSPORT_CONFIG => 'c661ad08',
         self::METHOD_AUTHORIZATION_FORM => 'a929597a',
         self::METHOD_ACCEPT_AUTHORIZATION => 'f3ed4c73',
+        self::METHOD_GET_FILE => 'be5335be',
+        self::METHOD_SET_SECURE_VALUE_ERRORS => '90c894b5',
     ];
 
     /**
