@@ -242,7 +242,7 @@ final class IngestConsumerTest extends IngestTestCase
             $dead[0][1],
             'D-043: the dead letter retains NO payload — keeping the bytes would put the system of record back on the bus',
         );
-        self::assertStringStartsWith('refused-v', $dead[0][1]['reason']);
+        self::assertStringStartsWith('refused-v1', $dead[0][1]['reason']);
 
         // The whole batch is acked — nothing stays pending for a retry
         $pending = $this->redis->xreadgroup(
@@ -447,6 +447,8 @@ final class IngestConsumerTest extends IngestTestCase
             $mirrored,
             'the seam received the PRE-MIGRATION entry exactly once — a v2 entry never touches it',
         );
+
+        self::assertCount(0, $this->redis->streamEntries(StreamSchema::DL));
 
         // The legacy path would have written the P2 user row; the seam defers
         // entirely to the ingester (mirror pipeline), so no P2 row.
@@ -2355,6 +2357,7 @@ final class IngestConsumerTest extends IngestTestCase
 
         $warnings = array_values(array_filter($logger->calls, fn ($c) => $c[0] === 'warning' && str_contains($c[1], 'bus routed handler declined')));
         self::assertNotEmpty($warnings, 'warning must be logged when onRouted returns false');
+        self::assertArrayHasKey('entry', $warnings[0][2]);
     }
 
     public function test_routed_handler_returning_true_does_not_log_declined_warning(): void
@@ -2400,7 +2403,8 @@ final class IngestConsumerTest extends IngestTestCase
         // cycle 1,2: warning (retry), cycle 3: error (dead-letter)
         $consumer->consumeOnce();
         $consumer->consumeOnce();
-        $consumer->consumeOnce();
+        $stats = $consumer->consumeOnce();
+        self::assertSame(1, $stats['processed']);
 
         $warnings = array_values(array_filter($logger->calls, fn ($c) => $c[0] === 'warning' && str_contains($c[1], 'bus entry failed; entry stays pending for retry')));
         self::assertCount(2, $warnings);
@@ -2415,6 +2419,7 @@ final class IngestConsumerTest extends IngestTestCase
         $errors = array_values(array_filter($logger->calls, fn ($c) => $c[0] === 'error' && str_contains($c[1], 'bus entry failed past the retry cap; dead-lettering')));
         self::assertCount(1, $errors);
         self::assertSame('boom-on-stored', $errors[0][2]['error']);
+        self::assertArrayHasKey('entry', $errors[0][2]);
 
         // dead-letter reason includes ingest-failed and key label
         $dead = $this->redis->streamEntries(StreamSchema::DL);
@@ -2452,7 +2457,7 @@ final class IngestConsumerTest extends IngestTestCase
 
         $dead = $redis->streamEntries(StreamSchema::DL);
         self::assertCount(1, $dead);
-        self::assertStringStartsWith('refused-v', $dead[0][1]['reason']);
+        self::assertStringStartsWith('refused-v1', $dead[0][1]['reason']);
     }
 
     public function test_replay_dead_letter_continues_past_non_retryable_to_replayable(): void
@@ -2523,5 +2528,125 @@ final class IngestConsumerTest extends IngestTestCase
 
         self::assertSame(1, $stats['forwarded']);
         self::assertIsArray($captured);
+    }
+
+
+    public function test_default_consumer_name_uses_real_hostname_not_fallback(): void
+    {
+        $reflection = new \ReflectionClass(\MeRezaRezaei\Teleframe\Bus\IngestConsumer::class);
+        $method = $reflection->getMethod('defaultConsumerName');
+        $method->setAccessible(true);
+        $name = $method->invoke(null);
+        $parts = explode('-', $name);
+
+        $host = gethostname();
+        $allowed = 'abcdefghijklmnopqrstuvwxyz0123456789_.-';
+        $expected = '';
+        $length = is_string($host) ? strlen($host) : 0;
+        for ($i = 0; $i < $length && strlen($expected) < 24; $i++) {
+            $char = strtolower($host[$i]);
+            if (str_contains($allowed, $char)) {
+                $expected .= $char;
+            }
+        }
+        if ($expected === '') {
+            $expected = 'host';
+        }
+        self::assertSame($expected, $parts[2]);
+    }
+
+    public function test_drain_legacy_no_seam_does_not_log_warning(): void
+    {
+        $redis = new ArrayRedis;
+        $logger = new TestLogger;
+        $consumer = new IngestConsumer($redis, null, null, null, $logger);
+        $method = (new \ReflectionClass($consumer))->getMethod('drainLegacy');
+        $method->setAccessible(true);
+
+        self::assertFalse($method->invoke($consumer, ['update' => '{}']));
+        $warnings = array_values(array_filter($logger->calls, fn ($c) => $c[0] === 'warning'));
+        self::assertSame([], $warnings);
+    }
+
+    public function test_strike_casts_non_numeric_stored_value_without_crash(): void
+    {
+        $redis = new ArrayRedis;
+        $redis->hset(StreamSchema::STRIKES_KEY, 'e1', 'garbage');
+        $c = new IngestConsumer($redis);
+        $m = (new \ReflectionClass($c))->getMethod('strike');
+        $m->setAccessible(true);
+
+        self::assertFalse($m->invoke($c, 'e1'));
+        self::assertSame('1', $redis->hget(StreamSchema::STRIKES_KEY, 'e1'));
+    }
+
+    public function test_identity_of_malformed_legacy_does_not_throw(): void
+    {
+        $redis = new ArrayRedis;
+        $consumer = new IngestConsumer($redis);
+        $method = (new \ReflectionClass($consumer))->getMethod('identityOf');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($consumer, ['update' => '{"account_id":1}']);
+        self::assertSame('', $result['constructor']);
+    }
+
+    public function test_reclaim_stale_pending_claims_all_idle_entries(): void
+    {
+        $redis = new ArrayRedis;
+        $consumer = new IngestConsumer($redis, null, null, null, new TestLogger, 'worker');
+
+        $redis->xadd(StreamSchema::STREAM, '*', ['v' => 2, 'account_id' => 7, 'seq' => 1, 'position' => 1, 'constructor' => 'updateNewMessage', 'ts' => 1]);
+        $redis->xadd(StreamSchema::STREAM, '*', ['v' => 2, 'account_id' => 7, 'seq' => 2, 'position' => 1, 'constructor' => 'updateNewMessage', 'ts' => 2]);
+        $redis->xreadgroup(StreamSchema::GROUP, 'crashed-9', [StreamSchema::STREAM => 10], '>');
+        $redis->warpTime(61_000);
+
+        $reflection = new \ReflectionClass($consumer);
+        $method = $reflection->getMethod('reclaimStalePending');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($consumer);
+        self::assertCount(2, $result);
+    }
+
+    public function test_normalize_entries_requires_index_zero(): void
+    {
+        $consumer = new IngestConsumer(new ArrayRedis);
+        $reflection = new \ReflectionClass($consumer);
+        $method = $reflection->getMethod('normalizeEntries');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($consumer, [0 => [1 => ['v' => 2]]]);
+        self::assertSame([], $result);
+    }
+
+    public function test_normalize_entries_requires_index_one(): void
+    {
+        $consumer = new IngestConsumer(new ArrayRedis);
+        $reflection = new \ReflectionClass($consumer);
+        $method = $reflection->getMethod('normalizeEntries');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($consumer, [0 => [0 => 'id']]);
+        self::assertSame([], $result);
+    }
+
+    public function test_pending_total_counts_rows_when_index_zero_is_array(): void
+    {
+        $consumer = new IngestConsumer(new ArrayRedis);
+        $reflection = new \ReflectionClass($consumer);
+        $method = $reflection->getMethod('pendingTotal');
+        $method->setAccessible(true);
+
+        self::assertSame(1, $method->invoke($consumer, [['entry']]));
+    }
+
+    public function test_count_slot_returns_null_for_float(): void
+    {
+        $class = new \ReflectionClass(\MeRezaRezaei\Teleframe\Bus\IngestConsumer::class);
+        $method = $class->getMethod('countSlot');
+        $method->setAccessible(true);
+
+        self::assertNull($method->invoke(null, 5.0));
     }
 }

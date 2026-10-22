@@ -682,4 +682,14 @@ final class LaravelRedisAdapterStreamVerbsTest extends TestCase
 
         return $connection;
     }
+
+
+    public function test_pair_ignores_trailing_odd_element(): void
+    {
+        $class = new \ReflectionClass(\MeRezaRezaei\Teleframe\Bus\LaravelRedisAdapter::class);
+        $method = $class->getMethod('pair');
+        $method->setAccessible(true);
+
+        self::assertSame(['a' => '1'], $method->invoke(null, ['a', '1', 'b']));
+    }
 }
