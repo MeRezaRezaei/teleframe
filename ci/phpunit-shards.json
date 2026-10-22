@@ -175,6 +175,7 @@
                 "tests/Ingest/UpdateIngestorTest.php",
                 "tests/Ingest/ValueClueStaysDistinctThroughTheConsumerLayerTest.php",
                 "tests/MiniApp",
+                "tests/Telegram",
                 "tests/Schema/AccountIsolationTest.php",
                 "tests/Schema/ChatAccessHashChildPlacesRowTest.php",
                 "tests/Schema/EveryForeignKeyIsReachableThroughARelationTest.php",

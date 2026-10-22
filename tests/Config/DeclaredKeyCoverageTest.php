@@ -182,9 +182,9 @@ final class DeclaredKeyCoverageTest extends TestCase
      */
     public function test_the_registry_still_covers_the_whole_declared_surface(): void
     {
-        self::assertCount(176, ConfigKeyRegistry::declaredKeys());
-        self::assertCount(166, ConfigKeyRegistry::READ);
-        self::assertCount(5, ConfigKeyRegistry::DEAD);
+        self::assertCount(204, ConfigKeyRegistry::declaredKeys());
+        self::assertCount(174, ConfigKeyRegistry::READ);
+        self::assertCount(25, ConfigKeyRegistry::DEAD);
         self::assertCount(0, ConfigKeyRegistry::READ_BUT_IGNORED);
         self::assertCount(5, ConfigKeyRegistry::READ_CONDITIONAL);
     }

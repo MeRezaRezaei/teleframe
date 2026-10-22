@@ -131,25 +131,39 @@ return [
     |   'bot-assistant' (bot assistants mirroring a user account).
     */
     'deduplication' => [
+        // INERT — read by nothing; the wire names live in Handler\Deduplicator constants.
         'ttl' => (int) env('TELEFRAME_DEDUP_TTL', 60),
+        // INERT — read by nothing.
         'scope' => env('TELEFRAME_DEDUP_SCOPE', 'account'),
+        // INERT — read by nothing.
         'prefix' => env('TELEFRAME_DEDUP_PREFIX', 'tg:bus:dedup'),
     ],
     'handler' => [
+        // INERT — read by nothing.
         'dedup_ttl' => (int) env('TELEFRAME_DEDUP_TTL', 60),
+        // INERT — read by nothing.
         'dedup_scope' => env('TELEFRAME_DEDUP_SCOPE', 'account'),
+        // INERT — read by nothing.
         'deduplication_ttl' => (int) env('TELEFRAME_DEDUP_TTL', 60),
+        // INERT — read by nothing.
         'deduplication_scope' => env('TELEFRAME_DEDUP_SCOPE', 'account'),
         'deduplication' => [
+            // INERT — read by nothing.
             'ttl' => (int) env('TELEFRAME_DEDUP_TTL', 60),
+            // INERT — read by nothing.
             'scope' => env('TELEFRAME_DEDUP_SCOPE', 'account'),
+            // INERT — read by nothing.
             'prefix' => env('TELEFRAME_DEDUP_PREFIX', 'tg:bus:dedup'),
         ],
     ],
     'multi_session' => [
+        // INERT — read by nothing.
         'dedup_ttl' => (int) env('TELEFRAME_DEDUP_TTL', 60),
+        // INERT — read by nothing.
         'dedup_scope' => env('TELEFRAME_DEDUP_SCOPE', 'account'),
+        // INERT — read by nothing.
         'deduplication_ttl' => (int) env('TELEFRAME_DEDUP_TTL', 60),
+        // INERT — read by nothing.
         'deduplication_scope' => env('TELEFRAME_DEDUP_SCOPE', 'account'),
     ],
 
@@ -350,12 +364,18 @@ return [
     | - initial_window: 4 MiB default
     */
     'proxy' => [
+        // INERT — read by nothing; default proxy type is not consumed from config.
         'default' => env('TELEFRAME_PROXY_TYPE', 'mtproto'),
         'web' => [
+            // INERT — read by nothing.
             'carrier' => env('TELEFRAME_WEB_CARRIER', 'auto'),
+            // INERT — read by nothing.
             'bridge_derivation' => 'tdesktop-web-proxy-bridge-v1',
+            // INERT — read by nothing.
             'max_frame_size' => 1024 * 1024,
+            // INERT — read by nothing.
             'chunk_size' => 64 * 1024,
+            // INERT — read by nothing.
             'initial_window' => 4 * 1024 * 1024,
         ],
     ],

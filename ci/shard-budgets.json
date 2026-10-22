@@ -274,6 +274,13 @@
       "measured_at": "2026-10-17",
       "over_target": false
     },
+    "Telegram": {
+      "seconds": 1.245,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-22",
+      "over_target": false
+    },
     "Vault": {
       "seconds": 1.241,
       "kind": "measured",

@@ -454,7 +454,7 @@ class Client
             $bodies[$key] = TLEncoder::encodeObject($request['method'], $request['params']);
         }
         // Both EncryptedConnection and WebProxyConnection have the same static method
-        $connClass = $this->conn::class ?? EncryptedConnection::class;
+        $connClass = $this->conn !== null ? $this->conn::class : EncryptedConnection::class;
         $connClass::assertBatchWithinBounds($bodies);
 
         for ($attempt = 1; ; $attempt++) {

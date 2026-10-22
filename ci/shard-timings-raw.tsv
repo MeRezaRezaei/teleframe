@@ -53,3 +53,4 @@ Console	689.228109428	2
 Schema	1758.487328025	2
 Ingest	2201.000000	2	# FAILED RUN, NOT A MEASUREMENT — the "authoritative" claim was wrong
 Support	0.43	0
+Telegram	1.245053873	0	# measured 2026-10-22 on a clean tree, wall time, exit 0

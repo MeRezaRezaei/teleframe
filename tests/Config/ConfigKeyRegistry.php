@@ -202,6 +202,7 @@ final class ConfigKeyRegistry
         'teleframe.notify.schedules',
         'teleframe.notify.schedules_dsn',
         'teleframe.notify.topics',
+        'teleframe.passport.accept_family',
         'teleframe.passport.account_id',
         'teleframe.passport.allowed_types',
         'teleframe.passport.anonymous_login',
@@ -334,6 +335,13 @@ final class ConfigKeyRegistry
         'teleframe.tstore.s3.use_path_style',
         'teleframe.user_session',
         'teleframe.vault.default_account',
+        'teleframe.web_proxy_server.carrier',
+        'teleframe.web_proxy_server.enabled',
+        'teleframe.web_proxy_server.listen_host',
+        'teleframe.web_proxy_server.port',
+        'teleframe.web_proxy_server.sponsor_channel',
+        'teleframe.web_proxy_server.tls_cert_file',
+        'teleframe.web_proxy_server.tls_key_file',
         'teleframe.webhook_require_secret',
         'teleframe.webhook_secret',
     ];
@@ -369,6 +377,33 @@ final class ConfigKeyRegistry
         'teleframe.bus.reload_channel',
         'teleframe.bus.stream',
         'teleframe.tstore.bucket_prefix',
+        // Cycle 17/18 dedup keys: declared + documented, read by nothing.
+        // Deduplicator uses the hardcoded tg:bus:dedup constant; ReplayDedup
+        // takes ttl via constructor injection. No config read exists.
+        'teleframe.deduplication.prefix',
+        'teleframe.deduplication.scope',
+        'teleframe.deduplication.ttl',
+        'teleframe.handler.dedup_scope',
+        'teleframe.handler.dedup_ttl',
+        'teleframe.handler.deduplication.prefix',
+        'teleframe.handler.deduplication.scope',
+        'teleframe.handler.deduplication.ttl',
+        'teleframe.handler.deduplication_scope',
+        'teleframe.handler.deduplication_ttl',
+        'teleframe.multi_session.dedup_scope',
+        'teleframe.multi_session.dedup_ttl',
+        'teleframe.multi_session.deduplication_scope',
+        'teleframe.multi_session.deduplication_ttl',
+        // Cycle 29 proxy keys: proxy.default and proxy.web.* are passed as a
+        // block (TeleframeServiceProvider defaultProxyConfig) but no leaf is
+        // ever indexed or read; web proxy carrier/max_frame/chunk/initial
+        // window/bridge_derivation have no consumer.
+        'teleframe.proxy.default',
+        'teleframe.proxy.web.bridge_derivation',
+        'teleframe.proxy.web.carrier',
+        'teleframe.proxy.web.chunk_size',
+        'teleframe.proxy.web.initial_window',
+        'teleframe.proxy.web.max_frame_size',
     ];
 
     /**

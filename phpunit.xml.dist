@@ -109,6 +109,9 @@
         <testsuite name="Teleframe">
             <directory>tests/Teleframe</directory>
         </testsuite>
+        <testsuite name="Telegram">
+            <directory>tests/Telegram</directory>
+        </testsuite>
         <testsuite name="Control">
             <directory>tests/Control</directory>
         </testsuite>
