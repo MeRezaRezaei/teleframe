@@ -1,0 +1,741 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# opencode-agents.yml — the opencode CI agent, running on GitHub Actions.
+#
+# PORTED FROM .gitlab-ci.yml, WHICH WAS THE SPECIFICATION. Every job body, every
+# flag, every budget and every WHY-comment below is carried across rather than
+# re-invented. The agent DEFINITION (.opencode-ci/opencode.json and
+# .opencode-ci/AGENTS.md) is NOT copied into this file — it is installed from the
+# repository at run time, so ONE definition drives both GitLab and GitHub and the
+# two lanes cannot drift apart.
+#
+# THE OPERATOR'S RULING, verbatim:
+#   "we use git hub for ci cd since in public projects like teleframe we can take
+#    advantege of git hub free ci plans and the git lab is only the one that is
+#    going to manage the ci of git hub inside git lab self hosted worker and the
+#    ai we made for our ci in git lab the new version of it is also avalbalble so
+#    our opencode ai can both be fired inside git lab self hosted and git hub
+#    offical"
+#
+# PORTS THESE RANGES OF .gitlab-ci.yml (that file stays — another lane is
+# stripping the jobs from it; this lane did not touch it):
+#   .gitlab-ci.yml:473-518  the hidden template `.opencode-agent` → inlined per
+#                            job below, because Actions has no `extends`
+#   .gitlab-ci.yml:370-453  warm-live-host     → warm-live-host
+#   .gitlab-ci.yml:525-566  opencode-read      → opencode-read
+#   .gitlab-ci.yml:568-606  opencode-write     → opencode-write
+#   .gitlab-ci.yml:663-765  opencode-verify    → opencode-verify
+#
+# THE MODEL / ENDPOINT IS NOT DECIDED HERE, ON PURPOSE. `.opencode-ci/opencode.json`
+# already points at https://or.pubg-sell.ir/v1 with model
+# opencode-omniroute/oc/space-bunny-free. This file COPIES that file and changes
+# nothing in it. A previous generation inlined its own provider block and reached
+# for 127.0.0.1:20128 and the opencode-zen / "opencode/" namespaces; those 403'd
+# and the failure was silent because the agent simply produced no verdict. If you
+# are editing this file and you feel the urge to add a `provider:` or a `model:`
+# line: do not. The file at .opencode-ci/opencode.json is the single source and
+# `test -f .opencode-ci/opencode.json` below is the guard that stops a typo from
+# turning into an unauthenticated agent.
+#
+# WHY THE SETUP BLOCK IS INLINED INSTEAD OF SHARED. GitLab expressed it as
+# `extends: .opencode-agent` plus a `!reference` from each job. GitHub Actions has
+# no `extends`, no merge-key syntax and no job templates inside a workflow — the
+# only shareable unit is a composite action under .github/actions/, and that is a
+# SECOND file which this lane does not own. So the block is copied per job. This
+# is duplicated on purpose and each copy is independently readable and
+# independently editable, which is what a reviewer of one lane needs. Same
+# reasoning, same trade, as .github/workflows/verify-php.yml recorded for the
+# `.php-setup` block.
+#
+# CONVENTIONS CARRIED FROM THE SOURCE. Em-dashes instead of ": " inside unquoted
+# messages, for the reason recorded at .gitlab-ci.yml:196-199 — a bare YAML scalar
+# containing ": " parses as a MAPPING and a whole pipeline fails to lint.
+#
+# SECURITY SHAPE, STATED UP FRONT. On GitLab the read/verify jobs were blind to
+# the write credential because GitLab *environments* scope variables. Actions has
+# no equivalent of a scoped-variable environment, but it has TWO mechanisms that
+# are at least as strong and one of them is enforced by the runner rather than by
+# a promise in a shell script:
+#   1. `permissions:` — the GITHUB_TOKEN is minted with exactly the scopes named,
+#      so a read job physically cannot write to the repository even if a step
+#      referenced it. That is the structural layer.
+#   2. `persist-credentials: false` — the token is never written into
+#      .git/config, so no later step, tool or agent subprocess can pick it up
+#      from the checkout's remote definition. That is the second structural layer.
+#   3. A startup assertion that ABORTS if any write-capable credential is visible
+#      — the ported GitLab "isolation proof", kept because a check that fails
+#      loudly beats a permission that might be misread.
+# Only opencode-write holds a write credential, and it holds the fewest it can.
+
+name: opencode-agents
+
+on:
+  # ── THE MANUAL PATH. This is the primary opt-in and it is the port of
+  # GitLab's project variables: instead of flipping a variable, a human ticks a
+  # box. Every input defaults to false, so dispatching this workflow without
+  # ticking anything runs four jobs that print one line each and exit — it cannot
+  # start burning quota by accident.
+  workflow_dispatch:
+    inputs:
+      opencode_agent:
+        description: "Master switch. OFF by default — the agent layer costs model quota."
+        type: boolean
+        required: false
+        default: false
+      opencode_allow_pipeline:
+        description: "Second fence. The read/write pair needs BOTH switches on."
+        type: boolean
+        required: false
+        default: false
+      opencode_push:
+        description: "Third fence. Only then may the writer push the warm ledger entry."
+        type: boolean
+        required: false
+        default: false
+      opencode_verifier:
+        description: "Allow the VERIFIER to investigate a red gate. Deliberately NOT tied to push."
+        type: boolean
+        required: false
+        default: false
+      warm_live:
+        description: "Run warm-live-host against a REAL Telegram session. Off by default, always."
+        type: boolean
+        required: false
+        default: false
+  # ── THE AUTOMATIC PATH. GitLab's `when: on_failure` had no honest equivalent
+  # inside a standalone workflow: on_actions only sees failures of jobs in THIS
+  # workflow, and the cold gates live in verify-php.yml / regen-gates.yml /
+  # security.yml / db-tracks.yml / fidelity-audit.yml / host-install.yml.
+  # `workflow_run` IS the honest equivalent — it fires after one of THOSE
+  # workflows completes and carries its conclusion and head_sha. Gated on the
+  # repository variable OPENCODE_VERIFIER because workflow_run has no inputs;
+  # that mirrors GitLab, where OPENCODE_VERIFIER was also a project variable.
+  workflow_run:
+    workflows: ["verify-php", "regen-gates", "security", "db-tracks", "fidelity-audit", "host-install"]
+    types: [completed]
+  # ── THE REUSABLE PATH, so another workflow can call this one with the same
+  # secrets instead of forking the agent definition.
+  workflow_call:
+    inputs:
+      opencode_agent:      {type: boolean, default: false}
+      opencode_allow_pipeline: {type: boolean, default: false}
+      opencode_push:       {type: boolean, default: false}
+      opencode_verifier:   {type: boolean, default: false}
+      warm_live:           {type: boolean, default: false}
+    secrets:
+      OMNIROUTE_API_KEY_READ:
+        required: false
+        description: "Read-scoped OmniRoute key. The only LLM credential read/verify ever see."
+      OMNIROUTE_API_KEY:
+        required: false
+        description: "Write-scoped OmniRoute key. opencode-write ONLY."
+      TELEGRAM_USER_SESSION:
+        required: false
+        description: "Real Telegram session. warm-live-host ONLY. A credential — never echo it."
+      TELEGRAM_API_ID:
+        required: false
+      TELEGRAM_API_HASH:
+        required: false
+
+# MINIMUM GLOBAL PERMISSIONS. Everything is denied here and each job opts back in
+# to exactly what it needs, because the default GITHUB_TOKEN on a public repo is
+# far broader than any job below deserves. The reader and the verifier stay at
+# `contents: read` and never appear in the write column.
+permissions:
+  contents: read
+
+# THE COMMON SETUP, PORTED FROM .gitlab-ci.yml:481-518 (`.opencode-agent`'s
+# before_script) — the git availability assertion, `git config --global
+# safe.directory`, and the copy of .opencode-ci/{opencode.json,AGENTS.md} into
+# $HOME/.config/opencode. It is COPIED into each job rather than shared, on
+# purpose: see the header for why Actions gets no composite action here. The
+# deviations from the GitLab original are named in the steps themselves —
+# chiefly, the apt lines are NOT ported.
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # opencode-read — the READER.
+  #
+  # Reads the commit and decides whether a live Telegram WARM run is warranted,
+  # printing exactly two machine-readable lines (WARM_NEEDED / WARM_REASON) that
+  # the write job can consume.
+  #
+  # THE SECURITY BOUNDARY IS THE POINT OF THIS JOB, and it is the port of the
+  # reasoning at .gitlab-ci.yml:539-545. On GitLab the read job proved it was
+  # blind to the write token by asserting GITLAB_TOKEN was absent from its
+  # environment. On Actions the write-capable credentials are GITHUB_TOKEN, any
+  # PAT in the repo, the write-scoped OMNIROUTE_API_KEY, and the Telegram session
+  # trio — and none of them is named in this job at all.
+  #
+  # THE TRAP THAT WAS MEASURED, PORTED VERBATIM BECAUSE IT BITES HERE TOO:
+  # asserting on the LLM key itself made the reader UNAUTHENTICATED. The LLM key
+  # is scoped to the write environment, so opencode died with "Authentication
+  # required" and the reader never read anything. A reader needs to be ABLE to
+  # think; what it must never hold is the ability to WRITE. So it gets its own
+  # read-scoped key (OMNIROUTE_API_KEY_READ) and is proven blind to the WRITE key
+  # and to every repository token.
+  opencode-read:
+    name: opencode-read (reader — no write credential)
+    # NO `needs:` — absent `needs` means parallel, which is the direct equivalent
+    # of GitLab's `needs: []` (start immediately, wait for nothing).
+    if: >-
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call')
+      && inputs.opencode_agent == true
+      && inputs.opencode_allow_pipeline == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      HOME: /tmp/.opencode-home
+      # THE ONE CREDENTIAL THIS JOB HAS. Read-scoped. Never the write key.
+      OMNIROUTE_API_KEY_READ: ${{ secrets.OMNIROUTE_API_KEY_READ }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # GIT_DEPTH: "0" — the reader diffs HEAD^ HEAD
+          persist-credentials: false   # no token in .git/config for any subprocess to find
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install opencode and the agent definition
+        run: |
+          set -euo pipefail
+          node --version; git --version; npm --version
+          # apt IS DELIBERATELY NOT PORTED. On the GitLab bare-metal runner the
+          # apt lines were what killed the whole agent layer (pipeline #923, job
+          # 2881: unsigned Debian repo, curl/jq/git never installed, job died at
+          # the next guard). The hosted runner image already carries git and curl,
+          # so the apt lines are dead weight AND the known failure mode. What is
+          # ported is the FIX: assert the tool this job actually needs and fail
+          # loudly and by name if it is absent.
+          command -v git  >/dev/null 2>&1 || { echo "FATAL — git is required (git log, git diff, git config safe.directory) and is absent."; exit 1; }
+          command -v curl >/dev/null 2>&1 || echo "NOTE — curl missing; the agent talks to the model over node, not curl."
+          echo "git available — $(git --version)"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          # PORTED VERBATIM from .gitlab-ci.yml:514 — npm install --global
+          # opencode-ai. Bounded, because a registry fetch is exactly the kind of
+          # step that hangs, and a hung step is a wedged runner.
+          timeout -k 5 600 npm install --global opencode-ai
+          command -v opencode >/dev/null 2>&1 || { echo "FATAL — opencode is on PATH after npm install --global; the install silently failed."; exit 1; }
+          opencode --version
+
+      - name: Install the shared agent definition
+        run: |
+          set -euo pipefail
+          # THE GUARD AGAINST THE SILENT-403 REGRESSION. If the source file is
+          # missing or is not JSON, this fails HERE, by name — rather than
+          # letting opencode start with no provider, hit a 403, and produce no
+          # verdict that anyone would notice.
+          test -f .opencode-ci/opencode.json || { echo "FATAL — .opencode-ci/opencode.json is absent; the shared agent definition is missing."; exit 1; }
+          node -e 'JSON.parse(require("fs").readFileSync(".opencode-ci/opencode.json","utf8"))' \
+            || { echo "FATAL — .opencode-ci/opencode.json is not valid JSON."; exit 1; }
+          mkdir -p "$HOME/.config/opencode" "$HOME/.local/share/opencode"
+          cp .opencode-ci/opencode.json "$HOME/.config/opencode/opencode.json"
+          cp .opencode-ci/AGENTS.md     "$HOME/.config/opencode/AGENTS.md"
+          echo "installed the SHARED definition — provider, model and rules come from .opencode-ci/, not from this workflow"
+
+      - name: Prove isolation from every write credential
+        run: |
+          set -euo pipefail
+          # PORTED FROM .gitlab-ci.yml:546-551, with the Actions credential names.
+          # GITHUB_TOKEN is absent because no step in this job references it and
+          # `permissions: contents: read` means it could not write anyway; this
+          # assertion proves the absence rather than assuming it.
+          for V in GITHUB_TOKEN GH_TOKEN GITHUB_PAT OMNIROUTE_API_KEY \
+                   TELEGRAM_USER_SESSION TELEGRAM_API_ID TELEGRAM_API_HASH TELEFRAME_WARM; do
+            if [ -n "$(eval echo "\$$V")" ]; then
+              echo "FATAL: $V is in scope for the READER job — isolation is broken."
+              exit 1
+            fi
+          done
+          test -n "${OMNIROUTE_API_KEY_READ:-}" || { echo "FATAL: the reader has no LLM credential."; exit 1; }
+          echo "isolation OK: no write token, no write LLM key and no Telegram credential in the reader environment; read-scoped LLM key present"
+
+      - name: Show the commit under review
+        run: |
+          echo "commit under review: ${{ github.sha }}"
+          git log --oneline -1
+          git diff --stat HEAD^ HEAD 2>/dev/null || echo "(no parent diff available)"
+
+      - name: Ask the reader for a warm verdict
+        run: |
+          set -euo pipefail
+          export HOME=/tmp/.opencode-home
+          # auth.json is written exactly as GitLab wrote it, so the two lanes
+          # configure opencode identically. The key is never echoed; GitHub masks
+          # it in logs and nothing in this script prints it.
+          printf '{"opencode-omniroute":{"type":"api","key":"%s"}}\n' "${OMNIROUTE_API_KEY_READ:-}" > "$HOME/.local/share/opencode/auth.json"
+          # THE INNER TIMEOUT IS NEW AND DELIBERATE. GitLab bounded the job with
+          # `timeout: 20m` and nothing inside it; a wedged model call therefore
+          # burned the whole 20m before failing. Here the model call is bounded at
+          # 900s — 15 minutes — which is ~900x the measured 49s the reader took
+          # once wired, so it costs nothing in the normal case and turns a hang
+          # into a visible failure with 5 minutes of the job budget left for the
+          # artifact upload.
+          timeout -k 5 900 opencode run --print-logs \
+            "Read AGENTS.md in .opencode-ci first. You are the READER for commit ${{ github.sha }}. \
+             Decide whether this commit needs a WARM run against a real Telegram session, using the \
+             rules in AGENTS.md. Print the verdict as exactly two lines: WARM_NEEDED=yes|no and \
+             WARM_REASON=<one line>. Do not modify any file. Do not run any command that talks to Telegram." \
+            | tee warm-decision.txt
+          cat warm-decision.txt
+
+      - name: Upload the warm decision
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: warm-decision-${{ github.run_id }}
+          path: warm-decision.txt
+          if-no-files-found: ignore
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # opencode-write — the only job that holds a write credential.
+  #
+  # Commits ONLY the warm-ledger entry the warm lane produced. That index is the
+  # whole point of the lane — it is what stops a commit being warmed twice — so
+  # if the lane did not run, there is nothing to commit and this job says so
+  # rather than inventing an entry.
+  opencode-write:
+    name: opencode-write (writer — holds the write credential)
+    if: >-
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call')
+      && inputs.opencode_agent == true
+      && inputs.opencode_allow_pipeline == true
+      && inputs.opencode_push == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write   # the ONLY job in this workflow that gets write
+    concurrency:
+      # resource_group: teleframe-warm-live, ported. Two runs can never commit
+      # and push the same ledger concurrently.
+      group: teleframe-warm-live
+      cancel-in-progress: false
+    env:
+      HOME: /tmp/.opencode-home
+      OMNIROUTE_API_KEY_READ: ${{ secrets.OMNIROUTE_API_KEY_READ }}
+      OMNIROUTE_API_KEY: ${{ secrets.OMNIROUTE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # persist-credentials stays TRUE here, deliberately and only here — the
+          # push step below needs it. Every other job in this file sets it false.
+          persist-credentials: true
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install opencode and the agent definition
+        run: |
+          set -euo pipefail
+          node --version; git --version; npm --version
+          command -v git >/dev/null 2>&1 || { echo "FATAL — git is required and is absent."; exit 1; }
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          # PORTED VERBATIM from .gitlab-ci.yml:514.
+          timeout -k 5 600 npm install --global opencode-ai
+          command -v opencode >/dev/null 2>&1 || { echo "FATAL — opencode is on PATH after npm install --global; the install silently failed."; exit 1; }
+
+      - name: Assert the write scope is present
+        run: |
+          set -euo pipefail
+          # PORTED FROM .gitlab-ci.yml:580-584.
+          for V in OMNIROUTE_API_KEY GITHUB_TOKEN; do
+            if [ -z "$(eval echo "\$$V")" ]; then echo "FATAL: $V is missing from the writer job."; exit 1; fi
+          done
+          echo "writer scope OK: write secrets present as designed"
+
+      - name: Commit the warm ledger entry, if the lane produced one
+        run: |
+          set -euo pipefail
+          if [ -f .warm-ledger.json ]; then
+            git add .warm-ledger.json
+            if git diff --cached --quiet; then
+              echo "warm ledger unchanged — the lane refused to re-run an already-warmed commit"
+            else
+              git -c user.name="teleframe-warm-agent" \
+                  -c user.email="warm-agent@users.noreply.github.com" \
+                  commit -m "warm: record the commit index for ${{ github.sha }}
+
+          Recorded by the warm lane in CI. The session value is never part of this file." \
+                  .warm-ledger.json
+              # GitLab hardcoded `HEAD:main`. This pushes to the ref that was
+              # actually dispatched, which is the same branch on main and the
+              # correct one on anything else. A branch-protection rule can still
+              # refuse it — that is a deliberate guard, not a bug to route around.
+              git push origin "HEAD:${{ github.ref_name }}"
+            fi
+          else
+            echo "no .warm-ledger.json produced — the lane did not run, so nothing is recorded"
+          fi
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # opencode-verify — investigates a RED cold gate instead of relaying CI output.
+  #
+  # The owner's words, ported at .gitlab-ci.yml:611-613: "run the verifier as
+  # agent after each failed ci to investigate the live codes it see and makes a
+  # report on them instead of relaying on ci out puts".
+  #
+  # WHY THIS JOB EXISTS AND WHY opencode-read IS NOT THE ANSWER. opencode-read is
+  # a WARM-DECISION job: it runs on a dispatch, answers "does this commit deserve
+  # a live Telegram run?", and never looks at a FAILURE. Meanwhile a red gate is
+  # diagnosed by a human scrolling a job log — which is exactly the "relying on
+  # CI outputs" the owner rejected.
+  #
+  # THE ONE DISTINCTION THIS JOB EXISTS TO MAKE, and the reason a human reading
+  # CI output gets it wrong: a red job is NOT evidence that the code is wrong.
+  # Pipeline #923 is the proof — two jobs failed BEFORE ANY CODE RAN (apt disk
+  # exhaustion, then an unsigned Debian repo), and every other gate was SKIPPED.
+  # Read as CI output that is a red pipeline about the code. It was a red pipeline
+  # about a degraded bare-metal runner — the environment wearing the costume of a
+  # code failure. So the prompt makes the agent classify CODE vs ENVIRONMENT/INFRA
+  # before proposing any fix, and says plainly that "no gate ran" is itself the
+  # finding.
+  #
+  # THE FIRE CONDITION, which is the one piece GitLab expressed as `when:
+  # on_failure` and Actions expresses as a `workflow_run` trigger plus an `if:`
+  # on the conclusion. It fires ONLY when a cold workflow in another file actually
+  # went red, so on an all-green repository it costs nothing even with the switch
+  # turned on.
+  opencode-verify:
+    name: opencode-verify (verifier — no write credential)
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure'
+       && vars.OPENCODE_VERIFIER == 'true')
+      || ((github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call')
+          && inputs.opencode_agent == true
+          && inputs.opencode_allow_pipeline == true
+          && inputs.opencode_verifier == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read   # a report is written to an artifact, never committed
+    env:
+      HOME: /tmp/.opencode-home
+      OMNIROUTE_API_KEY_READ: ${{ secrets.OMNIROUTE_API_KEY_READ }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # On the workflow_run path the checkout must be the FAILING commit, not
+          # the default branch — the GitLab equivalent of $CI_COMMIT_SHA.
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install opencode and the agent definition
+        run: |
+          set -euo pipefail
+          node --version; git --version; npm --version
+          command -v git >/dev/null 2>&1 || { echo "FATAL — git is required and is absent."; exit 1; }
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          # PORTED VERBATIM from .gitlab-ci.yml:514.
+          timeout -k 5 600 npm install --global opencode-ai
+          command -v opencode >/dev/null 2>&1 || { echo "FATAL — opencode is on PATH after npm install --global; the install silently failed."; exit 1; }
+
+      - name: Prove isolation and remove every Telegram credential
+        run: |
+          set -euo pipefail
+          # PORTED FROM .gitlab-ci.yml:687-693 and :701-709.
+          for V in GITHUB_TOKEN GH_TOKEN GITHUB_PAT OMNIROUTE_API_KEY \
+                   TELEGRAM_USER_SESSION TELEGRAM_API_ID TELEGRAM_API_HASH TELEFRAME_WARM; do
+            if [ -n "$(eval echo "\$$V")" ]; then
+              echo "FATAL: $V is in scope for the VERIFIER job — isolation is broken."
+              exit 1
+            fi
+          done
+          test -n "${OMNIROUTE_API_KEY_READ:-}" || { echo "FATAL: the verifier has no LLM credential."; exit 1; }
+          # THE STRUCTURAL TELEGRAM GUARD. The real session has ALREADY been
+          # invalidated once by AUTH_KEY_DUPLICATED — two places used it at once.
+          # An unattended agent on someone else's red pipeline is exactly the
+          # second place that causes it. So the variables are REMOVED from this
+          # process's environment — not "please do not use", actually absent — and
+          # the absence is then proved. On Actions they were never in scope in the
+          # first place; the unset is kept anyway, because the absence is the
+          # control and a control you can see is better than one you have to trust.
+          unset TELEGRAM_USER_SESSION TELEGRAM_API_ID TELEGRAM_API_HASH TELEFRAME_WARM
+          for V in TELEGRAM_USER_SESSION TELEGRAM_API_ID TELEGRAM_API_HASH TELEFRAME_WARM; do
+            if [ -n "$(eval echo "\$$V")" ]; then
+              echo "FATAL: $V survived unsetting — this job must never hold a Telegram credential."
+              exit 1
+            fi
+          done
+          echo "isolation OK: no write token and no write LLM key in scope"
+          echo "telegram guard OK: no session, api id, api hash or warm flag is reachable from this job"
+
+      - name: Write the report header
+        run: |
+          set -euo pipefail
+          # A machine-readable header so the report is self-describing even if the
+          # agent itself never runs — for example if the model is unreachable.
+          {
+            echo "=== CI VERIFIER REPORT ==="
+            echo "workflow run : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "commit      : ${{ github.sha }}"
+            echo "ref         : ${{ github.ref_name }}"
+            echo "conclusion  : ${{ github.event.workflow_run.conclusion }}"
+            echo "failed by   : see the triggering workflow's job list and the run page"
+          } | tee verifier-report.txt
+
+      - name: Fetch the failed job list
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          # The ONE place the verifier is allowed a token, and it is scoped to
+          # `actions: read` for exactly this call — it reads a job list and does
+          # nothing else. It is NOT put in the job's global env, so the isolation
+          # assertion above is genuinely checking an empty environment. If the
+          # call fails the job continues: the agent can still diagnose from the
+          # repository and from re-running the gate itself.
+          echo "job list requested (read-only, scoped to actions:read)" \
+            && gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?per_page=100" --jq '.jobs[] | "\(.conclusion)\t\(.name)"' \
+            || echo "job list unavailable (continuing — the agent will re-run the gate itself)"
+
+      - name: Run the verifier agent
+        run: |
+          set -euo pipefail
+          export HOME=/tmp/.opencode-home
+          printf '{"opencode-omniroute":{"type":"api","key":"%s"}}\n' "${OMNIROUTE_API_KEY_READ:-}" > "$HOME/.local/share/opencode/auth.json"
+          # Same inner bound as the reader: 900s inside a 20m job ceiling, so a
+          # wedged model call fails visibly instead of occupying the runner.
+          timeout -k 5 900 opencode run --print-logs \
+            "Read AGENTS.md in .opencode-ci first — it holds the rules for this job. \
+             You are the VERIFIER for a FAILED CI run of this repository. The run is \
+             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} \
+             and the commit is ${{ github.sha }}. A cold gate just went red. \
+             Read the repository and the job list in the working directory, and produce a \
+             short diagnosis report. It MUST contain, in this order: \
+             (1) WHAT FAILED — the job name and the exact error line, quoted. \
+             (2) ROOT CAUSE CLASS — exactly one of CODE, ENVIRONMENT, or INFRA, and the single \
+             strongest piece of evidence for that classification. This distinction is the whole point: \
+             a job that dies in its setup because apt or the runner ran out of disk or hit an \
+             unsigned repository is ENVIRONMENT or INFRA, NOT CODE, and no code was tested at all — \
+             if downstream jobs were SKIPPED rather than failed, say so, because 'nothing ran' is itself \
+             the finding. \
+             (3) RECOMMENDED FIX — the smallest change that makes this gate able to run again, \
+             naming the file and the line. \
+             (4) CONFIDENCE — high or low, and what would raise it. \
+             RULES: do not modify, create or delete any file in the repository. Do not run anything that \
+             contacts Telegram — no users.getUsers, no help.getNearestDc, no bin/warm-live-host.php, no \
+             composer warm; the Telegram session is not in your environment and you must not try to \
+             obtain one. Do not push or commit. Bound every command with 'timeout -k 5 <secs>'. Prefer \
+             reading code over running suites; a full suite is not your job. Report what you observed, \
+             never what you hoped." \
+            | tee -a verifier-report.txt
+          cat verifier-report.txt
+
+      - name: Upload the diagnosis
+        # The report outlives the job, which is the point: it is the artifact a
+        # human reads instead of scrolling the raw log.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verifier-report-${{ github.run_id }}
+          path: verifier-report.txt
+          if-no-files-found: ignore
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # warm-live-host — THE ONLY JOB THAT TOUCHES THE REAL TELEGRAM SESSION.
+  #
+  # Everything else in this repository's CI is COLD: stubbed, free, repeatable and
+  # safe on every push. This job is the opposite on every axis, and each
+  # difference is a deliberate control rather than an inconvenience:
+  #   * It installs a REAL Laravel host and puts the package in it, because no
+  #     amount of unit testing answers "does this work in a host".
+  #   * It uses a REAL session, so it spends REAL quota against a REAL account.
+  #   * Therefore it is DENY-BY-DEFAULT and OFF.
+  #
+  # Two fences stop that from costing the account, and both are enforced in CODE
+  # (bin/warm-live-host.php), not by convention here:
+  #   FENCE 1 — THE COMMIT LEDGER. A commit is warmed at most ONCE, keyed on its
+  #   full 40-char SHA. Re-running an already-warmed commit is refused BEFORE the
+  #   session is even read, so a retry costs nothing. Keyed on the branch instead,
+  #   a force-push would silently re-warm everything — the exact accident this
+  #   prevents.
+  #   FENCE 2 — THE ENDPOINT POLICY. Only six allowlisted read methods may be
+  #   called live. Everything else is refused, including all 132 methods matching
+  #   a destructive verb and every unclassified one. account.deleteAccount and
+  #   auth.resetAuthorizations are refused by name.
+  #
+  # WHY OFF, NOT "OFF FOR NOW". Running this from CI uses the SAME Telegram
+  # session the owner's live app uses, and Telegram invalidates a session used
+  # from two places at once (AUTH_KEY_DUPLICATED). Four CI runs left the stored
+  # session reading back as AUTH_KEY_UNREGISTERED. A warm lane that destroys the
+  # credential it is meant to verify is worse than no warm lane. The verification
+  # now runs LOCALLY, on purpose, by a human: `composer warm`.
+  #
+  # TWO GATES, NOT ONE. `inputs.warm_live` is the manual act; `vars.OPENCODE_WARM`
+  # is the standing repository permission. Turning either on alone does nothing.
+  warm-live-host:
+    name: warm-live-host (REAL Telegram session — two gates required)
+    if: >-
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call')
+      && inputs.opencode_agent == true
+      && inputs.warm_live == true
+      && vars.OPENCODE_WARM == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30   # GITLAB: timeout: 30m — see the budget note in the header of this job.
+    permissions:
+      contents: read
+    concurrency:
+      group: teleframe-warm-live   # resource_group: teleframe-warm-live — never overlap
+      cancel-in-progress: false    # interruptible: false — never stop halfway through a live call
+    env:
+      TF_WARM_LEDGER: ${{ github.workspace }}/.warm-ledger.json
+      TELEFRAME_WARM: "1"
+      COMPOSER_PROCESS_TIMEOUT: "1800"
+      TELEGRAM_USER_SESSION: ${{ secrets.TELEGRAM_USER_SESSION }}
+      TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+      TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up PHP 8.4 with the extensions the package requires
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          # The extension list is carried across from `docker-php-ext-install
+          # bcmath gmp zip pdo_pgsql sockets intl` in .gitlab-ci.yml:431-437.
+          # intl is NOT optional — composer.json requires ext-intl, and a warm
+          # lane without it dies on a composer platform-requirement failure that
+          # reads like a dependency problem rather than a missing extension.
+          # STATED SUBSTITUTION: GitLab ran this in a php:8.4-cli container with
+          # docker-php-ext-install; a container image has no node, so
+          # actions/checkout cannot run inside it. setup-php is the Actions-native
+          # equivalent and installs the same extensions. The `|| true` on the
+          # extension install is NOT carried over — see docs/decisions.md D-035,
+          # "named, not fixed": masking a failed extension build is exactly how
+          # the missing-intl defect stayed invisible for months.
+          extensions: bcmath, gmp, zip, pdo_pgsql, sockets, intl
+          coverage: none
+          ini-values: memory_limit=1G
+
+      - name: Install Composer
+        # PORTED VERBATIM from .gitlab-ci.yml:439. NOT ramsey/composer-install
+        # with `dependency-versions: locked`: composer.lock is gitignored in this
+        # repository (.gitignore:5), so there is no lock to install from and that
+        # action would fail on a file that does not exist in the checkout. This is
+        # also the command every other workflow in .github/workflows/ already
+        # runs, so the warm lane is on the same dependency set as the cold gates.
+        run: |
+          set -euo pipefail
+          # ── COMPOSER, CACHED ABOVE AND RETRIED HERE ─────────────────────────
+          #
+          # Full reasoning sits on the composer-binary cache step. What this
+          # block guarantees, in the order the guarantees are earned:
+          #
+          #  * A RESTORED BINARY IS USED AS-IS. `composer_ok` asks the binary
+          #    itself, not the cache's exit status, so a cache hit costs zero
+          #    network and a MISS is indistinguishable from no cache at all.
+          #  * RETRY WITH BACKOFF: 4 attempts, +5s/+10s/+15s. A refused TCP
+          #    handshake is transient by definition — nothing about the
+          #    repository changed between attempt 1 and attempt 2.
+          #  * `--connect-timeout 15` IS NAMED. The bare `curl -sS` this
+          #    replaces died at 4000 ms on 38764410834, so the connect budget
+          #    was being inherited from somewhere and was too tight to survive
+          #    one blip. Naming it makes it deterministic instead of accidental.
+          #  * `-f` CLOSES THE SILENT-HOLE. `curl -sS` returns 0 for a 404/500
+          #    body, which would have piped an HTML error page into the
+          #    installer. `-f` makes any non-2xx a failure like any other.
+          #  * DOWNLOAD TO A FILE, NOT INTO A PIPE. The old shape piped curl
+          #    straight into php, so a TRUNCATED body would have had php execute
+          #    a half-installer that can exit 0 and leave a corrupt binary for a
+          #    later run to trip over. `[ -s ]` plus a file means the installer
+          #    only ever runs on a complete, non-empty body.
+          #  * PROVE, DO NOT ASSUME. `composer --version` is INSIDE the retry
+          #    condition, so a download that "succeeded" but produced an
+          #    unusable binary is retried like a network failure. It runs again
+          #    AFTER the loop, so a poisoned cache hit still fails the job loudly
+          #    instead of being believed.
+          #  * THE FAILURE NAMES THE URL AND SAYS "INFRASTRUCTURE". A future
+          #    reader can tell a network failure from a code failure without
+          #    reading the log above it.
+          #
+          # WHY THE RETRY CANNOT MASK A REAL FAILURE: it wraps ONE http GET of a
+          # PHP installer script. It contains no test, no gate, and no assertion.
+          # When the attempts are exhausted it `exit 1`s and the job is red
+          # exactly as it was on 38764410834 — about 60 seconds later, with four
+          # chances instead of one. Every real gate below (composer install,
+          # guard, stan, smoke, the shards) is untouched and still decides the
+          # verdict on its own.
+          chmod +x /usr/local/bin/composer 2>/dev/null || true
+          COMPOSER_URL="https://getcomposer.org/installer"
+          composer_ok() { command -v composer >/dev/null 2>&1 && composer --version >/dev/null 2>&1; }
+          tf_attempts=0
+          if composer_ok; then
+            echo "composer binary is already present and working — no download needed."
+          else
+            for tf_i in 1 2 3 4; do
+              tf_attempts=$tf_i
+              echo "### composer installer attempt ${tf_i}/4 — GET ${COMPOSER_URL}"
+              if curl -sSfL --connect-timeout 15 --max-time 120 -o /tmp/composer-setup.php "${COMPOSER_URL}" \
+                 && [ -s /tmp/composer-setup.php ] \
+                 && php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer --quiet \
+                 && composer --version >/dev/null 2>&1; then break; fi
+              if [ "$tf_i" -lt 4 ]; then
+                echo "###   attempt ${tf_i}/4 failed — infrastructure, not code — retrying in $((tf_i * 5))s"
+                sleep $((tf_i * 5))
+              fi
+            done
+          fi
+          if ! composer_ok; then
+            echo "::error::composer installer unreachable after ${tf_attempts} attempt(s) — ${COMPOSER_URL}"
+            echo "FATAL — could not install the composer binary from ${COMPOSER_URL}."
+            echo "        INFRASTRUCTURE, NOT CODE: DNS/egress/TLS to getcomposer.org failed ${tf_attempts} times."
+            echo "        NO repository code was tested by this job. Re-run before reading a verdict into it."
+            exit 1
+          fi
+          # A recovered blip is VISIBLE. Without this, a job that absorbed
+          # network retries is indistinguishable in the run list from one that
+          # never hit the network at all — which is precisely the distinction
+          # the next reader needs when deciding whether to trust a green.
+          if [ "$tf_attempts" -gt 1 ]; then
+            { echo "### Transient network blip on the composer installer (RECOVERED)"
+              echo ""
+              echo "- URL: \`${COMPOSER_URL}\`"
+              echo "- Result: failed $((tf_attempts - 1))x, succeeded on attempt ${tf_attempts}/4"
+              echo "- Meaning: INFRASTRUCTURE, not code. Every gate in this job still ran."
+            } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+          fi
+          composer --version
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          composer install --no-interaction --prefer-dist
+
+      - name: Assert the live credentials exist, without printing them
+        run: |
+          set -euo pipefail
+          # The session must EXIST before we start and must never be echoed. The
+          # length check is deliberately the only thing printed, because a
+          # session's length is not a credential.
+          test -n "${TELEGRAM_USER_SESSION:-}" || { echo "ERROR: TELEGRAM_USER_SESSION is not set on this repository."; echo "Register it as a MASKED Actions secret before warming."; exit 2; }
+          test -n "${TELEGRAM_API_ID:-}"     || { echo "ERROR: TELEGRAM_API_ID is not set."; exit 2; }
+          test -n "${TELEGRAM_API_HASH:-}"   || { echo "ERROR: TELEGRAM_API_HASH is not set."; exit 2; }
+          echo "session present (${#TELEGRAM_USER_SESSION} bytes) — value never printed"
+
+      - name: Fail loudly if a secret was ever committed
+        run: |
+          set -euo pipefail
+          # This job holds a real session, so a committed secret is the one thing
+          # that must never reach this runner.
+          php bin/scan-credentials.php
+
+      - name: Run the warm lane
+        run: |
+          set -euo pipefail
+          php bin/warm-live-host.php

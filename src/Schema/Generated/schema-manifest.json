@@ -1,0 +1,55 @@
+{
+    "layer": 227,
+    "counts": {
+        "types": 664,
+        "constructors": 1685,
+        "methods": 799,
+        "files": 3,
+        "tables": 0,
+        "fks": 0,
+        "validators": 1,
+        "requests": 1,
+        "events": 1,
+        "models": 257,
+        "model_relations": 650,
+        "mirror_tables": 257
+    },
+    "tables": [],
+    "fk_count": 0,
+    "crc_mismatches": {
+        "msg_container": {
+            "stated": "73f1f8dc",
+            "computed": "29c1636d"
+        },
+        "decryptedMessageMediaDocument": {
+            "stated": "6abd9782",
+            "computed": "8e4c064c"
+        },
+        "user": {
+            "stated": "31774388",
+            "computed": "f12f5add"
+        },
+        "channel": {
+            "stated": "1c32b11c",
+            "computed": "c413f318"
+        },
+        "channelFull": {
+            "stated": "a04e8d3a",
+            "computed": "1801a109"
+        },
+        "message": {
+            "stated": "7600b9d3",
+            "computed": "fb13a06e"
+        },
+        "userFull": {
+            "stated": "06cbe645",
+            "computed": "393b120f"
+        }
+    },
+    "hash": "15877a54987d13560b8f5c2343fa3dcf9c4e5de93adbd3788ff6fdedd236e8e2",
+    "sources": [
+        "TL_mtproto_v1.tl",
+        "TL_secret.tl",
+        "TL_telegram_v227.tl"
+    ]
+}

@@ -1,0 +1,166 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MeRezaRezaei\Teleframe\Tests\Ingest;
+
+use Illuminate\Support\Facades\DB;
+use MeRezaRezaei\Teleframe\Ingest\ChunkFetcher;
+use MeRezaRezaei\Teleframe\Ingest\PtsWatermark;
+use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
+use MeRezaRezaei\Teleframe\Laravel\Console\IngestGateCommand;
+use MeRezaRezaei\Teleframe\Laravel\Providers\TeleframeServiceProvider;
+use MeRezaRezaei\Teleframe\Tests\Ingest\Concerns\RunsMigrations;
+use MeRezaRezaei\Teleframe\Tests\Support\ArrayRedis;
+use Orchestra\Testbench\TestCase as TestbenchTestCase;
+
+/**
+ * teleframe:ingest:gate — the session-register schema-integrity gate,
+ * end to end: fixture fetcher (via the FETCHER_KEY seam) → migrated
+ * relational DB → report + watermark persistence.
+ *
+ * @property ?ArrayRedis $redis
+ */
+final class IngestGateCommandTest extends TestbenchTestCase
+{
+    use RunsMigrations;
+
+    /**
+     * The tenants this fixture writes under.
+     *
+     * MEASURED: the gate runs for the literal account `'42'` (both
+     * `$this->artisan(...)` calls) and the fixture chunk writes `tf_messages`,
+     * `tf_chats`, `tf_users` and the `tf_ingest_clues` clue rows under that
+     * same account. With foreign-key enforcement on, every one of those tables
+     * carries `account_id -> telegram_accounts`, so the command blew up at the
+     * DATABASE (`SQLSTATE[23000] ... 19 FOREIGN KEY constraint failed`)
+     * instead of reporting on the surface it exists to gate.
+     *
+     * Declared HERE rather than by relaxing `seedIngestTenant()`: that helper
+     * contracts that each test declares the tenants it means to use, so a test
+     * writing under an unplanted id fails LOUDLY. A blanket auto-seed would
+     * also rob the orphan-refusal tests of their ability to plant an orphan.
+     */
+    protected function ingestTenantIds(): array
+    {
+        return [42];
+    }
+
+    private ?ArrayRedis $redis = null;
+
+    protected function getApplicationBasePath()
+    {
+        return dirname(__DIR__, 2);
+    }
+
+    protected function getPackageProviders($app): array
+    {
+        return [TeleframeServiceProvider::class];
+    }
+
+    protected function getEnvironmentSetUp($app): void
+    {
+        $app['config']->set('database.default', 'testing');
+        $app['config']->set('database.connections.testing', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+        ]);
+    }
+
+    private function migrateMirror(): void
+    {
+        $this->artisan('migrate', [
+            '--force' => true,
+            '--realpath' => true,
+            '--path' => UpdateIngestor::migrationPaths(),
+        ])->assertExitCode(0);
+
+        // AFTER the migration, never before: `telegram_accounts` is one of the
+        // migrated tables, so seeding first would insert into nothing.
+        $this->seedIngestTenant(...$this->ingestTenantIds());
+    }
+
+    private function fixtureFetcher(): ChunkFetcher
+    {
+        return new class implements ChunkFetcher
+        {
+            public function getState(): array
+            {
+                return ['pts' => 11, 'date' => 1726000000, 'qts' => 2, 'seq' => 5];
+            }
+
+            public function getDifference(array $state, ?array $priorState = null): array
+            {
+                return [
+                    '_' => 'updates.difference',
+                    'new_messages' => [
+                        [
+                            '_' => 'message',
+                            'id' => 7,
+                            'peer_id' => ['_type' => 2, '_id' => 900],
+                            'date' => 1726000000,
+                            'message' => 'gate proof',
+                        ],
+                    ],
+                    'users' => [
+                        ['_' => 'user', 'id' => 101, 'verified' => true],
+                    ],
+                    'chats' => [
+                        ['_' => 'chat', 'id' => 900, 'title' => 'gate lab', 'participants_count' => 3, 'date' => 1726000000, 'version' => 1],
+                    ],
+                    'state' => [
+                        '_' => 'updates.state',
+                        'pts' => 11, 'qts' => 2, 'date' => 1726000000, 'seq' => 5,
+                    ],
+                ];
+            }
+        };
+    }
+
+    public function test_gate_ingests_chunk_and_succeeds(): void
+    {
+        $this->migrateMirror();
+
+        $this->app->bind(IngestGateCommand::FETCHER_KEY, fn (): callable => fn (int $accountId): ChunkFetcher => $this->fixtureFetcher());
+        $this->app->singleton(PtsWatermark::class, fn () => new PtsWatermark(new ArrayRedis));
+
+        $this->artisan('teleframe:ingest:gate', ['account' => '42'])
+            ->assertExitCode(0)
+            ->expectsOutputToContain('Integrity OK')
+            // CORRECTED 2026-10-04: this asserted the literal label `inserted`,
+            // which told a reader that the count beside it was rows in the
+            // mirror. It is statements placed — measured on the shipped DDL,
+            // three facts colliding on one primary key print 3 and the table
+            // holds one row, every clue bucket empty. The label now names what
+            // it counts; the assertion follows the correction rather than
+            // encoding the old name, and is not weakened — `statements placed`
+            // is strictly more specific than the substring it replaces.
+            ->expectsOutputToContain('statements placed');
+
+        self::assertSame(1, DB::table('tf_messages')->where('account_id', 42)->where('id', 7)->count());
+        self::assertSame('gate lab', DB::table('tf_chats')->where('account_id', 42)->where('id', 900)->value('title'));
+    }
+
+    public function test_gate_only_flag_does_not_persist_watermark(): void
+    {
+        $this->migrateMirror();
+
+        $this->app->bind(IngestGateCommand::FETCHER_KEY, fn (): callable => fn (int $accountId): ChunkFetcher => $this->fixtureFetcher());
+        $this->app->singleton(PtsWatermark::class, function () {
+            $redis = new ArrayRedis;
+            $wm = new PtsWatermark($redis);
+            $wm->put(42, ['pts' => 1, 'date' => 1, 'qts' => 1, 'seq' => 1]);
+            $this->redis = $redis;
+
+            return $wm;
+        });
+
+        $this->artisan('teleframe:ingest:gate', ['account' => '42', '--only' => true])
+            ->assertExitCode(0)
+            ->expectsOutputToContain('watermark not persisted');
+
+        self::assertSame('1', $this->redis->hget('tg:pts:42', 'pts'), '--only leaves the old watermark untouched');
+    }
+}

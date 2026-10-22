@@ -1,0 +1,55 @@
+# Raw per-area measurement output. name<TAB>seconds<TAB>exit
+#
+# exit 137 = SIGKILL (out of memory: 8 phpunit processes at memory_limit=1G
+# alongside two other lanes running this same suite) — those seconds are FLOORS,
+# not measurements, and were re-taken. See ci/shard-timings.md.
+#
+# STATUS 2026-10-18: every row below is the 2026-10-17 run, whose tree was NOT
+# committed — HEAD was deterministically red in tests/Config. A number here
+# describes a dirty working tree until re-taken from a clean pinned commit.
+#
+# Rows whose exit is 1 or 2 are CORRUPTED RUNS, not measurements: another lane
+# owned the machine. Their seconds are lower bounds on a broken run. Do not
+# quote them as a duration.
+#
+# Only Config has been re-measured since (1.563s median of 3, exit 0, pinned
+# commit 07cf79c9). AGENTS.md forbids running the full suite locally; CI owns
+# the re-measure.
+#
+# MySql is absent deliberately: it is not sharded (owned by mysql-tests).
+Auth	.438760381	0
+Bot	1.732403304	0
+App	2.023216515	0
+Control	1.523498740	0
+Daemon	1.432651409	0
+DataCore	.421654511	0
+Config	1.563	0	# re-measured 2026-10-18 on a CLEAN tree, median of 3 runs, exit 0 (was 4.848 on the dirty 2026-10-17 tree, where tests/Config was red)
+Identity	1.525503793	0
+BotMap	9.209071474	0
+Message	.513133817	0
+MiniApp	.624577617	0
+Core	68.025103721	0
+Backup	74.201465078	0
+Notify	2.137691582	0
+Passport	24.482969129	0
+Credentials	110.548430389	0
+Pg	12.520492591	2
+Realtime	1.027016633	0
+Stage	.936220152	0
+Standalone	.917545156	0
+Supervisor	.528733538	0
+Teleframe	.931200456	0
+Vault	1.240563553	0
+Concerns	.422535973	0
+Live	1.467448757	0
+New	57.349556286	2
+Store	44.360984354	0
+Laravel	201.946691135	2
+Backfill	51.049369712	0
+Handler	336.530911080	2
+Bus	364.411873555	1
+Mirror	440.381426527	2
+Console	689.228109428	2
+Schema	1758.487328025	2
+Ingest	2201.000000	2	# FAILED RUN, NOT A MEASUREMENT — the "authoritative" claim was wrong
+Support	0.43	0

@@ -1,0 +1,28 @@
+diff --git a/src/lib/gramjs/client/TelegramClient.ts b/src/lib/gramjs/client/TelegramClient.ts
+index 2ee594a..f1beba4 100644
+--- a/src/lib/gramjs/client/TelegramClient.ts
++++ b/src/lib/gramjs/client/TelegramClient.ts
+@@ -51,7 +51,7 @@ import RequestState from '../network/RequestState';
+ import Session from '../sessions/Abstract';
+ import MemorySession from '../sessions/Memory';
+ import { LAYER } from '../tl/AllTLObjects';
+-import { getDC, getInputPeer, strippedPhotoToJpg } from '../Utils';
++import { getDC, getInputPeer, strippedPhotoToJpg, getTelegramWebLiveEndpoint } from '../Utils';
+ 
+ type TelegramClientParams = {
+   connection: typeof Connection;
+@@ -1318,6 +1318,14 @@ class TelegramClient {
+ 
+     this.loadConfig();
+ 
++    // Endpoint (relay) mode: the relay already granted the vault account at
++    // the WS upgrade and answers auth.* locally, so the stock phone/QR gate
++    // must never run — the browser takes authorization from the relay's
++    // answers instead of parking on the Auth screen.
++    if (getTelegramWebLiveEndpoint()) {
++      return;
++    }
++
+     if (await checkAuthorization(this, authParams.shouldThrowIfUnauthorized)) {
+       return;
+     }

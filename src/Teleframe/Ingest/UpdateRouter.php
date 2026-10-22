@@ -1,0 +1,178 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MeRezaRezaei\Teleframe\Ingest;
+
+use Illuminate\Database\ConnectionInterface;
+use Illuminate\Support\Facades\DB;
+use MeRezaRezaei\Teleframe\Laravel\Models\UpdateRoutingRule;
+use MeRezaRezaei\Teleframe\Schema\Eloquent\PeerShapeTool;
+
+/**
+ * Update router — the verbatim's loop-prevention classification layer.
+ *
+ * Owner verbatim 2026-09-14: "when i make a notify channel for one of the
+ * apps i should not handle the updates of that channel as new event but
+ * only update that only stores the final truth... so we can controll the
+ * things we are going to listen on or ignore in real time".
+ *
+ * Given (account_id, peer_type, peer_id), returns the routing decision:
+ * - act_on:    store the fact AND emit the UpdateStored event (app reacts);
+ * - store_only: store the fact but skip event emission (notify/log channels).
+ *
+ * The verbatim's "two Redis" path: DB is source of truth, Redis holds the
+ * hot-reloaded cache. This service answers from the Redis-2 cache first
+ * (real-time listen/ignore control without a DB hit per update) and falls
+ * back to the DB source of truth on a cache miss. The default for every
+ * unmarked fact is store_only — acting is opt-in via the settings, and the
+ * opt-in is writable from the host with `php artisan teleframe:routing <id>
+ * --account-wide --mode=act_on` (per-peer with --peer/--peer-id), which
+ * writes the rule row the observer hot-reloads here.
+ */
+final class UpdateRouter
+{
+    public function __construct(
+        private readonly ConnectionInterface $db,
+        private readonly ?UpdateRoutingCache $cache = null,
+    ) {}
+
+    /**
+     * The stored rule mode for a (account, peer) pair, or null when no
+     * explicit rule exists. Unlike mode(), this has NO default — callers
+     * that need to distinguish "explicitly store_only" from "no rule"
+     * (e.g. the self-originated escape hatch) use this.
+     *
+     * Redis-2 cache first, then DB source of truth (a cache miss queries
+     * the DB exactly as before — behavior identical without the cache).
+     */
+    public function explicitMode(int $accountId, int $peerType, int $peerId): ?string
+    {
+        if ($this->cache !== null) {
+            $cached = $this->cache->mode($accountId, $peerType, $peerId);
+            if ($cached !== null) {
+                return $cached;
+            }
+        }
+
+        try {
+            $rule = $this->db->table('tg_update_routing')
+                ->where('account_id', $accountId)
+                ->where('peer_type', $peerType)
+                ->where('peer_id', $peerId)
+                ->orderByDesc('priority')
+                ->first();
+        } catch (\Exception) {
+            return null;
+        }
+
+        return $rule === null ? null : $rule->mode;
+    }
+
+    /**
+     * Determine the routing mode for a (account, peer) pair.
+     *
+     * The verbatim's default is store_only — the app "watches for some
+     * specific updates" and acts only on the peers the settings mark
+     * act_on; every other fact (from other people OR our own reflection)
+     * is stored but never re-emitted as an event (loop prevention).
+     *
+     * Exact per-peer rules win; when none marks the peer, the account-level
+     * catch-all default rule (peer_type=0, peer_id=0 — the row the daemon
+     * pre-seeds for a discovered account) answers, so an operator flipping
+     * that row changes the default for the WHOLE account in real time. With
+     * no rule at all, store_only applies as always.
+     *
+     * @return string UpdateRoutingRule::MODE_ACT_ON | UpdateRoutingRule::MODE_STORE_ONLY
+     */
+    public function mode(int $accountId, int $peerType, int $peerId): string
+    {
+        if ($this->cache !== null) {
+            $cached = $this->cache->mode($accountId, $peerType, $peerId);
+            if ($cached !== null) {
+                return $cached;
+            }
+
+            $accountDefault = $this->cache->mode(
+                $accountId,
+                UpdateRoutingRule::DEFAULT_PEER_TYPE,
+                UpdateRoutingRule::DEFAULT_PEER_ID,
+            );
+            if ($accountDefault !== null) {
+                return $accountDefault;
+            }
+        }
+
+        try {
+            $rule = $this->db->table('tg_update_routing')
+                ->where('account_id', $accountId)
+                ->where('peer_type', $peerType)
+                ->where('peer_id', $peerId)
+                ->orderByDesc('priority')
+                ->first();
+
+            if ($rule === null) {
+                // no per-peer rule — fall back to the account-wide catch-all
+                $rule = $this->db->table('tg_update_routing')
+                    ->where('account_id', $accountId)
+                    ->where('peer_type', UpdateRoutingRule::DEFAULT_PEER_TYPE)
+                    ->where('peer_id', UpdateRoutingRule::DEFAULT_PEER_ID)
+                    ->first();
+            }
+        } catch (\Exception $e) {
+            // Table not yet migrated — no settings yet: store every fact
+            // silently (never act on a peer nobody marked).
+            return UpdateRoutingRule::MODE_STORE_ONLY;
+        }
+
+        if ($rule === null) {
+            return UpdateRoutingRule::MODE_STORE_ONLY;
+        }
+
+        return $rule->mode;
+    }
+
+    /**
+     * Classify a decoded TL update's peer and return the routing decision.
+     *
+     * The peer lives in the update payload under 'peer_id' (most update types)
+     * or 'channel_id' (channel-specific updates). PeerShapeTool normalizes
+     * the wire ctor object (peerUser/peerChat/peerChannel + id field) to the
+     * canonical _type/_id pair (spec enum 1=user 2=chat 3=channel). If no
+     * peer is extractable, the update defaults to store_only (the verbatim:
+     * nothing is an app input unless the settings marked it — unknown sources
+     * are stored, never acted on).
+     *
+     * @param  array<string, mixed>  $payload  decoded TL update
+     */
+    public function classify(int $accountId, array $payload): string
+    {
+        [$peerType, $peerId] = $this->peerPair($payload);
+
+        if ($peerType === 0) {
+            return UpdateRoutingRule::MODE_STORE_ONLY;
+        }
+
+        return $this->mode($accountId, $peerType, $peerId);
+    }
+
+    /**
+     * Extract the canonical [peer_type, peer_id] pair from a decoded update.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array{0: int, 1: int}
+     */
+    private function peerPair(array $payload): array
+    {
+        $peer = $payload['peer_id'] ?? [];
+        if (is_array($peer)) {
+            [$type, $id] = PeerShapeTool::normalize($peer);
+            if ($type !== 0) {
+                return [$type, $id];
+            }
+        }
+
+        // channel-specific updates carry the peer at top level
+        return PeerShapeTool::normalize($payload);
+    }
+}

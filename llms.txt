@@ -1,0 +1,86 @@
+# Teleframe
+
+PHP ^8.3 package for Laravel 13. One `merezarezaei/teleframe` library containing
+the full engine — native MTProto 2.0 for users and bots (Layer 227 wire, Layer
+229 schema catalog), Bot HTTP API, Mini App HMAC auth, Passport KYC decryption,
+Storage-backed file streaming — plus a merged consumer layer (tenant-scoped Ingest
+into Postgres, Redis stream Bus + multi-account Daemon + quota-aware Backfill,
+encrypted Telegram-channel Backup vault) and a one-class handler facade
+(`MeRezaRezaei\Teleframe\Teleframe`) over a shared handler pipeline.
+
+## Architecture
+
+Single package, PSR-4 roots under `src/`: `Core/` (wire engine), `Bot/` (Bot HTTP
+API), `Laravel/` (provider, console commands, glue), `Schema/` (schema pipeline +
+generators), and the consumer + handler modules under `MeRezaRezaei\Teleframe\` in
+`src/Teleframe/`. Generated schema artifacts live in `src/Schema/Generated/`
+(there is no top-level `generated/` directory).
+
+| Layer | Location | Concern |
+|---|---|---|
+| Engine | `src/Core/` | MTProto 2.0 wire: transport, encrypted connection, crypto (DH, 2FA SRP), zero-regex TL codec, method registry, typed RPC exceptions |
+| Bot | `src/Bot/` | Bot HTTP API: `BotClient`, `BotAccountScope`, fluent builders, webhooks/polling |
+| Schema | `src/Schema/` + `src/Core/Schema/` | `.tl` sources (`src/Schema/schema/sources/`), `teleframe:schema-update` (diff + regenerate + stamp, never migrates), Layer 229 catalog, skill files |
+| Laravel glue | `src/Laravel/` | `TeleframeServiceProvider`, `Route::telegramWebhook`, `tg.miniapp` middleware, config key `teleframe` (env `TELEFRAME_*`), `TF`/`Teleframe` facades |
+| Consumer | `src/Teleframe/{AccountLifecycle,Ingest,Bus,Daemon,Backfill,Backup,Control}/` | Tenant-scoped ingest truth mirror (Postgres, events out), Redis Streams fan-in consumer with a zero-regex route table re-read per entry, multi-account daemon, quota-aware backfill, encrypted backup vault |
+| Handlers | `src/Teleframe/Handler/` + `src/Teleframe/Testing/` | Handler-as-data registry (`on`/`onMessage`, priority-ordered, zero-regex `exact`/`prefix*`/`*`), 26-line middleware pipeline, `UpdateDispatcher` (DI-flavored, lazy model hydration), `EchoEliminator` (PSR-16 send registry), `FakeDispatcher` test surface |
+
+Public faces: `MeRezaRezaei\Teleframe\Teleframe` (compose-not-own facade:
+`ingest`, `ingestResponse`, `onMessage`/`on`, `run`, `user`/`chat`/`channel`,
+`route`, `backup`, `schemaLayer`, `send`) and the retained ingest-only
+`MeRezaRezaei\Teleframe\Teleclient`.
+
+Console commands (one class per file under `src/Laravel/Console/`):
+`teleframe:login`, `teleframe:poll`, `teleframe:doctor`, `teleframe:schema-audit`,
+`teleframe:schema-update`, `teleframe:regenerate`, `teleframe:ingest`,
+`teleframe:ingest:gate`, `teleframe:backfill`, `teleframe:backup`,
+`teleframe:relay`, `teleframe:daemon`, `teleframe:tstore`,
+`teleframe:vault-add-account`, `teleframe:vault-add-app`, `teleframe:vault-list`,
+`teleframe:vault-use-default`.
+
+## Composer
+
+- Requires PHP `^8.3` and `laravel/framework` `^13.0`, plus
+  `centrifugal/phpcent`, `phpseclib/phpseclib`, `psr/log`, `spatie/laravel-data`,
+  `temporal/sdk`, `vlucas/phpdotenv`, and ext-bcmath/dom/fileinfo/gmp/hash/intl/
+  json/libxml/mbstring/openssl/pdo/sodium/zlib.
+- `extra.laravel` auto-registers `TeleframeServiceProvider` and the `TF` /
+  `Teleframe` facades; `extra.telegram-layer` = 229.
+- Dev: `orchestra/testbench`, `phpunit`, `phpstan` (+ `spaze/phpstan-disallowed-calls`
+  — `preg_*` banned in `src/`).
+
+## Hard rules
+
+- `preg_*()` is banned in `src/` outside `src/Laravel/*`, `src/Schema/*` and
+  `src/Bot/*`; `src/Teleframe/Handler/**` and `src/Core/**` are strictly zero-regex.
+- `@generated` files under `src/Schema/`, `src/Laravel/Migrations/` and
+  `src/{Core,Bot}/Methods/Generated/` are never hand-edited — regenerate instead.
+- Session strings are credentials; `.env` is never committed, enforced by
+  `php bin/scan-credentials.php`.
+
+## Gates
+
+Run from the repository root. CI runs on GitHub Actions on PHP 8.3 and 8.4, with
+`postgres:17` and `mysql:8.4` service containers for the database tracks.
+
+```bash
+composer verify                    # credential guard + phpunit + phpstan + standalone smoke
+php bin/scan-credentials.php       # exit 0 = clean
+php bin/standalone-smoke.php       # exit 0 = every module plain-PHP-constructible
+vendor/bin/phpunit tests/Pg        # needs TELEFRAME_PG=1
+vendor/bin/phpunit tests/MySql     # needs TELEFRAME_MYSQL=1
+php bin/regenerate                 # regeneration; output must be byte-identical to the committed src/Schema/Generated
+```
+
+## Docs
+
+- `docs/quickstart.md` — recipes (bot message, user login, Mini App guard, Passport, streaming, consumer).
+- `docs/handlers.md` — one-class DX: onMessage, constructor routing, DI lazy hydration, echo elimination, FakeDispatcher.
+- `docs/ingest.md`, `docs/bus.md`, `docs/backup.md` — consumer modules.
+- `docs/usage/README.md` — the release-area index: install, notify, store + backup, raw MTProto, app framework, passport, and the live gate.
+- `docs/usage/live.md` — the opt-in live-test gate (`TELEFRAME_LIVE_TESTS=1`): an armed run fails loudly by name instead of skipping, the environment each declared step needs, what every step proves against a real account, and what it does not prove. Not part of `composer verify` or CI.
+- `docs/schema/mirror-relation-graph.md` — generated relation graph of the mirror tables: parent, join columns, cardinality, FK-or-not, plus mermaid erDiagrams. Generated by `php bin/generate-relation-graph.php`; `tests/Schema/RelationGraphIsCurrentTest.php` fails if it drifts.
+
+Design specs, implementation plans, the roadmap and the operator's verbatim
+archive are kept in the operator's private repository and are deliberately not
+published here, so no `docs/` path points at them.

@@ -1,0 +1,149 @@
+diff --git a/src/@types/global.d.ts b/src/@types/global.d.ts
+index 86ed666..35195d5 100644
+--- a/src/@types/global.d.ts
++++ b/src/@types/global.d.ts
+@@ -17,6 +17,7 @@ interface ImportMetaEnv {
+   readonly TG_PUBLIC_URL: string;
+   readonly TG_TELEGRAM_API_HASH?: string;
+   readonly TG_TELEGRAM_API_ID?: string;
++  readonly VITE_TELEGRAM_WEB_LIVE_ENDPOINT?: string;
+   readonly TG_TEST_SESSION?: string;
+ }
+ 
+diff --git a/src/lib/gramjs/Utils.ts b/src/lib/gramjs/Utils.ts
+index 2ad173f..397168b 100644
+--- a/src/lib/gramjs/Utils.ts
++++ b/src/lib/gramjs/Utils.ts
+@@ -179,7 +179,73 @@ export function getDisplayName(entity: Entity) {
+  * (These only support downloading/uploading and not creating a new AUTH key)
+  * @return {{port: number, ipAddress: string, id: number}}
+  */
++const BAKED_TELEGRAM_WEB_LIVE_ENDPOINT = import.meta.env.VITE_TELEGRAM_WEB_LIVE_ENDPOINT || undefined;
++
++function endpointToUrl(endpoint: string) {
++  return endpoint.includes('://') ? endpoint : `wss://${endpoint}/apiws`;
++}
++
++/**
++ * Returns the relay endpoint when the client has been pointed at the package's
++ * relay instead of Telegram's own servers. Prefers the runtime global
++ * `TELEGRAM_WEB_LIVE_ENDPOINT` (on the main thread that is `window`), falling
++ * back to the endpoint baked into the bundle at build time via the
++ * `TELEGRAM_WEB_LIVE_ENDPOINT` / `TG_DC_HOST` env vars. Undefined means the
++ * stock Telegram endpoints are used.
++ */
++export function getTelegramWebLiveEndpoint(): string | undefined {
++  if (typeof globalThis !== 'undefined') {
++    const runtimeValue = (globalThis as { TELEGRAM_WEB_LIVE_ENDPOINT?: string }).TELEGRAM_WEB_LIVE_ENDPOINT;
++    if (runtimeValue) {
++      return runtimeValue;
++    }
++  }
++  return BAKED_TELEGRAM_WEB_LIVE_ENDPOINT;
++}
++
++/**
++ * Returns the connectable live URL for one transport family, when the client
++ * is pointed at the relay. A `ws(s)` endpoint feeds the WebSocket transport,
++ * an `http(s)` endpoint feeds the HTTP long-poll transport, and a bare
++ * hostname resolves to both (`wss://host/apiws` and `https://host/apiw1`).
++ * Returns undefined when the endpoint does not match this transport family, so
++ * each transport keeps its stock fallback URL.
++ */
++export function getTelegramWebLiveUrl(transportScheme: 'ws' | 'http'): string | undefined {
++  const endpoint = getTelegramWebLiveEndpoint();
++  if (!endpoint) {
++    return undefined;
++  }
++  if (endpoint.startsWith('ws://') || endpoint.startsWith('wss://')) {
++    return transportScheme === 'ws' ? endpoint : undefined;
++  }
++  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
++    return transportScheme === 'http' ? endpoint : undefined;
++  }
++  const { host } = new URL(endpointToUrl(endpoint));
++  return transportScheme === 'ws' ? `wss://${host}/apiws` : `https://${host}/apiw1`;
++}
++
++/**
++ * Builds the DC config for the relay endpoint. All DC ids resolve to the same
++ * endpoint; the relay routes per ticket/account on the server side, so the
++ * `downloadDC` (`-1`) distinction does not apply.
++ */
++function parseTelegramWebLiveEndpoint(endpoint: string, dcId: number) {
++  const url = new URL(endpointToUrl(endpoint));
++  const isInsecure = url.protocol === 'ws:' || url.protocol === 'http:';
++  return {
++    id: dcId,
++    ipAddress: url.hostname,
++    port: url.port ? Number(url.port) : (isInsecure ? 80 : 443),
++  };
++}
++
+ export function getDC(dcId: number, downloadDC = false) {
++  const liveEndpoint = getTelegramWebLiveEndpoint();
++  if (liveEndpoint) {
++    return parseTelegramWebLiveEndpoint(liveEndpoint, dcId);
++  }
+   // TODO Move to external config
+   switch (dcId) {
+     case 1:
+diff --git a/src/lib/gramjs/extensions/HttpStream.ts b/src/lib/gramjs/extensions/HttpStream.ts
+index 4f736d4..4cf4453 100644
+--- a/src/lib/gramjs/extensions/HttpStream.ts
++++ b/src/lib/gramjs/extensions/HttpStream.ts
+@@ -1,5 +1,7 @@
+ import { concat } from '../../../util/encoding/buffer';
+ 
++import { getTelegramWebLiveUrl } from '../Utils';
++
+ const closeError = new Error('HttpStream was closed');
+ const REQUEST_TIMEOUT = 30000;
+ 
+@@ -65,6 +67,10 @@ export default class HttpStream {
+   }
+ 
+   static getURL(ip: string, port: number, isTestServer?: boolean, isPremium?: boolean) {
++    const liveUrl = getTelegramWebLiveUrl('http');
++    if (liveUrl) {
++      return liveUrl;
++    }
+     if (port === 443) {
+       return `https://${ip}:${port}/apiw1${isTestServer ? '_test' : ''}${isPremium ? '_premium' : ''}`;
+     } else {
+diff --git a/src/lib/gramjs/extensions/PromisedWebSockets.ts b/src/lib/gramjs/extensions/PromisedWebSockets.ts
+index 9df8439..4be31bb 100644
+--- a/src/lib/gramjs/extensions/PromisedWebSockets.ts
++++ b/src/lib/gramjs/extensions/PromisedWebSockets.ts
+@@ -2,6 +2,8 @@ import { Mutex } from 'async-mutex';
+ 
+ import { concat } from '../../../util/encoding/buffer';
+ 
++import { getTelegramWebLiveUrl } from '../Utils';
++
+ const closeError = new Error('WebSocket was closed');
+ const CONNECTION_TIMEOUT = 3000;
+ const MAX_TIMEOUT = 30000;
+@@ -79,6 +81,10 @@ export default class PromisedWebSockets {
+   }
+ 
+   getWebSocketLink(ip: string, port: number, isTestServer?: boolean, isPremium?: boolean) {
++    const liveUrl = getTelegramWebLiveUrl('ws');
++    if (liveUrl) {
++      return liveUrl;
++    }
+     if (port === 443) {
+       return `wss://${ip}:${port}/apiws${isTestServer ? '_test' : ''}${isPremium ? '_premium' : ''}`;
+     } else {
+diff --git a/vite.config.ts b/vite.config.ts
+index 3701a7a..455f3a5 100644
+--- a/vite.config.ts
++++ b/vite.config.ts
+@@ -184,6 +184,7 @@ export default defineConfig(({ mode }): UserConfig => {
+     TG_TELEGRAM_API_ID: telegramApiId,
+     TG_TELEGRAM_API_HASH: telegramApiHash,
+     TG_TEST_SESSION: env.TEST_SESSION || '',
++    VITE_TELEGRAM_WEB_LIVE_ENDPOINT: env.TELEGRAM_WEB_LIVE_ENDPOINT || env.TG_DC_HOST || '',
+   });
+ 
+   return {

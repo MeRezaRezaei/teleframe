@@ -1,0 +1,958 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MeRezaRezaei\Teleframe\Laravel\Services;
+
+use Closure;
+use Illuminate\Container\Container;
+use MeRezaRezaei\Teleframe\Bot\Services\BotClient;
+use MeRezaRezaei\Teleframe\Bus\CommittedRowSink;
+use MeRezaRezaei\Teleframe\Core\Contracts\SignalSink;
+use MeRezaRezaei\Teleframe\Core\Contracts\UpdateSinkInterface;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\AuthKeyException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\Rpc\FloodWaitException;
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Core\Services\UserAccountScope;
+use MeRezaRezaei\Teleframe\Ingest\UpdateIngestor;
+use MeRezaRezaei\Teleframe\Laravel\Events\TelegramGapDetected;
+use MeRezaRezaei\Teleframe\Laravel\Events\TelegramResynced;
+use MeRezaRezaei\Teleframe\Laravel\Events\TelegramSessionRevoked;
+use Throwable;
+use UnexpectedValueException;
+
+/**
+ * Decoupled, reusable Update Poller Service.
+ * Runs polling loops for any Bot API or MTProto User account and streams raw updates into pluggable sinks.
+ *
+ * The MTProto user loop implements the low-level updates.getDifference state
+ * machine (mirrors MadelineProto's UpdateLoop/UpdatesState semantics):
+ * state/intermediate_state adoption, slice continuation without refetching
+ * the same window, differenceTooLong pts resets and gap/resync signalling.
+ */
+class UpdatePollerService
+{
+    /**
+     * Floor for every backoff sleep: even unknown errors pause briefly
+     * instead of hammering Telegram in a tight loop.
+     */
+    public const MIN_BACKOFF_SECONDS = 2;
+
+    /**
+     * Upper bound for a single flood backoff sleep. Telegram can demand
+     * FLOOD_WAIT_X periods of many hours; clamping each sleep to one hour
+     * keeps the loop responsive to stop() and avoids near-infinite hangs
+     * (in production restarts and in test suites alike). The poller simply
+     * retries hourly until the flood window lapses.
+     */
+    public const MAX_BACKOFF_SECONDS = 3600;
+
+    /**
+     * Fetch kinds returned by fetchUserDifference().
+     */
+    protected const KIND_COMPLETE = 'complete';
+
+    protected const KIND_SLICE = TelegramGapDetected::KIND_SLICE;
+
+    protected const KIND_HOLE = TelegramGapDetected::KIND_HOLE;
+
+    protected const KIND_TOO_LONG = TelegramGapDetected::KIND_TOO_LONG;
+
+    protected const KIND_EMPTY = 'empty';
+
+    /**
+     * Frame-identity prefix for a PRODUCER-minted frame (D-041).
+     *
+     * Under the S1 inversion there is no Redis stream entry id at the moment
+     * a `tf_updates` key must be derived: the bus entry is published AFTER the
+     * row commits, so the identity the old scheme keyed on does not exist
+     * yet. The producer therefore mints its own — see mintProducerFrame().
+     */
+    public const PRODUCER_FRAME_PREFIX = 'producer';
+
+    /**
+     * Loop error reactions returned by errorLoopAction().
+     */
+    /** Bot API error code for a token Telegram does not accept. */
+    private const BOT_UNAUTHORIZED = 401;
+
+    protected const ACTION_RETHROW = 'rethrow';
+
+    protected const ACTION_BREAK = 'break';
+
+    protected const ACTION_BACKOFF = 'backoff';
+
+    protected UpdateSinkInterface $sink;
+
+    /** @var (Closure(array<string, mixed>): bool)|null */
+    protected ?Closure $filter = null;
+
+    protected bool $running = true;
+
+    /**
+     * Persisted sequence state for the MTProto user loop, normalized to
+     * {pts, date, qts, seq}. Null until seeded via setSequenceState(),
+     * pollUser() arguments or an adopted server state.
+     *
+     * @var array{pts: int, date: int, qts: int, seq: int}|null
+     */
+    protected ?array $sequenceState = null;
+
+    /**
+     * Per-channel pts map (channel_id => pts) observed on updates that
+     * carry both, e.g. updateNewChannelMessage / updateDeleteChannelMessages.
+     *
+     * @var array<int, int>
+     */
+    protected array $channelPts = [];
+
+    /**
+     * True while a fetch cycle started from an unknown state or has seen a
+     * gap; the next terminal response completes the resync and emits
+     * TelegramResynced.
+     */
+    protected bool $gapPending = false;
+
+    /**
+     * The TENANCY account id minted frames belong to, or 0 when no host
+     * injected one.
+     *
+     * **NOT `$user->session->userId`, and NOT `$source`.** Both of those are
+     * the TELEGRAM user id (`fetchUserDifference()` reads `$source` from the
+     * live session at :464, and names that same session id `$accountId` at
+     * :465 — it is a Telegram id and is used only for `TelegramGapDetected`
+     * / `TelegramResynced` attribution). The tenancy id is the account the
+     * daemon was configured with — `DaemonCommand`'s
+     * `(int) $config['account_id']` (i.e. `tf_accounts.id`), the same value
+     * handed to `RedisStreamSink`'s constructor and to
+     * `UpdateIngestor::ingest()` as the row's `account_id`. `AccountWorker`
+     * injects it here because it is the one place holding both the poller and
+     * the account config.
+     *
+     * 0 means "no tenancy account was injected" (a host that polls without
+     * the daemon). It is not a fold risk in itself: `frameKey()` hashes
+     * `sha256($accountId.':'.$frameId)` with the INGESTOR's account id, and
+     * the row is keyed by that same account id, so this component adds
+     * nothing to key uniqueness — it is there to be readable.
+     */
+    protected int $producerAccountId = 0;
+
+    /**
+     * The producer frame in scope for the update being handled right now, or
+     * null. Read it with getProducerFrame() from inside the sink.
+     *
+     * SCOPED, NOT STICKY: `processUpdate()` sets it immediately before the
+     * sink sees the update and restores the previous value in a `finally`, so
+     * a frameless caller — the Bot API loop at :265, a host calling
+     * `processUpdate()` directly — can never observe a stale frame, and a
+     * throw cannot leak one into the next update. The same discipline, and
+     * the same safety argument, as `UpdateIngestor::withinFrame()`: PHP
+     * ingest is synchronous and single-threaded.
+     */
+    protected ?string $producerFrame = null;
+
+    /**
+     * The truth writer the producer path commits through, or null for a host
+     * with no container.
+     *
+     * RESOLVED ONCE, LAZILY, and never required. `UpdateIngestor` is a
+     * container-resolvable class in every Laravel host, so this is a lookup;
+     * on a framework-free host — or a container that cannot build one — it is
+     * null and the sink publishes an identity-only entry carrying the -1/-1
+     * sentinels (D-042) rather than the pre-inversion payload.
+     *
+     * It is NOT resolved in the constructor: a host that only ever polls
+     * through a non-committing sink (EventDispatcherSink, a fan-out of two
+     * sinks) must not be made to build a database writer it never calls.
+     */
+    private bool $committerResolved = false;
+
+    private ?UpdateIngestor $committer = null;
+
+    public function __construct(?UpdateSinkInterface $sink = null, private ?SignalSink $signalSink = null)
+    {
+        $this->sink = $sink ?? new EventDispatcherSink;
+    }
+
+    /** Observe gap/resync signals without a Laravel event dispatcher (framework-free hosts). */
+    public function withSignalSink(SignalSink $sink): static
+    {
+        $this->signalSink = $sink;
+
+        return $this;
+    }
+
+    public function setSink(UpdateSinkInterface $sink): self
+    {
+        $this->sink = $sink;
+
+        return $this;
+    }
+
+    public function getSink(): UpdateSinkInterface
+    {
+        return $this->sink;
+    }
+
+    /**
+     * The truth writer this poller commits through, resolved once from the
+     * container and memoised — INCLUDING a null, so a host without one pays
+     * the lookup once rather than once per update.
+     *
+     * Guarded rather than bare `app()`: this class is documented as usable
+     * outside a framework, and a framework-free host must get the
+     * identity-only entry, not a fatal on a container that was never booted.
+     */
+    public function committer(): ?UpdateIngestor
+    {
+        if (! $this->committerResolved) {
+            $this->committerResolved = true;
+
+            try {
+                $container = Container::getInstance();
+
+                if ($container->bound(UpdateIngestor::class) || $container->has('app')) {
+                    $this->committer = $container->make(UpdateIngestor::class);
+                }
+            } catch (Throwable) {
+                // No container, or one that cannot build a writer. Identity-only
+                // entries are the honest degradation; the daemon path always
+                // has both, because it runs inside the host app.
+                $this->committer = null;
+            }
+        }
+
+        return $this->committer;
+    }
+
+    /**
+     * Inject the truth writer, skipping the container lookup. For a host that
+     * binds its own ingestor, and for a test that wants one specific writer.
+     */
+    public function withCommitter(?UpdateIngestor $committer): static
+    {
+        $this->committerResolved = true;
+        $this->committer = $committer;
+
+        return $this;
+    }
+
+    /**
+     * Tell the poller which TENANCY account it is producing frames for. See
+     * $producerAccountId for what this is and, emphatically, what it is not.
+     *
+     * Fluent, like every other setter on this class. No call site inside this
+     * file sets it: the poller cannot know a tenancy account id, and the
+     * daemon's worker is the composition root that has both.
+     */
+    public function setProducerAccountId(int $accountId): self
+    {
+        $this->producerAccountId = $accountId;
+
+        return $this;
+    }
+
+    /**
+     * Mint the producer frame identity for one update of one fetched window:
+     * `producer:<accountId>:<fromPts>:<ordinal>` (D-041).
+     *
+     * $fromPts is the pts the window was REQUESTED from — the window's left
+     * edge, not its result. $ordinal is the index of the update among the
+     * UNWRAPPED updates of that window, in delivery order; see
+     * streamUserPayload() for how that is counted and why it must not be a
+     * container index.
+     *
+     * WHY IT IS SAFE ACROSS A CRASH-RESTART, which is the entire reason the
+     * producer is allowed to mint its own identity: the difference cursor
+     * `{pts,date,qts,seq}` is persisted by the host only AFTER
+     * `AccountWorker::run()` ends (`lastSequenceState()`; nothing inside
+     * `run()` writes it anywhere durable). So a process that dies mid-window
+     * restarts from the cursor that was in force when that window was
+     * REQUESTED — the same $fromPts — Telegram replays the same vector in the
+     * same order, the same ordinals re-derive these same strings, and
+     * `UpdateIngestor` UPSERTS onto the rows the dead process committed
+     * instead of appending a duplicate.
+     *
+     * **THE PUBLISHED `seq` IS A HASHED NEGATIVE NUMBER, NOT TELEGRAM'S.**
+     * `UpdateIngestor::frameKey()` turns this string into `seq` in
+     * `[-1073741824, -1]` and `position` in `[0, 32767]`. No consumer may
+     * read the published `seq` as a Telegram sequence number.
+     */
+    public function mintProducerFrame(int $fromPts, int $ordinal): string
+    {
+        return self::PRODUCER_FRAME_PREFIX.':'.$this->producerAccountId.':'.$fromPts.':'.$ordinal;
+    }
+
+    /**
+     * The producer frame in scope for the update the sink is handling right
+     * now, or null. Valid ONLY for the duration of the `handle()` call (and
+     * the inline callback) that `processUpdate()` is making — see
+     * $producerFrame. Copy it if it must outlive the call.
+     */
+    public function getProducerFrame(): ?string
+    {
+        return $this->producerFrame;
+    }
+
+    /**
+     * Attach an optional predicate filter (e.g. only specific channel IDs or message types).
+     *
+     * @param  Closure(array<string, mixed>): bool  $filter
+     */
+    public function filter(Closure $filter): self
+    {
+        $this->filter = $filter;
+
+        return $this;
+    }
+
+    /**
+     * Compute how long a polling loop should back off after catching $e.
+     *
+     * Pure function (no side effects) so backoff policy is unit-testable:
+     *
+     * - Rpc\FloodWaitException (MTProto FLOOD_WAIT_X): sleep the demanded
+     *   $seconds, clamped to [MIN_BACKOFF_SECONDS, MAX_BACKOFF_SECONDS].
+     * - Bot API 429 (TelegramException code 429 whose description carries
+     *   "retry after N", as thrown by BotClient): sleep N, same clamp.
+     * - Anything else: the historical flat MIN_BACKOFF_SECONDS pause.
+     */
+    public static function secondsToWait(Throwable $e): int
+    {
+        if ($e instanceof FloodWaitException) {
+            return max(self::MIN_BACKOFF_SECONDS, min($e->seconds, self::MAX_BACKOFF_SECONDS));
+        }
+
+        if ($e instanceof TelegramException && $e->getCode() === 429) {
+            $retryAfter = self::parseRetryAfterSeconds($e->getMessage());
+            if ($retryAfter !== null) {
+                return max(self::MIN_BACKOFF_SECONDS, min($retryAfter, self::MAX_BACKOFF_SECONDS));
+            }
+        }
+
+        return self::MIN_BACKOFF_SECONDS;
+    }
+
+    /**
+     * Extract the N from Bot API 429 descriptions like
+     * "Too Many Requests: retry after 25" using sscanf only
+     * (src/ is regex-free by spec).
+     */
+    protected static function parseRetryAfterSeconds(string $message): ?int
+    {
+        $marker = 'retry after';
+        $pos = stripos($message, $marker);
+        if ($pos === false) {
+            return null;
+        }
+
+        sscanf(substr($message, $pos + strlen($marker)), '%*[^0-9]%d', $seconds);
+
+        return is_int($seconds) ? $seconds : null;
+    }
+
+    /**
+     * Stop the active polling loop cleanly.
+     */
+    public function stop(): void
+    {
+        $this->running = false;
+    }
+
+    /**
+     * Sleep $seconds in stop()-responsive chunks: a FLOOD_WAIT backoff can be
+     * up to MAX_BACKOFF_SECONDS (an hour), and stop() must take effect within
+     * one chunk instead of after the whole uninterruptible sleep.
+     */
+    protected function interruptibleSleep(int $seconds): void
+    {
+        for ($elapsed = 0; $elapsed < $seconds && $this->running; $elapsed += self::MIN_BACKOFF_SECONDS) {
+            sleep(self::MIN_BACKOFF_SECONDS);
+        }
+    }
+
+    /**
+     * Poll a Bot API client in a loop.
+     *
+     * @param  int  $timeout  Long-polling timeout in seconds
+     * @param  int  $limit  Max updates per fetch
+     * @param  (Closure(array<string, mixed>): void)|null  $onUpdate  Optional inline callback
+     */
+    public function pollBot(BotClient $bot, int $timeout = 30, int $limit = 100, ?Closure $onUpdate = null): void
+    {
+        $offset = 0;
+        $this->running = true;
+
+        while ($this->running) {
+            try {
+                $response = $bot->call('getUpdates', [
+                    'offset' => $offset,
+                    'limit' => $limit,
+                    'timeout' => $timeout,
+                ]);
+
+                $updates = $response['result'] ?? [];
+
+                // `result` must be a LIST OF UPDATES. Two real shapes violate
+                // that, and both used to move the offset:
+                //
+                //  - BotClient answers a 200-with-empty-body getUpdates with a
+                //    synthetic `bot_result`, whose `result` is an ASSOC array
+                //    `{_: 'bot_result', method: ..., params: [...]}`. Iterated
+                //    as a list, its `params` entry is an array with no
+                //    update_id, so `(int) null` is 0 and `max($offset, 0 + 1)`
+                //    advanced the offset to 1 having received NOTHING —
+                //    dropping update 0 permanently. The offset is how the Bot
+                //    API is told what you already have, so advancing it past
+                //    an update that was never delivered is unrecoverable.
+                //  - Any other malformed `result` reaches the same arithmetic.
+                //
+                // Only a genuine update advances anything. An entry that is not
+                // an array with an integer update_id is skipped and logged; it
+                // must not be able to move the cursor.
+                foreach (is_array($updates) ? $updates : [] as $update) {
+                    if (! is_array($update)) {
+                        continue;
+                    }
+
+                    $rawId = $update['update_id'] ?? null;
+
+                    if (! is_int($rawId) && ! (is_string($rawId) && ctype_digit($rawId))) {
+                        // Never advance on a guess. Telegram assigns update ids,
+                        // so a missing or non-numeric one means this is not an
+                        // update and the offset must not move.
+                        // No PSR-3 logger on this class by design, so the
+                        // refusal is structural: the entry is skipped and the
+                        // offset is untouched. A wrong offset would be worse
+                        // than a quiet one.
+                        continue;
+                    }
+
+                    $updateId = (int) $rawId;
+                    $offset = max($offset, $updateId + 1);
+
+                    $this->processUpdate($update, $bot->botToken, $onUpdate);
+                }
+            } catch (Throwable $e) {
+                // Same policy as the user loop, deliberately. This catch used
+                // to swallow EVERY throwable and retry, so a wrong or missing
+                // bot token — which no amount of retrying can fix — became an
+                // infinite 2-second sleep that exited 0 and looked healthy.
+                // One policy, one place where "terminal" is decided.
+                $action = $this->errorLoopAction($e);
+
+                if ($action === self::ACTION_RETHROW) {
+                    throw $e;
+                }
+
+                if ($action === self::ACTION_BREAK) {
+                    break;
+                }
+
+                $this->interruptibleSleep(self::secondsToWait($e));
+            }
+        }
+    }
+
+    /**
+     * Poll an MTProto User account for incoming difference updates (`updates.getDifference`).
+     *
+     * Implements the full difference state machine (see core.telegram.org/api/updates):
+     * - updates.difference / differenceEmpty: adopt state, sleep, poll again.
+     * - updates.differenceSlice: adopt intermediate_state, immediately keep
+     *   fetching from the advanced window (never refetch the same window).
+     * - updates.differenceTooLong: hard-reset pts to the server's pts, flag
+     *   the gap (TelegramGapDetected), keep polling.
+     * - new_encrypted_messages (qts items) are wrapped as
+     *   updateNewEncryptedMessage and streamed to the sink.
+     *
+     * Initial state precedence: a state previously stored via
+     * setSequenceState() wins over the (defaulted) constructor arguments.
+     *
+     * @param  int  $pts  Current persistent sequence number (0 = latest state)
+     * @param  int  $date  Current persistent timestamp
+     * @param  int  $qts  Current persistent secret chat sequence number
+     * @param  (Closure(array<string, mixed>): void)|null  $onUpdate  Optional inline callback
+     */
+    public function pollUser(
+        UserAccountScope $user,
+        int $pts = 0,
+        int $date = 0,
+        int $qts = 0,
+        ?Closure $onUpdate = null
+    ): void {
+        $this->running = true;
+
+        if ($this->sequenceState === null) {
+            // First poll from an unknown state: adopting the server's state
+            // is a resync (emitted when the first terminal response lands).
+            $this->gapPending = $pts === 0;
+            $this->sequenceState = ['pts' => $pts, 'date' => $date, 'qts' => $qts, 'seq' => 0];
+        }
+
+        while ($this->running) {
+            try {
+                // Bootstrap: Telegram rejects updates.getDifference(pts=0,
+                // date=0) with PERSISTENT_TIMESTAMP_EMPTY (live-observed).
+                // A cursorless first poll must learn the persistent timestamp
+                // via updates.getState before requesting the difference
+                // window. Inside the try so getState FloodWait obeys the
+                // standard backoff policy.
+                if ($this->sequenceState['pts'] === 0 && $this->sequenceState['date'] === 0) {
+                    $this->bootstrapFromGetState($user);
+                }
+
+                $kind = $this->fetchUserDifference($user, $onUpdate);
+
+                if ($kind !== self::KIND_SLICE && $kind !== self::KIND_TOO_LONG) {
+                    // Terminal response: adopt the calm polling cadence.
+                    sleep(1);
+                }
+                // slice/too_long: loop immediately from the advanced window.
+            } catch (Throwable $e) {
+                // A rejected auth key is terminal for the ACCOUNT, not just for
+                // this loop iteration, and the rethrow below is the only place
+                // it surfaces. Record the revocation FIRST, while the account
+                // identity is still in hand: the durable marker
+                // (telegram_accounts.revoked_at) plus TelegramSessionRevoked
+                // are what let a host answer "which accounts need re-login?"
+                // without holding this exception. Dispatching BEFORE the rethrow
+                // matters — a thrown AuthKeyException is the last statement this
+                // frame ever executes otherwise.
+                if ($e instanceof AuthKeyException) {
+                    $this->reportSessionRevoked($user);
+                }
+
+                $action = $this->errorLoopAction($e);
+                if ($action === self::ACTION_RETHROW) {
+                    throw $e;
+                }
+                if ($action === self::ACTION_BREAK) {
+                    break;
+                }
+                $this->interruptibleSleep(self::secondsToWait($e));
+            }
+        }
+    }
+
+    /**
+     * Bootstrap the polling cursor from updates.getState.
+     *
+     * Telegram rejects updates.getDifference(pts=0, date=0) with
+     * PERSISTENT_TIMESTAMP_EMPTY — a cursorless first poll must learn the
+     * server's state before requesting the difference window. Sets
+     * gapPending=true (the adopted state is the resync origin) and adopts
+     * pts/date/qts/seq from the server response.
+     */
+    private function bootstrapFromGetState(UserAccountScope $user): void
+    {
+        $state = $user->call('updates.getState');
+
+        $this->sequenceState = [
+            'pts' => (int) ($state['pts'] ?? 0),
+            'date' => (int) ($state['date'] ?? 0),
+            'qts' => (int) ($state['qts'] ?? 0),
+            'seq' => (int) ($state['seq'] ?? 0),
+        ];
+        $this->gapPending = true;
+    }
+
+    /**
+     * Announce that the server rejected $user's auth key.
+     *
+     * The account id is the TELEGRAM user id carried by the live session — the
+     * same value fetchUserDifference() passes as `account_id` to
+     * TelegramGapDetected / TelegramResynced, and the only identity a session
+     * knows. A scope with no id (a session that never completed login) has no
+     * account to attribute the failure to, so nothing is announced: inventing
+     * an owner for a revocation would be worse than silence.
+     *
+     * Announcement is deliberately fire-and-forget: recording the revocation
+     * must never replace the AuthKeyException the caller is about to receive,
+     * so no exception from here is allowed to escape.
+     */
+    protected function reportSessionRevoked(UserAccountScope $user): void
+    {
+        try {
+            $accountId = $user->getSession()->userId;
+            if ($accountId === null) {
+                return;
+            }
+
+            TelegramSessionRevoked::dispatch((int) $accountId);
+        } catch (Throwable) {
+        }
+    }
+
+    /**
+     * Error policy for the polling loops: how to react to a caught error.
+     * 'rethrow' for unrecognized response shapes (fail fast, keep state),
+     * 'break' when stop() won the race, 'backoff' otherwise.
+     */
+    protected function errorLoopAction(Throwable $e): string
+    {
+        if ($e instanceof UnexpectedValueException) {
+            return self::ACTION_RETHROW;
+        }
+
+        // A revoked or unregistered auth key is TERMINAL, not a transient
+        // condition. It used to fall through to ACTION_BACKOFF below, where
+        // secondsToWait() returns its 2-second floor — so a host calling
+        // pollUser() with a dead session spun at 2s/iteration FOREVER, with
+        // no exception, no log line and no PSR-3 logger anywhere in this
+        // class. Retrying cannot fix an auth key the server has deleted, and
+        // silence is the one thing an operator cannot act on.
+        if ($e instanceof AuthKeyException) {
+            return self::ACTION_RETHROW;
+        }
+
+        // Bot API 401 Unauthorized is the same shape of dead end as a revoked
+        // MTProto auth key: the token is wrong, and retrying it forever is just
+        // a slow way to hide a typo from the operator. TelegramException
+        // carries the code as its second argument.
+        if ($e instanceof TelegramException && $e->getCode() === self::BOT_UNAUTHORIZED) {
+            return self::ACTION_RETHROW;
+        }
+
+        if (! $this->running) {
+            return self::ACTION_BREAK;
+        }
+
+        return self::ACTION_BACKOFF;
+    }
+
+    /**
+     * Execute one updates.getDifference call and apply the response to the
+     * state machine. Returns the fetch kind; slice/too_long mean "keep
+     * fetching without sleeping", everything else is terminal.
+     *
+     * @param  (Closure(array<string, mixed>): void)|null  $onUpdate
+     */
+    protected function fetchUserDifference(UserAccountScope $user, ?Closure $onUpdate): string
+    {
+        $source = (string) ($user->session->userId ?? 'user');
+        $accountId = $user->session->userId;
+
+        $requestedPts = $this->sequenceState['pts'];
+        $diff = $user->call('updates.getDifference', [
+            'pts' => $requestedPts,
+            'pts_total_limit' => 100,
+            'date' => $this->sequenceState['date'],
+            'qts' => $this->sequenceState['qts'],
+        ]);
+
+        $kind = (string) ($diff['_'] ?? '');
+        if ($kind === '' && (isset($diff['state']) || isset($diff['new_messages']) || isset($diff['other_updates']))) {
+            // BC: constructor-less payloads (legacy canned responses / stripped
+            // transports) are full differences by shape.
+            $kind = 'updates.difference';
+        }
+
+        switch ($kind) {
+            case 'updates.difference':
+                $this->streamUserPayload($diff, $source, $onUpdate, $requestedPts);
+                $this->adoptState($diff['state'] ?? null);
+                $this->finishResync($accountId);
+
+                return self::KIND_COMPLETE;
+
+            case 'updates.differenceSlice':
+                $this->streamUserPayload($diff, $source, $onUpdate, $requestedPts);
+                $this->adoptState($diff['intermediate_state'] ?? null);
+
+                if ($this->sequenceState['pts'] > $requestedPts) {
+                    $this->gapPending = true;
+                    TelegramGapDetected::dispatch(TelegramGapDetected::KIND_SLICE, [
+                        'account_id' => $accountId,
+                        'from_pts' => $requestedPts,
+                        'to_pts' => $this->sequenceState['pts'],
+                    ]);
+                    $this->signalSink?->gapDetected(TelegramGapDetected::KIND_SLICE, [
+                        'account_id' => $accountId,
+                        'from_pts' => $requestedPts,
+                        'to_pts' => $this->sequenceState['pts'],
+                    ]);
+
+                    return self::KIND_SLICE;
+                }
+
+                // No forward progress: re-requesting the same window would
+                // loop forever (the historic bug). Force the window forward
+                // and flag the hole.
+                $this->sequenceState['pts'] = $requestedPts + 1;
+                $this->gapPending = true;
+                TelegramGapDetected::dispatch(TelegramGapDetected::KIND_HOLE, [
+                    'account_id' => $accountId,
+                    'requested_pts' => $requestedPts,
+                    'intermediate_pts' => $this->sequenceState['pts'],
+                ]);
+                $this->signalSink?->gapDetected(TelegramGapDetected::KIND_HOLE, [
+                    'account_id' => $accountId,
+                    'requested_pts' => $requestedPts,
+                    'intermediate_pts' => $this->sequenceState['pts'],
+                ]);
+
+                return self::KIND_HOLE;
+
+            case 'updates.differenceTooLong':
+                $serverPts = (int) ($diff['pts'] ?? $this->sequenceState['pts']);
+                TelegramGapDetected::dispatch(TelegramGapDetected::KIND_TOO_LONG, [
+                    'account_id' => $accountId,
+                    'local_pts' => $this->sequenceState['pts'],
+                    'server_pts' => $serverPts,
+                    'timeout' => isset($diff['timeout']) ? (int) $diff['timeout'] : null,
+                ]);
+                $this->signalSink?->gapDetected(TelegramGapDetected::KIND_TOO_LONG, [
+                    'account_id' => $accountId,
+                    'local_pts' => $this->sequenceState['pts'],
+                    'server_pts' => $serverPts,
+                    'timeout' => isset($diff['timeout']) ? (int) $diff['timeout'] : null,
+                ]);
+
+                // Hard reset (may move pts backwards): the server refused to
+                // replay the old window, its pts is authoritative.
+                $this->sequenceState['pts'] = $serverPts;
+                $this->gapPending = true;
+                $this->finishResync($accountId);
+
+                return self::KIND_TOO_LONG;
+
+            case 'updates.differenceEmpty':
+                $this->adoptState($diff);
+                $this->finishResync($accountId);
+
+                return self::KIND_EMPTY;
+        }
+
+        throw new UnexpectedValueException(
+            'Unrecognized updates.getDifference response: '.(string) ($diff['_'] ?? '(no constructor)')
+        );
+    }
+
+    /**
+     * Stream one difference payload to the sink in MadelineProto order:
+     * other_updates, new_encrypted_messages (wrapped as
+     * updateNewEncryptedMessage), then new_messages (wrapped as
+     * updateNewMessage / updateNewChannelMessage by peer). Updates pass
+     * through raw — channel_id context is never stripped — and any update
+     * carrying channel_id + pts advances the per-channel pts map.
+     *
+     * $fromPts is the pts this window was REQUESTED from (the value
+     * `fetchUserDifference()` captured before the RPC), and it is what makes
+     * the minted frames stable across a crash-restart — see
+     * mintProducerFrame(). Only the two streaming kinds pass it; the
+     * streaming branches are the only ones that emit updates.
+     *
+     * ## THE ORDINAL: THE INDEX OF THE UNWRAPPED UPDATE INSIDE THE WINDOW
+     *
+     * One counter, incremented once per update the sink is about to see, in
+     * MadelineProto delivery order, ACROSS all three loops. It is reset per
+     * fetched window, because a re-fetch of the same window must re-derive
+     * the same ordinals.
+     *
+     * NOT one counter per loop, and NOT the container index. This method
+     * UNWRAPS: `other_updates` entries pass through raw, while
+     * `new_encrypted_messages` and `new_messages` entries are each WRAPPED
+     * into a single `update*` ctor (`updateNewEncryptedMessage`,
+     * `updateNewMessage` / `updateNewChannelMessage`). So the sink sees ONE
+     * bare `update*` per call carrying NO delivering seq — which is exactly
+     * the payload that cannot key itself. A per-loop counter would hand
+     * `other_updates[0]` and `new_encrypted_messages[0]` the same ordinal,
+     * i.e. the same minted frame, and fold two different updates onto one
+     * `tf_updates` row. Two updates in ONE container collide the same way
+     * under any scheme that ignores the other two loops.
+     *
+     * The counter advances for every update emitted, INCLUDING one the filter
+     * rejects (the increment is here, not in `processUpdate()`): the ordinal
+     * must re-derive identically on the re-fetch that follows a crash,
+     * whatever the filter did on the previous attempt.
+     *
+     * @param  array<string, mixed>  $diff
+     * @param  (Closure(array<string, mixed>): void)|null  $onUpdate
+     */
+    protected function streamUserPayload(array $diff, string $source, ?Closure $onUpdate, int $fromPts): void
+    {
+        $ordinal = 0;
+
+        foreach ($diff['other_updates'] ?? [] as $upd) {
+            $this->trackChannelPts($upd);
+            $this->processUpdate($upd, $source, $onUpdate, $this->mintProducerFrame($fromPts, $ordinal));
+            $ordinal++;
+        }
+
+        foreach ($diff['new_encrypted_messages'] ?? [] as $encrypted) {
+            $update = ['_' => 'updateNewEncryptedMessage', 'message' => $encrypted];
+            $this->processUpdate($update, $source, $onUpdate, $this->mintProducerFrame($fromPts, $ordinal));
+            $ordinal++;
+        }
+
+        foreach ($diff['new_messages'] ?? [] as $msg) {
+            $constructor = self::isChannelMessage($msg) ? 'updateNewChannelMessage' : 'updateNewMessage';
+            $update = ['_' => $constructor, 'message' => $msg];
+            $this->trackChannelPts($update);
+            $this->processUpdate($update, $source, $onUpdate, $this->mintProducerFrame($fromPts, $ordinal));
+            $ordinal++;
+        }
+    }
+
+    /**
+     * Does this raw message belong to a channel/supergroup peer?
+     *
+     * @param  array<string, mixed>  $msg
+     */
+    protected static function isChannelMessage(array $msg): bool
+    {
+        return isset($msg['peer_id']['_'])
+            && $msg['peer_id']['_'] === 'peerChannel'
+            && isset($msg['peer_id']['channel_id']);
+    }
+
+    /**
+     * Record channel pts when an update carries both a channel id (top-level
+     * or inside message.peer_id) and a pts counter. Monotonic per channel.
+     *
+     * @param  array<string, mixed>  $update
+     */
+    protected function trackChannelPts(array $update): void
+    {
+        if (! isset($update['pts'])) {
+            return;
+        }
+
+        $channelId = $update['channel_id'] ?? $update['message']['peer_id']['channel_id'] ?? null;
+        if (! is_int($channelId)) {
+            return;
+        }
+
+        $pts = (int) $update['pts'];
+        if ($pts > ($this->channelPts[$channelId] ?? 0)) {
+            $this->channelPts[$channelId] = $pts;
+        }
+    }
+
+    /**
+     * Adopt a server-side state object (updates.state from `state` or
+     * `intermediate_state`, or the flat fields of differenceEmpty).
+     * Monotonic: pts/qts/seq never move backwards; date always follows
+     * the server. Null input is a no-op.
+     *
+     * @param  array<string, mixed>|null  $state
+     */
+    protected function adoptState(?array $state): void
+    {
+        if ($state === null) {
+            return;
+        }
+
+        foreach (['pts', 'date', 'qts', 'seq'] as $key) {
+            if (isset($state[$key])) {
+                $value = (int) $state[$key];
+                if (! isset($this->sequenceState[$key])
+                    || ! in_array($key, ['pts', 'qts', 'seq'], true)
+                    || $value > $this->sequenceState[$key]) {
+                    $this->sequenceState[$key] = $value;
+                }
+            }
+        }
+    }
+
+    /**
+     * Emit TelegramResynced if a resync was pending; clears the flag.
+     * Called after every terminal response state adoption.
+     */
+    protected function finishResync(?int $accountId): void
+    {
+        if ($this->gapPending) {
+            $this->gapPending = false;
+            TelegramResynced::dispatch($this->getSequenceState() ?? [], $accountId);
+            $this->signalSink?->resynced($this->getSequenceState() ?? [], (int) ($accountId ?? 0));
+        }
+    }
+
+    /**
+     * Current persisted sequence state, if any.
+     *
+     * @return array{pts: int, date: int, qts: int, seq: int}|null
+     */
+    public function getSequenceState(): ?array
+    {
+        return $this->sequenceState;
+    }
+
+    /**
+     * Seed the sequence state to resume from a persisted window (e.g.
+     * loaded from storage between runs). Takes precedence over pollUser()'s
+     * defaulted constructor arguments.
+     *
+     * @param  array{pts?: int, date?: int, qts?: int, seq?: int}  $state
+     */
+    public function setSequenceState(array $state): self
+    {
+        $this->sequenceState = [
+            'pts' => (int) ($state['pts'] ?? 0),
+            'date' => (int) ($state['date'] ?? 0),
+            'qts' => (int) ($state['qts'] ?? 0),
+            'seq' => (int) ($state['seq'] ?? 0),
+        ];
+        $this->gapPending = false;
+
+        return $this;
+    }
+
+    /**
+     * Observed per-channel pts map (channel_id => pts). Useful to seed
+     * channels.getDifference continuation windows.
+     *
+     * @return array<int, int>
+     */
+    public function getChannelPts(): array
+    {
+        return $this->channelPts;
+    }
+
+    /**
+     * Process a single update through the filter, sink, and callback.
+     * A sink returning false (not-now backpressure) skips the callback.
+     *
+     * @param  array<string, mixed>  $update
+     * @param  (Closure(array<string, mixed>): void)|null  $onUpdate
+     * @param  string|null  $frame  the producer frame minted for THIS update (D-041), in
+     *                              scope for the sink's handle() and the callback below
+     */
+    public function processUpdate(array $update, ?string $source = null, ?Closure $onUpdate = null, ?string $frame = null): void
+    {
+        // Scoped, not sticky — see $producerFrame. Restored on every exit path,
+        // including a throw out of the sink, so no frame survives its update.
+        $previousFrame = $this->producerFrame;
+        $this->producerFrame = $frame;
+
+        try {
+            if ($this->filter !== null && ! ($this->filter)($update)) {
+                return;
+            }
+
+            // Send to pluggable sink (EventDispatcher, Redis, Postgres, etc.)
+            //
+            // THE INVERSION, in one branch (D-039/D-040). A sink that speaks
+            // CommittedRowSink takes the two-phase form: it commits the row
+            // through the writer this poller resolved, under the frame minted
+            // above, and only then publishes the committed key. Every other
+            // sink keeps the one-argument face — an event dispatcher has no row
+            // to name and must not be handed a database writer.
+            $handled = $this->sink instanceof CommittedRowSink
+                ? $this->sink->handleCommitted($update, $source, $this->committer(), $frame)
+                : $this->sink->handle($update, $source);
+
+            if (! $handled) {
+                return;
+            }
+
+            // Invoke optional inline callback
+            if ($onUpdate !== null) {
+                $onUpdate($update);
+            }
+        } finally {
+            $this->producerFrame = $previousFrame;
+        }
+    }
+}

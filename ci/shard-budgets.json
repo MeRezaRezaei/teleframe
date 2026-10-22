@@ -1,0 +1,286 @@
+{
+  "_target_seconds_per_area": 60.0,
+  "_target_note": "S5: every area under 60s. S6: whole serial suite under 5 min (300s). Today the seven largest areas are ~83%% of 2.4h. Derived in docs/standards/testing-standards.md from ci/shard-timings-raw.tsv.",
+  "areas": {
+    "App": {
+      "seconds": 2.023,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Auth": {
+      "seconds": 0.439,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Backfill": {
+      "seconds": 51.049,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Backup": {
+      "seconds": 74.201,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": true
+    },
+    "Bot": {
+      "seconds": 1.732,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "BotMap": {
+      "seconds": 9.209,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Bus": {
+      "seconds": 364.412,
+      "kind": "operator-gated",
+      "blocked_by": "DISCHARGED BY: re-run this area's tests ALONE on a clean tree and record the wall clock — bin/run-phpunit-shard.php writes the row, bin/rollup-shard-reports.php rolls it up — then set kind=measured, measured_at=<date>, and drop this field. Until then the seconds below are a LOWER BOUND on a run that exited non-zero and must not be read as how long the area takes.",
+      "source": "ci/shard-timings-raw.tsv [exit 1: another lane owned that run; seconds are a floor]",
+      "measured_at": null,
+      "over_target": true,
+      "note": "NOT A MEASUREMENT. This run exited non-zero because another lane owned the machine; the seconds are a lower bound on a broken run. Re-measure alone on a clean tree before quoting this number as a duration."
+    },
+    "Concerns": {
+      "seconds": 0.423,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Config": {
+      "seconds": 1.563,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv \u2014 re-measured 2026-10-18 against pinned commit 07cf79c9 (clean tree), 3 runs, median of 1.47/1.67/1.56, exit 0. The previous 4.848 (2026-10-17) was taken while tests/Config was deterministically RED at HEAD; the two did not describe the same tree.",
+      "measured_at": "2026-10-18",
+      "over_target": false
+    },
+    "Console": {
+      "seconds": 689.228,
+      "kind": "operator-gated",
+      "blocked_by": "DISCHARGED BY: re-run this area's tests ALONE on a clean tree and record the wall clock — bin/run-phpunit-shard.php writes the row, bin/rollup-shard-reports.php rolls it up — then set kind=measured, measured_at=<date>, and drop this field. Until then the seconds below are a LOWER BOUND on a run that exited non-zero and must not be read as how long the area takes.",
+      "source": "ci/shard-timings-raw.tsv [exit 2: another lane owned that run; seconds are a floor]",
+      "measured_at": null,
+      "over_target": true,
+      "note": "NOT A MEASUREMENT. This run exited non-zero because another lane owned the machine; the seconds are a lower bound on a broken run. Re-measure alone on a clean tree before quoting this number as a duration."
+    },
+    "Control": {
+      "seconds": 1.523,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Core": {
+      "seconds": 68.025,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": true
+    },
+    "Credentials": {
+      "seconds": 110.548,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": true
+    },
+    "Daemon": {
+      "seconds": 1.433,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "DataCore": {
+      "seconds": 0.422,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Handler": {
+      "seconds": 336.531,
+      "kind": "operator-gated",
+      "blocked_by": "DISCHARGED BY: re-run this area's tests ALONE on a clean tree and record the wall clock — bin/run-phpunit-shard.php writes the row, bin/rollup-shard-reports.php rolls it up — then set kind=measured, measured_at=<date>, and drop this field. Until then the seconds below are a LOWER BOUND on a run that exited non-zero and must not be read as how long the area takes.",
+      "source": "ci/shard-timings-raw.tsv [exit 2: another lane owned that run; seconds are a floor]",
+      "measured_at": null,
+      "over_target": true,
+      "note": "NOT A MEASUREMENT. This run exited non-zero because another lane owned the machine; the seconds are a lower bound on a broken run. Re-measure alone on a clean tree before quoting this number as a duration."
+    },
+    "Identity": {
+      "seconds": 1.526,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Ingest": {
+      "seconds": 2201.0,
+      "kind": "operator-gated",
+      "blocked_by": "DISCHARGED BY: re-run this area's tests ALONE on a clean tree and record the wall clock — bin/run-phpunit-shard.php writes the row, bin/rollup-shard-reports.php rolls it up — then set kind=measured, measured_at=<date>, and drop this field. Until then the seconds below are a LOWER BOUND on a run that exited non-zero and must not be read as how long the area takes.",
+      "source": "ci/shard-timings-raw.tsv (re-measured ALONE after the 137; authoritative) [exit 2: another lane owned that run; seconds are a floor]",
+      "measured_at": null,
+      "over_target": true,
+      "note": "Self-contradictory as committed: the raw file calls 2201.0 \"authoritative\" while the same run exited 2. A failed run is a floor, not a measurement. 2201.0 is a LOWER BOUND on a broken run and must not be read as how long tests/Ingest takes."
+    },
+    "Laravel": {
+      "seconds": 201.947,
+      "kind": "operator-gated",
+      "blocked_by": "DISCHARGED BY: re-run this area's tests ALONE on a clean tree and record the wall clock — bin/run-phpunit-shard.php writes the row, bin/rollup-shard-reports.php rolls it up — then set kind=measured, measured_at=<date>, and drop this field. Until then the seconds below are a LOWER BOUND on a run that exited non-zero and must not be read as how long the area takes.",
+      "source": "ci/shard-timings-raw.tsv [exit 2: another lane owned that run; seconds are a floor]",
+      "measured_at": null,
+      "over_target": true,
+      "note": "NOT A MEASUREMENT. This run exited non-zero because another lane owned the machine; the seconds are a lower bound on a broken run. Re-measure alone on a clean tree before quoting this number as a duration."
+    },
+    "Live": {
+      "seconds": 1.467,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Message": {
+      "seconds": 0.513,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "MiniApp": {
+      "seconds": 0.625,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Mirror": {
+      "seconds": 440.381,
+      "kind": "operator-gated",
+      "blocked_by": "DISCHARGED BY: re-run this area's tests ALONE on a clean tree and record the wall clock — bin/run-phpunit-shard.php writes the row, bin/rollup-shard-reports.php rolls it up — then set kind=measured, measured_at=<date>, and drop this field. Until then the seconds below are a LOWER BOUND on a run that exited non-zero and must not be read as how long the area takes.",
+      "source": "ci/shard-timings-raw.tsv [exit 2: another lane owned that run; seconds are a floor]",
+      "measured_at": null,
+      "over_target": true,
+      "note": "NOT A MEASUREMENT. This run exited non-zero because another lane owned the machine; the seconds are a lower bound on a broken run. Re-measure alone on a clean tree before quoting this number as a duration."
+    },
+    "MySql": {
+      "seconds": null,
+      "kind": "operator-gated",
+      "source": "needs a reachable mysql:8.4 service; never measured on a dev box",
+      "blocked_by": "TELEFRAME_MYSQL=1 plus a running mysql:8.4 container (CI owns this)",
+      "measured_at": null,
+      "over_target": null
+    },
+    "New": {
+      "seconds": 57.35,
+      "kind": "operator-gated",
+      "blocked_by": "DISCHARGED BY: re-run this area's tests ALONE on a clean tree and record the wall clock — bin/run-phpunit-shard.php writes the row, bin/rollup-shard-reports.php rolls it up — then set kind=measured, measured_at=<date>, and drop this field. Until then the seconds below are a LOWER BOUND on a run that exited non-zero and must not be read as how long the area takes.",
+      "source": "ci/shard-timings-raw.tsv [exit 2: another lane owned that run; seconds are a floor]",
+      "measured_at": null,
+      "over_target": false,
+      "note": "NOT A MEASUREMENT. This run exited non-zero because another lane owned the machine; the seconds are a lower bound on a broken run. Re-measure alone on a clean tree before quoting this number as a duration."
+    },
+    "Notify": {
+      "seconds": 2.138,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Passport": {
+      "seconds": 24.483,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Pg": {
+      "seconds": 12.52,
+      "kind": "operator-gated",
+      "blocked_by": "DISCHARGED BY: re-run this area's tests ALONE on a clean tree and record the wall clock — bin/run-phpunit-shard.php writes the row, bin/rollup-shard-reports.php rolls it up — then set kind=measured, measured_at=<date>, and drop this field. Until then the seconds below are a LOWER BOUND on a run that exited non-zero and must not be read as how long the area takes.",
+      "source": "ci/shard-timings-raw.tsv [exit 2: another lane owned that run; seconds are a floor]",
+      "measured_at": null,
+      "over_target": false,
+      "note": "NOT A MEASUREMENT. This run exited non-zero because another lane owned the machine; the seconds are a lower bound on a broken run. Re-measure alone on a clean tree before quoting this number as a duration."
+    },
+    "Realtime": {
+      "seconds": 1.027,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Schema": {
+      "seconds": 1758.487,
+      "kind": "operator-gated",
+      "blocked_by": "DISCHARGED BY: re-run this area's tests ALONE on a clean tree and record the wall clock — bin/run-phpunit-shard.php writes the row, bin/rollup-shard-reports.php rolls it up — then set kind=measured, measured_at=<date>, and drop this field. Until then the seconds below are a LOWER BOUND on a run that exited non-zero and must not be read as how long the area takes.",
+      "source": "ci/shard-timings-raw.tsv [exit 2: another lane owned that run; seconds are a floor]",
+      "measured_at": null,
+      "over_target": true,
+      "note": "NOT A MEASUREMENT. This run exited non-zero because another lane owned the machine; the seconds are a lower bound on a broken run. Re-measure alone on a clean tree before quoting this number as a duration."
+    },
+    "Stage": {
+      "seconds": 0.936,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Standalone": {
+      "seconds": 0.918,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Store": {
+      "seconds": 44.361,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Supervisor": {
+      "seconds": 0.529,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Support": {
+      "seconds": 0.43,
+      "kind": "measured",
+      "source": "measured 2026-10-18 against pinned commit 5810d653 (clean tree), 3 runs, median of 0.42/0.38/0.43, exit 0, vendor/bin/phpunit tests/Support",
+      "measured_at": "2026-10-18",
+      "over_target": false,
+      "note": "This entry used to claim `kind: no-suite` with the rationale \"tests/Support holds shared test doubles and helpers, zero test classes\". That became FALSE at ae2fb8a5, which added FakeUserScopeDifferentialTest — a test landed in a directory the budget had declared empty, which is precisely the class of committed number AGENTS.md:255-258 forbids. The gate caught it and nothing was listening (goal 46.84). Measured rather than re-declared, because a second plausible number would repeat the defect this entry already committed once."
+    },
+    "Teleframe": {
+      "seconds": 0.931,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    },
+    "Vault": {
+      "seconds": 1.241,
+      "kind": "measured",
+      "source": "ci/shard-timings-raw.tsv",
+      "measured_at": "2026-10-17",
+      "over_target": false
+    }
+  },
+  "_revalidation": "2026-10-18: only Config was re-measured, because AGENTS.md forbids running the full suite on this machine (CI owns it). Every other row still describes the 2026-10-17 run, whose tree was NOT committed. Rows marked kind=floor are corrupted runs, not measurements. Re-measure the rest from a clean pinned commit before quoting any of them as a duration."
+}

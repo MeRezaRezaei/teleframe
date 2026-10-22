@@ -1,0 +1,377 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# pr-review-agent.yml — the review the operator cannot give.
+#
+# THE OPERATOR'S REASON THIS FILE EXISTS, verbatim:
+#   "i cant review ai work and accpet it we need an agent to accept that and
+#    giving it the power to do so or rejcet with reason its a porsigre thing
+#    and both of its end is obiovus does not need me"
+#
+# WHY IT IS NEEDED AT ALL — AND IT IS NOT A NICETY. The public repository
+# MeRezaRezaei/teleframe has branch protection on `main` requiring 1 approving
+# review (enforce_admins, no force push, no deletions — see the verbatim at
+# .brain/verbatim/2026-10-12-two-repo-git-flow.md). The GitLab `publish-public`
+# job opens that PR and then waits forever for a human who will never read it,
+# so the public branch stops moving. Both ends of this loop are obvious and
+# neither of them is the operator: approve a clean PR, or request changes with a
+# stated reason. This file is that loop, closed.
+#
+# THE SPLIT INSIDE THIS FILE IS THE DESIGN, and it is what keeps the AI from
+# being trusted with anything arithmetic can decide:
+#
+#   STAGE 1 — bin/verify-public-pr.php runs the mechanical checks (public
+#             surface strip set, credential scan, CI rollup). If it prints
+#             `VERDICT: BLOCKED` this workflow REQUEST CHANGES IMMEDIATELY WITH
+#             THE FAILING LINES AND STOPS. No model call. A tree containing
+#             `.brain/` does not need an opinion, it needs a wall, and spending
+#             quota — and worse, letting a model talk — about it is the failure
+#             mode this split exists to make impossible.
+#   STAGE 2 — only on `VERDICT: CLEAN` does the opencode agent read the tree and
+#             decide whether what is in it is actually safe and understood to be
+#             published to the world.
+#
+# THE MODEL AND ENDPOINT ARE NOT DECIDED HERE, ON PURPOSE. `.opencode-ci/
+# opencode.json` already points at https://or.pubg-sell.ir/v1 with model
+# opencode-omniroute/oc/space-bunny-free. This file INSTALLS that file and
+# changes nothing in it — ONE definition drives the GitLab lane, the GitHub agent
+# lanes and this reviewer, so the three cannot drift apart. A previous generation
+# inlined its own provider block and reached for 127.0.0.1:20128 and the
+# opencode-zen / "opencode/" namespaces; those 403'd and the failure was SILENT,
+# because the agent then simply produced no verdict and nobody noticed. If you
+# are editing this file and feel the urge to add a `provider:` or `model:` line:
+# do not.
+#
+# SECURITY SHAPE, WHICH IS THE POINT OF A PUBLIC-REPO REVIEWER. The token here
+# can post a review and read the repository. It cannot push, cannot write
+# contents, and cannot touch the private repository at all:
+#   permissions.pull-requests: write   — the ONLY write it holds, and the only
+#                                        thing it needs one for
+#   permissions.contents: read         — never `write`; a reviewer that can push
+#                                        can approve its own push
+#   persist-credentials: false         — the token is never written into
+#                                        .git/config for a subprocess to find
+# The token is referenced ONLY inside the two `gh pr review` steps, never in a
+# job-wide env, so the model subprocess is not holding a credential that can
+# post a review.
+#
+# NO INLINE KEY, EVER. The LLM key arrives as OMNIROUTE_API_KEY_READ and is
+# written straight into opencode's auth.json without being echoed; the review
+# token is secrets.GITHUB_TOKEN. Nothing here prints either.
+
+name: pr-review-agent
+
+on:
+  # THE AUTOMATIC PATH. opened/synchronize/reopened covers exactly the events
+  # that change what a reviewer would say. `edited` and `labeled` are
+  # deliberately absent: a title edit does not change the tree, and re-reviewing
+  # a PR on every label would spend quota re-deciding an unchanged question.
+  pull_request:
+    types: [opened, synchronize, reopened]
+  # THE MANUAL PATH, so a human can force a re-review after fixing something in
+  # the branch protection settings or after a mechanical gate misfired.
+  workflow_dispatch:
+
+# MINIMUM GLOBAL PERMISSIONS. Everything is denied; the job opts back in to
+# exactly the two scopes below. The default GITHUB_TOKEN on a public repository
+# is far broader than a reviewer deserves.
+permissions:
+  contents: read
+
+# ONE REVIEW PER PUSH, NEVER TWO AT ONCE. cancel-in-progress: false on purpose:
+# two reviews racing on the same head can land in either order, and the second
+# one to post wins regardless of which judgement is newer. Cancelling the older
+# run would be the alternative, and it would leave the PR with no review at all.
+concurrency:
+  group: pr-review-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  review:
+    name: pr-review (AI reviewer — approve or request changes)
+    runs-on: ubuntu-latest
+    # The whole job, model call included. The model call itself is bounded again
+    # at 600s below, so a wedged model fails visibly with minutes of the job
+    # budget left to post something.
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      HOME: /tmp/.opencode-home
+      # THE ONE LLM CREDENTIAL, and it is the READ-scoped one, for the same
+      # reason opencode-read uses it: a reviewer needs to be ABLE to think, and
+      # must never hold the write key.
+      OMNIROUTE_API_KEY_READ: ${{ secrets.OMNIROUTE_API_KEY_READ }}
+    steps:
+      # ── CHECKOUT, AT THE PR HEAD ────────────────────────────────────────────
+      # `github.sha` on a `pull_request` event is the MERGE commit, not the head.
+      # Reviewing the merge commit means reviewing a tree nobody proposed. The
+      # explicit ref is what makes "the PR head's exported tree" mean what it
+      # says in the operator's own words.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'          # composer.json requires ^8.3
+          coverage: none
+
+      # ── TRUST THE CHECKOUT ──────────────────────────────────────────────────
+      # Same step, same reason and in the same wording as opencode-agents.yml:
+      # actions/checkout leaves the worktree owned by a different uid, and every
+      # later `git` call refuses to touch it without this.
+      - name: Trust the checkout
+        run: |
+          set -euo pipefail
+          command -v git >/dev/null 2>&1 || { echo "FATAL — git is required and is absent."; exit 1; }
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          echo "git available — $(git --version)"
+          echo "reviewing head: $(git rev-parse HEAD)"
+
+      # ── INSTALL THE SHARED AGENT DEFINITION ────────────────────────────────
+      # INSTALL, never inline. The guard below exists because of the silent-403
+      # regression recorded in the header: with no provider block, opencode 403s
+      # and emits no verdict, and a reviewer that emits no verdict must NOT be
+      # read as a reviewer that approved. The verdict parsing further down fails
+      # closed for exactly that reason, and this step makes the cause visible.
+      - name: Install the shared agent definition
+        run: |
+          set -euo pipefail
+          test -f .opencode-ci/opencode.json || { echo "FATAL — .opencode-ci/opencode.json is absent; the shared agent definition is missing."; exit 1; }
+          node -e 'JSON.parse(require("fs").readFileSync(".opencode-ci/opencode.json","utf8"))' \
+            || { echo "FATAL — .opencode-ci/opencode.json is not valid JSON."; exit 1; }
+          mkdir -p "$HOME/.config/opencode" "$HOME/.local/share/opencode"
+          cp .opencode-ci/opencode.json "$HOME/.config/opencode/opencode.json"
+          cp .opencode-ci/AGENTS.md     "$HOME/.config/opencode/AGENTS.md"
+          echo "installed the SHARED definition — provider, model and rules come from .opencode-ci/, not from this workflow"
+
+      # ── STAGE 1: THE MECHANICAL GATE ────────────────────────────────────────
+      # Runs on EVERY path, including the BLOCKED one, because its output IS the
+      # review body when the tree is blocked. Bounded at 600s: the credential
+      # scan walks history and is the slowest thing here.
+      - name: Run the mechanical gate
+        id: gate
+        run: |
+          set -uo pipefail
+          timeout -k 5 600 php bin/verify-public-pr.php --quiet 2>&1 | tee pr-gate.txt
+          GATE="${PIPESTATUS[0]}"
+          if grep -q '^VERDICT: CLEAN$' pr-gate.txt; then
+            VERDICT=CLEAN
+          else
+            # NO VERDICT LINE, OR `BLOCKED`, ARE THE SAME THING HERE. A gate that
+            # crashed, was killed, or printed nothing must not be read as clean.
+            VERDICT=BLOCKED
+          fi
+          echo "exit-code=$GATE" >> "$GITHUB_OUTPUT"
+          echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
+          echo "gate exit=$GATE verdict=$VERDICT"
+
+      # ── STAGE 1 OUTCOME: REQUEST CHANGES, NO MODEL CALL ─────────────────────
+      # This is the branch that makes it structurally impossible for a
+      # mechanically-blocked PR to be approved: the approve/reject decision
+      # below lives in a step whose `if:` is `gate.verdict == 'CLEAN'`, so on a
+      # BLOCKED tree the opencode steps never execute, there is no verdict file
+      # to parse, and the only remaining path posts --request-changes.
+      - name: Request changes — the mechanical gate failed
+        if: steps.gate.outputs.verdict == 'BLOCKED'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          {
+            echo "### Mechanical gate: BLOCKED"
+            echo
+            echo "These checks are arithmetic, not judgement. A model was deliberately **not** asked, because nothing about a failing strip set or a credential hit is a matter of opinion."
+            echo
+            echo '```'
+            cat pr-gate.txt
+            echo '```'
+            echo
+            echo "See \`.brain/verbatim/2026-10-12-two-repo-git-flow.md\` for the private/public split, and \`bin/public-manifest.txt\` for what may be published."
+          } > review-body.md
+          timeout -k 5 120 gh pr review --request-changes --body-file review-body.md \
+            || echo "WARN — gh pr review could not post (GitHub refuses a review from the PR's own author identity on some token setups). The verdict is in this run's artifact and log."
+          echo "posted request-changes for a mechanically blocked PR"
+
+      - name: Record the blocked verdict when the review could not be posted
+        if: always() && steps.gate.outputs.verdict == 'BLOCKED'
+        run: |
+          cat pr-gate.txt >> "$GITHUB_STEP_SUMMARY"
+
+      # ── STAGE 2: THE AI JUDGEMENT ───────────────────────────────────────────
+      # Reached only when the tree passed everything mechanical. opencode is
+      # installed HERE rather than in the shared setup block so a BLOCKED run
+      # never spends 600s of npm on a decision it will not ask for.
+      - name: Set up Node 22
+        if: steps.gate.outputs.verdict == 'CLEAN'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install opencode
+        if: steps.gate.outputs.verdict == 'CLEAN'
+        run: |
+          set -euo pipefail
+          timeout -k 5 600 npm install --global opencode-ai
+          command -v opencode >/dev/null 2>&1 || { echo "FATAL — opencode is not on PATH after npm install --global; the install silently failed."; exit 1; }
+
+      # THE PROMPT, AND WHY IT IS PHRASED AS IT IS. The agent gets the tree, not
+      # a summary of it, and it is told three things that are not negotiable:
+      # reject when unclear, never approve to be agreeable, and remember this is
+      # the last gate before a PUBLIC repository. It is also told to print
+      # EXACTLY TWO LINES, because the parsing below must not have to guess —
+      # a verdict that needs interpretation is not a verdict.
+      - name: Ask the agent for a verdict
+        if: steps.gate.outputs.verdict == 'CLEAN'
+        id: judged
+        run: |
+          set -uo pipefail
+          export HOME=/tmp/.opencode-home
+          # The key is written and never printed. GitHub masks it in logs and
+          # nothing in this script echoes it.
+          printf '{"opencode-omniroute":{"type":"api","key":"%s"}}\n' "${OMNIROUTE_API_KEY_READ:-}" > "$HOME/.local/share/opencode/auth.json"
+          timeout -k 5 600 opencode run --print-logs \
+            "Read AGENTS.md in .opencode-ci first — it holds the rules for this repository, and some of them (never contact Telegram, never commit a session, never skip a test to get green) apply to you. \
+             You are the LAST REVIEW GATE on a pull request to a PUBLIC GitHub repository, MeRezaRezaei/teleframe. \
+             The mechanical checks have already passed: no path outside bin/public-manifest.txt, no private path from the D-035 strip set, no credential in the tree or its history, and every CI check green. Your job is what arithmetic cannot do — decide whether this tree is SAFE and UNDERSTOOD to publish to the open internet. \
+             Read the diff against the base branch and the repository itself. Weigh: does anything in this diff expose a credential, a session, an internal hostname, a private path or a private document? Does anything change behaviour that the tests do not cover? Is anything unclear to you, ambiguous, or unexplained? \
+             RULES, none of which you may bend: \
+             (1) If ANYTHING is unclear to you, REJECT. Do not approve a change you cannot fully account for, and do not approve it on the grounds that it looks small. \
+             (2) Do NOT approve to be agreeable. Agreement is not a review. An approval you would not defend in one sentence is a rejection. \
+             (3) You are the last gate before a PUBLIC repository. Assume the person reading this will never read it again. \
+             (4) Do not modify, create or delete any file in the repository. Do not push, commit, or contact Telegram. \
+             Print your answer as EXACTLY TWO LINES and nothing else — no preamble, no headings, no markdown fence, no code block: \
+             VERDICT=APPROVE \
+             or VERDICT=REJECT \
+             REASON=<one line naming the specific file or fact that decided it> \
+             If you would explain yourself at length, the explanation is not for this format; put the single deciding fact in REASON." \
+            > review-verdict.txt 2>&1
+          echo "agent exit=$?"
+          echo "--- raw agent output ---"
+          cat review-verdict.txt
+          echo "--- parsed ---"
+          # ZERO REGEX on purpose, matching the rest of this repository: a strict
+          # anchored prefix compare, not a pattern match that could be widened.
+          V=""
+          R=""
+          while IFS= read -r line; do
+            case "$line" in
+              VERDICT=*) [ -z "$V" ] && V="${line#VERDICT=}" ;;
+              REASON=*)  [ -z "$R" ] && R="${line#REASON=}" ;;
+            esac
+          done < review-verdict.txt
+          V="$(printf '%s' "$V" | tr -d '[:space:]')"
+          R="$(printf '%s' "$R" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          echo "verdict=$V"
+          echo "reason=$R"
+          # FAIL CLOSED. An unparsable, empty or unknown verdict is NOT an
+          # approval. This is the branch the silent-403 regression would have
+          # taken if it had not been handled: the model says nothing, nothing is
+          # parsed, and the PR would sit unreviewed forever. Instead it is
+          # rejected, out loud, naming the cause.
+          if [ "$V" = "APPROVE" ] && [ -n "$R" ]; then
+            echo "decision=APPROVE" >> "$GITHUB_OUTPUT"
+          elif [ "$V" = "APPROVE" ]; then
+            # A VERDICT=APPROVE LINE WITH NO REASON IS NOT AN APPROVAL. The
+            # prompt asks for the deciding fact because an approval nobody can
+            # restate in one sentence is indistinguishable from a shrug, and a
+            # shrug must not unblock a public repository.
+            echo "decision=REJECT" >> "$GITHUB_OUTPUT"
+            R="the reviewer agent returned APPROVE with no REASON; an approval without a stated deciding fact is not an approval"
+            echo "reason=$R" >> "$GITHUB_OUTPUT"
+            echo "FAIL CLOSED — $R"
+          elif [ "$V" = "REJECT" ]; then
+            echo "decision=REJECT" >> "$GITHUB_OUTPUT"
+            [ -n "$R" ] || R="the reviewer rejected without stating a reason"
+            echo "reason=$R" >> "$GITHUB_OUTPUT"
+          else
+            echo "decision=REJECT" >> "$GITHUB_OUTPUT"
+            R="the reviewer agent produced no parsable verdict (VERDICT was '${V:-empty}'); refusing to treat silence as approval"
+            echo "reason=$R" >> "$GITHUB_OUTPUT"
+            echo "FAIL CLOSED — $R"
+          fi
+          # THE REASON IS WRITTEN TO A FILE, NOT ONLY TO $GITHUB_OUTPUT, because
+          # the text comes from a model and the next step interpolates it into a
+          # review body. A reason containing a double quote, a backtick or a `$`
+          # must not be able to break the step that quotes it, so the body is
+          # built with `cat` from this file and never with an interpolation.
+          printf '%s\n' "$R" > review-reason.txt
+
+      # ── POST THE REVIEW ────────────────────────────────────────────────────
+      # Only reachable when the mechanical gate was CLEAN. On a BLOCKED tree the
+      # verdict step is skipped, `judged.outputs.decision` is empty, and this
+      # step does not run — which is what makes "cannot approve a blocked PR"
+      # a property of the graph rather than a promise in a comment.
+      - name: Post the approval
+        if: steps.gate.outputs.verdict == 'CLEAN' && steps.judged.outputs.decision == 'APPROVE'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          {
+            echo "### AI review: APPROVE"
+            echo
+            echo "Mechanical gate: all checks green. The agent's deciding fact:"
+            echo
+            printf '> '; cat review-reason.txt
+            echo
+            echo "_Posted by \`pr-review-agent.yml\` on behalf of the repository owner, who does not review AI work by hand._"
+          } > review-body.md
+          timeout -k 5 120 gh pr review --approve --body-file review-body.md \
+            || echo "WARN — gh pr review could not post. See the run log; an unposted approval must not be reported as an approval."
+          echo "approval posted"
+
+      - name: Post the rejection
+        if: steps.gate.outputs.verdict == 'CLEAN' && steps.judged.outputs.decision == 'REJECT'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          {
+            echo "### AI review: REJECT"
+            echo
+            echo "The mechanical gate passed — the tree contains nothing private and no credential. This rejection is a judgement, not arithmetic:"
+            echo
+            printf '> '; cat review-reason.txt
+            echo
+            echo "Fix the point above and push again; \`synchronize\` re-triggers this workflow."
+            echo
+            echo "_Posted by \`pr-review-agent.yml\` on behalf of the repository owner, who does not review AI work by hand._"
+          } > review-body.md
+          timeout -k 5 120 gh pr review --request-changes --body-file review-body.md \
+            || echo "WARN — gh pr review could not post. See the run log."
+          echo "request-changes posted"
+
+      - name: Record the verdict on the run summary
+        if: always()
+        run: |
+          {
+            echo "### pr-review-agent"
+            echo
+            echo "- head: \`$(git rev-parse HEAD)\`"
+            echo "- mechanical gate: **${{ steps.gate.outputs.verdict }}**"
+            echo "- agent decision: **${{ steps.judged.outputs.decision || 'not consulted' }}**"
+            if [ -s review-reason.txt ]; then printf -- '- reason: '; cat review-reason.txt; fi
+            echo
+            echo '```'
+            cat pr-gate.txt 2>/dev/null || echo "(no gate output)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # The gate output and the model's raw verdict outlive the job. An operator
+      # who wants to know what the reviewer actually said reads this, not a
+      # scroll of the log.
+      - name: Upload the gate output and the raw verdict
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-review-${{ github.event.pull_request.number || github.run_id }}-${{ github.run_id }}
+          path: |
+            pr-gate.txt
+            review-verdict.txt
+            review-reason.txt
+            review-body.md
+          if-no-files-found: ignore

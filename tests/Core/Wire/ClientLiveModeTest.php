@@ -1,0 +1,323 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MeRezaRezaei\Teleframe\Core\Tests\Wire;
+
+use MeRezaRezaei\Teleframe\Core\Exceptions\TelegramException;
+use MeRezaRezaei\Teleframe\Core\MTProto\Client;
+use MeRezaRezaei\Teleframe\Core\MTProto\Connection\EncryptedConnection;
+use MeRezaRezaei\Teleframe\Core\MTProto\Crypto\PacketCodec;
+use MeRezaRezaei\Teleframe\Core\MTProto\SessionData;
+use MeRezaRezaei\Teleframe\Core\MTProto\TL\TLEncoder;
+use MeRezaRezaei\Teleframe\Core\MTProto\Transport\FrameCodec;
+use PHPUnit\Framework\TestCase;
+
+class ClientLiveModeTest extends TestCase
+{
+    public function test_offline_stub_unchanged_by_default(): void
+    {
+        $session = new SessionData(dcId: 2, authKey: random_bytes(256));
+        $client = new Client(apiId: 1, apiHash: 'h', session: $session);
+        $res = $client->call('help.getNearestDc');
+        $this->assertSame('rpc_result', $res['_']);
+        $this->assertSame('help.getNearestDc', $res['method']);
+    }
+
+    public function test_resolve_live_default_is_false_without_laravel_container(): void
+    {
+        // config() only exists inside a Laravel app; the dev/test runtime here
+        // has no container, so the config-if-available default resolves false.
+        $client = new Client(apiId: 1, apiHash: 'h');
+
+        $resolve = new \ReflectionMethod(Client::class, 'resolveLiveDefault');
+        $this->assertFalse($resolve->invoke($client));
+    }
+
+    public function test_constructor_null_live_with_no_config_stays_offline(): void
+    {
+        $session = new SessionData(dcId: 2, authKey: random_bytes(256));
+        $client = new Client(apiId: 1, apiHash: 'h', session: $session, live: null);
+
+        $res = $client->call('help.getNearestDc'); // must be the stub, not a socket
+        $this->assertSame('rpc_result', $res['_']);
+    }
+
+    public function test_constructor_true_forces_live_wire_path(): void
+    {
+        [$clientSock, $serverSock] = $this->socketPair();
+        $authKey = random_bytes(256);
+        $session = new SessionData(dcId: 2, authKey: $authKey);
+        $client = new Client(apiId: 1, apiHash: 'h', session: $session, live: true);
+        $conn = $this->idPinnedConn(self::pinnedConn(new EncryptedConnection($session, $clientSock)));
+        self::setConn($client, $conn);
+        $this->seedFakeServerResponse($serverSock, $authKey, TLEncoder::encodeObject('rpc_result', [
+            'req_msg_id' => $this->pinnedMessageIdBase() + 4, // echoes the id call() sent
+            'result' => ['_' => 'nearestDc', 'country' => 'DE', 'this_dc' => 2, 'nearest_dc' => 2],
+        ]));
+
+        $res = $client->call('help.getNearestDc'); // live flag must use the wire, not the stub
+        $this->assertSame('nearestDc', $res['_']);
+        $this->assertSame(2, $res['this_dc']);
+
+        $client->close();
+        fclose($serverSock);
+    }
+
+    public function test_live_requires_auth_key_or_fails_fast(): void
+    {
+        $session = new SessionData(dcId: 2, authKey: ''); // empty key forces handshake attempt
+        $client = (new Client(apiId: 1, apiHash: 'h', session: $session))->live();
+
+        // Connecting to a dead port must fail fast with our RuntimeException,
+        // proving the live path really attempts the network (not the stub).
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('127.0.0.1:1');
+        $client->callToHost('127.0.0.1', 1); // port 1: connection refused
+    }
+
+    public function test_failed_call_to_host_does_not_cache_half_state(): void
+    {
+        $session = new SessionData(dcId: 2, authKey: '');
+        $client = (new Client(apiId: 1, apiHash: 'h', session: $session))->live();
+
+        // First attempt: dead port -> RuntimeException with host:port context.
+        try {
+            $client->callToHost('127.0.0.1', 1);
+            $this->fail('callToHost against a dead port must throw');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('127.0.0.1:1', $e->getMessage());
+        }
+
+        // Second attempt must start fresh: it fails the same way (a cached
+        // half-state would either short-circuit or produce a different error).
+        try {
+            $client->callToHost('127.0.0.1', 1);
+            $this->fail('second callToHost must also throw');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('127.0.0.1:1', $e->getMessage());
+        }
+
+        $this->assertNull(self::connOf($client), 'no connection may be cached after failure');
+        $this->assertSame('', $session->authKey, 'failed handshake must not store a partial key');
+    }
+
+    public function test_live_runtime_exception_evicts_cached_connection(): void
+    {
+        [$clientSock, $serverSock] = $this->socketPair();
+        $session = new SessionData(dcId: 2, authKey: random_bytes(256));
+        $client = (new Client(apiId: 1, apiHash: 'h', session: $session))->live();
+        self::setConn($client, self::pinnedConn(new EncryptedConnection($session, $clientSock)));
+
+        fclose($serverSock); // server side vanishes: the next call hits EOF
+
+        try {
+            $client->call('help.getNearestDc');
+            $this->fail('expected RuntimeException on a dead connection');
+        } catch (\RuntimeException $e) {
+            $this->assertNotInstanceOf(TelegramException::class, $e); // transport-level, not RPC
+        }
+
+        $this->assertNull(self::connOf($client), 'dead connection must be evicted (close + null)');
+    }
+
+    /**
+     * A pre-I/O encode failure in call() (known method, missing required
+     * field -> TLEncoder RuntimeException) is a caller error, not a dead
+     * connection: the cached connection must survive it and stay usable.
+     */
+    public function test_encode_failure_keeps_cached_connection(): void
+    {
+        [$clientSock, $serverSock] = $this->socketPair();
+        $authKey = random_bytes(256);
+        $session = new SessionData(dcId: 2, authKey: $authKey);
+        $client = (new Client(apiId: 1, apiHash: 'h', session: $session))->live();
+        $conn = self::idPinnedConn(self::pinnedConn(new EncryptedConnection($session, $clientSock)));
+        (new \ReflectionProperty(EncryptedConnection::class, 'inited'))->setValue($conn, true);
+        self::setConn($client, $conn);
+
+        try {
+            $client->call('ping'); // ping_id missing: encode-time failure, no bytes on the wire
+            $this->fail('expected exception was not thrown');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString("missing field 'ping_id'", $e->getMessage());
+        }
+
+        $this->assertSame($conn, self::connOf($client), 'encode failure must NOT evict the cached connection');
+
+        // Usability proof: the same connection answers a follow-up call
+        // (the pre-I/O failure consumed no msg ids — this is pin+4).
+        $this->seedFakeServerResponse($serverSock, $authKey, TLEncoder::encodeObject('rpc_result', [
+            'req_msg_id' => $this->pinnedMessageIdBase() + 4,
+            'result' => ['_' => 'nearestDc', 'country' => 'DE', 'this_dc' => 2, 'nearest_dc' => 2],
+        ]));
+        $this->assertSame('nearestDc', $client->call('help.getNearestDc')['_']);
+        $this->assertSame($conn, self::connOf($client));
+
+        $client->close();
+        fclose($serverSock);
+    }
+
+    public function test_even_with_auth_key_public_setter_does_not_swap_session(): void
+    {
+        // Regression: auth.sendCode mints its phone_code_hash against the auth
+        // key of the requesting session. TeleframeAuthService parks the session
+        // exported AFTER the handshake; if ensureAuthKey swapped in a fresh
+        // SessionData object, the parked string would carry an empty key and
+        // auth.signIn would handshake a DIFFERENT key -> PHONE_CODE_EXPIRED.
+        // The pre-seeded-key path must therefore return the SAME object.
+
+        $original = new SessionData(dcId: 2, authKey: random_bytes(256));
+
+        $client = new class(apiId: 1, apiHash: 'h', session: $original) extends Client
+        {
+            public function exposeEnsureAuthKey(string $host, int $port): SessionData
+            {
+                $socket = null;
+
+                return $this->ensureAuthKey($host, $port, $socket);
+            }
+        };
+        $client->live();
+
+        $returned = $client->exposeEnsureAuthKey('127.0.0.1', 1);
+        $this->assertSame($original, $returned, 'pre-seeded key path must reuse, not replace, the session object');
+        $this->assertSame($original, $client->getSession());
+    }
+
+    public function test_absorb_generated_key_mutates_session_in_place(): void
+    {
+        // The handshake path may never swap the object either. This exercises
+        // only the mutation seam (absorbGeneratedKey): the caller's session
+        // reference must gain the key material, not be replaced by the
+        // generated object.
+
+        $original = new SessionData(dcId: 2, authKey: '');
+        $generated = new SessionData(
+            dcId: 2,
+            authKey: random_bytes(256),
+            serverTimeDelta: -42,
+        );
+
+        $client = new class(apiId: 1, apiHash: 'h', session: $original) extends Client
+        {
+            public function exposeAbsorb(SessionData $generated): void
+            {
+                $this->absorbGeneratedKey($generated);
+            }
+        };
+
+        $client->exposeAbsorb($generated);
+
+        $this->assertSame($original, $client->getSession(), 'session object identity must be preserved');
+        $this->assertSame($generated->authKey, $original->authKey, 'auth key must land on the caller session');
+        $this->assertSame(-42, $original->serverTimeDelta, 'time delta must land on the caller session');
+        $this->assertSame(256, strlen($original->authKey));
+    }
+
+    public function test_live_telegram_exception_keeps_cached_connection(): void
+    {
+        [$clientSock, $serverSock] = $this->socketPair();
+        $authKey = random_bytes(256);
+        $session = new SessionData(dcId: 2, authKey: $authKey);
+        $client = (new Client(apiId: 1, apiHash: 'h', session: $session))->live();
+        $conn = self::idPinnedConn(self::pinnedConn(new EncryptedConnection($session, $clientSock)));
+        self::setConn($client, $conn);
+
+        // rpc_error must still ANSWER the sent request (req_msg_id demux);
+        // a foreign id would be skipped as a stray
+        $this->seedFakeServerResponse($serverSock, $authKey, TLEncoder::encodeObject('rpc_result', [
+            'req_msg_id' => $this->pinnedMessageIdBase() + 4,
+            'result' => ['_' => 'rpc_error', 'error_code' => 420, 'error_message' => 'SLOWMODE_WAIT_10'],
+        ]));
+
+        try {
+            $client->call('help.getNearestDc');
+            $this->fail('expected TelegramException on rpc_error');
+        } catch (TelegramException $e) {
+            $this->assertSame(420, $e->getCode());
+        }
+
+        $this->assertInstanceOf(EncryptedConnection::class, self::connOf($client), 'RPC-level error must keep the connection');
+
+        $client->close();
+        fclose($serverSock);
+    }
+
+    /**
+     * @return array{0: resource, 1: resource}
+     */
+    private function socketPair(): array
+    {
+        $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+        $this->assertNotFalse($pair);
+        stream_set_timeout($pair[0], 5);
+        stream_set_timeout($pair[1], 5);
+
+        return $pair;
+    }
+
+    /**
+     * Base for pinned-message-id tests: within PacketCodec's "not too far in
+     * the future" window (id>>32 < time()+300) yet far above any real clock
+     * candidate, so nextMessageId() deterministically yields base+4, +8, ...
+     */
+    private function pinnedMessageIdBase(): int
+    {
+        return ((time() + 290) << 32) & ~3;
+    }
+
+    /**
+     * Pins lastMessageId so the ids call() sends are deterministic and the
+     * pre-seeded rpc_result req_msg_id values can echo them.
+     */
+    private static function idPinnedConn(EncryptedConnection $conn): EncryptedConnection
+    {
+        (new \ReflectionProperty(EncryptedConnection::class, 'lastMessageId'))->setValue(
+            $conn,
+            ((time() + 290) << 32) & ~3
+        );
+
+        return $conn;
+    }
+
+    /**
+     * Fake telegram pre-buffers one encrypted (server->client) framed response
+     * so the single-threaded call() write+read cannot deadlock.
+     */
+    private function seedFakeServerResponse($serverSock, string $authKey, string $payload): void
+    {
+        fwrite($serverSock, FrameCodec::wrapAbridgedPayload(PacketCodec::encryptPacket(
+            payload: $payload,
+            authKey: $authKey,
+            sessionId: 0x5E5510A1,
+            serverSalt: 0x4242,
+            seqNo: 1,
+            toServer: false
+        )));
+    }
+
+    /**
+     * Pins the connection's random session_id to the fixed id the seed helper
+     * encrypts with (decryptPacket enforces the session_id echo).
+     */
+    private static function pinnedConn(EncryptedConnection $conn): EncryptedConnection
+    {
+        (new \ReflectionProperty(EncryptedConnection::class, 'sessionId'))->setValue($conn, 0x5E5510A1);
+
+        return $conn;
+    }
+
+    private static function setConn(Client $client, EncryptedConnection $conn): void
+    {
+        $prop = new \ReflectionProperty(Client::class, 'conn');
+        $prop->setValue($client, $conn);
+    }
+
+    private static function connOf(Client $client): mixed
+    {
+        $prop = new \ReflectionProperty(Client::class, 'conn');
+
+        return $prop->getValue($client);
+    }
+}

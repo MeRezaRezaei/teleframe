@@ -1,0 +1,149 @@
+# ==============================================================================
+# bin/public-manifest.txt — THE PUBLIC SURFACE OF MeRezaRezaei/teleframe
+#
+# This file is the ALLOWLIST. A tracked path is published if and only if a glob
+# below matches it. Everything else stays in the private repository.
+#
+# Read this when you are about to add, remove, or wonder about a path in the
+# public tree. Read it BEFORE you edit this file. The gate that reads it is
+# bin/check-public-surface.php; the producer that consumes it is
+# bin/export-public-repo.sh.
+# ==============================================================================
+#
+# WHY AN ALLOWLIST AND NOT A DENYLIST
+#
+# This repository tracks 5568 files, and 442 of them live under docs/ alone. A
+# denylist is a list of the internal things somebody remembered to write down,
+# and it keeps passing as the internal surface grows: `.brain/`, `.ledger/`,
+# `docs/verbatim/`, `docs/subagents/`, `docs/evidence/`, `inspection-snapshot/`,
+# `.opencode-ci/`, `docs/agent-registry.md`, `HANDOFF.md`, `.warm-ledger.json`,
+# `.credential-guard-baseline`, `.gitlab-ci.yml` — and the next internal file
+# lands in the public tree silently, because nothing listed it. An allowlist
+# fails the other way: a NEW path is outside the manifest until somebody adds
+# it, so the default is private and the gate goes red on the addition.
+#
+# THAT IS THE WHOLE ARGUMENT. The default must be private.
+#
+# HOW TO ADD A PATH — three steps, all three required
+#
+#   1. Add the glob below, in the section it belongs to.
+#   2. Add ONE comment line stating WHY it is public. Not what it is — why.
+#   3. Run: php bin/check-public-surface.php
+#      and then: bash bin/export-public-repo.sh /tmp/teleframe-public-check
+#      Both must be satisfied. The first proves the tree is clean, the second
+#      proves the export still produces what you expect.
+#
+# If step 2 is hard to write, that is information: the path is probably private.
+#
+# NEVER ADD THESE, AT ANY TIME, FOR ANY REASON
+#
+#   .brain/**              the agent's own doctrine, goals, plans AND — after
+#                          D-036 — all of its documentation, which used to live
+#                          under docs/
+#   docs/verbatim/**       the operator's raw words
+#   docs/verbatim.md       the pointer to them
+#
+#   There is no request that makes these public. They are the reason this file
+#   exists.
+#
+# WHAT IS DELIBERATELY EXCLUDED, AND WHY
+#
+#   .gitlab-ci.yml          EXCLUDED on purpose. It is the private repository's
+#                           CI file and it holds the five live-credential lanes
+#                           (warm-live-host, opencode-read/write/verify), which
+#                           carry a REAL Telegram session string. Publishing it
+#                           would publish the job names of the jobs that hold a
+#                           session. GitLab keeps this file; GitHub does not.
+#   HANDOFF.md              internal session handoff, not documentation
+#   .credential-guard-baseline  a RECEIPT for this repo's own un-purged SEC-1
+#                           history exposure, including blob SHAs. Private. It
+#                           is also NOT gitignored — private and untracked are
+#                           different things.
+#   .warm-ledger.json       per-commit internal ledger
+#   docs/<the old names>    the agent's documentation used to live here and now
+#                          lives in .brain/: subagents/ (per-lane transcripts),
+#                          verbatim/ + verbatims/ (the operator's own words),
+#                          superpowers/ (plans, specs, extractions, analysis),
+#                          evidence/, test-reports/, plans/, decisions.md,
+#                          agent-registry.md, agent-identities.md,
+#                          repo-status.md, what-has-been-done.md.
+#                          Every one of those NAMES is still in the strip set of
+#                          bin/check-public-surface.php even though no tracked
+#                          path carries it, so a restore from an old checkout
+#                          fails the gate instead of landing in the public tree.
+#   inspection-snapshot/**  local snapshots of the real deployment
+#   .ledger/**, .opencode-ci/**  agent working state
+#
+#   NOTE ON `docs/`: this file lists docs/*.md plus five named subtrees. It does
+#   NOT list `docs/**`. Any new docs/ subtree is private until it is added here
+#   deliberately, which is the same fail-closed property as the rest of the file.
+#
+# composer.lock is NOT listed and cannot be: it is gitignored (a library ships
+# no lockfile). There is nothing to publish.
+
+# --- the package itself ------------------------------------------------------
+src/**
+tests/**
+schema/**
+bootstrap/**
+tgweb-patches/**
+examples/**
+ci/**
+
+# --- public toolchain entry points -------------------------------------------
+# bin/ is public because the gates below ARE the build: the schema pipeline, the
+# credential guard, the shard runner and the standalone smoke are how this
+# project is verified, and a contributor cannot run a gate it cannot see.
+# The public-surface tooling itself (check-public-surface.php,
+# export-public-repo.sh, public-manifest.txt) is public for the same reason.
+bin/**
+
+# --- project configuration ---------------------------------------------------
+composer.json
+phpunit.xml.dist
+phpstan.neon.dist
+check-contract.php
+.gitignore
+.gitattributes
+
+# --- GitHub Actions (the whole point: this IS the CI) -------------------------
+.github/**
+
+# --- documentation -----------------------------------------------------------
+# The agent's own documentation MOVED OUT of docs/ into .brain/ (D-036). What
+# remains here is the user-facing module documentation only: quickstart, the
+# per-module pages, usage/, reference/, schema/ and skills/.
+#
+# There is deliberately no `docs/**` glob and no `docs/*.md` glob. Both would
+# republish the old system the moment anything landed there, and the whole
+# point of the move is that docs/ is now a small, explicit, public surface.
+docs/quickstart.md
+docs/index.md
+docs/bus.md
+docs/ingest.md
+docs/identity.md
+docs/botmap.md
+docs/bot-client.md
+docs/handlers.md
+docs/stages.md
+docs/store.md
+docs/backup.md
+docs/keyboards.md
+docs/miniapp.md
+docs/scaling.md
+docs/templates.md
+docs/telegram-passport.md
+docs/user-client.md
+docs/usage/**
+docs/reference/**
+docs/schema/**
+docs/skills/**
+
+# --- public top-level documents ----------------------------------------------
+AGENTS.md
+README.md
+CONTRIBUTING.md
+SECURITY.md
+CHANGELOG.md
+LICENSE
+llms.txt

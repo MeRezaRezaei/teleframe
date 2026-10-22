@@ -1,0 +1,843 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# security.yml — the credential guard and the public/private split gate, ported
+# from GitLab CI to GitHub Actions. THE .gitlab-ci.yml FILE WAS THE
+# SPECIFICATION: every command, every budget and every WHY-comment below is
+# carried across from it rather than re-invented here. Nothing in this file was
+# taken from a tutorial or a blog.
+#
+# THIS FILE IS THE ENFORCEMENT POINT FOR D-035 (docs/decisions.md:993, "GitHub
+# Actions is the only CI runner; GitLab is reduced to the private/public
+# separation, and the split is enforced by a gate"). Two of that decision's
+# clauses are executable and they are BOTH here:
+#
+#   * "a gate fails the build if any of them is tracked" — the private-only
+#     paths D-035 names (`docs/agent-registry.md`, `docs/decisions.md`,
+#     `.credential-guard-baseline`, `HANDOFF.md`, `.warm-ledger.json` and the
+#     rest) are rule 2 of `bin/check-public-surface.php`, and this workflow is
+#     what makes rule 2 a BUILD FAILURE rather than a script somebody may or may
+#     not run; and
+#   * "the public tree is produced by an explicit ALLOWLIST, not a denylist … it
+#     fails closed when something new is added" — rule 1 of the same checker,
+#     which this workflow runs on BOTH push and pull_request, because the
+#     contributor it stands between is a person opening a PR, not a person
+#     pushing to a protected branch.
+#
+# REPLACES THESE RANGES OF .gitlab-ci.yml (the file stays, because GitLab is
+# demoted to exactly one job — private/public separation, D-035 — so it is still
+# the record of what used to run here):
+#
+#   .gitlab-ci.yml:54-66    GIT_DEPTH: 0 → `fetch-depth: 0`
+#   .gitlab-ci.yml:70-103   COMPOSER_PROCESS_TIMEOUT: "3600"
+#   .gitlab-ci.yml:172-221  credential-guard (stage guard) — the ONLY line of
+#                           the original job that executed the project was
+#                           `- php bin/scan-credentials.php`; everything else was
+#                           the optional-apt preamble, which is reproduced below
+#                           with the ONE behavioural change the port forces
+#                           (Actions cannot tolerate a missing git, GitLab could)
+#
+# ── WHAT THIS FILE IS NOT, and the two ways a reader could get that wrong ────
+#
+# 1. IT IS NOT A LINTER. Nothing here is a style gate, and nothing here runs
+#    `composer verify`. The two scripts below are the whole job: one asks "is a
+#    credential committed?", the other asks "would this file be published?".
+# 2. IT IS NOT A SUPPRESSION LIST. See the .credential-guard-baseline paragraph
+#    in the credential-guard job below. A line added there to silence a new
+#    finding is the exact failure mode this whole file exists to make
+#    impossible, and this workflow is the last place that could enforce that.
+#
+# ── ON THE OPTIONAL-apt CHANGE, which is the ONE place this port does not
+# ── preserve the source verbatim, stated rather than buried in a step.
+# .gitlab-ci.yml:183-218 made `git` OPTIONAL: `apt-get install … git || echo`,
+# on the reasoning that the scanner degrades honestly with no git — it reports
+# the history axis UNKNOWN and exits 3 (INCOMPLETE), never 0
+# (bin/scan-credentials.php:512-532, :779-780, :1125), and the working-tree scan
+# still runs. That reasoning is correct AND it is GitLab-shaped: GitLab's runner
+# injects its own tooling, so `actions/checkout` is not the thing that needs
+# git here. In Actions it IS: `php:8.4-cli` ships no git, actions/checkout then
+# degrades to a REST API tarball with NO .git at all, and a tree with no .git
+# makes the scanner's history axis structurally unreachable — the checkout never
+# fails, it silently produces a shallower gate than the one the file claims.
+# So git is FATAL here, where it was optional there, and the fatal branch says
+# why. The scanner's own exit-3 path is STILL handled below, because a git that
+# is present but cannot reach an object's history is the same failure wearing a
+# different mask.
+#
+# ── CONVENTIONS CARRIED FROM THE SIBLING WORKFLOWS. Em-dashes instead of ": "
+# in unquoted messages, for the reason recorded at .gitlab-ci.yml:196-199 (a bare
+# YAML scalar containing ": " is parsed as a MAPPING and a whole pipeline then
+# fails to lint). `set -euo pipefail` in every run block. Setup BEFORE checkout
+# in both jobs, because the container ships no git. The setup block is repeated
+# per job rather than shared through `.github/actions/`, for the reason recorded
+# in db-tracks.yml:72-82: several lanes are porting out of the same
+# .gitlab-ci.yml in parallel and a shared composite action is a write-write
+# collision on a file nobody owns.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: security
+
+# `default: interruptible: true` (.gitlab-ci.yml:159-169) → its Actions-native
+# form. Neither job below is `interruptible: false` in the source; they mutate
+# nothing outside their own container, and credential-guard's entire value is
+# that it runs on every push rather than only on a lucky one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# .gitlab-ci.yml:43-52 `workflow: rules:` ran the ordinary gates on push and
+# merge-request. Carried as-is.
+#
+# `push:` AND `pull_request:` are BOTH required, and for public-surface this is
+# the whole point of the job rather than a convention: it is the gate between a
+# CONTRIBUTOR and a public leak, and a fork's pull_request is the only event
+# that exists for a contributor's first push. A `push:`-only trigger would never
+# run on a fork at all, and a `pull_request`-only trigger would never run on the
+# maintainer's own branch — so either one alone leaves an unclosed door.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# LEAST PRIVILEGE, and in a SECURITY workflow this line is load-bearing rather
+# than ceremonial. `contents: read` is the only scope either job needs: both
+# read the tree, neither pushes, publishes, or writes a package. There is no
+# `secrets:` scope granted anywhere in this file, and there must never be one —
+# the credential guard's own header names the failure mode this repository has
+# already paid for ("an environment used as a code-reading agent is a credential
+# one prompt injection away", .gitlab-ci.yml:1157). A guard job with no secret
+# scope cannot leak a secret even if its whole container is compromised.
+permissions:
+  contents: read
+
+# Deterministic shell. The `php:8.4-cli` image's /bin/sh is dash; naming bash
+# makes the port's semantics explicit instead of inheriting the container's.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # credential-guard — (.gitlab-ci.yml:172-221, stage guard)
+  #
+  # "guard -> credential guard (no committed session strings / .env files)" —
+  # the stage-list comment at .gitlab-ci.yml:5, carried.
+  #
+  # WHAT THIS JOB IS: the only thing standing between a committed Telegram
+  # session string and a public repository. `SessionData` values are account
+  # credentials — a leaked one is a hijacked account, not a leaked password, and
+  # it does not expire because a human forgot to rotate it.
+  # ───────────────────────────────────────────────────────────────────────────
+  credential-guard:
+    name: credential-guard (full history, no session strings)
+    runs-on: ubuntu-latest
+    # `timeout: 15m` (.gitlab-ci.yml:177), unchanged — NOT rounded, NOT raised.
+    # The source's own sizing, carried: GIT_DEPTH: 0 clones the FULL history and
+    # bin/scan-credentials.php walks all of it, measured 20s on pipeline 957. The
+    # bound is what makes an unbounded job here fail visibly instead of hanging.
+    # In GitLab the 15m clock covers `before_script` and image pull, and in
+    # Actions `timeout-minutes` starts BEFORE the container is pulled, so the
+    # image-pull cost is inside this budget in both systems.
+    timeout-minutes: 15
+    container: php:8.4-cli
+    env:
+      # .gitlab-ci.yml:70-103, carried with its sizing reasoning. Composer's
+      # process-timeout is 300s by default and composer runs each step as ONE
+      # child process, so a default timeout here kills the job instead of
+      # reporting a result. 3600 is sized against the SHARD budget (1800s of
+      # measured test time, ci/shard-timings.md, plus 2x headroom for a slower
+      # runner) rather than against this job's own ~20s runtime, because the
+      # SIBLING lanes in this port share the number and one number that fits only
+      # one job is not a number. This job does not run composer — see the setup
+      # step — so the variable is inert HERE; it is carried because every other
+      # workflow in this port declares it, and a security workflow that silently
+      # omits it would look like a deliberate exception to the next reader.
+      COMPOSER_PROCESS_TIMEOUT: "3600"
+      # Root in the container. Without this, composer prints a loud warning per
+      # command and its cache is written by a user the runner's cleanup does not
+      # look for.
+      COMPOSER_ALLOW_SUPERUSER: "1"
+      # Point composer AT the directory it would use. Unused for the same reason
+      # as COMPOSER_PROCESS_TIMEOUT: no composer runs in this job.
+      COMPOSER_CACHE_DIR: /root/.composer/cache
+    steps:
+      # ── SETUP FIRST, BEFORE CHECKOUT, AND THE ORDER IS LOAD-BEARING ─────────
+      # The source's optional-apt preamble (.gitlab-ci.yml:180-218), with the ONE
+      # change stated in the file header: in Actions, git is mandatory, because
+      # `php:8.4-cli` ships none and a git-less actions/checkout produces a REST
+      # tarball with no .git, which is a silently weaker gate rather than a
+      # visibly failed one.
+      #
+      # NO PHP EXTENSIONS ARE INSTALLED HERE, and this is a measured decision
+      # rather than an omission. bin/scan-credentials.php has no
+      # `require __DIR__.'/../vendor/autoload.php'`, uses no Normalizer, no
+      # mb_* and no intl (verified: 0 occurrences of each), so the `ext-intl`
+      # requirement in composer.json cannot reach it — which is why `composer
+      # install` is absent here and why `libicu-dev` + `docker-php-ext-install
+      # intl` are absent from this apt list. The sibling workflows install them
+      # because they run `composer install`; this job does not, and installing a
+      # build toolchain for a script that never boots the autoloader would buy
+      # a slower runner and nothing else.
+      - name: Apt git only (git is REQUIRED here, optional in GitLab — see header)
+        run: |
+          set -euo pipefail
+          # `--no-install-recommends` + the clean below are what keep the .deb
+          # archives from becoming the next "E: You don't have enough free space
+          # in /var/cache/apt/archives/" — the exact failure that killed
+          # credential-guard at exit 100 on pipeline #923 before a single line of
+          # this project's own verification ran (.gitlab-ci.yml:180-186).
+          apt-get update -qq || echo "apt-get update FAILED on this runner — if the next line fails too, this is a RUNNER disk/network problem, not a package problem"
+          apt-get install -y -qq --no-install-recommends git >/dev/null || { echo "FATAL — apt could not install git."; echo "        actions/checkout WITHOUT git degrades to a REST API tarball with no .git at all,"; echo "        and bin/scan-credentials.php reads git HISTORY. This job cannot see anything"; echo "        without git, so it is not run — a guard that cannot see is not a guard."; echo "        If the message above mentions free space or an unsigned repo, the RUNNER is"; echo "        degraded and no credential was checked."; exit 1; }
+          apt-get clean && rm -rf /var/lib/apt/lists/*
+          git --version
+          # The official php:*-cli images ship memory_limit=128M. The source job
+          # never touched it and ran in 20s on GitLab's runner, so this is NOT
+          # carried as a requirement — it is set because a credential gate that
+          # dies of OOM halfway through history reports a job timeout, which
+          # reads as "slow" rather than as "the gate never finished". Raising the
+          # ceiling cannot turn a red into a green: the scanner's verdict comes
+          # from its own exit code, not from surviving.
+          printf "memory_limit=1G\n" > /usr/local/etc/php/conf.d/ci-memory.ini
+          php -r 'printf("memory_limit=%s\n", ini_get("memory_limit"));'
+
+      # GIT_DEPTH: 0 → `fetch-depth: 0`. NON-NEGOTIABLE, and this is the single
+      # setting in the whole port most likely to be "tidied up" by someone who
+      # has not read what it is for.
+      #
+      # A SHALLOW CLONE IS A DISABLED GATE, not a speed optimisation.
+      #
+      # bin/scan-credentials.php scans git HISTORY for committed session strings.
+      # At the default depth 20 the runner's object set is truncated, so the
+      # guard could not see an exposure 84 commits back — while still printing
+      # "history depth all reachable from all". Pipeline #206 was GREEN on the
+      # credential-guard job with a live Telegram session sitting outside the
+      # window, and the only visible symptom was an unrelated test asserting a
+      # receipt that the truncated clone could not reach.
+      #
+      # GIT_DEPTH: 0 fetches the full history, so the guard's coverage claim
+      # becomes true and the receipt ratchet in
+      # tests/Credentials/RepositoryGuardTest.php can pass honestly. Clone time is
+      # the cost; a gate that cannot see is not a gate.
+      #
+      # `persist-credentials: false` is an ADDITION, not a carry-over. By default
+      # actions/checkout writes the job's GITHUB_TOKEN into .git/config as a
+      # persistent remote credential, which means a `.credential-guard-baseline`
+      # line added by mistake — or a stray `git remote -v` in a log line — is one
+      # `contents: read` token away from being a write token. This job reads a
+      # working tree and walks history; it never talks to a remote, so nothing is
+      # lost by not persisting.
+      - name: Checkout (FULL history — see the fetch-depth comment)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # `actions/checkout@v4` does NOT mark the checkout as safe. The Actions
+      # runner checks the tree out as a different UID than the job shell runs
+      # as, so every `git` command afterwards refuses with
+      #   fatal: detected dubious ownership in repository at '/__w/teleframe/<repo>'
+      # and exits 128. Measured, not assumed: this job failed with exactly that,
+      # from `check-public-surface: git ls-files failed (128)`.
+      #
+      # Two sibling workflows carry a comment asserting checkout "handles the
+      # git safe.directory ownership question". That claim is wrong, and it is
+      # the kind of wrong that reads like a fix. `git ls-files` is how the leak
+      # gate enumerates the public surface, so this step is load-bearing for
+      # that gate and not a convenience.
+      - name: Trust the checkout (git safe.directory)
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # PROVE THE HISTORY IS THERE, mechanically, because "NON-NEGOTIABLE" that
+      # nothing checks is a wish. The check is seconds-long, not a test suite.
+      #
+      # The threshold is 20 because 20 is Actions' DEFAULT depth: any count at or
+      # below it is the signature of a truncated fetch — including the
+      # checkout-fallback-without-git case above, which yields 1. The repository
+      # has hundreds of commits, so 20 is a floor that cannot produce a false red
+      # while catching every truncation.
+      - name: Assert the clone is NOT shallow (a disabled gate must fail loudly)
+        run: |
+          set -euo pipefail
+          count=$(git rev-list --count HEAD)
+          shallow=$(git rev-parse --is-shallow-repository)
+          echo "commits reachable from HEAD — ${count} (shallow=${shallow})"
+
+          # A SHALLOW CLONE and a REPO THAT GENUINELY HAS ONE COMMIT look
+          # identical by depth alone, and this gate originally treated both as
+          # "disabled". On the public mirror that was wrong: `teleframe` is
+          # published as a SINGLE commit by design — the export does
+          # `git init`, so no private blob can ever reach its history. That is
+          # the strongest form of the guarantee, not a failure of it.
+          #
+          # `git rev-parse --is-shallow-repository` is what separates the two.
+          # Shallow is still FATAL: scan-credentials.php scans history, so a
+          # truncated fetch turns the guard into a no-op that prints success.
+          # A non-shallow 1-commit repo is the intended public state, so it is
+          # allowed through and SAID SO, loudly, because a reader who sees
+          # "1 commits" here must not have to guess why it was not a FATAL.
+          if [ "$shallow" = "true" ]; then
+            echo "FATAL — the clone is shallow (${count} commits). bin/scan-credentials.php"
+            echo "        scans git HISTORY, so a shallow clone turns the credential guard into a"
+            echo "        no-op that still prints a success message. This is a DISABLED GATE, not a"
+            echo "        speed optimisation. Fix `fetch-depth` before reading anything else."
+            exit 1
+          fi
+          if [ "$count" -lt 20 ]; then
+            echo "NOTE — ${count} commit(s) and NOT shallow: this is the public mirror, which is"
+            echo "        published as a single commit so no private blob can exist in its history."
+            echo "        The guard ran against that single commit and scanned it in full."
+          fi
+
+      # ── THE GATE. The invocation is the EXACT line the GitLab job ran ────────
+      # .gitlab-ci.yml:220:  `- php bin/scan-credentials.php` — no flags, no
+      # arguments, nothing appended.
+      #
+      # That bare call is the FULL contract, and the reason is that every axis
+      # this job is credited with is a DEFAULT rather than an option:
+      #
+      #   working tree, TRACKED AND UNTRACKED  — default enumeration is
+      #     `git ls-files -z --cached` plus `--others --exclude-standard`
+      #     (bin/scan-credentials.php:387-400). No --include-ignored: ignored
+      #     paths are not part of any commit and not part of any leak, and the
+      #     flag is documented as slow and very noisy.
+      #   BINARY FILES to a prefix  — --binary-prefix default 1048576.
+      #   FRAGMENTED runs  — on by default; --no-fragment would disable the pass
+      #     that catches a session string broken across lines or quoting, and its
+      #     own help text calls disabling it "faster, weaker".
+      #   HISTORY from EVERY ref  — --history default `all`, --history-refs
+      #     default `all` (bin/scan-credentials.php:130-131).
+      #   THE BASELINE  — --history-baseline defaults to
+      #     `<root>/.credential-guard-baseline` (bin/scan-credentials.php:132-133).
+      #
+      # There is deliberately NO extra grep, NO extra history argument and NO
+      # forbidden-file list layered on top here, because the source job had none
+      # either — `grep -n scan-credentials .gitlab-ci.yml` returns the two
+      # invocations (line 220, the guard; line 819, inside the never-ported warm
+      # lane) and no surrounding filter. Adding one would be inventing coverage
+      # this file cannot verify, and an unverifiable extra check is a check
+      # nobody maintains.
+      #
+      # ── NOTHING BELOW OR ABOVE THIS STEP MAY PRINT A SECRET. ─────────────────
+      # The scanner's own contract (bin/scan-credentials.php:112-116) is that a
+      # finding reports path, line, length, shape and a short hash of the finding
+      # IDENTITY — never the matched characters — so a redacted CI log cannot leak
+      # the secret it just caught, and the coverage lines carry counts, shas and
+      # paths but no scanned bytes. That is why this step runs the script
+      # directly instead of capturing stdout into a variable and re-printing it:
+      # there is no second copy of the output anywhere in this workflow, and no
+      # step passes a session string through an env var, an `env:` block, a
+      # command-line argument, or an `if:` condition.
+      - name: php bin/scan-credentials.php — the single source of truth for pass/fail
+        run: |
+          set -uo pipefail
+          php bin/scan-credentials.php
+          code=$?
+          set -e
+          # Exit codes, from bin/scan-credentials.php:118 and its --help text:
+          #   0 clean · 1 findings · 2 usage error · 3 scan INCOMPLETE.
+          case "${code}" in
+            0)
+              echo "credential-guard: exit 0 — clean. The scanner's own coverage lines above name what it did NOT reach; read them."
+              exit 0
+              ;;
+            1)
+              echo "FATAL — credential-guard exit 1 — FINDINGS. The scanner printed them above."
+              echo "        Each finding names a path and a line. Do NOT paste the matched text anywhere,"
+              echo "        including into this job's log, and do NOT add a line to"
+              echo "        .credential-guard-baseline to make this go away — see the note in the file header."
+              exit 1
+              ;;
+            2)
+              echo "FATAL — credential-guard exit 2 — USAGE ERROR. The scanner rejected its own arguments"
+              echo "        or could not find the root it was pointed at. This is a WORKFLOW defect, not a"
+              echo "        credential finding, and it is emphatically NOT a pass: no scan ran."
+              exit 1
+              ;;
+            3)
+              echo "FATAL — credential-guard exit 3 — SCAN INCOMPLETE, which is NOT a pass."
+              echo "        A byte cap, a truncated (shallow) object set, a partial/promisor object set, or"
+              echo "        an object set whose completeness could not be determined all land here, because"
+              echo "        none of them can rule out a credential outside what was reached. The working-tree"
+              echo "        axis still ran and its findings still exited 1; this code means the OTHER axes"
+              echo "        could not vouch for themselves. Read the coverage lines the scanner printed, fix"
+              echo "        what they name, and re-run — do not paper over this by lowering the caps."
+              exit 1
+              ;;
+            *)
+              echo "FATAL — credential-guard exited ${code}, which is not a documented exit code"
+              echo "        (0 clean, 1 findings, 2 usage, 3 incomplete). Treating it as a failure because an"
+              echo "        unknown verdict is not a verdict."
+              exit 1
+              ;;
+          esac
+
+      # ── .credential-guard-baseline IS A RECEIPT, NOT A SUPPRESSION LIST. ─────
+      # Read this before you touch either file. It is the single most dangerous
+      # line in this workflow, because the wrong edit here is invisible.
+      #
+      # WHAT IT IS: a record of blobs that this repository's OWN git history is
+      # still known to contain. The 2026-09-14 Telegram session exposure was
+      # redacted from the working tree (SEC-1); purging it from history (SEC-3 —
+      # revoke the session, then purge the blobs) is user-gated and still open. A
+      # default-on history scan is therefore red forever unless that one known hit
+      # is receipted, and a permanently red gate gets switched off — which is the
+      # recurrence this guard exists to prevent.
+      #
+      # SO A HISTORY HIT WHOSE BLOB SHA IS LISTED THERE IS PRINTED AS
+      # "ACCEPTED … still reachable" ON EVERY RUN AND DOES NOT FAIL THE GATE.
+      # That is the intended behaviour and it is the only exception the gate has.
+      #
+      # WHAT IT IS NOT: a pardon. Every accepted hit is re-printed on every run,
+      # so the exposure is never hidden — only acknowledged. Deleting a line
+      # makes the gate red again immediately, which is exactly what should happen
+      # once the blob is actually gone.
+      #
+      # ── THEREFORE: NEVER ADD A LINE TO .credential-guard-baseline TO SILENCE A
+      # ── NEW FINDING. ─────────────────────────────────────────────────────────
+      # A line added there does not fix an exposure; it converts a red gate into a
+      # green one that is lying, and it is the one edit in this repository that a
+      # reviewer cannot detect by reading the diff — the file is a list of hashes
+      # and paths, so "we receipted it" and "we hid it" look identical.
+      #
+      # THIS WORKFLOW MUST NEVER EDIT THAT FILE. Not to add a receipt, not to
+      # remove one, not to reformat it. It is read-only to CI, here and in every
+      # job in this repository. If the guard is red and you believe the finding is
+      # a false positive, the fix is in the TEST or in the fixture that produced
+      # it (which is what happened to the one existing non-credential entry — a
+      # deliberately over-long MySQL truncation probe string, whose WORKING TREE
+      # copy was rewritten to prose so only the committed blob remains), never in
+      # the receipt. If you cannot tell whether a finding is a false positive, the
+      # correct outcome is to leave the gate red and say so; a gate that is red and
+      # honestly red is worth more than a gate that is green and wrong.
+      # ── WHY THIS STEP NAMES AN EXPLICIT BASE REF, and not `git diff` bare ─────
+      # A bare `git diff --quiet -- <path>` compares the WORKING TREE against the
+      # INDEX. After actions/checkout those two are identical BY CONSTRUCTION, so
+      # the comparison is vacuous for the edit this step exists to prevent: a pull
+      # request that appends one blob SHA to .credential-guard-baseline lands in
+      # BOTH the worktree and the index, the diff is clean, and this step prints
+      # "the receipt is intact" while asserting the opposite. bin/scan-credentials.php
+      # treats ACCEPT'd findings as non-failing, so the whole sequence converts a
+      # RED gate GREEN while the log reads as though it caught the problem. That is
+      # the same class of defect as the shallow-clone hole above: a gate that
+      # cannot see is not a gate.
+      #
+      # So the comparison is against a COMMIT — the base of whatever is under
+      # review — never against the index:
+      #
+      #   pull_request     → github.event.pull_request.base.sha  (the PR's base
+      #                      commit: exactly the tip the contributor branched from)
+      #   push             → github.event.before                 (the commit the
+      #                      push replaced; empty for a branch's first push, and
+      #                      forty zeroes when the ref did not exist, both handled
+      #                      below rather than assumed away)
+      #   workflow_dispatch→ HEAD^                              (a manual run has
+      #                      no "before", so the one preceding commit is the only
+      #                      base that means anything)
+      #
+      # THE THREE-DOT FORM (`$BASE_SHA...HEAD`) is used deliberately. Two dots
+      # means "the tree at BASE versus the tree at HEAD"; three dots means "the
+      # MERGE-BASE of BASE and HEAD versus HEAD", which is what "what this change
+      # introduced" means on a pull request whose branch has diverged. Two dots
+      # would report every commit that landed on the base after the fork as part
+      # of the reviewer's diff.
+      #
+      # The base object is present in the object set: this job checks out with
+      # `fetch-depth: 0` (the full-history requirement asserted three steps above),
+      # so both the base commit and the merge-base are local and no `git fetch`
+      # is needed here.
+      #
+      # TWO CHECKS, NOT ONE, because they answer two different questions and the
+      # second does not subsume the first:
+      #
+      #   (1) worktree vs index  — "did anything in THIS JOB change the file?"
+      #       (the scanner runs immediately above; a green scanner must leave the
+      #       receipt byte-identical)
+      #   (2) BASE...HEAD        — "did the change UNDER REVIEW change the file?"
+      #       (this is the check the bare form could never perform)
+      #
+      # DO NOT "FIX" A RED RESULT HERE WITH `|| true`, with `--no-index`, or by
+      # deleting either comparison. Every one of those restores exactly the lie
+      # this step was rewritten to remove while looking like a repair: `|| true`
+      # discards the verdict, `--no-index` turns a history comparison into a
+      # two-file filesystem comparison that no revision can satisfy, and deleting
+      # the check leaves the log still asserting "the receipt is intact" on a
+      # receipt that was edited. If this step is red, the receipt changed and the
+      # only correct outcomes are reverting the change or writing down why the
+      # edit was legitimate. A gate that is red and honestly red is worth more than
+      # a gate that is green and wrong.
+      - name: Assert the baseline was not modified by this workflow (read-only to CI)
+        run: |
+          set -euo pipefail
+
+          # ── Resolve the base ref. Every branch is a real fallback to HEAD^,
+          #    never an empty string — and the fallback is REPORTED as a fallback,
+          #    because a comparison that silently used a base the reader did not
+          #    ask for is indistinguishable from the one they did.
+          #
+          #    An unguarded empty BASE_SHA does not fail: it collapses the argument
+          #    to the literal `...HEAD`, which git resolves as `^HEAD` (the parent),
+          #    so the step compares HEAD^ against HEAD and exits CLEAN on a receipt
+          #    that a PR edited. Measured, in the throwaway repro that produced
+          #    this comment: `git diff --quiet "...HEAD" -- <file>` returned 0 on a
+          #    tree whose receipt had an extra line. That is why BASE_SHA is never
+          #    allowed to be empty.
+          case "${GITHUB_EVENT_NAME:-}" in
+            pull_request)
+              BASE_SHA="${{ github.event.pull_request.base.sha }}"
+              BASE_SOURCE="github.event.pull_request.base.sha"
+              ;;
+            push)
+              BASE_SHA="${{ github.event.before }}"
+              BASE_SOURCE="github.event.before"
+              ;;
+            *)
+              BASE_SHA=""
+              BASE_SOURCE="HEAD^"
+              ;;
+          esac
+
+          if [ "${BASE_SHA}" = "0000000000000000000000000000000000000000" ]; then
+            # A push that CREATES a ref reports an all-zero `before`: there was no
+            # previous commit to push over. Comparing against it is meaningless, so
+            # the one preceding commit stands in — same fallback as workflow_dispatch.
+            BASE_SHA=""
+            BASE_SOURCE="HEAD^ (github.event.before was all zeroes: this push created the ref)"
+          fi
+
+          if [ -z "${BASE_SHA}" ]; then
+            if git rev-parse --verify --quiet 'HEAD^' >/dev/null; then
+              BASE_SHA="$(git rev-parse --verify 'HEAD^')"
+              case "${BASE_SOURCE}" in
+                "github.event."*)
+                  # The event named a base field and it was empty. That is worth a
+                  # line of its own: it means the payload did not carry what the
+                  # step expected, and the comparison below is standing in for it.
+                  BASE_SOURCE="${BASE_SOURCE} was empty — FELL BACK to HEAD^"
+                  ;;
+              esac
+            else
+              # THE VERY FIRST COMMIT of a repository has no parent, and the empty
+              # TREE is the only base that means "everything this repository
+              # contains". It cannot be used with the symmetric `A...B` form,
+              # though: git requires a COMMIT on both sides of `...` and dies with
+              # "is a tree, not a commit". Measured here before this comment was
+              # written — the failure is an exit 128 from git, and because the check
+              # below reads any non-zero as "dirty", a git error would otherwise be
+              # reported as a receipt edit, which is a lie in the other direction.
+              # So the RANGE is built as a variable and this branch sets it to the
+              # two-argument form, which accepts a tree and means the same thing:
+              # the empty tree against the committed HEAD tree.
+              BASE_SHA="$(git hash-object -t tree /dev/null)"
+              BASE_SOURCE="the empty tree (HEAD has no parent: this is the first commit)"
+              DIFF_RANGE="${BASE_SHA} HEAD"
+            fi
+          fi
+
+          if [ -z "${BASE_SHA}" ]; then
+            echo "FATAL — no base ref could be resolved for ${GITHUB_EVENT_NAME:-unknown}."
+            echo "        This step refuses to compare against an empty ref, because an empty"
+            echo "        BASE_SHA becomes 'git diff --quiet \"...HEAD\"' — git resolves that as"
+            echo "        ^HEAD and reports clean on a receipt that was edited. That is the exact"
+            echo "        defect this step was rewritten to remove, so it will not be"
+            echo "        reintroduced by defaulting: report it instead."
+            exit 1
+          fi
+
+          # Three-dot for a commit base ("what this change introduced" = merge-base
+          # to HEAD), two-argument for the empty-tree base. Built in ONE place so
+          # the diff and the printed diff can never disagree about which form ran.
+          if [ -z "${DIFF_RANGE:-}" ]; then
+            DIFF_RANGE="${BASE_SHA}...HEAD"
+          fi
+
+          if ! git rev-parse --verify --quiet "${BASE_SHA}^{commit}" >/dev/null \
+            && ! git rev-parse --verify --quiet "${BASE_SHA}^{tree}" >/dev/null; then
+            echo "FATAL — the resolved base ref ${BASE_SHA} (from ${BASE_SOURCE}) is not in this"
+            echo "        checkout's object set, so the receipt check would compare against nothing."
+            echo "        This job checks out with fetch-depth: 0; if the base is a commit the fetch did"
+            echo "        not reach, the fetch-depth setting above is the thing to fix."
+            exit 1
+          fi
+
+          # Both endpoints of the range are checked to be real objects BEFORE the
+          # comparison, because a git error inside `git diff` exits non-zero and this
+          # step reads non-zero as "the receipt changed" — a git error would then be
+          # reported as a receipt edit, which is a lie in the other direction.
+          for endpoint in $(printf '%s' "${DIFF_RANGE}" | tr ' ' '\n' | grep -v '\.\.\.' | sort -u); do
+            if ! git cat-file -e "${endpoint}^{commit}" 2>/dev/null \
+              && ! git cat-file -e "${endpoint}^{tree}" 2>/dev/null; then
+              echo "FATAL — '${endpoint}' (from the diff range '${DIFF_RANGE}') is not a commit or a"
+              echo "        tree in this checkout, so git would error rather than answer, and this"
+              echo "        step reads a git error as 'the receipt changed'. Refusing to guess."
+              exit 1
+            fi
+          done
+
+          echo "credential-guard: base ref ${BASE_SHA} (from ${BASE_SOURCE}), diff range '${DIFF_RANGE}'"
+
+          # ── (1) Did THIS job modify the file? worktree vs index. ───────────────
+          if ! git diff --quiet -- .credential-guard-baseline; then
+            echo "FATAL — .credential-guard-baseline is MODIFIED in the working tree."
+            echo "        That file is a RECEIPT for this repository's own un-purged SEC-1 exposure, and"
+            echo "        this workflow is not permitted to edit it — not to add a receipt for a new"
+            echo "        finding, and not to remove one. If this diff is yours and you meant to change the"
+            echo "        SCANNER or a FIXTURE, revert this file. If it is not yours, treat it as the"
+            echo "        highest-priority incident in this repository: a credential gate has just been"
+            echo "        edited by something that should not have been able to."
+            git diff -- .credential-guard-baseline | sed -n '1,40p'
+            exit 1
+          fi
+
+          # ── (2) Did the change UNDER REVIEW modify the file? base vs HEAD. ─────
+          # This is the comparison the bare form could not make: a PR that appends
+          # a receipt leaves the index and the worktree identical, so check (1)
+          # passes while the thing it exists to prevent has happened.
+          if ! git diff --quiet ${DIFF_RANGE} -- .credential-guard-baseline; then
+            echo "FATAL — .credential-guard-baseline is MODIFIED by the change under review"
+            echo "        (base ${DIFF_RANGE}). The receipt is a list of blob SHAs and paths, so"
+            echo "        'we receipted a finding' and 'we hid one' are the same line of diff — this"
+            echo "        is the one edit in this repository a reviewer cannot catch by reading it."
+            echo "        The correct outcomes are to revert the file, or to write down in"
+            echo "        docs/decisions.md why the edit is a genuine finding and not a suppression."
+            echo "        Do NOT resolve this by adding '|| true', by adding --no-index, or by"
+            echo "        deleting this comparison: each of those makes the step green while it still"
+            echo "        prints 'the receipt is intact', which is the lie this step was rewritten"
+            echo "        to stop telling."
+            git diff ${DIFF_RANGE} -- .credential-guard-baseline | sed -n '1,40p'
+            exit 1
+          fi
+
+          echo "credential-guard: .credential-guard-baseline unmodified by this job and by this change — the receipt is intact."
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # public-surface — the private/public split gate (D-035)
+  #
+  # WHY THIS JOB IS IN A FILE NAMED security.yml, and why it is the reason the
+  # file exists at all: D-035 decides that this repository is PUBLIC and that a
+  # separate private repository holds the working tree. The split is enforced by
+  # `bin/check-public-surface.php`, which fails CLOSED — a path nobody thought
+  # about is a violation, not a neutral — via two independent rules: an
+  # ALLOWLIST (every tracked path must match bin/public-manifest.txt) and a
+  # STRIP SET (no path may live under a path D-035 declares private, whatever
+  # the manifest claims). A denylist would have let docs/agent-registry.md and
+  # .warm-ledger.json through on a repository with 5568 tracked files that gained
+  # 442 under docs/ alone.
+  #
+  # This job is what makes that script a BUILD FAILURE. The script existing is
+  # not enforcement; a script somebody may or may not run is a convention.
+  # ───────────────────────────────────────────────────────────────────────────
+  public-surface:
+    name: public-surface (allowlist + private strip set)
+    runs-on: ubuntu-latest
+    # 10 minutes. The source has no job for this — it is a `git ls-files -z`
+    # plus a walk of a few thousand paths, measured in seconds, and the number is
+    # here only so that a hung runner fails visibly instead of holding a
+    # concurrency slot open until GitHub's own limit.
+    timeout-minutes: 10
+    container: php:8.4-cli
+    steps:
+      # Same setup-first-before-checkout reason as credential-guard, and here it
+      # is not merely about history: `bin/check-public-surface.php` enumerates
+      # the published surface with `git -C <root> ls-files -z`
+      # (bin/check-public-surface.php:264-278), so WITHOUT git the checker exits
+      # 2 (usage error — "cannot run git ls-files"). git is required for the
+      # gate to produce ANY verdict.
+      #
+      # NO PHP EXTENSIONS AND NO composer, for the same measured reason as in
+      # credential-guard above: check-public-surface.php has no autoloader
+      # require, no Normalizer, no mb_*, no intl (verified: 0 occurrences of
+      # each). `composer install` is absent because nothing here boots the
+      # autoloader, and `libicu-dev` + `docker-php-ext-install intl` are absent
+      # because composer.json's `ext-intl` platform requirement cannot reach a
+      # script that never runs composer.
+      - name: Apt git only (git is required — the checker enumerates via git ls-files)
+        run: |
+          set -euo pipefail
+          apt-get update -qq || echo "apt-get update FAILED on this runner — if the next line fails too, this is a RUNNER disk/network problem, not a package problem"
+          apt-get install -y -qq --no-install-recommends git >/dev/null || { echo "FATAL — apt could not install git."; echo "        bin/check-public-surface.php enumerates the published surface with"; echo "        'git -C <root> ls-files -z' and exits 2 without it. A gate that cannot enumerate"; echo "        what it gates has produced no verdict at all."; exit 1; }
+          apt-get clean && rm -rf /var/lib/apt/lists/*
+          git --version
+          printf "memory_limit=1G\n" > /usr/local/etc/php/conf.d/ci-memory.ini
+          php -r 'printf("memory_limit=%s\n", ini_get("memory_limit"));'
+
+      # ── fetch-depth: 1 IS CORRECT HERE, AND ONLY HERE. ──────────────────────
+      # Stated explicitly rather than left as an Actions default, because the
+      # credential-guard job three hundred lines above sets `fetch-depth: 0` for
+      # the single most load-bearing reason in this file, and a reader who sees
+      # one job fetch everything and the other fetch one commit will reasonably
+      # assume the second one is an oversight.
+      #
+      # It is not. THE TWO GATES ASK DIFFERENT QUESTIONS:
+      #
+      #   credential-guard asks "was a credential EVER committed?" — a question
+      #     about HISTORY, unanswerable from a shallow object set, which is why a
+      #     shallow clone there is a DISABLED GATE (see that job's checkout
+      #     comment and the pipeline #206 record).
+      #
+      #   public-surface asks "WHICH FILES EXIST RIGHT NOW?" — a question about
+      #     the CURRENT TREE, enumerated with `git ls-files -z`, which reads the
+      #     index and the working tree. It never reads a commit's contents. Full
+      #     history would be 5568-file-history of cost for no additional reach:
+      #     a path that was deleted 400 commits ago cannot leak, and `git archive`
+      #     — the producer `bin/export-public-repo.sh` uses — cannot emit it
+      #     either.
+      #
+      # The gate and the producer therefore enumerate THE SAME SET BY
+      # CONSTRUCTION, which is the property that makes this gate worth anything:
+      # `git archive` emits the tracked tree, and the checker inspects the
+      # tracked tree. Fetching less history cannot make the checker disagree with
+      # the exporter about what is tracked.
+      - name: Checkout (DEFAULT depth is correct here — this gate is about the TREE)
+        uses: actions/checkout@v4
+        with:
+          # Spelled out rather than omitted: an omitted `fetch-depth` and an
+          # explicit `fetch-depth: 1` are the same behaviour today, but only one
+          # of them survives a future Actions default change as a DELIBERATE
+          # choice. This line is a decision, and it is documented above.
+          fetch-depth: 1
+          # Same reason as credential-guard: this job reads the tree and never
+          # talks to a remote, so the job's token has no business sitting in
+          # .git/config for the duration of the run.
+          persist-credentials: false
+
+      # Same load-bearing reason as the other checkout in this file: the runner
+      # checks out as a different UID, so `git` refuses the tree as dubious
+      # unless it is marked safe. See the step and its evidence there.
+      - name: Trust the checkout (git safe.directory)
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # ── THE GATE ────────────────────────────────────────────────────────────
+      # `bin/check-public-surface.php` reads `bin/public-manifest.txt` relative to
+      # its OWN SCRIPT location — `$root = dirname(__DIR__)` at
+      # bin/check-public-surface.php:46-47 — so it resolves the same manifest
+      # from any working directory, and it runs `git -C <root> ls-files -z` in
+      # that same root rather than in the CWD
+      # (bin/check-public-surface.php:264-266). CONFIRMED by reading both lines,
+      # not assumed from the --help text.
+      #
+      # The step still runs from the repository root anyway, for one honest
+      # reason rather than a superstitious one: `--tree=DIR` is the other
+      # enumeration mode and it takes its DIR from the argument, not from the
+      # CWD, but `cd "${GITHUB_WORKSPACE}"` makes the executed command readable
+      # without opening the script — a reader can see that the paths on stdout
+      # are repository-relative rather than having to take that on trust.
+      #
+      # NO FLAGS on the invocation. The bare call is the full contract:
+      #   --tree=DIR  absent  → `git ls-files -z`, i.e. the TRACKED tree, which is
+      #                         exactly what `git archive` (the exporter) emits.
+      #                         `--tree` would check an exported copy instead, and
+      #                         this gate's question is about THIS repository.
+      #   --quiet      absent  → the per-violation listing is the most useful part
+      #                         of the output on a red run, and suppressing it
+      #                         saves a second round-trip on the one occasion a
+      #                         human reads this log.
+      #   --list       absent  → that flag PRINTS THE PUBLISHED PATHS AND EXITS 0.
+      #                         It is the exporter's query, not the gate's: a
+      #                         `--list` step here could never fail, because it
+      #                         exits 0 by construction. Running it would put a
+      #                         permanently green step in a file whose entire
+      #                         value is that its steps can go red.
+      # GATE THE EXPORT, NOT THE SOURCE. Measured on GitHub Actions: this step
+      # ran `check-public-surface.php` against the PRIVATE tree and failed with
+      # `public surface VIOLATION: 5600 tracked files, 514 outside the
+      # manifest` — and it would fail on every commit forever, because the
+      # private tree is SUPPOSED to contain `.brain/` (386), `.ledger/` (38),
+      # `inspection-snapshot/` (33) and `.opencode-ci/` (2). A gate that is
+      # permanently red is not a gate; it is noise that gets ignored, and it
+      # hides the one violation it was written to catch.
+      #
+      # What actually needs proving is "what we would PUBLISH is clean". So the
+      # tree is exported first, and the EXPORT is gated. Same contract as the
+      # GitLab `publish-public` job, and as the exporter, which re-checks the
+      # exported tree itself. Measured on the export: `public surface OK: 5086
+      # tracked files, 0 outside the manifest`.
+      - name: php bin/check-public-surface.php — allowlist + private strip set
+        run: |
+          set -uo pipefail
+          cd "${GITHUB_WORKSPACE}"
+          export_dir="${RUNNER_TEMP}/teleframe-public-surface"
+          rm -rf "${export_dir}"
+          bash bin/export-public-repo.sh "${export_dir}" >/dev/null \
+            || { echo "FATAL — the exporter failed, so there is no tree to gate."; \
+                 echo "        A gate with nothing to gate has produced no verdict at all."; exit 1; }
+          php bin/check-public-surface.php --tree="${export_dir}"
+          code=$?
+          set -e
+          # Exit codes, from bin/check-public-surface.php:28-30 and its --help:
+          #   0 clean · 1 violations · 2 usage error.
+          case "${code}" in
+            0)
+              echo "public-surface: exit 0 — every path in the EXPORTED tree is inside bin/public-manifest.txt and outside the strip set."
+              exit 0
+              ;;
+            1)
+              echo "FATAL — public-surface exit 1 — VIOLATIONS. The offending paths are listed above,"
+              echo "        grouped by their first two segments (that grouping is a reading aid only and"
+              echo "        does not affect the verdict). The cause is that the PUBLIC REPOSITORY IS ABOUT"
+              echo "        TO PUBLISH INTERNAL SCAFFOLDING — either extend the allowlist in"
+              echo "        bin/public-manifest.txt deliberately, with a stated reason, or remove the path"
+              echo "        from the tree."
+              echo
+              echo "        Which of those two is right depends on the path, and picking the wrong one is the"
+              echo "        whole failure this gate exists to prevent:"
+              echo "          * a path that IS public (a source file, a published skill, a changelog) → widen"
+              echo "            bin/public-manifest.txt and write the reason into docs/decisions.md, so the"
+              echo "            next reader can see the decision rather than only its effect;"
+              echo "          * a path that is NOT public (docs/decisions.md, docs/agent-registry.md,"
+              echo "            .credential-guard-baseline, HANDOFF.md, .warm-ledger.json, docs/verbatim/,"
+              echo "            and the rest of D-035's private-only set) → remove it from the tree. A path in"
+              echo "            the strip set stays a violation EVEN IF the manifest is later widened to"
+              echo "            match it; that second, independent rule is what makes widening the manifest"
+              echo "            a deliberate act instead of an accidental one."
+              echo
+              echo "        Do NOT resolve this by disabling the job, by adding a skip, or by deleting the"
+              echo "        checker. A gate that has been switched off protects nothing, and this repository"
+              echo "        already has one permanently-red-gate problem it is paying for (SEC-3)."
+              exit 1
+              ;;
+            2)
+              echo "FATAL — public-surface exit 2 — USAGE ERROR. The checker could not read"
+              echo "        bin/public-manifest.txt, or 'git -C <root> ls-files -z' failed, or it was given a"
+              echo "        bad argument. That is a WORKFLOW or checkout defect rather than a split violation,"
+              echo "        and it is emphatically NOT a pass — no verdict was produced about what would be"
+              echo "        published."
+              exit 1
+              ;;
+            *)
+              echo "FATAL — public-surface exited ${code}, which is not a documented exit code"
+              echo "        (0 clean, 1 violations, 2 usage). Treating it as a failure because an unknown"
+              echo "        verdict is not a verdict."
+              exit 1
+              ;;
+          esac
+
+      # ── WHAT THIS CHECKER NEEDS, stated because the credential-guard job above
+      # ── sets fetch-depth: 0 and a reader will compare the two checkouts. ─────
+      #
+      # IT NEEDS FULL HISTORY: NO. It needs a WORKING TREE and a GIT BINARY and
+      # nothing else. `git ls-files -z` reads the index; the manifest is read from
+      # disk next to the script. Concretely:
+      #
+      #   * fetch-depth: 1 is sufficient — proven by the reasoning above and by
+      #     the fact that `--tree=DIR` (a plain recursive walk, no git at all) is
+      #     the checker's own documented alternative for an already-exported tree.
+      #   * Full history is not merely unnecessary, it is the WRONG question:
+      #     the gate is about the tree `bin/export-public-repo.sh` packages, and
+      #     that producer runs `git archive`, which emits the current tree.
+      #   * The one thing this job must NOT do is depend on full history SILENTLY
+      #     — which is why `fetch-depth: 1` is written out and explained rather
+      #     than left to a default, and why the two checkouts in this file carry
+      #     opposite values with a stated reason each.
+      #
+      # This step is documentation made executable: it fails if the checker's own
+      # input moved underneath the reasoning written above it.
+      - name: Confirm the manifest this gate reads is the tracked one
+        run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}"
+          # If the manifest were ever deleted from the index, the checker would
+          # exit 2 with "manifest not found" — which is loud. But it would be
+          # loud about the WRONG thing (it looks like a checkout problem), and the
+          # actual cause would be a commit that removed the file the gate depends
+          # on. Naming that here costs one line and turns a confusing red into a
+          # legible one.
+          test -f bin/public-manifest.txt || { echo "FATAL — bin/public-manifest.txt is missing from the checkout."; echo "        It is the ALLOWLIST — the thing that decides what this repository publishes."; echo "        Its absence is not a pass; it means the gate has no list to check against."; exit 1; }
+          echo "public-surface: manifest present — bin/public-manifest.txt"

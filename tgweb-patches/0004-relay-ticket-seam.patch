@@ -1,0 +1,118 @@
+diff --git a/src/lib/gramjs/Utils.ts b/src/lib/gramjs/Utils.ts
+index cdbf227..1bbff74 100644
+--- a/src/lib/gramjs/Utils.ts
++++ b/src/lib/gramjs/Utils.ts
+@@ -203,6 +203,70 @@ export function getTelegramWebLiveEndpoint(): string | undefined {
+   return BAKED_TELEGRAM_WEB_LIVE_ENDPOINT;
+ }
+ 
++/**
++ * The same-origin Laravel endpoint that mints a one-shot relay ticket
++ * (`POST /teleframe/accounts/{id}/ticket`), when the served client has been
++ * pointed at the package's relay. Read from the `TELEGRAM_WEB_RELAY_TICKET_URL`
++ * runtime global (baked into relay-bootstrap.js like the endpoint, and
++ * forwarded into the worker via the relay-config channel). Undefined means the
++ * client dials without a ticket.
++ */
++export function getRelayTicketUrl(): string | undefined {
++  if (typeof globalThis !== 'undefined') {
++    const runtimeValue = (globalThis as { TELEGRAM_WEB_RELAY_TICKET_URL?: string }).TELEGRAM_WEB_RELAY_TICKET_URL;
++    if (runtimeValue) {
++      return runtimeValue;
++    }
++  }
++  return undefined;
++}
++
++/**
++ * Optional bearer token for the ticket-mint fetch (`TELEGRAM_WEB_RELAY_BEARER`).
++ * In production the mint rides the page's own host session (same-origin
++ * fetch with cookies); the bearer exists for token-authenticated hosts (and
++ * headless harnesses that carry a Sanctum token instead of a browser login).
++ */
++export function getRelayBearer(): string | undefined {
++  if (typeof globalThis !== 'undefined') {
++    const runtimeValue = (globalThis as { TELEGRAM_WEB_RELAY_BEARER?: string }).TELEGRAM_WEB_RELAY_BEARER;
++    if (runtimeValue) {
++      return runtimeValue;
++    }
++  }
++  return undefined;
++}
++
++/**
++ * Mints a fresh one-shot relay ticket for the next socket session. The relay
++ * redeems exactly one ticket per WS upgrade (W-02), so each connection mints
++ * again — reuses, close-then-reconnect, and multi-connection all get new
++ * tickets and never replay a spent one. Returns undefined when no mint URL is
++ * configured (stock transport / no relay) or the mint fails (the dial then
++ * proceeds ticketless and the relay's 401 surfaces honestly).
++ */
++export async function obtainRelayTicket(): Promise<string | undefined> {
++  const ticketUrl = getRelayTicketUrl();
++  if (!ticketUrl) {
++    return undefined;
++  }
++  try {
++    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
++    const bearer = getRelayBearer();
++    if (bearer) {
++      headers.Authorization = `Bearer ${bearer}`;
++    }
++    const response = await fetch(ticketUrl, { method: 'POST', headers, credentials: 'same-origin' });
++    if (!response.ok) {
++      return undefined;
++    }
++    const body = (await response.json()) as { ticket?: string };
++    return body.ticket || undefined;
++  } catch {
++    return undefined;
++  }
++}
++
+ /**
+  * Returns the connectable live URL for one transport family, when the client
+  * is pointed at the relay. A `ws(s)` endpoint feeds the WebSocket transport,
+diff --git a/src/lib/gramjs/extensions/PromisedWebSockets.ts b/src/lib/gramjs/extensions/PromisedWebSockets.ts
+index e03cc54..be701b4 100644
+--- a/src/lib/gramjs/extensions/PromisedWebSockets.ts
++++ b/src/lib/gramjs/extensions/PromisedWebSockets.ts
+@@ -2,7 +2,7 @@ import { Mutex } from 'async-mutex';
+ 
+ import { concat } from '../../../util/encoding/buffer';
+ 
+-import { getTelegramWebLiveUrl } from '../Utils';
++import { getTelegramWebLiveUrl, obtainRelayTicket } from '../Utils';
+ 
+ const closeError = new Error('WebSocket was closed');
+ const CONNECTION_TIMEOUT = 3000;
+@@ -80,10 +80,11 @@ export default class PromisedWebSockets {
+     return toReturn;
+   }
+ 
+-  getWebSocketLink(ip: string, port: number, isTestServer?: boolean, isPremium?: boolean) {
++  async getWebSocketLink(ip: string, port: number, isTestServer?: boolean, isPremium?: boolean) {
+     const liveUrl = getTelegramWebLiveUrl('ws');
+     if (liveUrl) {
+-      return liveUrl;
++      const ticket = await obtainRelayTicket();
++      return ticket ? `${liveUrl}${liveUrl.includes('?') ? '&' : '?'}ticket=${encodeURIComponent(ticket)}` : liveUrl;
+     }
+     if (port === 443) {
+       return `wss://${ip}:${port}/apiws${isTestServer ? '_test' : ''}${isPremium ? '_premium' : ''}`;
+@@ -92,13 +93,13 @@ export default class PromisedWebSockets {
+     }
+   }
+ 
+-  connect(port: number, ip: string, isTestServer = false, isPremium = false) {
++  async connect(port: number, ip: string, isTestServer = false, isPremium = false) {
+     this.stream = new Uint8Array(0);
+     this.canRead = new Promise((resolve) => {
+       this.resolveRead = resolve;
+     });
+     this.closed = false;
+-    this.website = this.getWebSocketLink(ip, port, isTestServer, isPremium);
++    this.website = await this.getWebSocketLink(ip, port, isTestServer, isPremium);
+     this.client = new WebSocket(this.website, 'binary');
+     this.client.binaryType = 'arraybuffer';
+ 
