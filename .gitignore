@@ -100,3 +100,24 @@ infection/*-infection-per-mutator.md
 # Working scratch for the mutation slices (46.71/46.72) — per-slice timing lists,
 # html reports and temp plans. Never source, never evidence.
 .scratch/
+
+# The PRIVATE composer vendor this repository's `vendor` symlink points at.
+#
+# WHY IT IS SEPARATE, and why the symlink exists at all: `vendor` is a TRACKED
+# symlink (mode 120000), so the tree carries a pointer instead of 19,000 files.
+# It pointed at `/tmp/tfdist/vendor`, which is shared by every worktree and every
+# sibling repo on this host — so ONE other session's `composer install` rewrote
+# the dependency tree under a running mutation gate and killed it twice with
+# `Class "PhpParser\Node\Stmt\Nop" not found` and
+# `Class "Symfony\Component\Process\Exception\ProcessTimedOutException" not found`
+# (measured 2026-10-22 11:19:06 UTC and 11:30:54 UTC). A gate that dies because
+# a stranger ran composer is not a gate.
+#
+# `.vendor/` is this repository's own, private copy: nothing else on this host
+# writes into it, so a long gate keeps the dependency tree it started with.
+# It is gitignored for the same reason `vendor/` is — it is a regenerable
+# artefact, and `composer install` rebuilds it. DO NOT run `composer install`
+# in this repository while a mutation gate is running: the install writes
+# through the `vendor` symlink INTO `.vendor/`, which is the churn this
+# directory exists to stop.
+.vendor/

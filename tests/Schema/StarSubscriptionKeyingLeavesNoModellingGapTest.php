@@ -329,7 +329,7 @@ final class StarSubscriptionKeyingLeavesNoModellingGapTest extends TestCase
         $raw = json_decode((string) file_get_contents(self::CATALOG), true, 512, JSON_THROW_ON_ERROR);
         $raw['tf_stars_subscriptions']['scoped_by'] = ['peer_type', 'peer_id'];
 
-        $path = sys_get_temp_dir().'/teleframe-stars-scope-declared.json';
+        $path = sys_get_temp_dir().'/teleframe-stars-scope-declared-'.getmypid().'.json';
         file_put_contents($path, json_encode($raw, JSON_THROW_ON_ERROR));
 
         try {

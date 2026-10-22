@@ -417,7 +417,7 @@ final class MessageMediaReachesTheWriterTest extends TestCase
         $raw = json_decode((string) file_get_contents(self::CATALOG), true, 512, JSON_THROW_ON_ERROR);
         unset($raw[$table]['sources']);
 
-        $path = sys_get_temp_dir()."/teleframe-media-nosource-{$table}.json";
+        $path = sys_get_temp_dir()."/teleframe-media-nosource-{$table}-".getmypid().'.json';
         file_put_contents($path, json_encode($raw, JSON_THROW_ON_ERROR));
 
         try {

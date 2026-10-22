@@ -366,7 +366,7 @@ final class MirrorDerivedKeyPlacesRowTest extends TestCase
             unset($entries[$tfName]['key'], $entries[$tfName]['keyFrom']);
         }
 
-        $path = sys_get_temp_dir().'/teleframe-mirror-catalog-prefix.json';
+        $path = sys_get_temp_dir().'/teleframe-mirror-catalog-prefix-'.getmypid().'.json';
         file_put_contents($path, json_encode($entries, JSON_THROW_ON_ERROR));
 
         try {

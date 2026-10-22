@@ -626,7 +626,7 @@ final class MirrorDeclaredSourcesPlaceRowTest extends TestCase
         );
         unset($raw[$table]['sources']);
 
-        $path = sys_get_temp_dir()."/teleframe-no-source-{$table}.json";
+        $path = sys_get_temp_dir()."/teleframe-no-source-{$table}-".getmypid().'.json';
         file_put_contents($path, json_encode($raw, JSON_THROW_ON_ERROR));
 
         try {
