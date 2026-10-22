@@ -237,9 +237,20 @@ function skippedElsewhere(): array
             'why' => 'a live Telegram DC socket, the live vault roundtrip, the Redis-two hot-reload proof and the vault-terminal validation all need TELEGRAM_USER_SESSION + TELEGRAM_API_ID/HASH or an explicit opt-in gate. This repository must not carry those (AGENTS.md: session strings are credentials and .env is never committed), so in CI they skip by design',
             'classes' => [
                 'MeRezaRezaei\Teleframe\Laravel\Tests\LiveSessionAdapterTest',
+                'MeRezaRezaei\Teleframe\Tests\Live\LiveAuthFlowTest',
                 'MeRezaRezaei\Teleframe\Tests\Live\LiveBackupVaultTest',
+                'MeRezaRezaei\Teleframe\Tests\Live\LivePassportDecryptTest',
+                'MeRezaRezaei\Teleframe\Tests\Live\LivePassportSrpTest',
+                'MeRezaRezaei\Teleframe\Tests\Live\LiveWireGateTest',
                 'MeRezaRezaei\Teleframe\Tests\Ingest\HotReloadLiveTest',
                 'MeRezaRezaei\Teleframe\Tests\Laravel\Console\VaultTerminalLiveTest',
+            ],
+        ],
+        'socket-buffer' => [
+            'suite' => 'webproxy large-payload chunking — needs a socket send buffer > 1 MiB',
+            'why' => 'WebProxyStreamTest::test_write_stream_chunks_large_payload skips itself because chunking a >1 MiB payload needs a socket send buffer larger than the CI container provides; the chunking logic is verified by code review of WebProxyStream::writeStream. Not an installable extension or service, so the skip is declared rather than fixed in the job',
+            'classes' => [
+                'MeRezaRezaei\Teleframe\Core\Tests\MTProto\Transport\WebProxyStreamTest',
             ],
         ],
         'pinned-defect' => [
